@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forge : LogMerry</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #f6f1e7; color: #2b2620; margin: 0; padding: 32px 16px; line-height: 1.5; }
+  main { max-width: 760px; margin: 0 auto; background: #fffdf8; border: 1px solid #d9cfba; border-radius: 8px; padding: 32px; position: relative; }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  h2 { font-size: 1.1rem; margin-top: 28px; border-bottom: 1px solid #d9cfba; padding-bottom: 4px; }
+  .sub { color: #6b6256; margin: 0 0 16px; }
+  .seal { float: right; margin: 0 0 12px 16px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .cast li { list-style: none; margin-left: -20px; }
+</style>
+</head>
+<body>
+<main>
+  <svg class="seal" width="140" height="140" viewBox="0 0 140 140" role="img" aria-label="Sceau HARDENED">
+    <circle cx="70" cy="70" r="64" fill="#7a1f1f"/>
+    <circle cx="70" cy="70" r="56" fill="none" stroke="#e9cfa0" stroke-width="2" stroke-dasharray="3 4"/>
+    <circle cx="70" cy="70" r="46" fill="none" stroke="#e9cfa0" stroke-width="1.5"/>
+    <text x="70" y="66" text-anchor="middle" font-family="Georgia, serif" font-size="17" font-weight="bold" fill="#e9cfa0">HARDENED</text>
+    <text x="70" y="86" text-anchor="middle" font-family="Georgia, serif" font-size="10" fill="#e9cfa0">9 OCT 2026</text>
+  </svg>
+  <h1>LogMerry</h1>
+  <p class="sub">Rapport de forge. Objectif : tester si l'idée et le MVP tiennent. Issue : <strong>renforcée</strong>.</p>
+  <p>Cockpit personnel de conseil No-Code/IA (mini CRM, factures, échéances) avec un assistant RAG qui cite ses sources, construit pour le Workshop 8.</p>
+
+  <h2>Décisions verrouillées</h2>
+  <ul>
+    <li><strong>Une seule base Supabase.</strong> Données fictives pendant le WS8, puis purge (embeddings et historique inclus) ; seul le portfolio est conservé.</li>
+    <li><strong>MCP Supabase</strong> autorisé tant que la base est fictive ; à débrancher avant la première vraie donnée client.</li>
+    <li><strong>La contrainte est la date</strong> (fin de formation le 8 février 2027), pas les 130 h. Capacité déclarée : 35 h/semaine.</li>
+    <li><strong>Jalon du 30 octobre 2026</strong> : RAG de bout en bout. Sinon, aucune nouvelle fonction avant sa correction.</li>
+    <li><strong>Citations vérifiées à deux niveaux</strong> : contrôle automatique des identifiants cités à chaque réponse, vérification manuelle sur le jeu de test (réponses présentes, absentes, piège inter-comptes).</li>
+    <li><strong>Chat dans une fonction Supabase</strong> ; n8n pour l'asynchrone (ingestion, rappels, résumé hebdomadaire, calendrier).</li>
+    <li><strong>Embeddings</strong> : RGPD, puis qualité en français, puis coût. Modèle à choisir avant la première migration.</li>
+  </ul>
+
+  <h2>Écarté, et pourquoi</h2>
+  <ul>
+    <li>Colonne « fictif » par ligne : mélange démo et réel, risque de fausser la jauge ou de citer une note de démonstration.</li>
+    <li>Second projet Supabase pour le réel : proposé, non retenu.</li>
+    <li>Sacrifier du périmètre pour tenir 130 h : la contrainte réelle est le calendrier.</li>
+    <li>n8n pour le chat : un maillon de plus à sécuriser.</li>
+  </ul>
+
+  <h2>Points faibles restants</h2>
+  <ul>
+    <li>35 h/semaine sur environ 17 semaines : déclaré, non vérifié.</li>
+    <li>Le CRM se justifie surtout par le RAG (10 à 20 entités) : risque de dérive de périmètre.</li>
+    <li>Le modèle d'embeddings n'est pas encore choisi.</li>
+    <li>Critères de Richard, nom public, statut juridique et plafond : encore inconnus.</li>
+    <li>L'ingestion asynchrone ajoute n8n à la chaîne avant le jalon du 30 octobre.</li>
+  </ul>
+
+  <h2>Qui a interrogé l'idée</h2>
+  <ul class="cast">
+    <li>📋 <strong>John</strong>, Product Manager : questions courtes, chaque « pourquoi ? » resserre l'étau.</li>
+    <li>📊 <strong>Mary</strong>, Analyste : s'appuie sur les faits vérifiables, a chiffré le calendrier.</li>
+    <li>🏗️ <strong>Winston</strong>, Architecte : compromis, chemin du chat, vérification des citations.</li>
+    <li>🔒 <strong>Vex</strong>, Sécurité : transfert de données personnelles au passage au réel.</li>
+    <li>😤 <strong>Grumbal</strong>, L'adversaire : « comment ta citation peut-elle être fausse ? »</li>
+    <li>💼 <strong>Camille Roux</strong>, consultante indépendante (personnage généré) : le volume réel et la valeur du CRM.</li>
+  </ul>
+</main>
+</body>
+</html>
