@@ -24,9 +24,9 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 - Aucun conseil fiscal ou juridique généré par l'IA.
 - Aucune clé secrète (service role) côté client, dans le code ou dans un commit. `.env.local` est ignoré par git.
 - Le schéma évolue par migrations versionnées dans `supabase/migrations/`, pas par du SQL non tracé. Montrer le SQL avant de l'appliquer.
-- MCP Supabase : projet de test uniquement, lecture seule hors modification du schéma, approbation manuelle des appels.
+- MCP Supabase : tant que la base ne contient que des données fictives, lecture seule hors modification du schéma, approbation manuelle des appels. Avant la première vraie donnée client (passage à l'outil pro), débrancher le MCP ou réécrire cette règle.
 - La dimension des vecteurs dépend du modèle d'embeddings : toute modification impose une réindexation.
-- Données de démo fictives ou anonymisées, clairement étiquetées. Pas de vraies données clients dans le projet de test.
+- Données de démo fictives ou anonymisées, clairement étiquetées. Pas de vraies données clients pendant le Workshop 8. Au passage à l'outil pro : purge de la base (embeddings et historique de chat inclus), seul le portfolio est conservé, puis saisie des vraies données. Démo et réel sont isolés par la RLS (`owner_id`), sans colonne « fictif ».
 - Si une information manque (statut juridique, plafond, modèle d'IA), demander plutôt que supposer.
 
 ## Périmètre
