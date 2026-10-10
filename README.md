@@ -1,109 +1,110 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+<div align="center">
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+# LogMerry
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+**Un cockpit personnel pour piloter une activité de conseil No-Code / IA, avec un assistant qui répond depuis tes propres données et cite ses sources.**
 
-## Features
+![Statut](https://img.shields.io/badge/statut-en%20cadrage-orange)
+![Next.js](https://img.shields.io/badge/Next.js-TypeScript-000000?logo=nextdotjs)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20pgvector-3ECF8E?logo=supabase&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss&logoColor=white)
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+</div>
 
-## Demo
+> **Nom de code.** Le nom public du produit reste à définir.
+> **Statut : début de projet.** Le dépôt contient le gabarit Next.js + Supabase, le cadrage produit et la méthode de travail. Les fonctionnalités ci-dessous sont **prévues, pas encore construites**.
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## Le problème
 
-## Deploy to Vercel
+Lancer seul une activité de conseil demande de la rigueur : suivre prospects, clients, missions et factures, ne pas rater une échéance administrative, surveiller des revenus irréguliers, gérer son temps, et retrouver vite ce qu'on a déjà écrit (notes de rendez-vous, procédures, modèles).
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## La solution
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+Un outil à propriétaire unique qui rassemble deux choses :
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+- **Un cockpit « Aujourd'hui »** : actions du jour, relances, échéances proches.
+- **Un assistant IA (RAG)** : il répond à partir de ta base de connaissances, **cite ses sources**, et conserve l'historique des échanges.
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## Fonctionnalités prévues
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+**MVP**
 
-## Clone and run locally
+- [ ] Authentification sécurisée, données cloisonnées par utilisateur
+- [ ] Mini CRM : prospects, clients, contacts, missions
+- [ ] Suivi des factures émises et de leur statut (suivi uniquement)
+- [ ] Cockpit « Aujourd'hui » et échéances
+- [ ] Suivi des revenus par rapport à un plafond saisi par l'utilisateur
+- [ ] Base de connaissances : notes de rendez-vous, procédures, modèles, FAQ, livrables
+- [ ] Recherche dans les contenus
+- [ ] Assistant RAG avec sources citées et historique
+- [ ] Réalisations (portfolio) avec vue publique en lecture seule
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+**Ensuite** : capacité et suivi du temps, rappels d'échéances et résumé hebdomadaire (n8n), synchronisation calendrier.
+**Version 2** : portail client en lecture seule, questions libres générant du SQL.
 
-2. Create a Next.js app using the Supabase Starter template npx command
+**Hors périmètre** : facturation légale ou électronique, calcul officiel de cotisations, d'impôt ou de TVA, agenda complet, tout conseil fiscal ou juridique généré par l'IA.
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+## Comment l'assistant garde ses réponses fiables
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Les citations sont vérifiées à deux niveaux :
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+1. **À chaque réponse (automatique).** Chaque extrait envoyé au modèle porte un identifiant. Le modèle renvoie sa réponse et les identifiants cités ; le code rejette tout identifiant absent des extraits envoyés. L'interface relit la source en base à partir de l'identifiant. Si aucun extrait n'est assez pertinent, l'assistant dit qu'il ne trouve pas la réponse.
+2. **Sur un jeu de test (manuel).** `docs/rag-tests.md` regroupe 15 à 20 questions : réponse présente (avec source attendue), réponse absente (refus attendu), et un piège entre deux comptes (aucune fuite).
 
-3. Use `cd` to change into the app's directory
+## Stack
 
-   ```bash
-   cd with-supabase-app
-   ```
+| Couche | Choix |
+| --- | --- |
+| Front | Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui |
+| Backend | Supabase Cloud, région européenne : Auth, Postgres, Storage, pgvector |
+| Chat | Fonction Supabase, pour que la sécurité par ligne s'applique à chaque requête |
+| Tâches asynchrones | n8n : ingestion, rappels, résumé hebdomadaire, calendrier |
+| Modèle de langage et embeddings | À choisir : critères classés RGPD (hébergement UE), qualité en français, coût |
 
-4. Rename `.env.example` to `.env.local` and update the following:
+## Principes de sécurité
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+- **Sécurité par ligne (RLS)** sur toutes les tables, avec `owner_id = auth.uid()`. La recherche vectorielle filtre aussi par `owner_id`.
+- **Aucune clé secrète** côté client, dans le code ou dans un commit. `.env.local` est ignoré par git.
+- **Aucun taux, plafond ou montant fiscal codé en dur** : table de paramètres avec source et date de vérification. Les provisions sont des estimations étiquetées comme telles.
+- **Schéma versionné** par migrations dans `supabase/migrations/`.
+- **Données de démo fictives**, isolées des vraies données par la RLS.
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+## Démarrer en local
 
-5. You can now run the Next.js local development server:
+Prérequis : Node.js et un projet [Supabase](https://database.new).
 
-   ```bash
-   npm run dev
-   ```
+```bash
+git clone <url-du-depot>
+cd logmerry
+npm install
+cp .env.example .env.local
+```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+Renseigne `.env.local` avec les valeurs de ton projet (*Project settings → API*) :
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-or-anon-key
+```
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+```bash
+npm run dev
+```
 
-## Feedback and issues
+L'application tourne sur [localhost:3000](http://localhost:3000).
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## Documentation du projet
 
-## More Supabase examples
+| Fichier | Contenu |
+| --- | --- |
+| [`docs/brief.md`](docs/brief.md) | Brief produit : contexte, périmètre, exigences, planning |
+| [`_bmad-output/forge/logmerry-mvp/forged-idea.md`](_bmad-output/forge/logmerry-mvp/forged-idea.md) | Décisions issues de la session de cadrage |
+| [`CLAUDE.md`](CLAUDE.md) | Règles de travail avec l'assistant de code |
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## Contexte
+
+LogMerry est le projet du Workshop 8 du Bachelor Chef de Projet No-Code et IA (« Réaliser et déployer une application Fullstack en utilisant des outils No-Code et l'IA »). Il est construit avec une démarche de *vibe coding* tracée et sert aussi de portfolio pour une future activité de conseil.
+
+## Auteur
+
+Alex, auteur et propriétaire du projet.
