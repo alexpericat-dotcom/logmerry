@@ -74,7 +74,7 @@ Les citations sont vérifiées à deux niveaux :
 Prérequis : Node.js et un projet [Supabase](https://database.new).
 
 ```bash
-git clone <url-du-depot>
+git clone https://github.com/alexpericat-dotcom/logmerry.git
 cd logmerry
 npm install
 cp .env.example .env.local
