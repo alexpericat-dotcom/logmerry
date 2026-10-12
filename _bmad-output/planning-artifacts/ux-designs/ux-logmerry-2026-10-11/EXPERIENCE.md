@@ -100,12 +100,12 @@ Raccourcis **dans l'application** (une application web n'a pas de raccourci syst
 
 | Raccourci | Action |
 |---|---|
-| `⌘K` | Recherche (FR-19) |
-| `⌘/` | Ouvrir/fermer le panneau assistant |
+| `⌘K` | Ouvrir la palette de commandes : recherche (FR-19) et assistant |
+| Dans la palette | Entrée « Demander à l'assistant : {requête} » : Entrée l'envoie au panneau assistant ; les résultats de recherche (Notes, clients, Missions) suivent en dessous `[ASSUMPTION : ordre des entrées et action d'Entrée par défaut à confirmer par Alex]` |
 | `Esc` | Ferme d'abord le niveau le plus haut (menu ou popover > modale > panneau > mode édition) ; ne supprime jamais de saisie (brouillon conservé, ou confirmation si modifications non enregistrées) |
 | `Espace` sur une `task-row` | Cocher/décocher |
 
-- **Raccourcis** : chacun a un bouton équivalent visible, dont le nom accessible est « Rechercher » ou « Assistant » et `aria-keyshortcuts` ; inactif pendant une composition IME ; liste dans le menu d'aide. Réserves de navigateur (`⌘K` et `⌘/`) : sur clavier français Mac, `/` s'obtient avec Maj, donc lire `event.key` et non `event.code` ; `preventDefault` écrase une fonction du navigateur ; à valider sur Safari, Chrome et Firefox Mac (voir Open items).
+- **Raccourcis** : chacun a un bouton équivalent visible, dont le nom accessible est « Rechercher » ou « Ouvrir l'assistant » et `aria-keyshortcuts` ; inactif pendant une composition IME ; liste dans le menu d'aide. Réserves de navigateur (`⌘K`) : `preventDefault` écrase une fonction du navigateur ; à valider sur Safari, Chrome et Firefox Mac (voir Open items).
 - **Élément actif, survol, sélection clavier (F-03)** : fond `{colors.accent}`, **toujours** doublé d'un indicateur non coloré : barre de 3 px `{colors.primary}` dans la barre latérale, sinon gras ou coche. Jamais la teinte seule.
 - **Focus** : visible partout (`{colors.ring}`), jamais masqué par la barre latérale, le panneau assistant ou un élément sticky (`scroll-padding` égal à la hauteur des éléments sticky). À l'ouverture du panneau le focus va au champ de saisie ; à la fermeture il revient à l'élément qui avait le focus avant l'ouverture (y compris quand l'ouverture vient du raccourci) ; s'il n'existe plus, au `h1` de la page.
 - **Réordonnancement** : voir `task-row`, Component Patterns (règle unique : focus sur la case, annonce `role="status"`).
@@ -189,7 +189,7 @@ Cas limite : si le plafond manque, la jauge est en état « paramètre manquant 
 ## Open items
 
 - `[NOTE FOR UX]` UJ-4 et UJ-5 absents du PRD (qui s'arrête à UJ-3) : à reporter par bmad-prd.
-- `[ASSUMPTION]` Raccourcis `⌘/` et `⌘K` : à tester sur Safari, Chrome et Firefox Mac, clavier français compris (détail : Interaction Primitives).
+- `[ASSUMPTION]` Raccourci `⌘K` (palette de commandes unique : recherche et assistant) : à tester sur Safari, Chrome et Firefox Mac ; ordre des entrées de la palette et action d'Entrée par défaut à confirmer (détail : Interaction Primitives).
 - `[DECISION]` Panneau assistant poussé plutôt que superposé : confirmé par Alex.
 - **À reporter dans le PRD** :
   - écran « À faire » (éléments à documenter, Note brouillon) et ligne de synthèse du Cockpit (FR-14 reste à six règles) ;
