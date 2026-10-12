@@ -101,7 +101,7 @@ Raccourcis **dans l'application** (une application web n'a pas de raccourci syst
 | Raccourci | Action |
 |---|---|
 | `⌘K` | Ouvrir la palette de commandes : recherche (FR-19) et assistant |
-| Dans la palette | Entrée « Demander à l'assistant : {requête} » : Entrée l'envoie au panneau assistant ; les résultats de recherche (Notes, clients, Missions) suivent en dessous `[ASSUMPTION : ordre des entrées et action d'Entrée par défaut à confirmer par Alex]` |
+| Dans la palette | Entrée « Demander à l'assistant : {requête} » : Entrée l'envoie au panneau assistant ; les résultats de recherche (Notes, clients, Missions) suivent en dessous |
 | `Esc` | Ferme d'abord le niveau le plus haut (menu ou popover > modale > panneau > mode édition) ; ne supprime jamais de saisie (brouillon conservé, ou confirmation si modifications non enregistrées) |
 | `Espace` sur une `task-row` | Cocher/décocher |
 
@@ -189,7 +189,7 @@ Cas limite : si le plafond manque, la jauge est en état « paramètre manquant 
 ## Open items
 
 - `[NOTE FOR UX]` UJ-4 et UJ-5 absents du PRD (qui s'arrête à UJ-3) : à reporter par bmad-prd.
-- `[ASSUMPTION]` Raccourci `⌘K` (palette de commandes unique : recherche et assistant) : à tester sur Safari, Chrome et Firefox Mac ; ordre des entrées de la palette et action d'Entrée par défaut à confirmer (détail : Interaction Primitives).
+- `[ASSUMPTION]` Raccourci `⌘K` (palette de commandes unique : recherche et assistant) : à tester sur Safari, Chrome et Firefox Mac .
 - `[DECISION]` Panneau assistant poussé plutôt que superposé : confirmé par Alex.
 - **À reporter dans le PRD** :
   - écran « À faire » (éléments à documenter, Note brouillon) et ligne de synthèse du Cockpit (FR-14 reste à six règles) ;
