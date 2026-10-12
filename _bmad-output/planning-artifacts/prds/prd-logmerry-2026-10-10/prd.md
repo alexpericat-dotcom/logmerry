@@ -2,14 +2,14 @@
 title: LogMerry
 status: final
 created: 2026-10-10
-updated: 2026-10-11
+updated: 2026-10-12
 ---
 
 # PRD : LogMerry
 *Nom de code. Le nom public reste à définir.*
 
 ## 0. Objet du document
-Ce PRD s'adresse à l'auteur, à son tuteur (Richard) et aux étapes BMAD suivantes (UX, architecture, épics). Il s'appuie sur `docs/brief.md` et sur la session de cadrage `_bmad-output/forge/logmerry-mvp/forged-idea.md`, qu'il ne duplique pas. Chaque fonctionnalité regroupe des exigences fonctionnelles (FR), numérotées de façon continue dans tout le document (l'ordre de lecture peut différer de l'ordre numérique). Les hypothèses sont balisées `[ASSUMPTION]` et indexées en §10. Les choix techniques détaillés sont dans `addendum.md`.
+Ce PRD s'adresse à l'auteur, à son tuteur (Richard) et aux étapes BMAD suivantes (UX, architecture, épics). Il s'appuie sur `docs/brief.md` et sur la session de cadrage `_bmad-output/forge/logmerry-mvp/forged-idea.md`, qu'il ne duplique pas. Chaque fonctionnalité regroupe des exigences fonctionnelles (FR), numérotées de façon continue dans tout le document (l'ordre de lecture peut différer de l'ordre numérique). Les hypothèses sont balisées `[ASSUMPTION]` et indexées en §10. Les choix techniques détaillés sont dans `addendum.md`. Les écrans, le ton et le comportement de l'interface sont décrits dans `ux-designs/ux-logmerry-2026-10-11/DESIGN.md` (aspect) et `EXPERIENCE.md` (comportement, parcours détaillés), sous `_bmad-output/planning-artifacts/`.
 
 ## 1. Vision
 LogMerry est un cockpit personnel pour piloter une activité de conseil No-Code/IA en micro-entreprise. Chaque jour, il dit à son propriétaire quoi faire, et pourquoi, à partir de ses missions, de ses prospects, de ses factures et de ses échéances. Un assistant répond à partir de **ses propres notes** et **cite ses sources**.
@@ -31,9 +31,11 @@ Le produit sert deux buts qui vont dans le même sens : valider le Workshop 8 (p
 Les clients (portail en version 2), les équipes, et toute personne cherchant un outil de facturation légale ou de conseil fiscal.
 
 ### 2.3 Parcours clés
-- **UJ-1. Alex ouvre son cockpit un lundi matin.** Alex, consultant débutant en micro-entreprise, se connecte. Le cockpit « Aujourd'hui » affiche trois tâches, chacune avec son motif (« échéance administrative dans 3 jours », « facture échue depuis 1 jour », « devis sans réponse depuis 7 jours »). Il coche la première et la liste se réordonne. **Cas limite :** si un paramètre fiscal est absent, la jauge de plafond affiche « paramètre manquant » au lieu d'un chiffre.
-- **UJ-2. Alex retrouve une procédure pendant un rendez-vous.** Alex demande à l'assistant comment il a configuré l'authentification chez un client précédent. L'assistant répond avec un extrait et un lien vers la note source. **Cas limite :** la base ne contient rien de pertinent, l'assistant répond qu'il ne trouve pas.
-- **UJ-3. Un visiteur consulte une réalisation publiée.** Un prospect ouvre le lien public du portfolio et voit uniquement les réalisations publiées avec l'accord du client, en lecture seule.
+- **UJ-1. Alex ouvre son cockpit un lundi matin.** Alex, consultant débutant en micro-entreprise, se connecte. Le cockpit « Aujourd'hui » affiche trois tâches, chacune avec son motif (« échéance administrative dans 3 jours », « facture échue depuis 1 jour », « devis sans réponse depuis 7 jours »). Il coche la première et la liste se réordonne. Quand tout est fait, un message de félicitation s'affiche (au MVP : félicitation seule ; la proposition de « prendre de l'avance » est après le MVP, §7.4). Sous la liste, une ligne de synthèse (« 2 procédures à documenter ») renvoie vers l'écran « À faire » (FR-21) ; ce n'est pas une tâche. **Cas limite :** si un paramètre fiscal est absent, la jauge de plafond affiche « paramètre manquant » au lieu d'un chiffre.
+- **UJ-2. Alex retrouve une procédure pendant un rendez-vous.** Alex demande à l'assistant comment il a configuré l'authentification chez un client précédent. L'assistant répond avec un extrait et un lien vers la note source. **Cas limite :** la base ne contient rien de pertinent, l'assistant répond qu'il ne trouve pas et propose « Créer une note à documenter plus tard » (FR-21).
+- **UJ-3. Une visiteuse consulte une réalisation publiée.** Camille (personnage fictif), gérante d'une petite agence, ouvre le lien public du portfolio et voit uniquement les réalisations publiées avec l'accord du client, en lecture seule. Pour contacter Alex, elle utilise un lien « m'écrire » (e-mail) ; la page n'a pas de formulaire au MVP.
+- **UJ-4. Alex saisit son activité après un premier rendez-vous.** Alex crée le prospect depuis la note de rendez-vous, puis le passe en client, crée la ou les missions, ajoute des étapes datées, un devis, puis les échéances. À l'ouverture du cockpit, il voit l'effet de sa saisie : les tâches issues de ses étapes et échéances, chacune avec son motif. Chaque formulaire n'exige que ses champs minimaux (détail dans `EXPERIENCE.md`).
+- **UJ-5. Alex enregistre un paiement et règle son plafond.** Alex marque une facture payée et saisit l'encaissement, puis renseigne le plafond dans les paramètres avec sa source et sa date de vérification. Au retour sur le cockpit, la jauge de plafond est à jour (estimation). **Cas limite :** sans plafond, la jauge affiche « paramètre manquant », sans chiffre.
 
 ## 3. Glossaire
 - **Propriétaire** — l'unique utilisateur connecté ; ses données sont isolées par `owner_id`.
@@ -50,7 +52,10 @@ Les clients (portail en version 2), les équipes, et toute personne cherchant un
 - **Règle d'adaptation** — règle déterministe qui ordonne les tâches du cockpit et explique son choix.
 - **Réalisation** — élément du portfolio, publiable en lecture seule avec l'accord du client.
 - **Sigles** — ACRE (aide à la création ou à la reprise d'une entreprise) ; CA (chiffre d'affaires) ; RAG (génération augmentée par récupération : l'assistant répond à partir d'extraits retrouvés) ; RLS (sécurité par ligne) ; MCP (protocole qui permet à un assistant de code d'accéder à la base Supabase) ; J-3, J+1, M-1 (3 jours avant, 1 jour après, 1 mois avant une date).
-- **Fiche d'outil** — entrée du catalogue d'outils (brique, taille de projet, coût, limites, date de vérification).
+- **Fiche d'outil** — entrée du catalogue d'outils (brique, taille de projet, coût, limites, date de vérification). Hors MVP.
+- **Devis** — suivi simple d'une proposition commerciale (montant, date d'envoi, statut) rattaché à une mission ou à un prospect ; ce n'est pas un document (FR-22).
+- **Écran « À faire »** — liste des éléments à documenter plus tard.
+- **Élément à documenter** — Note brouillon créée depuis une requête sans résultat de l'assistant, titrée d'après cette requête (FR-21).
 
 ## 4. Fonctionnalités
 
@@ -90,14 +95,28 @@ Le propriétaire demande un résumé d'une note. Livré après le jalon du 30 oc
 - Le propriétaire peut le régénérer ou l'ignorer ; il n'est jamais enregistré à la place de la note.
 - Un résumé n'est possible que sur une note du propriétaire connecté.
 
+#### FR-21 : Éléments à documenter (écran « À faire »)
+Quand l'assistant ne trouve rien, le propriétaire peut cliquer sur « Créer une note à documenter plus tard ». Livré avec le cockpit (§7.3). **Conséquences (testables) :**
+- Une Note brouillon est créée, titrée d'après la requête, et listée sur l'écran « À faire », propre à chaque propriétaire.
+- Une Note brouillon vide n'est pas indexée par le RAG ; elle ne peut donc jamais être citée. Dès qu'elle reçoit du contenu, FR-3 s'applique.
+- Le cockpit affiche sous la liste des tâches une ligne de synthèse (« 2 procédures à documenter »), lien vers l'écran « À faire », masquée à 0 et mise à jour au retour sur le cockpit.
+- Cette ligne n'est pas une tâche : sans case à cocher, hors liste du jour, hors ordre de priorité. **FR-14 reste à six règles.**
+
 ### 4.3 CRM et missions
 **Description :** prospects, clients, contacts et missions découpées en étapes. Chaque fiche porte une étiquette d'origine (client réel, formation, ami, démo).
 
 #### FR-7 : Prospects, clients, contacts
-Le propriétaire crée et suit des prospects, clients et contacts, avec un statut et une étiquette d'origine. **Conséquences :** une fiche peut être filtrée par statut et par étiquette d'origine ; un contact est rattaché à un client ou à un prospect ; le compte de démonstration n'affiche que des fiches étiquetées « démo ».
+Le propriétaire crée et suit des prospects, clients et contacts, avec un statut et une étiquette d'origine. **Conséquences :** une fiche peut être filtrée par statut et par étiquette d'origine ; un contact est rattaché à un client ou à un prospect ; depuis l'éditeur de note, le propriétaire lie la note à un prospect ou client (champ « Lié à ») et peut créer le prospect sans quitter la note (nom et origine seulement, avec suggestion des fiches existantes avant création) ; un prospect qui devient client change de statut sans ressaisie, et ses notes et contacts le suivent ; le compte de démonstration n'affiche que des fiches étiquetées « démo ».
 
 #### FR-8 : Missions et étapes
 Le propriétaire crée une mission, la découpe en étapes datées et suit leur avancement. **Conséquences :** une mission affiche sa progression ; les étapes échues alimentent le cockpit.
+
+#### FR-22 : Suivi de devis
+Le propriétaire suit un devis rattaché à une mission ou à un prospect. **Conséquences (testables) :**
+- Champs : montant et date d'envoi obligatoires ; statut « envoyé » (par défaut), « accepté » ou « refusé » ; remarque facultative.
+- Statut « accepté » : une mission est créée ou confirmée. Statut « refusé » : la tâche correspondante disparaît du cockpit.
+- La règle 5 de FR-14 (devis sans réponse depuis 7 jours) s'appuie sur ce suivi : seul un devis au statut « envoyé » la déclenche.
+- Aucun document de devis n'est produit (FR-18 reste un non-objectif).
 
 **Notes :** `[NOTE FOR PM]` Comme on attend 10 à 20 entités, le CRM se justifie surtout comme support du RAG et des missions. Le garder minimal et surveiller le périmètre.
 
@@ -126,13 +145,13 @@ L'assistant explique les estimations sans conseiller. **Conséquences :** une de
 **Description :** déclarations et obligations d'indépendant saisies par le propriétaire avec leur date et leur source. L'outil les range et les rappelle ; il ne les invente pas.
 
 #### FR-13 : Échéances
-Le propriétaire crée des échéances avec date et source. **Conséquences :** une échéance sans date ou sans source est refusée à la saisie ; une échéance dont la date approche (J-3) apparaît dans le cockpit ; chaque paramètre et chaque fiche d'outil porte un rappel de revérification périodique.
+Le propriétaire crée des échéances avec date et source. **Conséquences :** une échéance sans date ou sans source est refusée à la saisie ; une échéance dont la date approche (J-3) apparaît dans le cockpit ; chaque paramètre porte un rappel de revérification périodique (le rappel pour les fiches d'outils ne s'applique pas au MVP, catalogue hors MVP).
 
 ### 4.6 Cockpit « Aujourd'hui »
 **Description :** liste ordonnée des tâches du jour, chacune avec son motif. Réalise UJ-1.
 
 #### FR-14 : Règles d'adaptation du MVP
-Six règles déterministes ordonnent les tâches du jour. Déclencheurs, calculés à partir de données saisies : (1) échéance administrative à J-3 ; (2) facture échue à J+1 (non payée, date d'échéance dépassée) ; (3) encaissements cumulés à 90 % du plafond de TVA (paramètre) ; (4) fin de l'ACRE à M-1, date saisie ; (5) devis ou prospect sans mise à jour depuis 7 jours ; (6) pipeline vide (moins de deux missions ou prospects planifiés le mois suivant). **Ordre de priorité quand plusieurs règles se déclenchent :** 1, 2, 3, 4, 5, 6 ; à priorité égale, la date la plus proche d'abord. **Conséquences :** chaque tâche explique « pourquoi aujourd'hui » ; aucune règle n'est décidée par le modèle de langage ; aucun e-mail n'est envoyé automatiquement (un brouillon est proposé) ; une règle dont le paramètre est absent est affichée comme « paramètre manquant », pas ignorée.
+Six règles déterministes ordonnent les tâches du jour. Déclencheurs, calculés à partir de données saisies : (1) échéance administrative à J-3 ; (2) facture échue à J+1 (non payée, date d'échéance dépassée) ; (3) encaissements cumulés à 90 % du plafond de TVA (paramètre) ; (4) fin de l'ACRE à M-1, date saisie ; (5) devis ou prospect sans mise à jour depuis 7 jours ; (6) pipeline vide (moins de deux missions ou prospects planifiés le mois suivant). Ces six règles sont les seules : l'écran « À faire » (FR-21) n'en ajoute aucune. **Ordre de priorité quand plusieurs règles se déclenchent :** 1, 2, 3, 4, 5, 6 ; à priorité égale, la date la plus proche d'abord. **Conséquences :** chaque tâche explique « pourquoi aujourd'hui » ; aucune règle n'est décidée par le modèle de langage ; aucun e-mail n'est envoyé automatiquement (un brouillon est proposé) ; une règle dont le paramètre est absent est affichée comme « paramètre manquant », pas ignorée.
 
 #### FR-15 : Affichage financier
 Le cockpit affiche le CA encaissé, la position par rapport au plafond et les estimations étiquetées. **Conséquences :** les montants affichés sont identiques à ceux de FR-11 (même calcul, pas de second calcul) ; un montant manquant affiche « paramètre manquant » ; chaque estimation porte l'étiquette « estimation ». L'affichage financier n'est pas un critère de réussite de l'outil.
@@ -141,22 +160,26 @@ Le cockpit affiche le CA encaissé, la position par rapport au plafond et les es
 **Description :** réalisations avec vue publique en lecture seule. Réalise UJ-3.
 
 #### FR-16 : Publication
-Le propriétaire publie une réalisation avec l'accord du client. **Conséquences :** la vue publique n'expose que les réalisations publiées ; elle est en lecture seule ; aucune donnée privée n'y apparaît.
+Le propriétaire publie une réalisation avec l'accord du client. **Conséquences :**
+- La vue publique n'expose que les réalisations publiées ; elle est en lecture seule (au MVP, seul un lien « m'écrire » permet de contacter le propriétaire) ; aucune donnée privée n'y apparaît.
+- Champs obligatoires : titre, description courte, étiquette d'origine (client réel, formation, ami, démo) et accord du client, sans lequel la publication est bloquée.
+- Champs facultatifs : captures (texte alternatif obligatoire pour chacune), stack en étiquettes, chiffre de résultat (publiable seulement avec l'accord), nom du client.
+- Sans accord, le nom du client est anonymisé par défaut (« Client, secteur X »).
 
-### 4.8 Catalogue d'outils **[OPTIONNEL MVP : premier à couper]**
-**Description :** fiches par brique (base de données, formulaires, automatisation…), avec taille de projet adaptée, coût, hébergement, limites et date de vérification. Une stack retenue peut être rattachée à chaque mission.
+### 4.8 Catalogue d'outils **[HORS MVP]**
+**Description :** fiches par brique (base de données, formulaires, automatisation…), avec taille de projet adaptée, coût, hébergement, limites et date de vérification. Une stack retenue peut être rattachée à chaque mission. Décision de la session UX du 11 octobre : hors MVP et hors navigation de l'application.
 
 #### FR-17 : Fiches d'outils et stack de mission
 Le propriétaire crée des fiches d'outils et rattache une stack à une mission. **Conséquences :** une fiche dont la date de vérification est dépassée est signalée.
 
 #### FR-18 : Brouillon de devis
-Le système assemble un brouillon de lignes à partir du catalogue, à recopier dans le modèle de devis du propriétaire. Dépend de FR-17. **[NON-OBJECTIF pour le MVP]** : document de devis complet (mentions légales, numérotation, suivi d'acceptation).
+Le système assemble un brouillon de lignes à partir du catalogue, à recopier dans le modèle de devis du propriétaire. Dépend de FR-17. Hors MVP, comme FR-17. **[NON-OBJECTIF]** : document de devis complet (mentions légales, numérotation) ; le simple suivi de statut d'un devis est couvert par FR-22.
 
 ## 5. Contraintes, garde-fous et exigences non fonctionnelles
 
 ### 5.1 Exigences non fonctionnelles transverses
 - **NFR-1 : Performance.** Une page courante s'affiche en moins de 3 secondes ; l'assistant répond en moins de 15 secondes dans la majorité des cas, ou affiche un état d'attente.
-- **NFR-2 : Accessibilité.** Écrans principaux utilisables au clavier, contrastes lisibles, libellés de formulaire associés (cible WCAG 2.1 AA sur les parcours UJ-1 à UJ-3).
+- **NFR-2 : Accessibilité.** Écrans principaux utilisables au clavier, contrastes lisibles, libellés de formulaire associés (cible WCAG 2.1 AA sur les parcours UJ-1 à UJ-5). Écrans, ton (tutoiement dans l'espace privé, vouvoiement sur le portfolio public) et appareils (ordinateur principal ; téléphone pour la consultation et la saisie légère ; portfolio public lisible sur téléphone) : voir `DESIGN.md` et `EXPERIENCE.md`.
 - **NFR-3 : Sécurité.** Voir FR-1 (isolation par ligne), aucune clé secrète côté client, schéma versionné.
 - **NFR-4 : Fiabilité et sauvegarde.** Les données du propriétaire peuvent être restaurées après une erreur ; une sauvegarde est vérifiée avant le passage aux vraies données.
 - **NFR-5 : Traçabilité de la démarche.** `docs/journal.md` consigne les prompts, les décisions, les bugs et les corrections ; les résultats du jeu de test du RAG sont enregistrés à chaque itération (au moins trois exécutions datées, avec le score), pour montrer l'amélioration.
@@ -184,9 +207,13 @@ Le système assemble un brouillon de lignes à partir du catalogue, à recopier 
 FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-19. S'il n'est pas atteint : aucune nouvelle fonction, correction du RAG d'abord.
 
 ### 7.3 MVP, après le RAG
-Ordre de livraison : (1) résumé automatique des notes (FR-20), CRM et missions (FR-7, FR-8) ; (2) finances et paramètres (FR-9 à FR-12) ; (3) formalités et cockpit (FR-13 à FR-15) ; (4) réalisations (FR-16) ; (5) catalogue d'outils et brouillon de devis (FR-17, FR-18). Cet ordre indique quoi couper en premier : le catalogue. Le calendrier (§7.1) n'impose aucune coupe pour l'instant.
+Ordre de livraison : (1) résumé automatique des notes (FR-20), CRM, missions et suivi de devis (FR-7, FR-8, FR-22) ; (2) finances et paramètres (FR-9 à FR-12) ; (3) formalités, cockpit et éléments à documenter (FR-13 à FR-15, FR-21) ; (4) réalisations (FR-16). Le catalogue d'outils et le brouillon de devis (FR-17, FR-18) sont hors MVP (§7.4). Le calendrier (§7.1) n'impose aucune coupe pour l'instant.
 
-### 7.4 Version 2
+### 7.4 Après le MVP et version 2
+- Catalogue d'outils, fiches et brouillon de devis (FR-17, FR-18), reportés hors MVP.
+- « Prendre de l'avance » : à la fin des tâches du jour, proposition facultative (opt-in strict, SM-C1) de voir jusqu'à 3 tâches futures (étapes de mission à venir et échéances des 30 prochains jours, date la plus proche, étiquetées « à venir », hors liste du jour). Au MVP : félicitation seule.
+- Formulaire de contact sur le portfolio public. Contraintes : insertion seule par un visiteur anonyme, anti-spam sans test cognitif, aucun e-mail automatique, mention RGPD (détail dans `addendum.md`).
+- Import de fichiers (Notion, PDF) dans les notes ; au MVP, les CGV et procédures se collent dans une note (FR-3).
 - Veille n8n des taux : détection et alerte, mise à jour après validation du propriétaire.
 - Rappels d'échéances et résumé hebdomadaire via n8n ; synchronisation avec un calendrier.
 - Capacité et suivi du temps, avec comparaison du temps passé et du devis.
@@ -219,12 +246,12 @@ Ordre de livraison : (1) résumé automatique des notes (FR-20), CRM et missions
 
 | Critère évalué | Où il est traité |
 | --- | --- |
-| Compréhension du besoin métier, cohérence du produit | §1, §2, §3 ; parcours UJ-1 à UJ-3 |
+| Compréhension du besoin métier, cohérence du produit | §1, §2, §3 ; parcours UJ-1 à UJ-5 |
 | Pertinence de la stack choisie | `addendum.md` (choix et options écartées argumentés) |
 | Qualité de la démarche de Vibe Coding ; usage de l'IA pour produire, corriger, améliorer | NFR-5 (journal, itérations du jeu de test) ; SM-6 |
 | Fonctionnalité IA utile intégrée | FR-4 (réponses citées), FR-20 (résumé automatique), FR-12 ; calculs expliqués par l'assistant |
 | Logique RAG et base vectorielle | FR-3, FR-4, FR-6, FR-19 ; `addendum.md` (découpage, embeddings, vérification des citations) |
-| Qualité de l'expérience utilisateur | NFR-1, NFR-2 ; cockpit FR-14, FR-15 ; document UX à produire (`bmad-ux`) |
+| Qualité de l'expérience utilisateur | NFR-1, NFR-2 ; cockpit FR-14, FR-15 ; parcours UJ-1 à UJ-5 ; documents UX : `ux-designs/ux-logmerry-2026-10-11/DESIGN.md` et `EXPERIENCE.md` |
 | Crédibilité globale du MVP présenté | SM-6 (parcours de démo complet, application déployée) ; jalon du 30 octobre |
 | Fonctionnalités attendues (compte, tableau de bord, contenus, recherche, dialogue, RAG, historique, espace structuré) | FR-1, FR-14/FR-15, FR-3, FR-19, FR-4, FR-4/FR-6, FR-5, FR-3/FR-7 |
 

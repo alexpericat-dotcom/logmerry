@@ -35,4 +35,13 @@ Une seule base Supabase. Comptes de démonstration et compte réel isolés par R
 Données de santé, catégorie spéciale du RGPD : consentement actif, signal dérivé conservé (ex. « charge élevée hier »), données brutes jamais conservées, jamais envoyées au modèle de langage.
 
 ## Devis
-MVP : brouillon de lignes. Version future : document complet, qui implique mentions légales, numérotation et suivi d'acceptation, donc une frontière avec la facturation légale, hors périmètre.
+MVP : simple suivi (montant, date d'envoi, statut ; FR-22), sans document. Brouillon de lignes depuis le catalogue (FR-18) : hors MVP avec le catalogue. Version future : document complet, qui implique mentions légales et numérotation, donc une frontière avec la facturation légale, hors périmètre.
+
+## Éléments à documenter (FR-21)
+Une Note brouillon vide n'est pas indexée (pas d'extrait, pas d'embedding) ; l'indexation démarre au premier contenu, comme pour toute note (FR-3). Le comptage de la ligne de synthèse du cockpit est calculé côté serveur, filtré par `owner_id`.
+
+## Formulaire de contact public (après MVP)
+Contraintes : table de demandes en insertion seule pour un visiteur anonyme (cas RLS particulier : pas de lecture, pas de mise à jour) ; anti-spam sans test cognitif (champ piège masqué, délai minimal de soumission, limitation de débit côté serveur) ; aucun e-mail automatique ; mention RGPD. Au MVP : lien `mailto:`, aucune écriture en base, page publique en lecture seule (FR-16).
+
+## « Prendre de l'avance » (après MVP)
+Déterministe, sans IA. Source : étapes de mission à venir et échéances des 30 prochains jours ; ordre par date la plus proche ; 3 tâches au plus, étiquetées « à venir » avec date et motif ; source vide : félicitation seule.
