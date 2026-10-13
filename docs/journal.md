@@ -38,3 +38,10 @@
 
 - Liste des notes : l'heure (Paris) s'affiche maintenant avec la date, à la demande du propriétaire après l'essai de la preview.
 - Essais manuels sur la preview : liste vide, création, titre vide refusé, ordre récent → ancien : OK. Contrôle en base (lecture seule) : les 2 notes de test ont bien `owner_id` = ton compte (rempli par `auth.uid()`). Story 2.1 terminée.
+
+## 2026-10-13 — Story 2.2 : Modifier, classer et supprimer une note
+
+- Prompt : « Story 2.2 », via `bmad-build` ; spec `spec-2-2-modifier-classer-supprimer-une-note.md`. Décision du propriétaire : confirmation de suppression en ligne (pas de fenêtre modale).
+- Seconde migration : type de note (enum), `updated_at` avec déclencheur, limite de 50 000 caractères sur le texte (reportée depuis la revue de la 2.1). SQL montré puis approuvé avant application ; contrôles après application OK.
+- Code : page `/notes/[id]` (modification + suppression), filtre par type, type choisi à la création, actions factorisées.
+- Revue par 3 sous-agents : 6 correctifs dont un vrai bug (le message d'échec de suppression restait invisible tant que la confirmation était ouverte), note disparue distinguée d'une erreur, annulation bloquée pendant une suppression en cours ; reports : tests des actions et de la base avec la story 2.3, filtre conservé au retour sur la liste.

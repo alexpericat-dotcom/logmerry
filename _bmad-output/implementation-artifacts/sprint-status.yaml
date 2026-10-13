@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-13-2026 19:00
+last_updated: 10-13-2026 20:30
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -43,7 +43,7 @@ development_status:
 
   epic-2: in-progress
   2-1-créer-et-lister-mes-notes: done
-  2-2-modifier-classer-et-supprimer-une-note: backlog
+  2-2-modifier-classer-et-supprimer-une-note: review
   2-3-deux-comptes-fictifs-ne-se-voient-pas: backlog
   2-4-rechercher-dans-mes-notes-avec-k: backlog
   epic-2-retrospective: optional
