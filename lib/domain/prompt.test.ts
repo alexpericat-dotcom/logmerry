@@ -32,6 +32,7 @@ test("la consigne interdit les conseils fiscaux et juridiques et les chiffres in
   assert.match(SYSTEM_PROMPT, /chiffre/);
   assert.match(SYSTEM_PROMPT, /donnée/);
   assert.match(SYSTEM_PROMPT, /liste vide/, "pas de source citée quand les extraits ne répondent pas");
+  assert.match(SYSTEM_PROMPT, /sujet voisin/, "pas de source citée pour un refus, même si un extrait est proche");
   assert.match(SYSTEM_PROMPT, /sans gras/, "pas de Markdown : le panneau affiche du texte simple");
 });
 

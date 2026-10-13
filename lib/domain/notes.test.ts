@@ -7,6 +7,9 @@ import {
   excerpt,
   isUuid,
   parseTypeFilter,
+  parseStatusFilter,
+  draftTitle,
+  DRAFT_TITLE_PREFIX,
   validateNoteInput,
 } from "./notes.ts";
 
@@ -72,4 +75,18 @@ test("isUuid : accepte un uuid, refuse le reste", () => {
   assert.equal(isUuid("0b6b1f0e-3c1a-4a77-9d0f-5a1f6f1d2b3c"), true);
   assert.equal(isUuid("abc"), false);
   assert.equal(isUuid("0b6b1f0e-3c1a-4a77-9d0f-5a1f6f1d2b3c'; drop"), false);
+});
+
+test("filtre brouillons : seulement « brouillon »", () => {
+  assert.equal(parseStatusFilter("brouillon"), "draft");
+  assert.equal(parseStatusFilter(["brouillon", "x"]), "draft");
+  for (const v of [undefined, "", "actif", "draft"]) assert.equal(parseStatusFilter(v), null);
+});
+
+test("titre d'une note à documenter : préfixe et question, espaces réduits, 200 caractères au plus", () => {
+  assert.equal(draftTitle("  Quel   est le tarif de Gamma ? "), "À documenter : Quel est le tarif de Gamma ?");
+  const long = draftTitle("é".repeat(500));
+  assert.equal([...long].length, TITLE_MAX);
+  assert.ok(long.startsWith(DRAFT_TITLE_PREFIX) && long.endsWith("…"));
+  assert.ok(validateNoteInput({ type: "note", title: long, body: "" }).ok, "le titre passe la validation d'une note");
 });

@@ -1,6 +1,24 @@
 import { AnswerRejected, inventedNumbers, verifyCitations } from "./citations.ts";
 
-export const NOT_FOUND = "Je n'ai trouvé aucune note correspondant à cette question.";
+/** Message exact de la conception (Voice and Tone) quand aucun extrait n'est assez proche : Claude n'est pas appelé. */
+export const NOT_FOUND = "Je n'ai trouvé aucune procédure documentée correspondant à cette requête.";
+/** Formulation d'avant la story 8.11 : des refus ainsi libellés sont déjà dans l'historique enregistré. */
+const LEGACY_NOT_FOUND = "Je n'ai trouvé aucune note correspondant à cette question.";
+
+/**
+ * Faut-il proposer « Créer une note à documenter plus tard » sous ce message ? Oui pour une réponse de l'assistant qui ne s'appuie sur aucune source :
+ * refus fixe (anciennes et nouvelle formulations) ou réponse de Claude disant que les notes ne répondent pas (aucune citation, comme le veut la consigne).
+ */
+export function offersDraftNote(message: { role: "user" | "assistant"; text: string; sources?: unknown[] }): boolean {
+  if (message.role !== "assistant") return false;
+  return isRefusal(message.text) || message.sources?.length === 0;
+}
+
+/** Le texte est-il un refus de l'assistant (« je ne trouve pas ») ? Sert à proposer « Créer une note à documenter plus tard », aussi sous les refus relus de l'historique. */
+export function isRefusal(text: string): boolean {
+  const t = text.trim();
+  return t === NOT_FOUND || t === LEGACY_NOT_FOUND;
+}
 
 /** Extrait envoyé au modèle : son texte vient de la base (jamais du modèle). */
 export type ChunkLike = { id: string; noteId: string; title: string; content: string };

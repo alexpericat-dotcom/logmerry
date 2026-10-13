@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
+  draftTitle,
   isUuid,
   validateNoteInput,
   type NoteErrors,
@@ -139,4 +140,31 @@ export async function retryIndexing(id: string): Promise<RetryState> {
   revalidatePath("/notes");
   revalidatePath(`/notes/${id}`);
   return result.value === "failed" ? { message: "Indexation impossible pour le moment. Réessaie." } : {};
+}
+
+/** `existing` : le brouillon de cette question existait déjà (pas de doublon). */
+export type DraftState = { ok: true; id: string; title: string; existing: boolean } | { ok: false; error: string };
+
+/** Crée une note brouillon vide « À documenter : {question} » depuis l'assistant (sans texte : rien à indexer, jamais citable). */
+export async function createDraftFromQuestion(question: string): Promise<DraftState> {
+  const failed: DraftState = { ok: false, error: "Création impossible pour le moment. Réessaie." };
+  const text = String(question ?? "").slice(0, 1000).replace(/\s+/g, " ").trim(); // borné : l'entrée vient du navigateur
+  if (!text) return failed;
+  const result = await withSession(async (supabase) => {
+    const title = draftTitle(text);
+    // Un seul brouillon par question : redemander puis recliquer ne crée pas de doublon.
+    const found = await supabase.from("notes").select("id").eq("status", "draft").eq("title", title).limit(1).maybeSingle();
+    if (found.data) return { id: found.data.id as string, title, existing: true };
+    // État « indexée » d'emblée : une note sans texte n'a rien à indexer (comme `indexNote` pour un texte vide).
+    const { data, error } = await supabase
+      .from("notes")
+      .insert({ title, body: "", type: "note", status: "draft", index_status: "indexed" })
+      .select("id")
+      .single();
+    return error ? null : { id: data.id as string, title, existing: false };
+  });
+  if (result.status === "signed-out") redirect("/auth/login");
+  if (result.status === "failed" || !result.value) return failed;
+  revalidatePath("/notes");
+  return { ok: true, ...result.value };
 }
