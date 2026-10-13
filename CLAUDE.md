@@ -14,9 +14,10 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 ## Stack (à confirmer en cas de changement)
 - Front : Next.js (TypeScript, Tailwind) issu du template Supabase.
 - Backend : Supabase Cloud, région européenne (Auth, Postgres, Storage, pgvector).
-- Orchestration : n8n (ingestion, rappels, résumé hebdomadaire, envoi vers le calendrier).
-- Modèle de langage et embeddings : API à choisir (coût, qualité, RGPD).
-- Chemin du chat (n8n ou fonction Supabase) : à trancher après test.
+- Hébergement : Vercel (région Paris), Next.js 16.x. Détail dans `_bmad-output/planning-artifacts/architecture/architecture-logmerry-2026-10-12/ARCHITECTURE-SPINE.md`, qui fait foi.
+- IA : Claude (Anthropic) pour les réponses, `mistral-embed` (Mistral AI, 1024 dimensions) pour les embeddings. Appels côté serveur uniquement. Modèle Claude exact à valider sur `docs/rag-tests.md`.
+- Chat et indexation : Route Handler et Server Actions Next.js (ni fonction Supabase, ni n8n).
+- n8n : hors MVP (rappels, résumé hebdomadaire, calendrier : après le MVP).
 
 ## Règles à respecter
 - Sécurité par ligne (RLS) activée sur toutes les tables, avec `owner_id = auth.uid()`. La recherche vectorielle filtre aussi par `owner_id`.
@@ -50,4 +51,4 @@ Le RAG est construit en premier, car c'est la partie la plus risquée et la plus
 - Interface en français, code et commits en anglais, petits commits.
 
 ## Points ouverts
-Choix final du front, modèle de langage et d'embeddings, statut juridique de l'activité, chemin du chat, attentes exactes du tuteur.
+Statut juridique de l'activité, attentes exactes du tuteur, mention RGPD pour l'envoi des extraits à Anthropic et Mistral, modèle Claude exact.
