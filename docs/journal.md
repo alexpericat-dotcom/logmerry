@@ -55,3 +55,12 @@
 - Script `npm run test:isolation` : 11 vérifications passées, dont B ne peut ni lire, ni modifier, ni supprimer la note de A, ni se faire attribuer ou attribuer une note ; déclencheur `updated_at`, contrainte de 50 000 caractères, titre vide et type inconnu vérifiés. Aucun reste de test en base après exécution.
 - À rejouer après chaque migration touchant une table.
 - Revue par un relecteur indépendant : 5 correctifs (test rendu symétrique avec une note de B, codes d'erreur RLS exigés, cas sans connexion durci, cause de l'échec de connexion, modèle `.env.test.local.example`), deux reports (nouvelles tables, branchement en CI). Résultat final : `npm run test:isolation` 13/13, aucun reste de test en base.
+
+## 2026-10-13 — Story 2.4 : Rechercher dans mes notes avec ⌘K
+
+- Prompt : « Story 2.4 », via `bmad-build` ; spec `spec-2-4-rechercher-dans-mes-notes-avec-cmd-k.md`. Décision du propriétaire : plein texte français avec début de mot ; accents non neutralisés (limite connue).
+- Troisième migration : colonne `search` (tsvector généré), index GIN, fonction `search_notes` en `security invoker`, réservée aux comptes connectés. SQL montré puis approuvé avant application ; conseiller de sécurité : aucun nouvel avertissement.
+- Code : normalisation de la requête testée, Server Action `searchNotes`, palette en `<dialog>` natif (⌘K / Ctrl+K, bouton « Rechercher », flèches, Entrée, Échap), sans nouvelle dépendance.
+- Bug rencontré : le premier appel de la migration a échoué (identifiant du projet manquant), sans effet en base. Lint : `setState` dans un effet refusé, état « réponse correspondant à la saisie » déduit à la place.
+- Vérifications : lint, tsc, build, `npm test` 23/23, `npm run test:isolation` 14/14 (A trouve sa note, B non, refus sans connexion).
+- Reste : essais manuels sur la preview (Safari, Chrome, Firefox) et revue.

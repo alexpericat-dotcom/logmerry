@@ -2,7 +2,8 @@
 title: 'Story 2.4 : Rechercher dans mes notes avec ⌘K'
 type: 'feature'
 created: '2026-10-13'
-status: 'ready-for-dev'
+status: 'in-progress'
+baseline_commit: '91767c05860a057a2af0b9f8f8f199d869902d0a'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -55,12 +56,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `supabase/migrations/<version>_notes_search.sql` -- colonne `search`, index GIN, fonction `search_notes`, droits -- migration
-- [ ] `lib/domain/search.ts` + test -- normalisation de la requête -- règle pure testée
-- [ ] `app/(app)/notes/search-actions.ts` -- Server Action `searchNotes` -- lecture sous RLS
-- [ ] `components/search-palette.tsx` + `components/app-sidebar.tsx` -- palette, raccourci, bouton -- interface
-- [ ] `tests/isolation.test.ts` -- recherche à deux comptes -- isolation
-- [ ] `docs/journal.md` -- entrée de la story
+- [x] `supabase/migrations/<version>_notes_search.sql` -- colonne `search`, index GIN, fonction `search_notes`, droits -- migration
+- [x] `lib/domain/search.ts` + test -- normalisation de la requête -- règle pure testée
+- [x] `app/(app)/notes/search-actions.ts` -- Server Action `searchNotes` -- lecture sous RLS
+- [x] `components/search-palette.tsx` + `components/app-sidebar.tsx` -- palette, raccourci, bouton -- interface
+- [x] `tests/isolation.test.ts` -- recherche à deux comptes -- isolation
+- [x] `docs/journal.md` -- entrée de la story
 
 **Acceptance Criteria:**
 - Given plusieurs notes, when j'appuie sur ⌘K (ou je clique sur « Rechercher ») et je tape un mot, then les notes qui le contiennent s'affichent et Entrée ouvre celle choisie.
