@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-13-2026 22:30
+last_updated: 10-13-2026 23:30
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -103,5 +103,5 @@ development_status:
   8-12-garde-fous-et-explication-des-estimations: backlog
   8-13-résumé-automatique-d-une-note: backlog
   8-14-jeu-de-test-du-rag-et-score: review
-  8-15-test-de-fuite-sur-l-assistant-et-l-historique: backlog
+  8-15-test-de-fuite-sur-l-assistant-et-l-historique: done
   epic-8-retrospective: optional
