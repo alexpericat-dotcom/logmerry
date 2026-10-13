@@ -2,16 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { frenchAuthError, validateEmail } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -22,27 +18,39 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
+    const emailMsg = validateEmail(email);
+    const passwordMsg = password ? null : "Saisis ton mot de passe.";
+    setEmailError(emailMsg);
+    setPasswordError(passwordMsg);
+    setFormError(null);
+    if (emailMsg || passwordMsg) return;
 
+    setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { error } = await createClient().auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
+      if (error) {
+        const { field, message } = frenchAuthError(error);
+        if (field === "password") setPasswordError(message);
+        else setFormError(message);
+        setIsLoading(false);
+        return;
+      }
+      // Le bouton reste désactivé pendant la navigation.
       router.push("/protected");
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
+      router.refresh();
+    } catch {
+      setFormError("Connexion impossible pour le moment. Réessaie dans un instant.");
       setIsLoading(false);
     }
   };
@@ -51,56 +59,65 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">
+            Connexion
+          </h1>
           <CardDescription>
-            Enter your email below to login to your account
+            Saisis ton e-mail et ton mot de passe pour accéder à LogMerry.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} noValidate>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
-                  required
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? "email-error" : undefined}
                 />
+                {emailError && (
+                  <p id="email-error" role="alert" className="text-sm text-destructive">
+                    {emailError}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Mot de passe</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Mot de passe oublié ?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
-                  required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={passwordError ? true : undefined}
+                  aria-describedby={passwordError ? "password-error" : undefined}
                 />
+                {passwordError && (
+                  <p id="password-error" role="alert" className="text-sm text-destructive">
+                    {passwordError}
+                  </p>
+                )}
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {formError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {formError}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Connexion…" : "Se connecter"}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
             </div>
           </form>
         </CardContent>
