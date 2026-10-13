@@ -31,6 +31,7 @@ test("la consigne interdit les conseils fiscaux et juridiques et les chiffres in
   assert.match(SYSTEM_PROMPT, /conseil fiscal ou juridique/);
   assert.match(SYSTEM_PROMPT, /chiffre/);
   assert.match(SYSTEM_PROMPT, /donnée/);
+  assert.match(SYSTEM_PROMPT, /liste vide/, "pas de source citée quand les extraits ne répondent pas");
 });
 
 test("réponse valide : texte nettoyé et identifiants cités", () => {

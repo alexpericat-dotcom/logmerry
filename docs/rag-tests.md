@@ -15,7 +15,7 @@ Ce fichier regroupe les tests de l'assistant : le test de fuite entre comptes (s
 **Ce que fait le test**
 1. A et B reçoivent chacun 3 notes fictives sur des thèmes proches (factures, clients, abonnements) mais avec des faits différents ; chaque note est vectorisée par le vrai `mistral-embed` (environ 10 textes envoyés à Mistral, tous fictifs).
 2. Chacun pose à `match_chunks` les questions qui portent sur les sujets de **l'autre** compte, avec un seuil à 0 et la limite maximale (20), les conditions les plus favorables à une fuite : il ne doit recevoir que ses propres extraits, jamais le texte ni la note de l'autre.
-3. Même chose avec le seuil réel de l'application (0,76).
+3. Même chose avec le seuil réel de l'application (aujourd'hui 0,70, importé de `lib/domain/matching.ts`).
 4. Lecture directe de `note_chunks` par chaque compte : aucun extrait de l'autre, ni par liste ni par note.
 5. Sans connexion : la fonction est refusée (code 42501).
 6. Contrôle du détecteur : un petit test vérifie que la fonction qui repère les fuites signale bien un extrait interdit (et un seul suffit) et laisse passer les siens. Il vérifie le détecteur, pas la base.
@@ -38,7 +38,7 @@ Ce fichier regroupe les tests de l'assistant : le test de fuite entre comptes (s
 
 ## 2. Jeu de questions du RAG (story 8.14) — à rédiger
 
-Ce jeu mesure la qualité de l'assistant : 15 à 20 questions, chacune avec la **source attendue**, dont des questions dont la réponse est absente des notes (refus attendu) et des pièges inter-comptes. Il sert aussi à régler le seuil de similarité (aujourd'hui 0,76, provisoire) et à valider le modèle Claude (`AI_CHAT_MODEL`).
+Ce jeu mesure la qualité de l'assistant : 15 à 20 questions, chacune avec la **source attendue**, dont des questions dont la réponse est absente des notes (refus attendu) et des pièges inter-comptes. Il sert aussi à régler le seuil de similarité (aujourd'hui 0,70, provisoire ; il était à 0,76 et refusait des questions légitimes) et à valider le modèle Claude (`AI_CHAT_MODEL`).
 
 Je ne l'invente pas : il doit venir de tes vraies attentes, avec de vraies notes fictives que tu choisis. Quand tu le rédigeras, une ligne par question suffit :
 
