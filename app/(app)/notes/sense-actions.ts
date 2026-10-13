@@ -7,13 +7,14 @@ import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 import { normalizeQuery } from "@/lib/domain/search";
 import { createClient } from "@/lib/supabase/server";
 
-export type SenseResult = { chunkId: string; noteId: string; title: string; content: string; score: number };
+/** `score` nul : extrait trouvé seulement par ses mots-clés (pas de similarité). */
+export type SenseResult = { chunkId: string; noteId: string; title: string; content: string; score: number | null };
 /** `question` : renvoyée pour que le champ la garde après la recherche. */
 export type SenseState = { results: SenseResult[]; searched?: boolean; message?: string; question?: string };
 
 const SEARCH_FAILED = "Recherche impossible pour le moment. Réessaie.";
 
-/** « Chercher par sens » : lit mes extraits les plus proches de la question (`retrieveChunks`, sous RLS). */
+/** « Chercher par sens » : mes extraits les plus pertinents, par sens et par mots-clés (`retrieveChunks`, sous RLS). */
 export async function searchBySense(raw: string): Promise<SenseState> {
   const question = normalizeQuery(String(raw ?? ""), SENSE_QUERY_MAX);
   if (!question) return { results: [], question: "" };
