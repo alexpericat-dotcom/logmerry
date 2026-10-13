@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { searchNotes, type SearchResult } from "@/app/(app)/notes/search-actions";
+import { useAssistant } from "@/components/assistant-provider";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
+import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 import { SEARCH_MAX, normalizeQuery } from "@/lib/domain/search";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ const DELAY_MS = 200;
 /** Bouton « Rechercher » + palette ⌘K / Ctrl+K (<dialog> natif : piège de focus, Échap et retour du focus). */
 export function SearchPalette({ labelClass }: { labelClass: string }) {
   const router = useRouter();
+  const assistant = useAssistant();
   const dialog = useRef<HTMLDialogElement>(null);
   const latest = useRef(0);
   const [query, setQuery] = useState("");
@@ -61,21 +64,35 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
   const done = !!q && answered === q;
   const shown = useMemo(() => (done ? results : []), [done, results]);
 
+  // Entrée « Demander à l'assistant » en tête dès qu'une requête est saisie ; les résultats suivent.
+  const hasAssistant = !!q;
+  const total = (hasAssistant ? 1 : 0) + shown.length;
+  const current = Math.min(active, Math.max(total - 1, 0)); // l'index peut être périmé quand les résultats changent
+  const activeResult = hasAssistant ? shown[current - 1] : shown[current];
+  const activeId = !total ? undefined : hasAssistant && current === 0 ? "search-assistant" : activeResult ? `search-${activeResult.id}` : undefined;
+
   useEffect(() => {
-    if (shown.length) document.getElementById(`search-${shown[active]?.id}`)?.scrollIntoView({ block: "nearest" });
-  }, [active, shown]);
+    if (activeId) document.getElementById(activeId)?.scrollIntoView({ block: "nearest" });
+  }, [activeId]);
 
   const choose = (r: SearchResult) => {
     dialog.current?.close();
     router.push(`/notes/${r.id}`);
   };
 
+  const askAssistant = () => {
+    dialog.current?.close();
+    void assistant.ask(normalizeQuery(query, SENSE_QUERY_MAX));
+  };
+
   const onInputKey = (e: React.KeyboardEvent) => {
-    if (e.nativeEvent.isComposing || !shown.length) return;
-    if (e.key === "ArrowDown") setActive((active + 1) % shown.length);
-    else if (e.key === "ArrowUp") setActive((active - 1 + shown.length) % shown.length);
-    else if (e.key === "Enter") choose(shown[active]);
-    else return;
+    if (e.nativeEvent.isComposing || !total) return;
+    if (e.key === "ArrowDown") setActive((current + 1) % total);
+    else if (e.key === "ArrowUp") setActive((current - 1 + total) % total);
+    else if (e.key === "Enter") {
+      if (hasAssistant && current === 0) askAssistant();
+      else if (activeResult) choose(activeResult);
+    } else return;
     e.preventDefault();
   };
 
@@ -111,9 +128,9 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
       >
         <Input
           role="combobox"
-          aria-expanded={shown.length > 0}
+          aria-expanded={total > 0}
           aria-controls="search-results"
-          aria-activedescendant={shown.length ? `search-${shown[active].id}` : undefined}
+          aria-activedescendant={activeId}
           aria-label="Rechercher dans mes notes"
           placeholder="Rechercher dans mes notes…"
           maxLength={SEARCH_MAX}
@@ -123,15 +140,27 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           onKeyDown={onInputKey}
         />
         <ul id="search-results" role="listbox" aria-label="Résultats" className="mt-2 max-h-80 overflow-y-auto">
+          {hasAssistant && (
+            <li
+              id="search-assistant"
+              role="option"
+              aria-selected={current === 0}
+              onClick={askAssistant}
+              onMouseMove={() => setActive(0)}
+              className={cn("cursor-pointer rounded-md px-2 py-2 font-medium", current === 0 && "bg-accent")}
+            >
+              Demander à l&apos;assistant : {q}
+            </li>
+          )}
           {shown.map((r, i) => (
             <li
               key={r.id}
               id={`search-${r.id}`}
               role="option"
-              aria-selected={i === active}
+              aria-selected={(hasAssistant ? i + 1 : i) === current}
               onClick={() => choose(r)}
-              onMouseMove={() => setActive(i)}
-              className={cn("cursor-pointer rounded-md px-2 py-2", i === active && "bg-accent")}
+              onMouseMove={() => setActive(hasAssistant ? i + 1 : i)}
+              className={cn("cursor-pointer rounded-md px-2 py-2", (hasAssistant ? i + 1 : i) === current && "bg-accent")}
             >
               <div className="flex items-center gap-2">
                 <span className="truncate font-medium">{r.title}</span>
