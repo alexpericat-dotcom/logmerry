@@ -2,12 +2,14 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
-import type { Source } from "@/lib/domain/chat-flow";
+import type { HistoryMessage, StoredSource } from "@/lib/domain/history";
 
-export type AssistantMessage = { id: number; role: "user" | "assistant"; text: string; sources?: Source[] };
+export type AssistantMessage = { id: string; role: "user" | "assistant"; text: string; sources?: StoredSource[] };
 
 type Assistant = {
   isOpen: boolean;
+  /** L'historique enregistré n'a pas pu être relu : le panneau le dit au lieu de paraître vide. */
+  historyFailed: boolean;
   messages: AssistantMessage[];
   pending: boolean;
   error: string | null;
@@ -31,10 +33,18 @@ export function useAssistant(): Assistant {
 const GENERIC_ERROR = "L'assistant n'a pas pu répondre pour le moment.";
 const TIMEOUT_MS = 70_000; // un peu plus que les 60 s de Claude côté serveur
 
-/** État de l'assistant au niveau de la zone privée : la conversation survit au changement de page (pas au rechargement). */
-export function AssistantProvider({ children }: { children: React.ReactNode }) {
+/** État de l'assistant au niveau de la zone privée : la conversation survit au changement de page ; l'historique enregistré est relu au chargement. */
+export function AssistantProvider({
+  children,
+  initialMessages = [],
+  historyFailed = false,
+}: {
+  children: React.ReactNode;
+  initialMessages?: HistoryMessage[];
+  historyFailed?: boolean;
+}) {
   const [isOpen, setOpen] = useState(false);
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
+  const [messages, setMessages] = useState<AssistantMessage[]>(initialMessages);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -63,7 +73,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     setPending(true);
     setError(null);
     lastQuestion.current = question;
-    if (addMessage) setMessages((m) => [...m, { id: nextId.current++, role: "user", text: question }]);
+    if (addMessage) setMessages((m) => [...m, { id: `local-${nextId.current++}`, role: "user", text: question }]);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -71,10 +81,10 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ question }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
-      const json = (await res.json().catch(() => null)) as { answer?: string; sources?: Source[]; error?: string } | null;
+      const json = (await res.json().catch(() => null)) as { answer?: string; sources?: StoredSource[]; error?: string } | null;
       if (!res.ok || !json?.answer) throw new Error(json?.error ?? GENERIC_ERROR);
       const answer = json.answer;
-      setMessages((m) => [...m, { id: nextId.current++, role: "assistant", text: answer, sources: Array.isArray(json.sources) ? json.sources : [] }]);
+      setMessages((m) => [...m, { id: `local-${nextId.current++}`, role: "assistant", text: answer, sources: Array.isArray(json.sources) ? json.sources : [] }]);
     } catch (e) {
       setError(e instanceof Error && e.name !== "TimeoutError" && e.message ? e.message : GENERIC_ERROR);
       // Saisie conservée, sans écraser ce que j'ai tapé entre-temps.
@@ -106,8 +116,8 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   }, [send]);
 
   const value = useMemo(
-    () => ({ isOpen, messages, pending, error, draft, setDraft, openPanel, closePanel, ask, retry }),
-    [isOpen, messages, pending, error, draft, openPanel, closePanel, ask, retry],
+    () => ({ isOpen, historyFailed, messages, pending, error, draft, setDraft, openPanel, closePanel, ask, retry }),
+    [isOpen, historyFailed, messages, pending, error, draft, openPanel, closePanel, ask, retry],
   );
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;
 }

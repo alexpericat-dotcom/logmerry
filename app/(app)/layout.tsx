@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { AssistantProvider } from "@/components/assistant-provider";
+import { listHistory } from "@/lib/db/history";
 import { SIDEBAR_COOKIE } from "@/lib/nav";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,9 +17,17 @@ async function AppShell({ children }: { children: React.ReactNode }) {
 
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
   const email = typeof data.claims.email === "string" ? data.claims.email : null;
+  // L'historique de l'assistant ; s'il ne se charge pas, l'application reste utilisable avec un panneau vide.
+  const loaded = await listHistory(supabase).then(
+    (history) => ({ history, failed: false }),
+    (e) => {
+      console.error("Historique illisible :", e instanceof Error ? e.message : "erreur inconnue");
+      return { history: [], failed: true };
+    },
+  );
 
   return (
-    <AssistantProvider>
+    <AssistantProvider initialMessages={loaded.history} historyFailed={loaded.failed}>
       <div className="flex min-h-svh">
         <a
           href="#main"

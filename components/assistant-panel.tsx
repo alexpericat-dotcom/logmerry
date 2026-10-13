@@ -55,6 +55,11 @@ export function AssistantPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
+        {a.historyFailed && (
+          <p role="status" className="mb-3 text-sm text-destructive">
+            Ton historique n&apos;a pas pu être chargé. Recharge la page pour réessayer.
+          </p>
+        )}
         {a.messages.length === 0 && !a.pending && (
           <p className="text-sm text-muted-foreground">Pose une question : je te réponds à partir de tes notes indexées.</p>
         )}

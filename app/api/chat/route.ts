@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { askClaude } from "@/lib/ai/chat";
 import { retrieveChunks } from "@/lib/db/retrieval";
+import { saveExchange } from "@/lib/db/history";
 import { AnswerRejected } from "@/lib/domain/citations";
 import { answerQuestion } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
       retrieve: (q) => retrieveChunks(supabase, q),
       ask: askClaude,
     });
+    // L'enregistrement de l'historique ne bloque jamais la réponse : en cas d'échec, journal sans contenu.
+    await saveExchange(supabase, question, result.answer, result.sources).catch((e) =>
+      console.error("Historique non enregistré :", e instanceof Error ? e.message : "erreur inconnue"),
+    );
     return NextResponse.json(result);
   } catch (e) {
     // Journal sans question ni contenu de note ni clé : seulement la nature de l'échec.
