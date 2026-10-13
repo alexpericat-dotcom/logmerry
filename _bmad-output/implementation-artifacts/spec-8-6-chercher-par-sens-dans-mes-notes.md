@@ -1,7 +1,7 @@
 ---
 title: 'Story 8.6 : Chercher par sens dans mes notes'
 type: 'feature'
-created: '2026-10-14'
+created: '2026-10-13'
 status: 'done'
 baseline_commit: '7e83f07c63ecb62be63b93a559b6818f62af9ddd'
 route: 'oneshot'

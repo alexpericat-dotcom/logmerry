@@ -1,7 +1,7 @@
 ---
 title: 'Story 8.4 : Indexer mes notes existantes'
 type: 'feature'
-created: '2026-10-14'
+created: '2026-10-13'
 status: 'done'
 baseline_commit: 'd3622bd4ede2e788d9ada16d45f737f907ef3291'
 route: 'oneshot'

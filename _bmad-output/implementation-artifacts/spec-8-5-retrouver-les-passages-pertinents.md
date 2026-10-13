@@ -1,7 +1,7 @@
 ---
 title: 'Story 8.5 : Retrouver les passages pertinents (fonction de recherche)'
 type: 'feature'
-created: '2026-10-14'
+created: '2026-10-13'
 status: 'done'
 baseline_commit: '1fd967644cd823eac8f47773ee4073302403d4f5'
 route: 'dispatch'

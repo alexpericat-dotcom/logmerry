@@ -85,7 +85,7 @@
 - Code : `lib/domain/chunking.ts` et ses tests (taille, chevauchement, couverture, texte sans espace, emoji, note de 50 000 caractères). `npm test` 35/35, lint et tsc propres.
 - Revue par un relecteur indépendant : 6 correctifs (commentaire sur les emoji, test d'emoji direct, borne basse du chevauchement, test de la coupe à la phrase, test chronométré retiré, note sur la détection naïve des phrases), 3 constats écartés (triage dans la spec).
 
-## 2026-10-14 — Story 8.3 : Indexer une note à l'enregistrement (sprint 3)
+## 2026-10-13 — Story 8.3 : Indexer une note à l'enregistrement (sprint 3)
 
 - Prompt : « Story 8.3 », via `bmad-build` ; spec `spec-8-3-indexer-une-note-a-l-enregistrement.md`. Choix tranchés : réindexation à chaque sauvegarde ; en cas d'échec, anciens extraits supprimés (jamais de passage périmé) ; note sans texte : état « indexée », aucun appel IA.
 - Cinquième migration : enum `index_status` et colonne `notes.index_status` (défaut « en attente »). SQL montré puis approuvé ; cette fois l'outil MCP l'a appliquée (version 20261013152420) ; conseiller de sécurité : rien de nouveau.
@@ -96,7 +96,7 @@
 - Essai sur la preview : premier essai en « échec » (variables d'IA absentes de Vercel : le journal serveur disait `Variable d'environnement manquante : ANTHROPIC_API_KEY`, sans clé ni contenu) ; note bien enregistrée, pastille « Échec d'indexation » et bouton « Réessayer » visibles, message d'échec propre. Constat : l'outil MCP Vercel est refusé (403), la CLI `vercel logs` a servi à lire les journaux. Variables ajoutées (Production et Preview), puis redéploiement obligatoire (une variable ne s'applique qu'aux nouveaux déploiements) ; « Réessayer » : « Indexée ». Contrôle en base (lecture seule) : chaque note a 1 extrait, `mistral-embed`, vecteur de 1 024 valeurs. Story 8.3 terminée.
 - Piège : l'indexation exige les trois variables, y compris la clé Anthropic inutile pour vectoriser ; amélioration proposée (lire seulement la clé Mistral), à décider.
 
-## 2026-10-14 — Story 8.4 : Indexer mes notes existantes (sprint 3)
+## 2026-10-13 — Story 8.4 : Indexer mes notes existantes (sprint 3)
 
 - Prompt : « Story 8.4 », via `bmad-build` (route courte, sans migration) ; spec `spec-8-4-indexer-mes-notes-existantes.md`. Décision : le bouton vit dans Paramètres (comme prévu par les critères), page créée en première version et entrée activée dans la barre ; les paramètres de la story 4.1 s'y ajouteront.
 - Règles : le bouton indexe mes notes « en attente » ou « en échec » (25 par clic, un compteur indique indexées, en échec, restantes) ; une note sans texte passe « indexée » sans appel IA ; une note avec texte est indexée même en brouillon ; relancer ne touche pas aux notes déjà indexées et remplace toujours les extraits (aucun doublon).
@@ -104,7 +104,7 @@
 - Revue par un relecteur indépendant : 3 correctifs (« en attente » avant « en échec », journal serveur des erreurs, message « déjà indexées »), 6 constats écartés (triage dans la spec).
 - Essai sur la preview (compte du propriétaire) : page Paramètres, compteur et bouton : OK. Story 8.4 terminée ; sprint 3 (stories 8.1 à 8.4) terminé.
 
-## 2026-10-14 — Story 8.5 : Retrouver les passages pertinents (sprint 4)
+## 2026-10-13 — Story 8.5 : Retrouver les passages pertinents (sprint 4)
 
 - Prompt : « Story 8.5 », via `bmad-build` ; spec `spec-8-5-retrouver-les-passages-pertinents.md`. Branche `feat/sprint-4-recherche-par-sens`, créée depuis la branche du sprint 3 (PR #3 pas encore fusionnée).
 - Mesure avant d'écrire la spec (textes fictifs, `mistral-embed`) : les scores sont très resserrés. Passages pertinents : meilleur score 0,79 à 0,82 ; questions sans rapport : 0,72 à 0,73, et même une recette de gâteau atteint 0,66 à 0,72. Seuil de départ proposé pour la story 8.6 : 0,76, provisoire, à régler sur le jeu de test (8.14). Le seuil reste un paramètre de l'appelant.
@@ -113,9 +113,16 @@
 - Test à deux comptes écrit d'abord et vu rouge (la fonction n'existait pas), puis vert : A retrouve ses extraits classés, rien sous le seuil, limite et plafond de 20, B ne reçoit aucun extrait de A, anonyme refusé (42501), vecteur de mauvaise dimension refusé. `test:isolation` 19/19, `npm test` 49/49, lint, tsc, build.
 - Revue par 3 sous-agents : 4 correctifs (plafond et `match_count` à 0 ou négatif testés, erreur de dimension précisée, assertion de B moins fragile, journal), 1 report (`strict_order` quand le volume grandit), 7 constats écartés (triage dans la spec).
 
-## 2026-10-14 — Story 8.6 : Chercher par sens dans mes notes (sprint 4)
+## 2026-10-13 — Story 8.6 : Chercher par sens dans mes notes (sprint 4)
 
 - Prompt : « Story 8.6 », via `bmad-build` (route courte, sans migration) ; spec `spec-8-6-chercher-par-sens-dans-mes-notes.md`. Décisions : bloc « Chercher par sens » en haut de la page Notes ; question de 300 caractères au plus ; 8 extraits au plus ; score affiché « 0,79 » ; seuil 0,76 (provisoire) ; messages « Aucun passage trouvé. » et « Recherche impossible pour le moment. Réessaie. » ; ⌘K inchangé.
 - Vérification avec le vrai Mistral et le compte fictif A (4 notes fictives réalistes indexées par le vrai `indexNote`) : 4 questions pertinentes → la bonne note en tête (0,78 à 0,83) ; 3 questions sans rapport (Australie, pneu de vélo, gâteau) → meilleur score 0,72 à 0,74, donc rien au-dessus de 0,76 ; B reçoit zéro extrait même avec un seuil à 0. La marge est mince (0,02 à 0,04) : à régler sur le jeu de test (story 8.14).
 - Revue par un relecteur indépendant : 5 correctifs (champ vidé après chaque recherche : la question est renvoyée dans l'état ; champ obligatoire ; nombre de résultats annoncé ; code d'erreur dans le journal ; phrase « seules les notes indexées sont cherchées »), 5 constats écartés (triage dans la spec). `npm test` 51/51, lint, tsc, build.
 - Essai sur la preview (compte du propriétaire) : question proche de « Auto Quittance » → la note, score 0,83 ; question sans rapport → « Aucun passage trouvé. » (aucun score affiché : rien n'atteint le seuil) ; ⌘K inchangé. Story 8.6 terminée.
+
+## 2026-10-13 — Story 8.7 : La recherche ne fuit pas entre comptes (sprint 4)
+
+- Prompt : « Story 8.7 », via `bmad-build` (route courte : un test et de la documentation, sans migration) ; spec `spec-8-7-la-recherche-ne-fuit-pas-entre-comptes.md`.
+- Test `npm run test:leak` (`tests/leak-search.test.ts`) : A et B reçoivent chacun 3 notes fictives sur des thèmes proches, vectorisées avec le vrai `mistral-embed` ; chacun pose à `match_chunks` les questions qui portent sur les sujets de l'autre, avec un seuil à 0 et la limite maximale, puis avec le seuil et la limite réels de l'application ; lecture directe de `note_chunks` ; visiteur refusé (42501) ; contrôle du détecteur ; nettoyage vérifié. Résultat : 8 vérifications sur 8, aucune fuite. Documenté dans `docs/rag-tests.md` (nouveau fichier ; le jeu de questions du RAG reste à rédiger par le propriétaire pour la story 8.14).
+- Revue par un relecteur indépendant : 9 correctifs. Le plus important : mon « contrôle du test » ne prouvait rien (il comparait deux listes disjointes par construction) ; il est remplacé par un vrai contrôle du détecteur. Autre défaut réel : un compte de démo qui aurait eu d'autres extraits aurait provoqué un faux échec ; le critère est maintenant « un extrait de l'autre compte », pas « un extrait que je n'ai pas inséré ».
+- Erreur de ma part, repérée grâce à la revue : j'avais daté « 2026-10-14 » les entrées des stories 8.3 à 8.7 alors que nous sommes le 13 octobre 2026 ; corrigé partout (journal, specs, suivi de sprint, `docs/rag-tests.md`). Les dates des commits git étaient justes.

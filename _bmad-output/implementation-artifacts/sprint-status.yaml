@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-14-2026 03:00
+last_updated: 10-13-2026 18:25
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -95,7 +95,7 @@ development_status:
   8-4-indexer-mes-notes-existantes: done
   8-5-retrouver-les-passages-pertinents-fonction-de-recherche: done
   8-6-chercher-par-sens-dans-mes-notes: done
-  8-7-la-recherche-ne-fuit-pas-entre-comptes: backlog
+  8-7-la-recherche-ne-fuit-pas-entre-comptes: done
   8-8-poser-une-question-à-l-assistant: backlog
   8-9-citations-vérifiées-et-sources-cliquables: backlog
   8-10-retrouver-mon-historique: backlog
