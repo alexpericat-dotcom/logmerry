@@ -29,10 +29,12 @@ export function ForgotPasswordForm({
 
     setIsLoading(true);
     try {
-      // Le modèle d'e-mail Supabase ajoute token_hash et type à cette URL (voir docs/supabase-auth-setup.md).
+      // Supabase ajoute `code` à cette URL ; /auth/confirm l'échange contre une session.
       const { error } = await createClient().auth.resetPasswordForEmail(
         email.trim(),
-        { redirectTo: `${window.location.origin}/auth/confirm` },
+        {
+          redirectTo: `${window.location.origin}/auth/confirm?next=/auth/update-password`,
+        },
       );
       if (error) {
         setFormError(frenchAuthError(error).message);

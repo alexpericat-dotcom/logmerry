@@ -20,16 +20,11 @@ Authentication → URL Configuration.
   - `https://logmerry-*-new-team-adce.vercel.app/**` (previews : adresses de branche et de déploiement)
   - `http://localhost:3000/**`
 
-## 4. Modèle d'e-mail « Reset password »
+## 4. E-mail de réinitialisation
 
-Authentication → Email Templates → **Reset Password**. Remplacer le lien par :
+Rien à modifier. Le modèle par défaut de Supabase reste en anglais (le modifier exige un SMTP personnalisé). Son lien te renvoie vers `/auth/confirm?next=/auth/update-password&code=…`, que l'application échange contre une session. Le lien doit être ouvert **dans le même navigateur** que celui où tu as demandé la réinitialisation (protection PKCE).
 
-```html
-<h2>Nouveau mot de passe</h2>
-<p><a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery&next=/auth/update-password">Choisir un nouveau mot de passe</a></p>
-```
-
-`{{ .RedirectTo }}` vaut `<adresse du site>/auth/confirm` (le formulaire « Mot de passe oublié » le fournit). Le lien passe par `/auth/confirm`, qui échange `token_hash` côté serveur puis ouvre `/auth/update-password`.
+Limite connue : sans SMTP personnalisé, Supabase n'envoie qu'aux adresses des membres de ton organisation et très peu d'e-mails par heure. Utilise donc l'e-mail de ton compte Supabase pour ton compte LogMerry. Un SMTP (Resend, Brevo) sera nécessaire avant l'usage réel.
 
 ## 5. Vérifier
 

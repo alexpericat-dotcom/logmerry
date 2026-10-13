@@ -15,3 +15,4 @@
 - Bug de build : `/protected` lisait les cookies hors `Suspense` (Cache Components) → contenu déplacé dans un composant sous `Suspense`. Types `.next` périmés après suppression des pages d'inscription → dossier de types régénéré.
 - Tests : `node --test lib/auth.test.ts` (5 tests : `next`, messages d'erreur, validations).
 - Revue par 3 sous-agents (aveugle, cas limites, trous de vérification) : 8 correctifs appliqués, le reste consigné dans la spec. Configuration Supabase à faire par le propriétaire en suivant `docs/supabase-auth-setup.md`.
+- Blocage Supabase : l'offre gratuite refuse de modifier le modèle d'e-mail sans SMTP personnalisé (capture du tableau de bord). Je m'étais trompé en disant que c'était possible. Décision (option 1) : garder le modèle par défaut et échanger le `code` PKCE dans `/auth/confirm`. SMTP (Resend ou Brevo) à prévoir avant l'usage réel.

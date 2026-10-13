@@ -14,9 +14,9 @@ context:
 
 ## Intent
 
-**Problem:** les pages d'authentification du template Supabase sont en anglais, laissent un lien « Sign up », affichent les messages bruts de Supabase, et le parcours « mot de passe oublié » ne peut pas aboutir : le lien de l'e-mail revient avec un `code` que `/auth/update-password` n'échange pas.
+**Problem:** les pages d'authentification du template Supabase sont en anglais, laissent un lien « Sign up », affichent les messages bruts de Supabase, et le parcours « mot de passe oublié » ne peut pas aboutir : le lien de l'e-mail revient avec un `code` que personne n'échange contre une session.
 
-**Approach:** franciser et durcir connexion, déconnexion, mot de passe oublié et nouveau mot de passe ; supprimer l'inscription publique (pages et composant) ; faire passer le lien de réinitialisation par `/auth/confirm` (échange `token_hash` côté serveur) ; vérifier l'utilisateur côté serveur sur la zone privée. La configuration du tableau de bord Supabase est faite par le propriétaire (liste de contrôle fournie).
+**Approach:** franciser et durcir connexion, déconnexion, mot de passe oublié et nouveau mot de passe ; supprimer l'inscription publique (pages et composant) ; faire passer le lien de réinitialisation par `/auth/confirm` (échange du `code` PKCE côté serveur, modèle d'e-mail Supabase par défaut) ; vérifier l'utilisateur côté serveur sur la zone privée. La configuration du tableau de bord Supabase est faite par le propriétaire (liste de contrôle fournie).
 
 ## Boundaries & Constraints
 
@@ -32,7 +32,7 @@ context:
 | Mauvais mot de passe | e-mail valide, mot de passe faux | reste sur la page, « E-mail ou mot de passe incorrect » sous le champ mot de passe (décision du propriétaire : ne révèle pas si le compte existe) | message traduit, jamais le texte brut de Supabase |
 | Champ vide ou e-mail mal formé | champ requis vide | message nommant le champ | validation avant l'appel réseau |
 | Mot de passe oublié | e-mail saisi | confirmation neutre (même message si le compte n'existe pas) | erreur réseau : message français |
-| Lien de réinitialisation | `/auth/confirm?token_hash=…&type=recovery&next=/auth/update-password` | session ouverte, formulaire du nouveau mot de passe | lien expiré ou invalide : `/auth/error` en français |
+| Lien de réinitialisation | `/auth/confirm?next=/auth/update-password&code=…` | session ouverte, formulaire du nouveau mot de passe | lien expiré ou invalide : `/auth/error` en français |
 | Déconnexion | clic sur « Se déconnecter » | session fermée, retour à `/auth/login` ; `/protected` renvoie ensuite à la connexion | N/A |
 | Accès sans session | ouverture de `/protected` | redirection vers `/auth/login` | N/A |
 | `next` externe | `next=https://evil.example` | redirection vers `/` | N/A |
@@ -61,7 +61,7 @@ context:
 - [x] `components/logout-button.tsx`, `components/auth-button.tsx`, `app/auth/error/page.tsx` -- français -- critère 3
 - [x] `app/auth/sign-up*`, `components/sign-up-form.tsx` -- suppression -- critère 4
 - [x] `app/protected/*` -- retirer le contenu du template -- zone privée propre
-- [x] `docs/supabase-auth-setup.md` -- liste de contrôle propriétaire : inscriptions désactivées, modèle d'e-mail « Reset password » pointant vers `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/update-password`, URL de redirection autorisées (production et preview), création du compte -- configuration hors code
+- [x] `docs/supabase-auth-setup.md` -- liste de contrôle propriétaire : inscriptions désactivées, URL de redirection autorisées (production et preview), création du compte -- configuration hors code
 - [x] `docs/journal.md` -- entrée de la story -- exigence de traçabilité
 
 **Acceptance Criteria:**
@@ -74,12 +74,14 @@ context:
 ## Implementation Notes
 
 - Implémenté directement (pas de sous-agent : non demandé). `lib/auth.ts` regroupe `safeNext`, la traduction des erreurs Supabase et les validations ; `components/password-input.tsx` porte le bouton afficher/masquer.
-- Lien de réinitialisation : `redirectTo` = `<site>/auth/confirm` et le modèle d'e-mail utilise `{{ .RedirectTo }}` (et non `{{ .SiteURL }}` comme écrit dans la tâche) pour que les previews fonctionnent ; voir `../../docs/supabase-auth-setup.md`.
+- Lien de réinitialisation : `redirectTo` = `<site>/auth/confirm?next=/auth/update-password` ; voir `../../docs/supabase-auth-setup.md`. Voir aussi le Spec Change Log (changement de méthode d'échange).
 - Écarts assumés : `hasEnvVars` supprimé (le proxy ne laisse plus passer sans contrôle quand les variables manquent) ; `allowImportingTsExtensions` ajouté à `tsconfig.json` pour le test `node --test` ; `/protected` rend son contenu sous `Suspense` (exigé par Cache Components).
 - Vérifié : `npm run lint`, `npx tsc --noEmit`, `npm run build`, `node --test lib/auth.test.ts` (5/5) ; serveur local : `/auth/sign-up` 404, `/protected` sans session 307 vers `/auth/login`, `/auth/confirm?next=https://evil.example` sans jeton vers `/auth/error`.
 - Non vérifié (demande le compte et la configuration Supabase du propriétaire) : connexion réussie, déconnexion avec session, e-mail de réinitialisation réel. Lignes de la matrice couvertes par test automatique : `next` externe, message de mauvais mot de passe, champs vides ou mal formés, lien expiré (message). Les autres lignes sont à vérifier à la main (section Verification).
 
 ## Spec Change Log
+
+- 2026-10-13, décision du propriétaire après la revue : Supabase (offre gratuite) interdit de modifier le modèle d'e-mail sans SMTP personnalisé. Le parcours de réinitialisation passe de `token_hash` + modèle d'e-mail modifié à l'échange du `code` PKCE du modèle par défaut (`exchangeCodeForSession` dans `/auth/confirm`). Le texte gelé (Approach, ligne « Lien de réinitialisation » de la matrice) a été mis à jour avec l'accord du propriétaire. Évite : un e-mail impossible à personnaliser. KEEP : `safeNext`, `try/catch` autour de l'échange, `redirect` hors du `try`, `/auth/error` pour tout échec. Les constats de la revue sur `type` et `token_hash` ne s'appliquent plus (le paramètre `type` n'existe plus).
 
 ## Review Triage Log
 
