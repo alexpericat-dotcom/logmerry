@@ -28,3 +28,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`
   summary: Brancher `npm run test:isolation` sur une vérification avant déploiement quand une CI existera.
   evidence: Aucune CI aujourd'hui ; le rejeu après chaque migration dépend de la mémoire. Une action GitHub avec les deux comptes en secrets suffirait.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-1-preparer-le-serveur-pour-l-ia.md`
+  summary: la fonction de recherche vectorielle (8.5) doit filtrer par `owner_id` sans perdre de résultats avec l'index HNSW.
+  evidence: un index HNSW filtré après coup peut renvoyer moins de `k` lignes ; prévoir une sur-lecture ou le balayage itératif de pgvector, et un test avec plusieurs comptes.
