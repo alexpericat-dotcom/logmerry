@@ -19,6 +19,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { LogoutButton } from "@/components/logout-button";
+import { SearchPalette } from "@/components/search-palette";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { NAV_ITEMS, SIDEBAR_COOKIE, isCurrent, type NavIcon } from "@/lib/nav";
@@ -76,6 +77,10 @@ export function AppSidebar({
         >
           {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </Button>
+      </div>
+
+      <div className="px-2 pb-2">
+        <SearchPalette labelClass={labelClass} />
       </div>
 
       <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-2">
