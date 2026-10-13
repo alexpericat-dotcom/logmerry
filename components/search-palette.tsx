@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { searchNotes, type SearchResult } from "@/app/(app)/notes/search-actions";
 import { Badge } from "@/components/ui/badge";
@@ -39,10 +39,15 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
   const q = normalizeQuery(query);
 
   useEffect(() => {
+    const id = ++latest.current; // invalide aussi toute réponse en vol (saisie vidée, palette fermée)
     if (!q) return;
-    const id = ++latest.current;
     const timer = setTimeout(async () => {
-      const state = await searchNotes(q);
+      let state: Awaited<ReturnType<typeof searchNotes>>;
+      try {
+        state = await searchNotes(q);
+      } catch {
+        state = { results: [], message: "Recherche impossible pour le moment. Réessaie." };
+      }
       if (id !== latest.current) return; // réponse périmée
       setResults(state.results);
       setMessage(state.message ?? null);
@@ -54,7 +59,11 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   // Les résultats ne valent que pour la saisie à laquelle ils répondent.
   const done = !!q && answered === q;
-  const shown = done ? results : [];
+  const shown = useMemo(() => (done ? results : []), [done, results]);
+
+  useEffect(() => {
+    if (shown.length) document.getElementById(`search-${shown[active]?.id}`)?.scrollIntoView({ block: "nearest" });
+  }, [active, shown]);
 
   const choose = (r: SearchResult) => {
     dialog.current?.close();
@@ -92,7 +101,12 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           setQuery("");
           setAnswered("");
         }}
-        onClick={(e) => e.target === dialog.current && dialog.current.close()}
+        onClick={(e) => {
+          // Seul le fond (hors du cadre) ferme ; le rembourrage du cadre ne ferme pas.
+          const r = e.currentTarget.getBoundingClientRect();
+          const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+          if (outside) e.currentTarget.close();
+        }}
         className="m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-background p-3 text-foreground shadow-lg backdrop:bg-black/50"
       >
         <Input
