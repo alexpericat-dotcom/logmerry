@@ -10,6 +10,7 @@ export const metadata = { title: "Notes · LogMerry" };
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
+  timeStyle: "short",
   timeZone: "Europe/Paris",
 });
 

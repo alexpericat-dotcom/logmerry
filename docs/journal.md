@@ -35,3 +35,5 @@
 - Code : liste `/notes` (état vide, ordre récent → ancien), création `/notes/nouvelle`, validation du titre en fonction pure testée.
 - Remarque : le CLI Supabase n'est pas installé ; la migration passe par le MCP, le fichier de `supabase/migrations/` porte la version enregistrée par Supabase.
 - Revue par 3 sous-agents : 7 correctifs (session vérifiée avant validation, erreurs réseau gérées, titre compté en points de code, texte limité à 50 000 caractères et caractère nul retiré, écran d'erreur français avec « Réessayer », débordement des titres longs, découpe d'extrait sans casser les emoji), trois reports (test de l'action et RLS à deux comptes en 2.3, pagination en 2.4, contrainte de longueur côté base avec la migration de la 2.2).
+
+- Liste des notes : l'heure (Paris) s'affiche maintenant avec la date, à la demande du propriétaire après l'essai de la preview.
