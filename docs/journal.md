@@ -102,4 +102,4 @@
 - Règles : le bouton indexe mes notes « en attente » ou « en échec » (25 par clic, un compteur indique indexées, en échec, restantes) ; une note sans texte passe « indexée » sans appel IA ; une note avec texte est indexée même en brouillon ; relancer ne touche pas aux notes déjà indexées et remplace toujours les extraits (aucun doublon).
 - Vérification avec le vrai Mistral et le compte fictif A (script jetable, même logique que l'action) : 3 notes indexées au 1er clic, 0 au 2e, extraits identiques, la note de B reste « en attente ». `npm test` 49/49, `npm run test:isolation` 18/18, lint, tsc, build.
 - Revue par un relecteur indépendant : 3 correctifs (« en attente » avant « en échec », journal serveur des erreurs, message « déjà indexées »), 6 constats écartés (triage dans la spec).
-- Reste : essai sur la preview, puis fin du sprint 3.
+- Essai sur la preview (compte du propriétaire) : page Paramètres, compteur et bouton : OK. Story 8.4 terminée ; sprint 3 (stories 8.1 à 8.4) terminé.
