@@ -5,7 +5,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --test \"lib/**/*.test.ts\""
+    "test": "node --test \"lib/**/*.test.ts\"",
+    "test:isolation": "node --env-file=.env.local --env-file=.env.test.local --test tests/isolation.test.ts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.1",
