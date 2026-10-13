@@ -20,6 +20,19 @@ export function AssistantPanel() {
     if (a.isOpen) input.current?.focus();
   }, [a.isOpen]);
 
+  // Échap ferme le panneau de partout, après les niveaux plus hauts : la palette ⌘K (<dialog> ouvert, elle se ferme d'abord)
+  // ou un élément qui a déjà pris la touche (`preventDefault`). Jamais pendant une composition IME.
+  const { isOpen, closePanel } = a;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.isComposing || e.defaultPrevented || document.querySelector("dialog[open]")) return;
+      closePanel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, closePanel]);
+
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [a.messages.length, a.pending, a.error]);
@@ -29,9 +42,6 @@ export function AssistantPanel() {
   return (
     <aside
       aria-label="Assistant"
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && !e.nativeEvent.isComposing) a.closePanel();
-      }}
       className="fixed inset-0 z-40 flex flex-col bg-background lg:sticky lg:top-0 lg:z-auto lg:h-svh lg:w-96 lg:shrink-0 lg:border-l"
     >
       <div className="flex items-center justify-between border-b p-3">
