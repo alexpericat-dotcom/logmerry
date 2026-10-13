@@ -199,4 +199,29 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     const anon = await newClient().rpc("search_notes", { query: word });
     assert.ok(anon.error, "l'appel sans connexion doit être refusé");
   });
+
+  test("recherche : corps seul, début de mot, classement, ponctuation, mots vides, limite de 20", async () => {
+    const tag = `zq${Date.now().toString(36)}`; // mot unique à cette exécution
+    const ins = async (title: string, body: string) => {
+      const { data, error } = await a.client.from("notes").insert({ title: `${PREFIX} ${title}`, body }).select("id").single();
+      assert.ifError(error);
+      return data!.id as string;
+    };
+    const search = async (query: string) => {
+      const { data, error } = await a.client.rpc("search_notes", { query });
+      assert.ifError(error);
+      return (data as { id: string }[]).map((n) => n.id);
+    };
+    const inBody = await ins("corps", `un ${tag}rendezvous dans le texte`);
+    const inTitle = await ins(`${tag}rendezvous titre`, "rien");
+    assert.deepEqual(await search(`${tag}rend`), [inTitle, inBody], "début de mot, titre avant corps");
+    for (const q of ["", "   ", "!!! ???", "le de la", "& | ! ( ) : '"]) {
+      assert.deepEqual(await search(q), [], `« ${q} » ne renvoie rien et ne lève pas d'erreur`);
+    }
+    const many = await Promise.all(Array.from({ length: 22 }, (_, i) => ins(`lot ${i}`, `${tag}lot`)));
+    assert.equal(many.length, 22);
+    assert.equal((await search(`${tag}lot`)).length, 20);
+    const anon = await newClient().rpc("search_notes", { query: tag });
+    assert.equal(anon.error?.code, "42501", "refus par les droits attendu");
+  });
 });
