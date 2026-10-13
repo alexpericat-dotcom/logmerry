@@ -9,7 +9,7 @@ import { AssistantSources } from "@/components/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isRefusal } from "@/lib/domain/chat-flow";
+import { offersDraftNote } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 
 /** Panneau « Assistant » : non modal, après `main`, il réduit la largeur de la page sans la recouvrir (plein écran sous 1 024 px). */
@@ -67,9 +67,9 @@ export function AssistantPanel() {
         )}
         <ul className="flex flex-col gap-3">
           {a.messages.map((m, i) => {
-            // Refus de l'assistant (reconnu à son texte, aussi après un rechargement) : la question est le message qui précède.
-            const previous = a.messages[i - 1];
-            const refusedQuestion = m.role === "assistant" && isRefusal(m.text) && previous?.role === "user" ? previous.text : null;
+              // Réponse sans source (refus fixe, ou « mes notes ne répondent pas », aussi après un rechargement) : la question est le message qui précède.
+              const previous = a.messages[i - 1];
+              const refusedQuestion = offersDraftNote(m) && previous?.role === "user" ? previous.text : null;
             return (
               <li
                 key={m.id}

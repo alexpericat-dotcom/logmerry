@@ -20,5 +20,7 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+**Extension décidée après l'essai du propriétaire sur la preview :** le bouton « Créer une note à documenter plus tard » est aussi proposé sous toute réponse de l'assistant **sans source** (par exemple « Tes notes ne décrivent aucune procédure… » rédigé par Claude quand des extraits proches mais non pertinents lui ont été envoyés), pas seulement sous le message fixe (`offersDraftNote`, testé). La consigne impose « citations » vide quand les extraits ne répondent pas, donc « sans source » signifie « les notes ne répondent pas ».
+
 Fichiers : `lib/domain/chat-flow.ts` (message exact de la conception, `isRefusal`), `lib/domain/notes.ts` (`draftTitle`, `parseStatusFilter`), `lib/db/notes.ts` (`listNotes` filtré par statut), `app/(app)/notes/actions.ts` (`createDraftFromQuestion`), `app/(app)/notes/page.tsx` (filtre « Brouillons »), `components/assistant-draft-button.tsx`, `components/assistant-panel.tsx`. Pas de migration. Changement visible : le message de refus est maintenant celui de la conception, « Je n'ai trouvé aucune procédure documentée correspondant à cette requête. » (avant : « …aucune note correspondant à cette question. »). Vérifié avec les vrais services : refus sans appel à Claude, brouillon créé (statut brouillon, aucun extrait), présent dans le filtre, jamais cité, retrouvé par ⌘K, invisible pour B.
 

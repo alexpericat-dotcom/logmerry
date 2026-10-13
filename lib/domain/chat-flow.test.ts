@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AnswerRejected } from "./citations.ts";
-import { NOT_FOUND, answerQuestion, isRefusal, type ChunkLike } from "./chat-flow.ts";
+import { NOT_FOUND, answerQuestion, isRefusal, offersDraftNote, type ChunkLike } from "./chat-flow.ts";
 
 const chunk = (id: string, content = `texte ${id}`): ChunkLike => ({ id, noteId: `n-${id}`, title: `Note ${id}`, content });
 
@@ -70,4 +70,13 @@ test("un refus est reconnu, aussi avec l'ancienne formulation de l'historique, p
 
 test("le message du refus est celui de la conception (Voice and Tone)", () => {
   assert.equal(NOT_FOUND, "Je n'ai trouvé aucune procédure documentée correspondant à cette requête.");
+});
+
+test("le bouton « note à documenter » : refus fixe ou réponse sans source ; jamais pour une question ni une réponse sourcée", () => {
+  assert.equal(offersDraftNote({ role: "assistant", text: NOT_FOUND, sources: [] }), true);
+  assert.equal(offersDraftNote({ role: "assistant", text: NOT_FOUND }), true, "refus d'un message sans liste de sources");
+  assert.equal(offersDraftNote({ role: "assistant", text: "- Tes notes ne décrivent aucune procédure de transfert.", sources: [] }), true, "Claude dit que les notes ne répondent pas");
+  assert.equal(offersDraftNote({ role: "assistant", text: "- Le prospect veut des quittances.", sources: [{}] }), false);
+  assert.equal(offersDraftNote({ role: "assistant", text: "Réponse sans information de sources." }), false);
+  assert.equal(offersDraftNote({ role: "user", text: NOT_FOUND, sources: [] }), false);
 });
