@@ -32,3 +32,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-1-preparer-le-serveur-pour-l-ia.md`
   summary: la fonction de recherche vectorielle (8.5) doit filtrer par `owner_id` sans perdre de résultats avec l'index HNSW.
   evidence: un index HNSW filtré après coup peut renvoyer moins de `k` lignes ; prévoir une sur-lecture ou le balayage itératif de pgvector, et un test avec plusieurs comptes.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-3-indexer-une-note-a-l-enregistrement.md`
+  summary: tester `embedTexts` avec un `fetch` simulé (lots de 16 dans l'ordre, statut non OK, délai).
+  evidence: seul l'appel réel (script jetable) le couvre ; une erreur d'ordre entre lots désalignerait extraits et vecteurs pour une note de plus de 16 extraits.

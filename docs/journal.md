@@ -84,3 +84,13 @@
 - Décisions : extraits d'environ 1 000 caractères avec chevauchement de 150, coupés de préférence à un paragraphe, une ligne, une fin de phrase ou un espace ; reprise calée sur un début de mot ; texte vide : zéro extrait ; le titre sera joint au texte vectorisé par la story 8.3.
 - Code : `lib/domain/chunking.ts` et ses tests (taille, chevauchement, couverture, texte sans espace, emoji, note de 50 000 caractères). `npm test` 35/35, lint et tsc propres.
 - Revue par un relecteur indépendant : 6 correctifs (commentaire sur les emoji, test d'emoji direct, borne basse du chevauchement, test de la coupe à la phrase, test chronométré retiré, note sur la détection naïve des phrases), 3 constats écartés (triage dans la spec).
+
+## 2026-10-14 — Story 8.3 : Indexer une note à l'enregistrement (sprint 3)
+
+- Prompt : « Story 8.3 », via `bmad-build` ; spec `spec-8-3-indexer-une-note-a-l-enregistrement.md`. Choix tranchés : réindexation à chaque sauvegarde ; en cas d'échec, anciens extraits supprimés (jamais de passage périmé) ; note sans texte : état « indexée », aucun appel IA.
+- Cinquième migration : enum `index_status` et colonne `notes.index_status` (défaut « en attente »). SQL montré puis approuvé ; cette fois l'outil MCP l'a appliquée (version 20261013152420) ; conseiller de sécurité : rien de nouveau.
+- Appel réel à Mistral vérifié d'abord avec un texte fictif (200, vecteurs de 1 024 valeurs, index dans l'ordre), sans `fetch` ni dépendance ajoutés au projet.
+- Code : `lib/ai/embeddings.ts` (serveur seul, lots de 16, délai de 20 s), `lib/domain/embeddings.ts` (lots, validation de la réponse), `lib/domain/index-note.ts` (orchestration pure testable), branchement dans la sauvegarde, `retryIndexing`, pastille d'état dans la liste et sur la page, bouton de nouvel essai.
+- Vérification de bout en bout avec les deux comptes fictifs et le vrai Mistral (script jetable) : 4 extraits indexés, remplacés par 1 puis 0, B ne voit rien, clé invalide : « échec » et extraits supprimés, journal sans clé ni contenu.
+- Revue par 3 sous-agents : 4 correctifs (orchestration sans test : déplacée dans `lib/domain` avec 7 tests ; bouton aussi pour « en attente » ; échecs de remise en ordre journalisés ; erreur de lecture du « Réessayer » mal présentée), 1 report (`embedTexts` avec `fetch` simulé), le reste écarté (triage dans la spec). Vérifications : lint, tsc, build, `npm test` 45/45, `npm run test:isolation` 18/18.
+- Reste : essai sur la preview (variables d'IA à mettre dans Vercel) avant de passer la story à « done ».

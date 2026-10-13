@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-13-2026 23:59
+last_updated: 10-14-2026 00:20
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -91,7 +91,7 @@ development_status:
   epic-8: in-progress
   8-1-préparer-le-serveur-pour-l-ia: done
   8-2-découper-une-note-en-extraits: done
-  8-3-indexer-une-note-à-l-enregistrement: backlog
+  8-3-indexer-une-note-à-l-enregistrement: review
   8-4-indexer-mes-notes-existantes: backlog
   8-5-retrouver-les-passages-pertinents-fonction-de-recherche: backlog
   8-6-chercher-par-sens-dans-mes-notes: backlog
