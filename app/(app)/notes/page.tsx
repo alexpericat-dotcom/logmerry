@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { IndexStatus } from "@/components/index-status";
+import { SenseSearch } from "@/components/sense-search";
 import { Button } from "@/components/ui/button";
 import { listNotes } from "@/lib/db/notes";
 import {
@@ -120,6 +121,7 @@ export default function NotesPage({ searchParams }: { searchParams: SearchParams
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Notes</h1>
+      <SenseSearch />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <NotesList searchParams={searchParams} />
       </Suspense>

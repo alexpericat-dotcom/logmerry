@@ -295,4 +295,69 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     assert.ifError(byB.error);
     assert.equal(byB.data!.length, 0, "B ne peut pas changer l'état de la note de A");
   });
+
+  test("match_chunks : A retrouve ses extraits classés, sous le seuil rien, limite, B ne reçoit rien de A, anonyme refusé", async () => {
+    // Vecteurs de base : une seule valeur à 1, donc des similarités exactes (1, 0,707 ou 0).
+    const vec = (...hot: [number, number][]) => {
+      const v = new Array(1024).fill(0);
+      for (const [i, x] of hot) v[i] = x;
+      return JSON.stringify(v);
+    };
+    const row = (note_id: string, chunk_index: number, content: string, embedding: string) => ({
+      note_id, chunk_index, content, embedding, embedding_model: "test-model",
+    });
+    const ins = await a.client.from("note_chunks").insert([
+      row(noteA.id, 20, "pile", vec([0, 1])),
+      row(noteA.id, 21, "voisin", vec([0, 1], [1, 1])),
+      row(noteA.id, 22, "loin", vec([2, 1])),
+      row(noteA.id, 23, "sans vecteur", null as unknown as string),
+    ]);
+    assert.ifError(ins.error);
+    const insB = await b.client.from("note_chunks").insert(row(noteB.id, 20, "secret de B", vec([0, 1])));
+    assert.ifError(insB.error);
+
+    const match = (c: typeof a.client, embedding: string, threshold: number, count = 5) =>
+      c.rpc("match_chunks", { query_embedding: embedding, match_threshold: threshold, match_count: count });
+
+    const near = await match(a.client, vec([0, 1]), 0.5);
+    assert.ifError(near.error);
+    const rows = near.data as { content: string; similarity: number }[];
+    assert.deepEqual(rows.map((r) => r.content), ["pile", "voisin"], "classés du plus proche au moins proche ; « loin » et « sans vecteur » exclus");
+    assert.ok(rows[0].similarity > 0.999 && Math.abs(rows[1].similarity - Math.SQRT1_2) < 0.001);
+
+    const none = await match(a.client, vec([5, 1]), 0.5);
+    assert.ifError(none.error);
+    assert.deepEqual(none.data, [], "aucun extrait au-dessus du seuil : liste vide, pas d'erreur");
+
+    const limited = await match(a.client, vec([0, 1]), -1, 1);
+    assert.ifError(limited.error);
+    assert.equal((limited.data as unknown[]).length, 1, "match_count borne le résultat");
+
+    // Plafond de 20 : 22 extraits de plus, `match_count` à 100 ; 0 ou négatif : liste vide sans erreur.
+    const lot = await a.client.from("note_chunks").insert(
+      Array.from({ length: 22 }, (_, i) => row(noteA.id, 30 + i, `lot ${i}`, vec([7, 1]))),
+    );
+    assert.ifError(lot.error);
+    const capped = await match(a.client, vec([7, 1]), 0.5, 100);
+    assert.ifError(capped.error);
+    assert.equal((capped.data as unknown[]).length, 20, "le résultat ne dépasse jamais 20 lignes");
+    for (const count of [0, -5]) {
+      const empty = await match(a.client, vec([7, 1]), 0.5, count);
+      assert.ifError(empty.error);
+      assert.deepEqual(empty.data, [], `match_count = ${count} : liste vide`);
+    }
+
+    const forB = await match(b.client, vec([0, 1]), -1, 20);
+    assert.ifError(forB.error);
+    const contentsB = (forB.data as { content: string }[]).map((r) => r.content);
+    assert.ok(contentsB.includes("secret de B"), "B retrouve son propre extrait");
+    for (const mine of ["pile", "voisin", "loin"]) assert.ok(!contentsB.includes(mine), `B ne reçoit pas « ${mine} » de A`);
+    assert.ok(!contentsB.some((c) => c.startsWith("lot ")), "B ne reçoit aucun extrait du lot de A");
+
+    const anon = await match(newClient(), vec([0, 1]), 0.5);
+    assert.equal(anon.error?.code, "42501", "refus par les droits attendu");
+
+    const bad = await match(a.client, "[0.1,0.2,0.3]", 0.5);
+    assert.match(bad.error?.message ?? "", /dimension/i, "un vecteur de 3 valeurs est refusé (1024 attendues)");
+  });
 });
