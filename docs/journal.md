@@ -27,3 +27,42 @@
 - Écart repéré : le bouton de thème n'avait pas de nom accessible → `aria-label` ajouté.
 - Revue par 3 sous-agents : 4 correctifs (erreur de déconnexion lisible barre repliée, test des pages et constante `HOME_PATH`, repère `aside`, références `/protected` de la doc), un point reporté (vérification propre à chaque page), le reste écarté avec preuve dans la spec.
 - Contrôles manuels sur la preview : connexion et barre, repli mémorisé au rechargement, lien « Aller au contenu », thème clair/sombre, déconnexion puis `/aujourd-hui` renvoyé à la connexion : tous OK. Story 1.3 terminée.
+
+## 2026-10-13 — Story 2.1 : Créer et lister mes notes
+
+- Prompt : « Story 2.1 », via `bmad-build` ; spec `spec-2-1-creer-et-lister-mes-notes.md`.
+- Première migration : table `notes` (RLS, 4 policies sur `owner_id`), SQL montré puis approuvé avant application via le MCP Supabase. Contrôles après application : RLS active, 4 policies présentes, aucun avertissement sur `notes`.
+- Code : liste `/notes` (état vide, ordre récent → ancien), création `/notes/nouvelle`, validation du titre en fonction pure testée.
+- Remarque : le CLI Supabase n'est pas installé ; la migration passe par le MCP, le fichier de `supabase/migrations/` porte la version enregistrée par Supabase.
+- Revue par 3 sous-agents : 7 correctifs (session vérifiée avant validation, erreurs réseau gérées, titre compté en points de code, texte limité à 50 000 caractères et caractère nul retiré, écran d'erreur français avec « Réessayer », débordement des titres longs, découpe d'extrait sans casser les emoji), trois reports (test de l'action et RLS à deux comptes en 2.3, pagination en 2.4, contrainte de longueur côté base avec la migration de la 2.2).
+
+- Liste des notes : l'heure (Paris) s'affiche maintenant avec la date, à la demande du propriétaire après l'essai de la preview.
+- Essais manuels sur la preview : liste vide, création, titre vide refusé, ordre récent → ancien : OK. Contrôle en base (lecture seule) : les 2 notes de test ont bien `owner_id` = ton compte (rempli par `auth.uid()`). Story 2.1 terminée.
+
+## 2026-10-13 — Story 2.2 : Modifier, classer et supprimer une note
+
+- Prompt : « Story 2.2 », via `bmad-build` ; spec `spec-2-2-modifier-classer-supprimer-une-note.md`. Décision du propriétaire : confirmation de suppression en ligne (pas de fenêtre modale).
+- Seconde migration : type de note (enum), `updated_at` avec déclencheur, limite de 50 000 caractères sur le texte (reportée depuis la revue de la 2.1). SQL montré puis approuvé avant application ; contrôles après application OK.
+- Code : page `/notes/[id]` (modification + suppression), filtre par type, type choisi à la création, actions factorisées.
+- Revue par 3 sous-agents : 6 correctifs dont un vrai bug (le message d'échec de suppression restait invisible tant que la confirmation était ouverte), note disparue distinguée d'une erreur, annulation bloquée pendant une suppression en cours ; reports : tests des actions et de la base avec la story 2.3, filtre conservé au retour sur la liste.
+- Essais manuels sur la preview : modification, type et filtre, suppression avec annulation et confirmation, note introuvable : OK. Contrôle en base (lecture seule) : la note restante a le type `faq` et `updated_at` postérieur à `created_at`, donc le déclencheur fonctionne ; la suppression a bien retiré l'autre note. Story 2.2 terminée.
+
+## 2026-10-13 — Story 2.3 : Deux comptes fictifs ne se voient pas
+
+- Prompt : « Story 2.3 », via `bmad-build` (route courte) ; spec `spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`.
+- Comptes fictifs « démo A » et « démo B » (`demo-a@example.com`, `demo-b@example.com`) créés par SQL après accord explicite du propriétaire (la première tentative a été bloquée par le système : écriture de données dans `auth`) ; connexion des deux vérifiée avec l'API de connexion. Identifiants dans `.env.test.local`, ignoré par git.
+- Bug rencontré : mon premier test de connexion a échoué à cause de `${!var}` (indirection bash absente de zsh), sans lien avec les comptes ; refait en Python.
+- Script `npm run test:isolation` : 11 vérifications passées, dont B ne peut ni lire, ni modifier, ni supprimer la note de A, ni se faire attribuer ou attribuer une note ; déclencheur `updated_at`, contrainte de 50 000 caractères, titre vide et type inconnu vérifiés. Aucun reste de test en base après exécution.
+- À rejouer après chaque migration touchant une table.
+- Revue par un relecteur indépendant : 5 correctifs (test rendu symétrique avec une note de B, codes d'erreur RLS exigés, cas sans connexion durci, cause de l'échec de connexion, modèle `.env.test.local.example`), deux reports (nouvelles tables, branchement en CI). Résultat final : `npm run test:isolation` 13/13, aucun reste de test en base.
+
+## 2026-10-13 — Story 2.4 : Rechercher dans mes notes avec ⌘K
+
+- Prompt : « Story 2.4 », via `bmad-build` ; spec `spec-2-4-rechercher-dans-mes-notes-avec-cmd-k.md`. Décision du propriétaire : plein texte français avec début de mot ; accents non neutralisés (limite connue).
+- Troisième migration : colonne `search` (tsvector généré), index GIN, fonction `search_notes` en `security invoker`, réservée aux comptes connectés. SQL montré puis approuvé avant application ; conseiller de sécurité : aucun nouvel avertissement.
+- Code : normalisation de la requête testée, Server Action `searchNotes`, palette en `<dialog>` natif (⌘K / Ctrl+K, bouton « Rechercher », flèches, Entrée, Échap), sans nouvelle dépendance.
+- Bug rencontré : le premier appel de la migration a échoué (identifiant du projet manquant), sans effet en base. Lint : `setState` dans un effet refusé, état « réponse correspondant à la saisie » déduit à la place.
+- Vérifications : lint, tsc, build, `npm test` 23/23, `npm run test:isolation` 14/14 (A trouve sa note, B non, refus sans connexion).
+- Revue par 3 sous-agents : 5 correctifs (clic sur le rembourrage fermait la palette, rejet réseau non géré, réponse en vol après fermeture, option active non défilée, sémantique SQL non testée : corps, début de mot, classement, mots vides, opérateurs, limite de 20), 9 constats écartés (dont accents : limite voulue ; `[:alnum:]` mesuré OK). `test:isolation` 15/15.
+- Piège de la preview : la Vercel Toolbar capte ⌘K sur les déploiements preview (absente en production) ; essai via le bouton « Rechercher » puis toolbar fermée. Autre piège : l'URL d'une preview est fixée à un commit, il faut ouvrir celle du dernier push.
+- Essais manuels sur la preview : bouton, ⌘K, recherche, ouverture d'une note, Échap : OK. Story 2.4 terminée.

@@ -19,7 +19,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Cockpit", href: "/aujourd-hui", icon: "cockpit", available: true },
-  { label: "Notes", href: "/notes", icon: "notes", available: false },
+  { label: "Notes", href: "/notes", icon: "notes", available: true },
   { label: "Clients", href: "/clients", icon: "clients", available: false },
   { label: "Missions", href: "/missions", icon: "missions", available: false },
   { label: "Factures", href: "/factures", icon: "factures", available: false },
