@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { updateNote } from "@/app/(app)/notes/actions";
 import { DeleteNote } from "@/components/delete-note";
 import { IndexStatus } from "@/components/index-status";
+import { NoteSummary } from "@/components/note-summary";
 import { NoteForm } from "@/components/note-form";
 import { RetryIndexing } from "@/components/retry-indexing";
 import { getNote } from "@/lib/db/notes";
@@ -30,6 +31,7 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
           {note.index_status !== "indexed" && <RetryIndexing id={id} failed={note.index_status === "failed"} />}
         </div>
       </div>
+      <NoteSummary id={id} title={note.title} />
       <NoteForm
         action={updateNote.bind(null, id)}
         initial={{ title: note.title, body: note.body, type: note.type }}
