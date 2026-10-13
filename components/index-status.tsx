@@ -1,12 +1,20 @@
+import { AlertTriangle, Check, Clock, type LucideIcon } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 
-const LABELS = {
-  indexed: "Indexée",
-  pending: "En attente d'indexation",
-  failed: "Échec d'indexation",
-} as const;
+const STATES = {
+  indexed: { label: "Indexée", Icon: Check, variant: "success" },
+  pending: { label: "En attente d'indexation", Icon: Clock, variant: "warning" },
+  failed: { label: "Échec d'indexation", Icon: AlertTriangle, variant: "destructive" },
+} as const satisfies Record<string, { label: string; Icon: LucideIcon; variant: "success" | "warning" | "destructive" }>;
 
-/** Pastille de l'état d'indexation d'une note (le texte porte l'information, pas seulement la couleur). */
-export function IndexStatus({ status }: { status: keyof typeof LABELS }) {
-  return <Badge variant={status === "failed" ? "destructive" : "outline"}>{LABELS[status]}</Badge>;
+/** Pastille de l'état d'indexation d'une note : une icône et un texte (jamais la couleur seule, DESIGN.md). */
+export function IndexStatus({ status }: { status: keyof typeof STATES }) {
+  const { label, Icon, variant } = STATES[status];
+  return (
+    <Badge variant={variant}>
+      <Icon size={12} aria-hidden="true" />
+      {label}
+    </Badge>
+  );
 }

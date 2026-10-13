@@ -47,7 +47,7 @@ export function AssistantPanel() {
   return (
     <aside
       aria-label="Assistant"
-      className="fixed inset-0 z-40 flex flex-col bg-background lg:sticky lg:top-0 lg:z-auto lg:h-svh lg:w-96 lg:shrink-0 lg:border-l"
+      className="fixed inset-0 z-40 flex flex-col bg-popover text-popover-foreground lg:sticky lg:top-0 lg:z-auto lg:h-svh lg:w-96 lg:shrink-0 lg:border-l"
     >
       <div className="flex items-center justify-between border-b p-3">
         <h2 className="font-semibold">Assistant</h2>
