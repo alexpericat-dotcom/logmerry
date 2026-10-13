@@ -36,4 +36,4 @@ Limite connue : sans SMTP personnalisé, Supabase n'envoie qu'aux adresses des m
 
 ## 6. (Recommandé) Longueur minimale côté Supabase
 
-Authentication → Policies → longueur minimale du mot de passe : **12**. Le formulaire l'exige déjà ; ce réglage le fait respecter côté serveur.
+Authentication → **Sign In / Providers** → ligne **Email** (à déplier) → **Minimum password length** : **12** → Save. (Le menu « Policies » concerne les règles de la base, pas les mots de passe.) Le formulaire l'exige déjà ; ce réglage le fait respecter côté serveur.
