@@ -278,4 +278,21 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     const seenByB = await b.client.from("note_chunks").select("id").eq("note_id", noteB.id);
     assert.deepEqual(seenByB.data, [], "B ne trouve aucun extrait étranger sur sa note");
   });
+
+  test("état d'indexation : « en attente » par défaut, valeur inconnue refusée, invisible pour B", async () => {
+    const own = await a.client.from("notes").select("index_status").eq("id", noteA.id).single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.index_status, "pending");
+    const set = await a.client.from("notes").update({ index_status: "indexed" }).eq("id", noteA.id).select("index_status").single();
+    assert.ifError(set.error);
+    assert.equal(set.data!.index_status, "indexed");
+    const bad = await a.client.from("notes").update({ index_status: "inconnu" }).eq("id", noteA.id);
+    assert.equal(bad.error?.code, "22P02");
+    const forB = await b.client.from("notes").select("index_status").eq("id", noteA.id).maybeSingle();
+    assert.ifError(forB.error);
+    assert.equal(forB.data, null, "B ne voit ni la note ni l'état de A");
+    const byB = await b.client.from("notes").update({ index_status: "failed" }).eq("id", noteA.id).select("id");
+    assert.ifError(byB.error);
+    assert.equal(byB.data!.length, 0, "B ne peut pas changer l'état de la note de A");
+  });
 });
