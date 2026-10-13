@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
-export type AssistantMessage = { id: number; role: "user" | "assistant"; text: string };
+import type { Source } from "@/lib/domain/chat-flow";
+
+export type AssistantMessage = { id: number; role: "user" | "assistant"; text: string; sources?: Source[] };
 
 type Assistant = {
   isOpen: boolean;
@@ -69,10 +71,10 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ question }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
-      const json = (await res.json().catch(() => null)) as { answer?: string; error?: string } | null;
+      const json = (await res.json().catch(() => null)) as { answer?: string; sources?: Source[]; error?: string } | null;
       if (!res.ok || !json?.answer) throw new Error(json?.error ?? GENERIC_ERROR);
       const answer = json.answer;
-      setMessages((m) => [...m, { id: nextId.current++, role: "assistant", text: answer }]);
+      setMessages((m) => [...m, { id: nextId.current++, role: "assistant", text: answer, sources: Array.isArray(json.sources) ? json.sources : [] }]);
     } catch (e) {
       setError(e instanceof Error && e.name !== "TimeoutError" && e.message ? e.message : GENERIC_ERROR);
       // Saisie conservée, sans écraser ce que j'ai tapé entre-temps.

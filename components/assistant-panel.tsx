@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useAssistant } from "@/components/assistant-provider";
+import { AssistantSources } from "@/components/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ export function AssistantPanel() {
   const a = useAssistant();
   const input = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
+  const last = a.messages.at(-1);
+  const lastAnswer = last?.role === "assistant" ? last : null;
 
   // À l'ouverture, le focus va au champ de saisie.
   useEffect(() => {
@@ -59,15 +62,16 @@ export function AssistantPanel() {
           {a.messages.map((m) => (
             <li
               key={m.id}
-              className={m.role === "user" ? "ml-6 self-end rounded-md bg-accent p-2 text-sm" : "mr-2 whitespace-pre-wrap break-words text-sm"}
+              className={m.role === "user" ? "ml-6 self-end rounded-md bg-accent p-2 text-sm" : "mr-2 break-words text-sm"}
             >
               <span className="sr-only">{m.role === "user" ? "Toi : " : "Assistant : "}</span>
-              {m.text}
+              <span className="whitespace-pre-wrap">{m.text}</span>
+              {m.sources && <AssistantSources sources={m.sources} />}
             </li>
           ))}
         </ul>
         <div role="status" className="mt-3 text-sm text-muted-foreground">
-          {a.pending ? "Recherche dans tes notes…" : !a.error && a.messages.at(-1)?.role === "assistant" ? "Réponse prête." : ""}
+          {a.pending ? "Recherche dans tes notes…" : !a.error && lastAnswer ? `Réponse prête${lastAnswer.sources?.length ? `, ${lastAnswer.sources.length} source${lastAnswer.sources.length > 1 ? "s" : ""}` : ""}.` : ""}
         </div>
         {a.error && !a.pending && (
           <div role="alert" className="mt-3 flex flex-col items-start gap-2 text-sm">
