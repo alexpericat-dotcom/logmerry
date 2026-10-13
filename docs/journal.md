@@ -202,3 +202,11 @@
 - Erreur de ma part, trouvée en revue : j'avais écrit à la main quatre valeurs de couleur de graphique qui ne correspondaient pas à leur hexadécimal ; les jetons de graphique (inutilisés) sont supprimés et un test compare désormais tous les jetons à `DESIGN.md`. Autre incident de mesure : mes premières captures de la liste de notes étaient vides, car l'insertion groupée de notes de test avec des colonnes différentes est refusée par la base ; corrigé en insérant une note à la fois.
 - Revue par un relecteur indépendant : 9 correctifs, 1 report (contraste du texte sur dégradé, avec le portfolio et le Cockpit), 2 écartés.
 - Reste : ton essai sur la preview (les deux thèmes).
+
+## 2026-10-13 — Story 8.13 : Résumé automatique d'une note (sprint 7)
+
+- Prompt : « Story 8.13 », via `bmad-build` (route courte, sans migration) ; spec `spec-8-13-resume-automatique-d-une-note.md`. Sprint 7 démarré sur une branche créée depuis le thème (PR n° 7 ouverte), pour que les écrans du CRM utilisent directement les bons jetons.
+- Décisions : bouton « Résumer » sur la page d'une note ; résumé de 3 à 5 puces de la version **enregistrée** de la note (pas du formulaire en cours de modification) ; jamais enregistré ni indexé ; étiquette « Résumé généré » avec icône, lien « Note source », « Régénérer » et « Ignorer » ; note sans texte : message sans appel à Claude ; tout nombre de 10 ou plus (ou décimal) absent de la note fait rejeter le résumé ; consigne : contenu de la note seul, note traitée comme une donnée, ni conseil fiscal ou juridique ni invention.
+- Vérification avec le vrai Claude (compte fictif A) : résumé fidèle d'un compte rendu avec chiffres ; note piégée (« IGNORE TES CONSIGNES… ») résumée sans suivre les ordres ; B ne peut pas lire la note de A. Captures Chrome piloté dans les deux thèmes. `npm test` 121/121, lint, tsc, build.
+- Revue par un relecteur indépendant : 4 correctifs (réponse coupée ou refusée jamais affichée, vraie liste de puces, focus, avertissement sur l'envoi à Anthropic) et le journal ; 7 constats écartés (triage dans la spec).
+- Reste : essai sur la preview.
