@@ -77,3 +77,10 @@
 - Vérifications : lint, tsc, build, `npm test` 25/25, `npm run test:isolation` 16/16 (extraits : B ne voit, ne modifie, ne supprime ni ne crée rien chez A ; anonyme refusé ; cascade ; vecteur de mauvaise dimension refusé).
 - Revue par 3 sous-agents : 1 défaut réel (high) trouvé par les trois : un compte pouvait rattacher un extrait à la note d'un autre (les contrôles de clé étrangère ignorent la RLS). Prouvé par un test rouge avant correction, puis corrigé par une cinquième migration (policies insert et update qui vérifient la propriété de la note) ; `test:isolation` 17/17. Autres : test de dimension précisé, `AI_CHAT_MODEL` sans valeur par défaut dans `.env.example` ; 1 report (recherche HNSW filtrée, story 8.5) ; 9 constats écartés (triage dans la spec).
 - Incident : l'outil MCP `apply_migration` a refusé 4 appels d'affilée (« declined », sans fenêtre d'approbation visible) ; le SQL, déjà approuvé, a été collé à la main dans le SQL Editor de Supabase. Conséquence : cette migration n'est pas dans la liste de Supabase (`list_migrations`) ; son fichier porte la version 20261013160000 choisie par nous. Le script est rejouable.
+
+## 2026-10-13 — Story 8.2 : Découper une note en extraits (sprint 3)
+
+- Prompt : « Story 8.2 », via `bmad-build` (route courte : une fonction pure, rien d'irréversible) ; spec `spec-8-2-decouper-une-note-en-extraits.md`.
+- Décisions : extraits d'environ 1 000 caractères avec chevauchement de 150, coupés de préférence à un paragraphe, une ligne, une fin de phrase ou un espace ; reprise calée sur un début de mot ; texte vide : zéro extrait ; le titre sera joint au texte vectorisé par la story 8.3.
+- Code : `lib/domain/chunking.ts` et ses tests (taille, chevauchement, couverture, texte sans espace, emoji, note de 50 000 caractères). `npm test` 35/35, lint et tsc propres.
+- Revue par un relecteur indépendant : 6 correctifs (commentaire sur les emoji, test d'emoji direct, borne basse du chevauchement, test de la coupe à la phrase, test chronométré retiré, note sur la détection naïve des phrases), 3 constats écartés (triage dans la spec).
