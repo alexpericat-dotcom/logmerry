@@ -22,3 +22,9 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-2-modifier-classer-supprimer-une-note.md`
   summary: Conserver le filtre de type (`?type=`) au retour sur la liste après modification, suppression ou « Annuler ».
   evidence: Ces actions renvoient sur `/notes` nu : l'utilisateur qui filtrait sur « Procédures » retombe sur « Toutes ». Sans importance avec peu de notes.
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`
+  summary: Étendre `tests/isolation.test.ts` à chaque nouvelle table (clients, missions, factures, extraits, historique, réalisations…).
+  evidence: Le script ne couvre que `notes` ; la règle de ta charte impose l'isolation sur toutes les tables, et la recherche vectorielle doit aussi filtrer par `owner_id`. À faire dans chaque story qui crée une table.
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`
+  summary: Brancher `npm run test:isolation` sur une vérification avant déploiement quand une CI existera.
+  evidence: Aucune CI aujourd'hui ; le rejeu après chaque migration dépend de la mémoire. Une action GitHub avec les deux comptes en secrets suffirait.

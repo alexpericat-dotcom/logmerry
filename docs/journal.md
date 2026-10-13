@@ -46,3 +46,12 @@
 - Code : page `/notes/[id]` (modification + suppression), filtre par type, type choisi à la création, actions factorisées.
 - Revue par 3 sous-agents : 6 correctifs dont un vrai bug (le message d'échec de suppression restait invisible tant que la confirmation était ouverte), note disparue distinguée d'une erreur, annulation bloquée pendant une suppression en cours ; reports : tests des actions et de la base avec la story 2.3, filtre conservé au retour sur la liste.
 - Essais manuels sur la preview : modification, type et filtre, suppression avec annulation et confirmation, note introuvable : OK. Contrôle en base (lecture seule) : la note restante a le type `faq` et `updated_at` postérieur à `created_at`, donc le déclencheur fonctionne ; la suppression a bien retiré l'autre note. Story 2.2 terminée.
+
+## 2026-10-13 — Story 2.3 : Deux comptes fictifs ne se voient pas
+
+- Prompt : « Story 2.3 », via `bmad-build` (route courte) ; spec `spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`.
+- Comptes fictifs « démo A » et « démo B » (`demo-a@example.com`, `demo-b@example.com`) créés par SQL après accord explicite du propriétaire (la première tentative a été bloquée par le système : écriture de données dans `auth`) ; connexion des deux vérifiée avec l'API de connexion. Identifiants dans `.env.test.local`, ignoré par git.
+- Bug rencontré : mon premier test de connexion a échoué à cause de `${!var}` (indirection bash absente de zsh), sans lien avec les comptes ; refait en Python.
+- Script `npm run test:isolation` : 11 vérifications passées, dont B ne peut ni lire, ni modifier, ni supprimer la note de A, ni se faire attribuer ou attribuer une note ; déclencheur `updated_at`, contrainte de 50 000 caractères, titre vide et type inconnu vérifiés. Aucun reste de test en base après exécution.
+- À rejouer après chaque migration touchant une table.
+- Revue par un relecteur indépendant : 5 correctifs (test rendu symétrique avec une note de B, codes d'erreur RLS exigés, cas sans connexion durci, cause de l'échec de connexion, modèle `.env.test.local.example`), deux reports (nouvelles tables, branchement en CI). Résultat final : `npm run test:isolation` 13/13, aucun reste de test en base.
