@@ -2,7 +2,7 @@
 title: 'Story 8.10 : Retrouver mon historique'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '2a1433253eef734333e990a0da71e17b0f49dcec'
 route: 'dispatch'
 review_loop_iteration: 0
