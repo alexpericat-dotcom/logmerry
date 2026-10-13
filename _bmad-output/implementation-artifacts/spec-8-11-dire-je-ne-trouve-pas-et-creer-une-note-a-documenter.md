@@ -2,7 +2,7 @@
 title: 'Story 8.11 : Dire « je ne trouve pas » et créer une note à documenter'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '3dec5762cb3dd231e8cd12f3d406b95d1b995018'
 route: 'oneshot'
 review_loop_iteration: 0
