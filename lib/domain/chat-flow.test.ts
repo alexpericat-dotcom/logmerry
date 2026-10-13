@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AnswerRejected } from "./citations.ts";
-import { NOT_FOUND, answerQuestion, type ChunkLike } from "./chat-flow.ts";
+import { NOT_FOUND, answerQuestion, isRefusal, type ChunkLike } from "./chat-flow.ts";
 
 const chunk = (id: string, content = `texte ${id}`): ChunkLike => ({ id, noteId: `n-${id}`, title: `Note ${id}`, content });
 
@@ -58,4 +58,16 @@ test("réponse sans citation (les notes ne répondent pas) : acceptée, aucune s
 test("une panne de la recherche ou de Claude remonte (la route la traduit en 502)", async () => {
   await assert.rejects(answerQuestion("q", { retrieve: async () => { throw new Error("match_chunks"); }, ask: async () => ({ answer: "", citations: [] }) }), /match_chunks/);
   await assert.rejects(answerQuestion("q", { retrieve: async () => [chunk("c1")], ask: async () => { throw new Error("Claude a répondu 500."); } }), /500/);
+});
+
+test("un refus est reconnu, aussi avec l'ancienne formulation de l'historique, pas une vraie réponse", () => {
+  assert.equal(isRefusal(NOT_FOUND), true);
+  assert.equal(isRefusal(`  ${NOT_FOUND}\n`), true);
+  assert.equal(isRefusal("Je n'ai trouvé aucune note correspondant à cette question."), true);
+  assert.equal(isRefusal("- Le prospect veut automatiser les quittances."), false);
+  assert.equal(isRefusal(""), false);
+});
+
+test("le message du refus est celui de la conception (Voice and Tone)", () => {
+  assert.equal(NOT_FOUND, "Je n'ai trouvé aucune procédure documentée correspondant à cette requête.");
 });

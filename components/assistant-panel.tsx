@@ -3,11 +3,13 @@
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
+import { AssistantDraftButton } from "@/components/assistant-draft-button";
 import { useAssistant } from "@/components/assistant-provider";
 import { AssistantSources } from "@/components/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isRefusal } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 
 /** Panneau « Assistant » : non modal, après `main`, il réduit la largeur de la page sans la recouvrir (plein écran sous 1 024 px). */
@@ -64,16 +66,22 @@ export function AssistantPanel() {
           <p className="text-sm text-muted-foreground">Pose une question : je te réponds à partir de tes notes indexées.</p>
         )}
         <ul className="flex flex-col gap-3">
-          {a.messages.map((m) => (
-            <li
-              key={m.id}
-              className={m.role === "user" ? "ml-6 self-end rounded-md bg-accent p-2 text-sm" : "mr-2 break-words text-sm"}
-            >
-              <span className="sr-only">{m.role === "user" ? "Toi : " : "Assistant : "}</span>
-              <span className="whitespace-pre-wrap">{m.text}</span>
-              {m.sources && <AssistantSources sources={m.sources} />}
-            </li>
-          ))}
+          {a.messages.map((m, i) => {
+            // Refus de l'assistant (reconnu à son texte, aussi après un rechargement) : la question est le message qui précède.
+            const previous = a.messages[i - 1];
+            const refusedQuestion = m.role === "assistant" && isRefusal(m.text) && previous?.role === "user" ? previous.text : null;
+            return (
+              <li
+                key={m.id}
+                className={m.role === "user" ? "ml-6 self-end rounded-md bg-accent p-2 text-sm" : "mr-2 break-words text-sm"}
+              >
+                <span className="sr-only">{m.role === "user" ? "Toi : " : "Assistant : "}</span>
+                <span className="whitespace-pre-wrap">{m.text}</span>
+                {m.sources && <AssistantSources sources={m.sources} />}
+                {refusedQuestion && <AssistantDraftButton question={refusedQuestion} />}
+              </li>
+            );
+          })}
         </ul>
         <div role="status" className="mt-3 text-sm text-muted-foreground">
           {a.pending ? "Recherche dans tes notes…" : !a.error && lastAnswer ? `Réponse prête${lastAnswer.sources?.length ? `, ${lastAnswer.sources.length} source${lastAnswer.sources.length > 1 ? "s" : ""}` : ""}.` : ""}

@@ -11,6 +11,7 @@ import {
   NOTE_TYPES,
   NOTE_TYPE_LABELS,
   excerpt,
+  parseStatusFilter,
   parseTypeFilter,
   type NoteType,
 } from "@/lib/domain/notes";
@@ -19,18 +20,19 @@ import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Notes · LogMerry" };
 
-type SearchParams = Promise<{ type?: string | string[] }>;
+type SearchParams = Promise<{ type?: string | string[]; statut?: string | string[] }>;
 
-function Filters({ current }: { current: NoteType | null }) {
+function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: boolean }) {
   const items: { label: string; href: string; type: NoteType | null }[] = [
     { label: "Toutes", href: "/notes", type: null },
     ...NOTE_TYPES.map((t) => ({ label: NOTE_FILTER_LABELS[t], href: `/notes?type=${t}`, type: t })),
   ];
+  const drafts = { label: "Brouillons", href: "/notes?statut=brouillon" };
   return (
-    <nav aria-label="Filtrer par type">
+    <nav aria-label="Filtrer les notes">
       <ul className="flex flex-wrap gap-2">
         {items.map((item) => {
-          const active = item.type === current;
+          const active = !draftOnly && item.type === current;
           return (
             <li key={item.href}>
               <Link
@@ -46,14 +48,28 @@ function Filters({ current }: { current: NoteType | null }) {
             </li>
           );
         })}
+        <li>
+          <Link
+            href={drafts.href}
+            aria-current={draftOnly ? "page" : undefined}
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full border px-3 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+              draftOnly ? "border-primary bg-accent font-bold" : "border-input",
+            )}
+          >
+            {drafts.label}
+          </Link>
+        </li>
       </ul>
     </nav>
   );
 }
 
 async function NotesList({ searchParams }: { searchParams: SearchParams }) {
-  const type = parseTypeFilter((await searchParams).type);
-  const notes = await listNotes(type);
+  const params = await searchParams;
+  const draftOnly = parseStatusFilter(params.statut) === "draft";
+  const type = draftOnly ? null : parseTypeFilter(params.type);
+  const notes = await listNotes(type, draftOnly ? "draft" : null);
 
   const createButton = (
     <Button asChild>
@@ -61,7 +77,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
     </Button>
   );
 
-  if (notes.length === 0 && !type) {
+  if (notes.length === 0 && !type && !draftOnly) {
     return (
       <div className="flex max-w-2xl flex-col items-start gap-4">
         <p className="text-muted-foreground">
@@ -77,11 +93,11 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="flex flex-col items-start gap-6">
       <div className="flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
-        <Filters current={type} />
+        <Filters current={type} draftOnly={draftOnly} />
         {createButton}
       </div>
       {notes.length === 0 ? (
-        <p className="text-muted-foreground">Aucune note de ce type.</p>
+        <p className="text-muted-foreground">{draftOnly ? "Aucun brouillon. Les notes à documenter plus tard apparaissent ici." : "Aucune note de ce type."}</p>
       ) : (
         <ul className="flex w-full max-w-2xl flex-col gap-3">
           {notes.map((note) => (

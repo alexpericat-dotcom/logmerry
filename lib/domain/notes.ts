@@ -65,3 +65,17 @@ export function excerpt(body: string, max = 140): string {
   const chars = [...body.replace(/\s+/g, " ").trim()];
   return chars.length > max ? `${chars.slice(0, max).join("").trimEnd()}…` : chars.join("");
 }
+
+/** Filtre « Brouillons » de la liste des notes (`?statut=brouillon`) ; toute autre valeur : pas de filtre. */
+export function parseStatusFilter(value: string | string[] | undefined): "draft" | null {
+  return (Array.isArray(value) ? value[0] : value) === "brouillon" ? "draft" : null;
+}
+
+export const DRAFT_TITLE_PREFIX = "À documenter : ";
+
+/** Titre d'une note à documenter, dérivé de la question (200 caractères au plus, points de code comptés). */
+export function draftTitle(question: string): string {
+  const q = question.slice(0, TITLE_MAX * 2).replace(/\s+/g, " ").trim(); // borné avant tout parcours : l'entrée vient du navigateur
+  const chars = [...`${DRAFT_TITLE_PREFIX}${q}`];
+  return chars.length > TITLE_MAX ? `${chars.slice(0, TITLE_MAX - 1).join("").trimEnd()}…` : chars.join("");
+}

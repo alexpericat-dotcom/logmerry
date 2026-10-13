@@ -17,10 +17,11 @@ export type Note = {
 const COLUMNS = "id, title, body, status, type, index_status, created_at, updated_at";
 
 /** Mes notes (filtrées par type si demandé), de la plus récente à la plus ancienne ; la RLS limite aux miennes. */
-export async function listNotes(type: NoteType | null = null): Promise<Note[]> {
+export async function listNotes(type: NoteType | null = null, status: "draft" | null = null): Promise<Note[]> {
   const supabase = await createClient();
   let query = supabase.from("notes").select(COLUMNS).order("created_at", { ascending: false });
   if (type) query = query.eq("type", type);
+  if (status) query = query.eq("status", status);
   const { data, error } = await query;
   if (error) throw new Error("Impossible de charger les notes.");
   return data as Note[];
