@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { HOME_PATH } from "@/lib/nav";
 import { frenchAuthError, validateNewPassword } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -37,7 +38,7 @@ export function UpdatePasswordForm({
         else setFormError(message);
         return;
       }
-      router.push("/protected");
+      router.push(HOME_PATH);
       router.refresh();
     } catch {
       setFormError("Enregistrement impossible pour le moment. Réessaie dans un instant.");

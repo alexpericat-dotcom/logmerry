@@ -1,11 +1,13 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function LogoutButton() {
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+
+export function LogoutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -25,14 +27,27 @@ export function LogoutButton() {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-1">
       {failed && (
-        <span role="alert" className="text-sm text-destructive">
+        <span
+          role="alert"
+          className={compact ? "sr-only" : "px-2 text-xs text-destructive"}
+        >
           Déconnexion impossible. Réessaie.
         </span>
       )}
-      <Button onClick={logout} disabled={busy}>
-        Se déconnecter
+      <Button
+        variant="ghost"
+        size={compact ? "icon" : "sm"}
+        className={`${compact ? "" : "justify-start"} ${failed ? "text-destructive" : ""}`}
+        onClick={logout}
+        disabled={busy}
+        title={failed ? "Déconnexion impossible. Réessaie." : "Se déconnecter"}
+      >
+        <LogOut size={16} aria-hidden="true" />
+        <span className={compact ? "sr-only" : "sr-only md:not-sr-only"}>
+          Se déconnecter
+        </span>
       </Button>
     </div>
   );

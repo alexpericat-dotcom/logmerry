@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { HOME_PATH } from "@/lib/nav";
 import { frenchAuthError, validateEmail } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -47,7 +48,7 @@ export function LoginForm({
         return;
       }
       // Le bouton reste désactivé pendant la navigation.
-      router.push("/protected");
+      router.push(HOME_PATH);
       router.refresh();
     } catch {
       setFormError("Connexion impossible pour le moment. Réessaie dans un instant.");
