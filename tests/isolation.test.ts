@@ -224,4 +224,75 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     const anon = await newClient().rpc("search_notes", { query: tag });
     assert.equal(anon.error?.code, "42501", "refus par les droits attendu");
   });
+
+  test("extraits (note_chunks) : B ne voit, ne modifie, ne supprime ni ne crée rien chez A ; anonyme refusé ; cascade ; dimension", async () => {
+    const chunk = { note_id: noteA.id, chunk_index: 0, content: "extrait de A", embedding_model: "test-model" };
+    const own = await a.client.from("note_chunks").insert(chunk).select("id, owner_id").single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.owner_id, a.userId);
+    const id = own.data!.id;
+
+    const read = await b.client.from("note_chunks").select("id");
+    assert.ifError(read.error);
+    assert.ok(!read.data!.some((c) => c.id === id), "B ne voit pas l'extrait de A");
+    const upd = await b.client.from("note_chunks").update({ content: "piraté" }).eq("id", id).select("id");
+    assert.ifError(upd.error);
+    assert.equal(upd.data!.length, 0);
+    const del = await b.client.from("note_chunks").delete().eq("id", id).select("id");
+    assert.ifError(del.error);
+    assert.equal(del.data!.length, 0);
+    const fake = await b.client.from("note_chunks").insert({ ...chunk, chunk_index: 1, owner_id: a.userId });
+    assert.equal(fake.error?.code, "42501", "B ne peut pas créer un extrait au nom de A");
+    const still = await a.client.from("note_chunks").select("content").eq("id", id).single();
+    assert.equal(still.data!.content, "extrait de A");
+
+    const anon = newClient();
+    const anonRead = await anon.from("note_chunks").select("id");
+    assert.ifError(anonRead.error);
+    assert.deepEqual(anonRead.data, []);
+    const anonWrite = await anon.from("note_chunks").insert({ ...chunk, chunk_index: 2 });
+    assert.equal(anonWrite.error?.code, "42501");
+
+    const badDim = await a.client.from("note_chunks").insert({ ...chunk, chunk_index: 3, embedding: "[0.1,0.2,0.3]" });
+    assert.match(badDim.error?.message ?? "", /dimension/i, "un vecteur de 3 valeurs est refusé (1024 attendues)");
+
+    const { data: temp, error: tempError } = await a.client
+      .from("notes").insert({ title: `${PREFIX} cascade`, body: "x" }).select("id").single();
+    assert.ifError(tempError);
+    const tempChunk = await a.client.from("note_chunks")
+      .insert({ ...chunk, note_id: temp!.id }).select("id").single();
+    assert.ifError(tempChunk.error);
+    await a.client.from("notes").delete().eq("id", temp!.id);
+    const gone = await a.client.from("note_chunks").select("id").eq("id", tempChunk.data!.id);
+    assert.deepEqual(gone.data, [], "supprimer la note supprime ses extraits");
+  });
+
+  test("extraits : A ne peut pas rattacher un extrait à la note de B, ni déplacer un des siens vers elle", async () => {
+    const chunk = { chunk_index: 0, content: "extrait", embedding_model: "test-model" };
+    const onB = await a.client.from("note_chunks").insert({ ...chunk, note_id: noteB.id }).select("id");
+    assert.equal(onB.error?.code, "42501", "refus par la RLS attendu");
+    const mine = await a.client.from("note_chunks").insert({ ...chunk, chunk_index: 9, note_id: noteA.id }).select("id").single();
+    assert.ifError(mine.error);
+    const moved = await a.client.from("note_chunks").update({ note_id: noteB.id }).eq("id", mine.data!.id).select("id");
+    assert.ok(moved.error || moved.data!.length === 0, "déplacement vers la note de B refusé");
+    const seenByB = await b.client.from("note_chunks").select("id").eq("note_id", noteB.id);
+    assert.deepEqual(seenByB.data, [], "B ne trouve aucun extrait étranger sur sa note");
+  });
+
+  test("état d'indexation : « en attente » par défaut, valeur inconnue refusée, invisible pour B", async () => {
+    const own = await a.client.from("notes").select("index_status").eq("id", noteA.id).single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.index_status, "pending");
+    const set = await a.client.from("notes").update({ index_status: "indexed" }).eq("id", noteA.id).select("index_status").single();
+    assert.ifError(set.error);
+    assert.equal(set.data!.index_status, "indexed");
+    const bad = await a.client.from("notes").update({ index_status: "inconnu" }).eq("id", noteA.id);
+    assert.equal(bad.error?.code, "22P02");
+    const forB = await b.client.from("notes").select("index_status").eq("id", noteA.id).maybeSingle();
+    assert.ifError(forB.error);
+    assert.equal(forB.data, null, "B ne voit ni la note ni l'état de A");
+    const byB = await b.client.from("notes").update({ index_status: "failed" }).eq("id", noteA.id).select("id");
+    assert.ifError(byB.error);
+    assert.equal(byB.data!.length, 0, "B ne peut pas changer l'état de la note de A");
+  });
 });

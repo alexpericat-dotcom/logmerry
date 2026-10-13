@@ -3,7 +3,9 @@ import { Suspense } from "react";
 
 import { updateNote } from "@/app/(app)/notes/actions";
 import { DeleteNote } from "@/components/delete-note";
+import { IndexStatus } from "@/components/index-status";
 import { NoteForm } from "@/components/note-form";
+import { RetryIndexing } from "@/components/retry-indexing";
 import { getNote } from "@/lib/db/notes";
 import { isUuid } from "@/lib/domain/notes";
 import { formatDateTime } from "@/lib/format";
@@ -23,6 +25,10 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
         <p className="mt-1 text-sm tabular-nums text-muted-foreground">
           Dernière modification : {formatDateTime(note.updated_at)}
         </p>
+        <div className="mt-2 flex flex-col items-start gap-2">
+          <IndexStatus status={note.index_status} />
+          {note.index_status !== "indexed" && <RetryIndexing id={id} failed={note.index_status === "failed"} />}
+        </div>
       </div>
       <NoteForm
         action={updateNote.bind(null, id)}

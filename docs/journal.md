@@ -66,3 +66,40 @@
 - Revue par 3 sous-agents : 5 correctifs (clic sur le rembourrage fermait la palette, rejet réseau non géré, réponse en vol après fermeture, option active non défilée, sémantique SQL non testée : corps, début de mot, classement, mots vides, opérateurs, limite de 20), 9 constats écartés (dont accents : limite voulue ; `[:alnum:]` mesuré OK). `test:isolation` 15/15.
 - Piège de la preview : la Vercel Toolbar capte ⌘K sur les déploiements preview (absente en production) ; essai via le bouton « Rechercher » puis toolbar fermée. Autre piège : l'URL d'une preview est fixée à un commit, il faut ouvrir celle du dernier push.
 - Essais manuels sur la preview : bouton, ⌘K, recherche, ouverture d'une note, Échap : OK. Story 2.4 terminée.
+
+## 2026-10-13 — Story 8.1 : Préparer le serveur pour l'IA (sprint 3)
+
+- Prompt : « Story 8.1 », via `bmad-build` ; spec `spec-8-1-preparer-le-serveur-pour-l-ia.md`. Ordre suivi : celui du plan des sprints (le RAG d'abord, jalon du 30 octobre), pas celui des numéros d'epic ; branche `feat/sprint-3-preparer-ia` créée depuis la branche du sprint 2 (PR #2 pas encore fusionnée).
+- Quatrième migration : extension `vector` (schéma `extensions`) et table `note_chunks` (RLS à 4 policies, `vector(1024)` nullable, `embedding_model` obligatoire, index HNSW cosinus, cascade depuis `notes`). SQL montré puis approuvé avant application ; conseiller de sécurité : aucun nouvel avertissement.
+- Code : `lib/ai/config.ts` (`server-only`, lecture des 3 variables à l'appel, build possible sans clés) et `lib/domain/ai-config.ts` (validation pure testée : l'erreur nomme la variable, jamais sa valeur). Noms des variables dans `.env.example`.
+- Clés Anthropic et Mistral créées par le propriétaire, mises dans `.env.local` (vérifié sans afficher les valeurs ; ignoré par git). Reste à les mettre dans Vercel (Production et Preview) avant la story 8.3.
+- Contrôle manuel : un composant client qui importe `lib/ai/` fait échouer le build (« server-only »), retiré ensuite.
+- Vérifications : lint, tsc, build, `npm test` 25/25, `npm run test:isolation` 16/16 (extraits : B ne voit, ne modifie, ne supprime ni ne crée rien chez A ; anonyme refusé ; cascade ; vecteur de mauvaise dimension refusé).
+- Revue par 3 sous-agents : 1 défaut réel (high) trouvé par les trois : un compte pouvait rattacher un extrait à la note d'un autre (les contrôles de clé étrangère ignorent la RLS). Prouvé par un test rouge avant correction, puis corrigé par une cinquième migration (policies insert et update qui vérifient la propriété de la note) ; `test:isolation` 17/17. Autres : test de dimension précisé, `AI_CHAT_MODEL` sans valeur par défaut dans `.env.example` ; 1 report (recherche HNSW filtrée, story 8.5) ; 9 constats écartés (triage dans la spec).
+- Incident : l'outil MCP `apply_migration` a refusé 4 appels d'affilée (« declined », sans fenêtre d'approbation visible) ; le SQL, déjà approuvé, a été collé à la main dans le SQL Editor de Supabase. Conséquence : cette migration n'est pas dans la liste de Supabase (`list_migrations`) ; son fichier porte la version 20261013160000 choisie par nous. Le script est rejouable.
+
+## 2026-10-13 — Story 8.2 : Découper une note en extraits (sprint 3)
+
+- Prompt : « Story 8.2 », via `bmad-build` (route courte : une fonction pure, rien d'irréversible) ; spec `spec-8-2-decouper-une-note-en-extraits.md`.
+- Décisions : extraits d'environ 1 000 caractères avec chevauchement de 150, coupés de préférence à un paragraphe, une ligne, une fin de phrase ou un espace ; reprise calée sur un début de mot ; texte vide : zéro extrait ; le titre sera joint au texte vectorisé par la story 8.3.
+- Code : `lib/domain/chunking.ts` et ses tests (taille, chevauchement, couverture, texte sans espace, emoji, note de 50 000 caractères). `npm test` 35/35, lint et tsc propres.
+- Revue par un relecteur indépendant : 6 correctifs (commentaire sur les emoji, test d'emoji direct, borne basse du chevauchement, test de la coupe à la phrase, test chronométré retiré, note sur la détection naïve des phrases), 3 constats écartés (triage dans la spec).
+
+## 2026-10-14 — Story 8.3 : Indexer une note à l'enregistrement (sprint 3)
+
+- Prompt : « Story 8.3 », via `bmad-build` ; spec `spec-8-3-indexer-une-note-a-l-enregistrement.md`. Choix tranchés : réindexation à chaque sauvegarde ; en cas d'échec, anciens extraits supprimés (jamais de passage périmé) ; note sans texte : état « indexée », aucun appel IA.
+- Cinquième migration : enum `index_status` et colonne `notes.index_status` (défaut « en attente »). SQL montré puis approuvé ; cette fois l'outil MCP l'a appliquée (version 20261013152420) ; conseiller de sécurité : rien de nouveau.
+- Appel réel à Mistral vérifié d'abord avec un texte fictif (200, vecteurs de 1 024 valeurs, index dans l'ordre), sans `fetch` ni dépendance ajoutés au projet.
+- Code : `lib/ai/embeddings.ts` (serveur seul, lots de 16, délai de 20 s), `lib/domain/embeddings.ts` (lots, validation de la réponse), `lib/domain/index-note.ts` (orchestration pure testable), branchement dans la sauvegarde, `retryIndexing`, pastille d'état dans la liste et sur la page, bouton de nouvel essai.
+- Vérification de bout en bout avec les deux comptes fictifs et le vrai Mistral (script jetable) : 4 extraits indexés, remplacés par 1 puis 0, B ne voit rien, clé invalide : « échec » et extraits supprimés, journal sans clé ni contenu.
+- Revue par 3 sous-agents : 4 correctifs (orchestration sans test : déplacée dans `lib/domain` avec 7 tests ; bouton aussi pour « en attente » ; échecs de remise en ordre journalisés ; erreur de lecture du « Réessayer » mal présentée), 1 report (`embedTexts` avec `fetch` simulé), le reste écarté (triage dans la spec). Vérifications : lint, tsc, build, `npm test` 45/45, `npm run test:isolation` 18/18.
+- Essai sur la preview : premier essai en « échec » (variables d'IA absentes de Vercel : le journal serveur disait `Variable d'environnement manquante : ANTHROPIC_API_KEY`, sans clé ni contenu) ; note bien enregistrée, pastille « Échec d'indexation » et bouton « Réessayer » visibles, message d'échec propre. Constat : l'outil MCP Vercel est refusé (403), la CLI `vercel logs` a servi à lire les journaux. Variables ajoutées (Production et Preview), puis redéploiement obligatoire (une variable ne s'applique qu'aux nouveaux déploiements) ; « Réessayer » : « Indexée ». Contrôle en base (lecture seule) : chaque note a 1 extrait, `mistral-embed`, vecteur de 1 024 valeurs. Story 8.3 terminée.
+- Piège : l'indexation exige les trois variables, y compris la clé Anthropic inutile pour vectoriser ; amélioration proposée (lire seulement la clé Mistral), à décider.
+
+## 2026-10-14 — Story 8.4 : Indexer mes notes existantes (sprint 3)
+
+- Prompt : « Story 8.4 », via `bmad-build` (route courte, sans migration) ; spec `spec-8-4-indexer-mes-notes-existantes.md`. Décision : le bouton vit dans Paramètres (comme prévu par les critères), page créée en première version et entrée activée dans la barre ; les paramètres de la story 4.1 s'y ajouteront.
+- Règles : le bouton indexe mes notes « en attente » ou « en échec » (25 par clic, un compteur indique indexées, en échec, restantes) ; une note sans texte passe « indexée » sans appel IA ; une note avec texte est indexée même en brouillon ; relancer ne touche pas aux notes déjà indexées et remplace toujours les extraits (aucun doublon).
+- Vérification avec le vrai Mistral et le compte fictif A (script jetable, même logique que l'action) : 3 notes indexées au 1er clic, 0 au 2e, extraits identiques, la note de B reste « en attente ». `npm test` 49/49, `npm run test:isolation` 18/18, lint, tsc, build.
+- Revue par un relecteur indépendant : 3 correctifs (« en attente » avant « en échec », journal serveur des erreurs, message « déjà indexées »), 6 constats écartés (triage dans la spec).
+- Essai sur la preview (compte du propriétaire) : page Paramètres, compteur et bouton : OK. Story 8.4 terminée ; sprint 3 (stories 8.1 à 8.4) terminé.

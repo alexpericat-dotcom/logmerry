@@ -24,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Missions", href: "/missions", icon: "missions", available: false },
   { label: "Factures", href: "/factures", icon: "factures", available: false },
   { label: "Échéances", href: "/echeances", icon: "echeances", available: false },
-  { label: "Paramètres", href: "/parametres", icon: "parametres", available: false },
+  { label: "Paramètres", href: "/parametres", icon: "parametres", available: true },
   { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: false },
 ];
