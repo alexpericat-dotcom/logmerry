@@ -19,6 +19,9 @@ export const normalize = (s: string): string =>
 // « pas de/d' », « impossible », ou une négation « ne … pas » dans la même phrase (« Tes notes ne donnent pas le taux »).
 const REFUSAL = /\b(aucun|aucune|rien|impossible)\b|pas (de|d')|n'ai trouvé|\bne\b[^.\n]{0,50}\bpas\b|\bn'[a-zéèêàâîïôûù]+\b[^.\n]{0,50}\bpas\b/;
 
+/** Le texte dit-il que les notes ne répondent pas (formule de refus reconnue) ? */
+export const looksLikeRefusal = (text: string): boolean => REFUSAL.test(normalize(text));
+
 /**
  * Note une question : « bon extrait retrouvé ? » et « réponse fidèle ? ». Jugement automatique grossier, utile pour comparer deux exécutions :
  * - réponse attendue : toutes les notes attendues parmi les sources, et au moins un fait attendu dans la réponse ;

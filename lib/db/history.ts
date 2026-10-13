@@ -19,8 +19,8 @@ export async function listHistory(supabase: SupabaseClient): Promise<HistoryMess
   return toHistory(data as unknown as MessageRow[]);
 }
 
-/** Enregistre un échange vérifié : ma question, la réponse et ses citations (références, jamais une copie du texte). Lève une erreur sans contenu en cas d'échec. */
-export async function saveExchange(supabase: SupabaseClient, question: string, answer: string, sources: Source[]): Promise<void> {
+/** Enregistre un échange vérifié : ma question, la réponse et ses citations (références, jamais une copie du texte). Rend les identifiants des messages enregistrés. Lève une erreur sans contenu en cas d'échec. */
+export async function saveExchange(supabase: SupabaseClient, question: string, answer: string, sources: Source[]): Promise<string[]> {
   // Une seule insertion pour les deux messages ; horodatages explicites pour garder l'ordre question puis réponse.
   const now = Date.now();
   const inserted = await supabase
@@ -31,8 +31,9 @@ export async function saveExchange(supabase: SupabaseClient, question: string, a
     ])
     .select("id, role");
   if (inserted.error) throw new Error(`messages ${inserted.error.code ?? ""}`.trim());
+  const ids = inserted.data.map((m) => m.id as string);
   const assistant = inserted.data.find((m) => m.role === "assistant");
-  if (!assistant || !sources.length) return;
+  if (!assistant || !sources.length) return ids;
 
   const cited = await supabase
     .from("message_citations")
@@ -42,4 +43,5 @@ export async function saveExchange(supabase: SupabaseClient, question: string, a
     await supabase.from("messages").delete().in("id", inserted.data.map((m) => m.id));
     throw new Error(`citations ${cited.error.code ?? ""}`.trim());
   }
+  return ids;
 }
