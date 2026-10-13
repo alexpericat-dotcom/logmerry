@@ -33,3 +33,15 @@ export async function getNote(id: string): Promise<Note | null> {
   if (error) throw new Error("Impossible de charger la note.");
   return data as Note | null;
 }
+
+export type IndexCounts = { total: number; indexed: number; pending: number; failed: number };
+
+/** Combien de mes notes sont indexées, en attente ou en échec ; la RLS limite aux miennes. */
+export async function countIndexStatuses(): Promise<IndexCounts> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("notes").select("index_status");
+  if (error) throw new Error("Impossible de charger l'état d'indexation.");
+  const counts: IndexCounts = { total: data.length, indexed: 0, pending: 0, failed: 0 };
+  for (const { index_status } of data) counts[index_status as "indexed" | "pending" | "failed"]++;
+  return counts;
+}
