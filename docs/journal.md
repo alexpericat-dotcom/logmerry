@@ -63,4 +63,6 @@
 - Code : normalisation de la requête testée, Server Action `searchNotes`, palette en `<dialog>` natif (⌘K / Ctrl+K, bouton « Rechercher », flèches, Entrée, Échap), sans nouvelle dépendance.
 - Bug rencontré : le premier appel de la migration a échoué (identifiant du projet manquant), sans effet en base. Lint : `setState` dans un effet refusé, état « réponse correspondant à la saisie » déduit à la place.
 - Vérifications : lint, tsc, build, `npm test` 23/23, `npm run test:isolation` 14/14 (A trouve sa note, B non, refus sans connexion).
-- Reste : essais manuels sur la preview (Safari, Chrome, Firefox) et revue.
+- Revue par 3 sous-agents : 5 correctifs (clic sur le rembourrage fermait la palette, rejet réseau non géré, réponse en vol après fermeture, option active non défilée, sémantique SQL non testée : corps, début de mot, classement, mots vides, opérateurs, limite de 20), 9 constats écartés (dont accents : limite voulue ; `[:alnum:]` mesuré OK). `test:isolation` 15/15.
+- Piège de la preview : la Vercel Toolbar capte ⌘K sur les déploiements preview (absente en production) ; essai via le bouton « Rechercher » puis toolbar fermée. Autre piège : l'URL d'une preview est fixée à un commit, il faut ouvrir celle du dernier push.
+- Essais manuels sur la preview : bouton, ⌘K, recherche, ouverture d'une note, Échap : OK. Story 2.4 terminée.

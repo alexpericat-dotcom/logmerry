@@ -2,7 +2,7 @@
 title: 'Story 2.4 : Rechercher dans mes notes avec ⌘K'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '91767c05860a057a2af0b9f8f8f199d869902d0a'
 route: 'dispatch'
 review_loop_iteration: 0
