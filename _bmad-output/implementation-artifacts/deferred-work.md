@@ -59,3 +59,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-14-jeu-de-test-du-rag-et-score.md`
   summary: option `--runs N` pour `test:rag` (plusieurs passages, taux de réussite par question) et jeu de questions non vues pour ne pas régler l'assistant sur le jeu de test.
   evidence: le résultat varie d'une exécution à l'autre (18, 19, 20 observés) et la consigne a été réglée sur ce même jeu ; un score unique contre un seuil de 18 est instable.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-appliquer-le-theme-logmerry.md`
+  summary: tester le contraste du texte sur les dégradés (Forest sur dégradé 1 et 2, Chalk sur dégradé 5) quand ils seront utilisés, avec le portfolio public et le bandeau du Cockpit.
+  evidence: les paires validées de `DESIGN.md` (10,60 ; 7,47 ; 6,65) ne sont pas encore couvertes par un test, car aucun écran n'utilise ces dégradés avec du texte.
