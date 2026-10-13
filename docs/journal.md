@@ -18,3 +18,11 @@
 - Blocage Supabase : l'offre gratuite refuse de modifier le modèle d'e-mail sans SMTP personnalisé (capture du tableau de bord). Je m'étais trompé en disant que c'était possible. Décision (option 1) : garder le modèle par défaut et échanger le `code` PKCE dans `/auth/confirm`. SMTP (Resend ou Brevo) à prévoir avant l'usage réel.
 - Test sur la preview : message d'erreur générique au lieu de « E-mail ou mot de passe incorrect ». Diagnostic : aucune requête de connexion dans les journaux Supabase (`query_logs`), puis lecture du code de la preview (`vercel curl`) : la clé publique y était une suite de 46 puces « •••• ». La variable Vercel avait été remplie avec le texte masqué du tableau de bord. Correction : variable remplacée par la vraie clé (Preview et Production), build relancé. Leçon : une variable Vercel « masquée » ne doit jamais être copiée depuis l'écran ; la coller depuis `.env.local`.
 - Les 5 tests manuels passent sur la preview (mauvais mot de passe, connexion, déconnexion, réinitialisation, inscription en 404). Story 1.2 terminée.
+
+## 2026-10-13 — Story 1.3 : Voir mon cockpit vide dans la barre latérale
+
+- Prompt : « Story 1.3 », via `bmad-build` ; spec `spec-1-3-voir-mon-cockpit-vide-dans-la-barre-laterale.md`.
+- Décisions du propriétaire : entrées de barre sans page = affichées, inactives, mention « bientôt » ; palette et police de marque reportées à une story dédiée.
+- Réalisé : zone privée `app/(app)/`, page `/aujourd-hui` (remplace `/protected`), barre latérale repliable (cookie), lien « Aller au contenu », un seul `h1`, revérification du jeton côté serveur.
+- Écart repéré : le bouton de thème n'avait pas de nom accessible → `aria-label` ajouté.
+- Revue par 3 sous-agents : 4 correctifs (erreur de déconnexion lisible barre repliée, test des pages et constante `HOME_PATH`, repère `aside`, références `/protected` de la doc), un point reporté (vérification propre à chaque page), le reste écarté avec preuve dans la spec.

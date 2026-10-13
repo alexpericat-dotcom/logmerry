@@ -29,8 +29,8 @@ Limite connue : sans SMTP personnalisé, Supabase n'envoie qu'aux adresses des m
 ## 5. Vérifier
 
 1. Connexion avec un mauvais mot de passe : « E-mail ou mot de passe incorrect. » sous le champ mot de passe.
-2. Connexion correcte : arrivée sur `/protected`.
-3. « Se déconnecter », puis ouvrir `/protected` : retour à `/auth/login`.
+2. Connexion correcte : arrivée sur `/aujourd-hui`.
+3. « Se déconnecter », puis ouvrir `/aujourd-hui` : retour à `/auth/login`.
 4. « Mot de passe oublié » : e-mail reçu, lien ouvre « Nouveau mot de passe », la connexion fonctionne avec le nouveau.
 5. `/auth/sign-up` : page introuvable (404).
 
