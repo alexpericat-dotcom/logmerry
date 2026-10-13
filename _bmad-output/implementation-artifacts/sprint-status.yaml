@@ -91,7 +91,7 @@ development_status:
   epic-8: in-progress
   8-1-préparer-le-serveur-pour-l-ia: done
   8-2-découper-une-note-en-extraits: done
-  8-3-indexer-une-note-à-l-enregistrement: review
+  8-3-indexer-une-note-à-l-enregistrement: done
   8-4-indexer-mes-notes-existantes: backlog
   8-5-retrouver-les-passages-pertinents-fonction-de-recherche: backlog
   8-6-chercher-par-sens-dans-mes-notes: backlog

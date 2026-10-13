@@ -2,7 +2,7 @@
 title: 'Story 8.3 : Indexer une note à l''enregistrement'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'ed42ea4104ba3cfd0e774a2a73c314894d214b62'
 route: 'dispatch'
 review_loop_iteration: 0
