@@ -148,4 +148,4 @@
 - Défaut repéré à l'essai réel : Claude écrivait du Markdown (`**7 jours**`) que le panneau afficherait avec ses astérisques ; consigne ajoutée (texte simple).
 - Vérification avec le vrai Mistral et le vrai Claude : réponses normales acceptées avec la bonne source ; questions sans réponse dans les notes : pas de source ni de conseil ; hors sujet : message fixe. `npm test` 80/80, lint, tsc, build.
 - Revue par un relecteur indépendant : 5 correctifs (message dédié au rejet, extrait lisible en entier, message de copie ciblé et temporaire, réponse validée côté navigateur, types uniques), 5 constats écartés (triage dans la spec). Décision notable : les nombres sont comparés à tous les extraits envoyés, pas aux seuls extraits cités, sinon une réponse « mes notes ne répondent pas » qui reprend légitimement des chiffres serait rejetée à tort.
-- Reste : essai sur la preview.
+- Essai sur la preview (compte du propriétaire) : sources sous la réponse, « Voir l'extrait », « Ouvrir », « Copier le texte », hors-sujet sans source, plus d'astérisques : OK. Story 8.9 terminée.

@@ -2,7 +2,7 @@
 title: 'Story 8.9 : Citations vérifiées et sources cliquables'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '795b1202d9fa7513537b6980933daf3265ae027e'
 route: 'oneshot'
 review_loop_iteration: 0
