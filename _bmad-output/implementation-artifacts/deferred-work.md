@@ -55,3 +55,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-10-retrouver-mon-historique.md`
   summary: index sur `message_citations.note_id` et `chunk_id`, et chargement de l'historique à l'ouverture du panneau.
   evidence: chaque suppression de note ou régénération d'extraits parcourt la table des citations (`on delete set null`) ; l'historique est relu à chaque chargement de la mise en page. Négligeable aujourd'hui.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-14-jeu-de-test-du-rag-et-score.md`
+  summary: option `--runs N` pour `test:rag` (plusieurs passages, taux de réussite par question) et jeu de questions non vues pour ne pas régler l'assistant sur le jeu de test.
+  evidence: le résultat varie d'une exécution à l'autre (18, 19, 20 observés) et la consigne a été réglée sur ce même jeu ; un score unique contre un seuil de 18 est instable.
