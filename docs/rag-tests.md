@@ -15,7 +15,7 @@ Ce fichier regroupe les tests de l'assistant : le test de fuite entre comptes (s
 **Ce que fait le test**
 1. A et B reçoivent chacun 3 notes fictives sur des thèmes proches (factures, clients, abonnements) mais avec des faits différents ; chaque note est vectorisée par le vrai `mistral-embed` (environ 10 textes envoyés à Mistral, tous fictifs).
 2. Chacun pose à `match_chunks` les questions qui portent sur les sujets de **l'autre** compte, avec un seuil à 0 et la limite maximale (20), les conditions les plus favorables à une fuite : il ne doit recevoir que ses propres extraits, jamais le texte ni la note de l'autre.
-3. Même chose avec le seuil réel de l'application (0,76).
+3. Même chose avec le seuil réel de l'application (aujourd'hui 0,76, importé de `lib/domain/matching.ts`).
 4. Lecture directe de `note_chunks` par chaque compte : aucun extrait de l'autre, ni par liste ni par note.
 5. Sans connexion : la fonction est refusée (code 42501).
 6. Contrôle du détecteur : un petit test vérifie que la fonction qui repère les fuites signale bien un extrait interdit (et un seul suffit) et laisse passer les siens. Il vérifie le détecteur, pas la base.
@@ -45,5 +45,7 @@ Je ne l'invente pas : il doit venir de tes vraies attentes, avec de vraies notes
 | N° | Question | Source attendue (titre de la note) | Réponse présente ? | Bon extrait retrouvé ? | Réponse fidèle ? |
 |---|---|---|---|---|---|
 | 1 | | | | | |
+
+Cas déjà relevé à l'essai, à inclure : « est ce que j'ai une note qui traite de quittance » (source attendue : la note « Auto Quittance »). Elle scorait 0,75 par sens, sous le seuil de 0,76 : la recherche par mots-clés (hybride) la retrouve.
 
 Objectif de départ : 18 questions sur 20 (décision de l'auteur, à confirmer avec Richard).

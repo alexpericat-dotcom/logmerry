@@ -164,6 +164,25 @@ describe("fuite de la recherche par sens entre deux comptes fictifs", () => {
     });
   }
 
+  for (const who of ["A", "B"] as const) {
+    const other = who === "A" ? "B" : "A";
+    // Voie « par mots-clés » de l'assistant : la recherche plein texte (`search_notes`) puis la lecture des extraits de ces notes.
+    test(`${who} cherche par mots-clés les mots propres à ${other} : aucune note ni extrait de ${other}`, async () => {
+      const account = who === "A" ? a : b;
+      const own = who === "A" ? NOTES.A : NOTES.B;
+      assert.ok(own.length > 0);
+      const theirs = other === "A" ? ["alpha", "recouvrement", "beta", "quittances"] : ["gamma", "relance", "delta", "abonnement"];
+      for (const word of theirs) {
+        const { data, error } = await account.client.rpc("search_notes", { query: word });
+        assert.ifError(error);
+        assert.deepEqual((data as { id: string }[]).filter((n) => noteIds[other].has(n.id)), [], `« ${word} » : note de ${other} reçue`);
+        const chunks = await account.client.from("note_chunks").select("id").in("note_id", [...noteIds[other]]);
+        assert.ifError(chunks.error);
+        assert.deepEqual(chunks.data, [], "extraits de l'autre compte reçus");
+      }
+    });
+  }
+
   test("sans connexion : aucune recherche par sens", async () => {
     const { data, error } = await newClient().rpc("match_chunks", {
       query_embedding: JSON.stringify(questionVectors.B[0]), match_threshold: -1, match_count: 20,

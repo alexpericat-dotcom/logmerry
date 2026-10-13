@@ -7,6 +7,7 @@ import {
   FileText,
   Gauge,
   Image as ImageIcon,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Receipt,
@@ -18,6 +19,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { useAssistant } from "@/components/assistant-provider";
 import { LogoutButton } from "@/components/logout-button";
 import { SearchPalette } from "@/components/search-palette";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -46,6 +48,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  const assistant = useAssistant();
 
   const toggle = () => {
     const next = !collapsed;
@@ -79,8 +82,18 @@ export function AppSidebar({
         </Button>
       </div>
 
-      <div className="px-2 pb-2">
+      <div className="flex flex-col gap-1 px-2 pb-2">
         <SearchPalette labelClass={labelClass} />
+        <button
+          type="button"
+          onClick={assistant.isOpen ? assistant.closePanel : assistant.openPanel}
+          aria-expanded={assistant.isOpen}
+          title={assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}
+          className="flex h-9 w-full items-center gap-3 rounded-md border-l-[3px] border-transparent px-2 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <MessageSquare size={16} aria-hidden="true" />
+          <span className={labelClass}>{assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}</span>
+        </button>
       </div>
 
       <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-2">

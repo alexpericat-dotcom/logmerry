@@ -40,3 +40,18 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-5-retrouver-les-passages-pertinents.md`
   summary: passer `hnsw.iterative_scan` de `relaxed_order` à `strict_order` dans `match_chunks` quand le nombre d'extraits devient grand.
   evidence: `relaxed_order` peut ranger légèrement hors ordre les résultats de l'index ; la limite interne peut alors couper un extrait un peu plus proche. Sans effet tant que la table est petite (balayage séquentiel) ; modifier la fonction demande de recharger pgvector dans la migration (voir la note de la migration).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
+  summary: tester `retrieveChunks` avec un faux client Supabase et extraire l'index de la palette ⌘K en fonction pure testée.
+  evidence: le mappage des champs, le titre de repli et le décalage d'index (+1 avec l'entrée de l'assistant) ne sont couverts que par les essais de bout en bout et à la main.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
+  summary: tester `retrieveChunks` (échec de la voie par mots-clés ignoré, échec de la voie par sens fatal) avec un faux client.
+  evidence: le comportement n'est couvert que par l'essai de bout en bout ; deux chemins asynchrones et une fusion dépendent de lui.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-retrouver-mon-historique.md`
+  summary: ajouter un moyen d'effacer l'historique de l'assistant (et décider d'une durée de conservation).
+  evidence: les questions tapées sont conservées sans limite ni moyen de les retirer ; la politique de suppression existe en base (aucune interface). À traiter avec la mention RGPD, avant toute donnée réelle.
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-retrouver-mon-historique.md`
+  summary: index sur `message_citations.note_id` et `chunk_id`, et chargement de l'historique à l'ouverture du panneau.
+  evidence: chaque suppression de note ou régénération d'extraits parcourt la table des citations (`on delete set null`) ; l'historique est relu à chaque chargement de la mise en page. Négligeable aujourd'hui.

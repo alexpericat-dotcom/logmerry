@@ -41,7 +41,11 @@ export function DeleteNote({ id }: { id: string }) {
       action={action}
       role="group"
       aria-labelledby="delete-question"
-      onKeyDown={(e) => e.key === "Escape" && !pending && setConfirming(false)}
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" || pending) return;
+        e.preventDefault(); // la confirmation prend la touche : le panneau de l'assistant reste ouvert
+        setConfirming(false);
+      }}
       className="flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3"
     >
       <p id="delete-question" className="font-semibold">

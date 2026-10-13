@@ -22,7 +22,7 @@ export function SenseSearch() {
         Chercher par sens
       </h2>
       <p className="text-sm text-muted-foreground">
-        Pose une question : tu vois les passages de tes notes que l&apos;assistant retrouverait. Seules les notes indexées sont cherchées. Ta question est
+        Pose une question : tu vois les passages de tes notes que l&apos;assistant retrouverait, par sens (avec un score) et par mots-clés. Seules les notes indexées sont cherchées. Ta question est
         envoyée à Mistral AI : n&apos;y mets pas de données réelles de clients.
       </p>
       <form action={action} className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -53,7 +53,9 @@ export function SenseSearch() {
                 <Link href={`/notes/${r.noteId}`} className="min-w-0 break-words font-semibold underline-offset-4 hover:underline">
                   {r.title}
                 </Link>
-                <span className="shrink-0 text-sm tabular-nums text-muted-foreground">score {formatScore(r.score)}</span>
+                <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                  {r.score === null ? "mot-clé" : `score ${formatScore(r.score)}`}
+                </span>
               </div>
               <p className="mt-1 break-words text-sm text-muted-foreground">{excerpt(r.content, 300)}</p>
             </li>

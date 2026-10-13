@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { AssistantPanel } from "@/components/assistant-panel";
+import { AssistantProvider } from "@/components/assistant-provider";
+import { listHistory } from "@/lib/db/history";
 import { SIDEBAR_COOKIE } from "@/lib/nav";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,20 +17,31 @@ async function AppShell({ children }: { children: React.ReactNode }) {
 
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
   const email = typeof data.claims.email === "string" ? data.claims.email : null;
+  // L'historique de l'assistant ; s'il ne se charge pas, l'application reste utilisable avec un panneau vide.
+  const loaded = await listHistory(supabase).then(
+    (history) => ({ history, failed: false }),
+    (e) => {
+      console.error("Historique illisible :", e instanceof Error ? e.message : "erreur inconnue");
+      return { history: [], failed: true };
+    },
+  );
 
   return (
-    <div className="flex min-h-svh">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:outline focus:outline-2 focus:outline-ring"
-      >
-        Aller au contenu
-      </a>
-      <AppSidebar email={email} defaultCollapsed={collapsed} />
-      <main id="main" tabIndex={-1} className="min-w-0 flex-1 p-6 md:p-8">
-        {children}
-      </main>
-    </div>
+    <AssistantProvider initialMessages={loaded.history} historyFailed={loaded.failed}>
+      <div className="flex min-h-svh">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:outline focus:outline-2 focus:outline-ring"
+        >
+          Aller au contenu
+        </a>
+        <AppSidebar email={email} defaultCollapsed={collapsed} />
+        <main id="main" tabIndex={-1} className="min-w-0 flex-1 p-6 md:p-8">
+          {children}
+        </main>
+        <AssistantPanel />
+      </div>
+    </AssistantProvider>
   );
 }
 
