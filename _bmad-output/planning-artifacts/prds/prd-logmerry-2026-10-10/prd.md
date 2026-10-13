@@ -2,14 +2,14 @@
 title: LogMerry
 status: final
 created: 2026-10-10
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # PRD : LogMerry
 *Nom de code. Le nom public reste à définir.*
 
 ## 0. Objet du document
-Ce PRD s'adresse à l'auteur, à son tuteur (Richard) et aux étapes BMAD suivantes (UX, architecture, épics). Il s'appuie sur `docs/brief.md` et sur la session de cadrage `_bmad-output/forge/logmerry-mvp/forged-idea.md`, qu'il ne duplique pas. Chaque fonctionnalité regroupe des exigences fonctionnelles (FR), numérotées de façon continue dans tout le document (l'ordre de lecture peut différer de l'ordre numérique). Les hypothèses sont balisées `[ASSUMPTION]` et indexées en §10. Les choix techniques détaillés sont dans `addendum.md`. Les écrans, le ton et le comportement de l'interface sont décrits dans `ux-designs/ux-logmerry-2026-10-11/DESIGN.md` (aspect) et `EXPERIENCE.md` (comportement, parcours détaillés), sous `_bmad-output/planning-artifacts/`.
+Ce PRD s'adresse à l'auteur, à son tuteur (Richard) et aux étapes BMAD suivantes (UX, architecture, épics). Il s'appuie sur `docs/brief.md` et sur la session de cadrage `_bmad-output/forge/logmerry-mvp/forged-idea.md`, qu'il ne duplique pas. Chaque fonctionnalité regroupe des exigences fonctionnelles (FR), numérotées de façon continue dans tout le document (l'ordre de lecture peut différer de l'ordre numérique). Les hypothèses sont balisées `[ASSUMPTION]` et indexées en §10. Les choix techniques détaillés sont dans `addendum.md` et, en cas d'écart, dans l'architecture (`architecture/architecture-logmerry-2026-10-12/ARCHITECTURE-SPINE.md`) qui fait foi. Les écrans, le ton et le comportement de l'interface sont décrits dans `ux-designs/ux-logmerry-2026-10-11/DESIGN.md` (aspect) et `EXPERIENCE.md` (comportement, parcours détaillés), sous `_bmad-output/planning-artifacts/`.
 
 ## 1. Vision
 LogMerry est un cockpit personnel pour piloter une activité de conseil No-Code/IA en micro-entreprise. Chaque jour, il dit à son propriétaire quoi faire, et pourquoi, à partir de ses missions, de ses prospects, de ses factures et de ses échéances. Un assistant répond à partir de **ses propres notes** et **cite ses sources**.
@@ -186,7 +186,7 @@ Le système assemble un brouillon de lignes à partir du catalogue, à recopier 
 
 ### 5.2 Contraintes et garde-fous
 - **Pas de conseil fiscal ou juridique généré par l'IA.** Les provisions et cotisations sont des estimations, jamais des montants officiels.
-- **Données personnelles et RGPD :** hébergement dans l'Union européenne ; les extraits de notes sont envoyés au fournisseur du modèle (critère de choix : RGPD, puis qualité en français, puis coût).
+- **Données personnelles et RGPD :** hébergement dans l'Union européenne (base Supabase UE, fonctions Vercel en région Paris) ; les extraits de notes sont envoyés à Anthropic (réponses) et à Mistral AI (embeddings) : à documenter avant toute donnée réelle.
 - **Gouvernance des données :** une seule base ; données fictives pendant le Workshop 8 ; au passage à l'outil pro, purge (embeddings et historique de chat inclus), seul le portfolio est conservé ; le MCP Supabase est autorisé tant que la base ne contient que des données fictives (lecture seule hors modification du schéma, approbation manuelle) et débranché avant la première vraie donnée client.
 - **Sécurité :** aucune clé secrète côté client, dans le code ou dans un commit ; schéma versionné dans `supabase/migrations/`.
 - **Langue :** interface en français, code et commits en anglais.
@@ -258,7 +258,7 @@ Ordre de livraison : (1) résumé automatique des notes (FR-20), CRM, missions e
 ## 9. Questions ouvertes
 1. Critères de notation : reçus du tuteur (voir §8). Restent à confirmer avec Richard, session du 12 octobre 2026 : le formalisme BMAD attendu et la date de soutenance.
 2. Seuil de bonnes réponses du RAG : voir FR-6 ; à réviser si Richard exige autre chose.
-3. Modèle de langage et d'embeddings : à choisir avant la première migration, via `bmad-deep-recon` en type `technical`.
+3. ~~Modèle de langage et d'embeddings~~ : tranché le 13 octobre 2026 dans l'architecture (Claude pour les réponses, `mistral-embed` pour les embeddings). Reste à valider le modèle Claude exact sur le jeu de test (FR-6) et à documenter l'envoi des extraits à deux fournisseurs (RGPD) avant toute donnée réelle.
 4. Nom public du produit.
 5. Valeurs de référence (taux de l'ACRE, seuils de TVA, périodicité de déclaration) : fournies par l'auteur, **non vérifiées**, à confirmer à la source avant usage.
 
