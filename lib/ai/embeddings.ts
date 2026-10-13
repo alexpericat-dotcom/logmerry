@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getAiConfig } from "@/lib/ai/config";
+import { getMistralApiKey } from "@/lib/ai/config";
 import { parseEmbeddings, toBatches } from "@/lib/domain/embeddings";
 
 export const EMBEDDING_MODEL = "mistral-embed";
@@ -10,7 +10,7 @@ const TIMEOUT_MS = 20_000;
 /** Vecteurs (1 024 valeurs) des textes, dans l'ordre. Lève une erreur sans contenu ni clé si l'appel échoue. */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (!texts.length) return [];
-  const { mistralApiKey } = getAiConfig();
+  const mistralApiKey = getMistralApiKey();
   const vectors: number[][] = [];
   for (const batch of toBatches(texts)) {
     const res = await fetch(URL, {

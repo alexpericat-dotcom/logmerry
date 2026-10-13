@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { readAiConfig } from "./ai-config.ts";
+import { VARIABLES, readAiConfig, readEnvVar } from "./ai-config.ts";
 
 const ENV = { ANTHROPIC_API_KEY: "a-secret", MISTRAL_API_KEY: "m-secret", AI_CHAT_MODEL: "un-modele" };
 
@@ -22,4 +22,9 @@ test("variable absente ou vide : l'erreur nomme la variable, jamais une valeur",
       );
     }
   }
+});
+
+test("une seule variable lue : les autres, absentes, ne gênent pas", () => {
+  assert.equal(readEnvVar({ MISTRAL_API_KEY: " m-secret " }, VARIABLES.mistralApiKey), "m-secret");
+  assert.throws(() => readEnvVar({}, VARIABLES.mistralApiKey), /MISTRAL_API_KEY/);
 });
