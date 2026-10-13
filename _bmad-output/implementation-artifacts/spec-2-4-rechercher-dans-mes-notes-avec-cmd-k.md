@@ -2,7 +2,7 @@
 title: 'Story 2.4 : Rechercher dans mes notes avec ⌘K'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '91767c05860a057a2af0b9f8f8f199d869902d0a'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -75,6 +75,23 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+| Constat | Verdict | Route | Preuve / décision |
+|---|---|---|---|
+| Clic sur le rembourrage de la palette la ferme | medium | patch | `e.target === dialog` vrai aussi pour le rembourrage ; test de position du clic |
+| Rejet réseau de `searchNotes` non géré dans l'effet | medium | patch | `answered` jamais posé, aucun message ; `try/catch` ajouté |
+| Réponse en vol après saisie vidée ou fermeture | low | patch | `latest` incrémenté aussi quand la saisie est vide |
+| Option active non défilée dans la liste | low | patch | `scrollIntoView({block:"nearest"})` |
+| Sémantique SQL non testée (corps, début de mot, ordre, mots vides, opérateurs, limite 20, refus 42501) | medium | patch | cas ajouté à `tests/isolation.test.ts` (15/15) |
+| Accents non neutralisés | low | rejeté | limite décidée par le propriétaire (frozen) |
+| `[:alnum:]` coupe les mots accentués | false | rejeté | mesuré : « procédure » intact, base `en_US.UTF-8` |
+| `title` / `body` NULL | false | rejeté | colonnes `NOT NULL` |
+| Palette dans une barre repliée / instances multiples | false | rejeté | une seule instance, barre toujours affichée, libellé `sr-only` |
+| `search` exposé par `select *` | false | rejeté | requêtes existantes à colonnes explicites |
+| Corps complet renvoyé (20 lignes) | low | rejeté | reste côté serveur, extrait envoyé au client |
+| Résultats vidés entre deux frappes, pas de « Recherche… », plus de 20 non signalé | low | rejeté | confort ; limite de 20 voulue par la spec |
+| Test de la Server Action (mocks) | low | rejeté | colle fine ; essai manuel suffit pour le Workshop 8 |
+| Avis NOTICE sur requête vide | false | rejeté | renvoie une liste vide, vérifié par le test |
 
 ## Design Notes
 
