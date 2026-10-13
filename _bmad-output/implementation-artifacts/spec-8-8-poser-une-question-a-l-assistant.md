@@ -2,7 +2,7 @@
 title: 'Story 8.8 : Poser une question à l''assistant'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '02e7b6e888f1197b029fd36d43049efa9b68f5b4'
 route: 'dispatch'
 review_loop_iteration: 0
