@@ -1,0 +1,107 @@
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when its first story starts (via build's sprint sync)
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates the next story after the previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; the status view surfaces open ones
+generated: 10-13-2026 12:35
+last_updated: 10-13-2026 17:10
+project: logmerry
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+development_status:
+  epic-1: in-progress
+  1-1-voir-logmerry-en-ligne: done
+  1-2-me-connecter-et-me-déconnecter: done
+  1-3-voir-mon-cockpit-vide-dans-la-barre-latérale: done
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-créer-et-lister-mes-notes: backlog
+  2-2-modifier-classer-et-supprimer-une-note: backlog
+  2-3-deux-comptes-fictifs-ne-se-voient-pas: backlog
+  2-4-rechercher-dans-mes-notes-avec-k: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-gérer-mes-prospects-et-clients: backlog
+  3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: backlog
+  3-3-lier-une-note-à-un-client-ou-un-prospect: backlog
+  3-4-créer-des-missions: backlog
+  3-5-découper-une-mission-en-étapes: backlog
+  3-6-suivre-mes-devis: backlog
+  3-7-rechercher-aussi-clients-et-missions: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-renseigner-mes-paramètres: backlog
+  4-2-enregistrer-mes-factures: backlog
+  4-3-enregistrer-un-encaissement: backlog
+  4-4-voir-ma-position-par-rapport-au-plafond: backlog
+  4-5-voir-une-estimation-de-cotisations: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-enregistrer-mes-échéances: backlog
+  5-2-voir-mes-tâches-du-jour-échéances-et-factures-échues: backlog
+  5-3-tâches-liées-au-plafond-et-à-l-acre: backlog
+  5-4-tâches-devis-sans-réponse-et-pipeline-vide: backlog
+  5-5-voir-mon-ca-encaissé-et-ma-jauge-sur-le-cockpit: backlog
+  5-6-écran-à-faire-et-ligne-de-synthèse: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-gérer-mes-réalisations: backlog
+  6-2-publier-avec-l-accord-du-client: backlog
+  6-3-voir-le-portfolio-public: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-données-de-démonstration-fictives: backlog
+  7-2-accessibilité-des-parcours-principaux: backlog
+  7-3-sauvegarde-vérifiée: backlog
+  7-4-parcours-de-démo-complet: backlog
+  epic-7-retrospective: optional
+
+  epic-8: backlog
+  8-1-préparer-le-serveur-pour-l-ia: backlog
+  8-2-découper-une-note-en-extraits: backlog
+  8-3-indexer-une-note-à-l-enregistrement: backlog
+  8-4-indexer-mes-notes-existantes: backlog
+  8-5-retrouver-les-passages-pertinents-fonction-de-recherche: backlog
+  8-6-chercher-par-sens-dans-mes-notes: backlog
+  8-7-la-recherche-ne-fuit-pas-entre-comptes: backlog
+  8-8-poser-une-question-à-l-assistant: backlog
+  8-9-citations-vérifiées-et-sources-cliquables: backlog
+  8-10-retrouver-mon-historique: backlog
+  8-11-dire-je-ne-trouve-pas-et-créer-une-note-à-documenter: backlog
+  8-12-garde-fous-et-explication-des-estimations: backlog
+  8-13-résumé-automatique-d-une-note: backlog
+  8-14-jeu-de-test-du-rag-et-score: backlog
+  8-15-test-de-fuite-sur-l-assistant-et-l-historique: backlog
+  epic-8-retrospective: optional

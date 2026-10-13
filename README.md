@@ -57,9 +57,10 @@ Les citations sont vérifiées à deux niveaux :
 | --- | --- |
 | Front | Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui |
 | Backend | Supabase Cloud, région européenne : Auth, Postgres, Storage, pgvector |
-| Chat | Fonction Supabase, pour que la sécurité par ligne s'applique à chaque requête |
-| Tâches asynchrones | n8n : ingestion, rappels, résumé hebdomadaire, calendrier |
-| Modèle de langage et embeddings | À choisir : critères classés RGPD (hébergement UE), qualité en français, coût |
+| Hébergement | Vercel (fonctions en région Paris, `cdg1`) |
+| Chat et indexation | Route Handler et Server Actions Next.js, avec la session de l'utilisateur pour que la RLS s'applique |
+| Modèle de langage et embeddings | Claude (Anthropic) pour les réponses, `mistral-embed` (Mistral AI) pour les embeddings, appels côté serveur uniquement |
+| Tâches asynchrones | n8n, après le MVP |
 
 ## Principes de sécurité
 
@@ -92,6 +93,14 @@ npm run dev
 ```
 
 L'application tourne sur [localhost:3000](http://localhost:3000).
+
+## Déployer sur Vercel
+
+1. Sur [vercel.com](https://vercel.com), *Add New → Project*, importer le dépôt GitHub `logmerry`.
+2. Framework : Next.js (détecté). La région des fonctions (`cdg1`, Paris) est fixée dans `vercel.json`.
+3. Variables d'environnement (*Settings → Environment Variables*) : `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, les mêmes que dans `.env.local`. Aucune clé secrète à ce stade.
+4. Dans Supabase (*Authentication → URL Configuration*), ajouter l'adresse Vercel dans *Site URL* et *Redirect URLs* (`https://<ton-projet>.vercel.app/**`).
+5. Déployer, puis ouvrir l'adresse : la page « LogMerry » doit s'afficher.
 
 ## Documentation du projet
 
