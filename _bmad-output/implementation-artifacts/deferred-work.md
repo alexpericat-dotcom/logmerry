@@ -44,3 +44,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
   summary: tester `retrieveChunks` avec un faux client Supabase et extraire l'index de la palette ⌘K en fonction pure testée.
   evidence: le mappage des champs, le titre de repli et le décalage d'index (+1 avec l'entrée de l'assistant) ne sont couverts que par les essais de bout en bout et à la main.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
+  summary: tester `retrieveChunks` (échec de la voie par mots-clés ignoré, échec de la voie par sens fatal) avec un faux client.
+  evidence: le comportement n'est couvert que par l'essai de bout en bout ; deux chemins asynchrones et une fusion dépendent de lui.

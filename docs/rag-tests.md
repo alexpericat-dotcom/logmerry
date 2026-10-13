@@ -46,4 +46,6 @@ Je ne l'invente pas : il doit venir de tes vraies attentes, avec de vraies notes
 |---|---|---|---|---|---|
 | 1 | | | | | |
 
+Cas déjà relevé à l'essai, à inclure : « est ce que j'ai une note qui traite de quittance » (source attendue : la note « Auto Quittance »). Elle scorait 0,75 par sens, sous le seuil de 0,76 : la recherche par mots-clés (hybride) la retrouve.
+
 Objectif de départ : 18 questions sur 20 (décision de l'auteur, à confirmer avec Richard).

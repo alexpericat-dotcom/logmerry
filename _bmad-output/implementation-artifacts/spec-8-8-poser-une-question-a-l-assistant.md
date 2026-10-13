@@ -79,6 +79,23 @@ context:
 
 ## Review Triage Log
 
+**Ajout après l'essai sur la preview : recherche hybride** (décision du propriétaire : seuil gardé à 0,76, mots-clés isolés de la question). `lib/domain/keywords.ts` (mots-clés, extraits retenus, fusion), voie par mots-clés dans `lib/db/retrieval.ts` (`search_notes` par mot-clé puis extraits contenant un mot-clé), « mot-clé » affiché à la place du score dans « Chercher par sens ». Relecture indépendante de cet ajout :
+
+| Constat | Verdict | Route | Preuve / décision |
+|---|---|---|---|
+| Les extraits trouvés par mots-clés peuvent être chassés quand la voie par sens remplit les 8 places | high | patch | 3 places réservées aux extraits trouvés seulement par mots-clés ; test avec 8 extraits par sens |
+| Les sigles de deux lettres (IA, RH) sont perdus | medium | patch | mots de deux lettres gardés s'ils ne sont pas des mots vides ; tests |
+| Les 5 premiers mots sont gardés, pas les plus utiles ; « contient » reste | medium | patch | au-delà de 5, les 5 plus longs dans l'ordre ; « contient » devient mot vide ; tests |
+| Liste de mots vides : doublon, trous, mots méta pouvant être le sujet (« fiche », « document », « texte ») | medium | patch | trous comblés, doublon retiré, « fiche », « document », « texte » ne sont plus des mots vides |
+| Pas d'insensibilité aux accents pour reconnaître une variante dans les extraits | medium | patch | accents ignorés des deux côtés ; test |
+| Préfixe de 5 lettres trop large (« contr ») ou exact sous 5 lettres | low | rejeté | limite assumée, noter `ponytail:` ; un vrai radical demanderait un stemmer |
+| Lecture des extraits limitée à 300 lignes sans ordre | low | rejeté | des dizaines de notes au MVP |
+| `search_notes` renvoie les textes complets pour n'utiliser que le titre | low | rejeté | volume faible |
+| Note trouvée par mots mais sans mot-clé dans ses extraits, ou non indexée : rien | low | rejeté | seules les notes indexées sont cherchées, c'est écrit sur la page |
+| Panne de la voie par mots-clés invisible pour l'utilisateur | low | rejeté | journalisée ; la voie par sens continue |
+| `retrieveChunks` (échec d'une voie ignoré, l'autre fatale) sans test automatique | low | defer | vérifié de bout en bout avec les vrais services |
+| Le chat utiliserait `score` nul | false | rejeté | `askClaude` ne reçoit que identifiant, titre et texte |
+
 | Constat | Verdict | Route | Preuve / décision |
 |---|---|---|---|
 | La question n'est pas échappée dans le message (balises forgeables) | medium | patch | question échappée ; test ajouté |
