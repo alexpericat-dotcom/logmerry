@@ -26,3 +26,4 @@
 - Réalisé : zone privée `app/(app)/`, page `/aujourd-hui` (remplace `/protected`), barre latérale repliable (cookie), lien « Aller au contenu », un seul `h1`, revérification du jeton côté serveur.
 - Écart repéré : le bouton de thème n'avait pas de nom accessible → `aria-label` ajouté.
 - Revue par 3 sous-agents : 4 correctifs (erreur de déconnexion lisible barre repliée, test des pages et constante `HOME_PATH`, repère `aside`, références `/protected` de la doc), un point reporté (vérification propre à chaque page), le reste écarté avec preuve dans la spec.
+- Contrôles manuels sur la preview : connexion et barre, repli mémorisé au rechargement, lien « Aller au contenu », thème clair/sombre, déconnexion puis `/aujourd-hui` renvoyé à la connexion : tous OK. Story 1.3 terminée.
