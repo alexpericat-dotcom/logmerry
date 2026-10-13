@@ -50,7 +50,7 @@ Le test ne supprime que ce qu'il a créé (notes et messages par identifiant). *
 
 ## 2. Jeu de questions du RAG (story 8.14)
 
-**Statut : proposé par l'assistant de développement, à relire et corriger par toi.** Il remplace le « à rédiger » : change, supprime ou ajoute des questions selon ce que tu veux vraiment éprouver. Tout le contenu est **fictif** (clients, montants, dates inventés).
+**Statut : relu par le propriétaire le 13 octobre 2026, sans modification (proposé à l'origine par l'assistant de développement).** Il remplace le « à rédiger » : change, supprime ou ajoute des questions selon ce que tu veux vraiment éprouver. Tout le contenu est **fictif** (clients, montants, dates inventés).
 
 Les mêmes données sont dans `tests/rag-cases.json` (notes du corpus et questions avec réponses attendues), que le script de la story 8.14 lira pour mesurer le score. Si tu modifies ce tableau, dis-le : les deux fichiers doivent rester identiques.
 

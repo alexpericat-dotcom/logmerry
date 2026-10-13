@@ -2,7 +2,7 @@
 title: 'Story 8.14 : Jeu de test du RAG et score'
 type: 'feature'
 created: '2026-10-13'
-status: 'in-review'
+status: 'done'
 baseline_commit: '3f41b221fdfdd041d08fb385770c2a9a33ad767a'
 route: 'oneshot'
 review_loop_iteration: 0
