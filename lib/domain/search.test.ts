@@ -14,3 +14,8 @@ test("rien à chercher : chaîne vide", () => {
 test("100 caractères au plus", () => {
   assert.equal([...normalizeQuery("é".repeat(SEARCH_MAX + 50))].length, SEARCH_MAX);
 });
+
+test("longueur maximale réglable", () => {
+  assert.equal([...normalizeQuery("a".repeat(500), 300)].length, 300);
+  assert.equal([...normalizeQuery("a".repeat(500))].length, SEARCH_MAX);
+});
