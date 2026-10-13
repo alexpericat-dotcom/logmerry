@@ -183,4 +183,20 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     const badType = await a.client.from("notes").insert({ title: `${PREFIX} type`, type: "inconnu" });
     assert.equal(badType.error?.code, "22P02");
   });
+
+  test("recherche : A trouve sa note, B ne la trouve pas, sans connexion c'est refusé", async () => {
+    const word = "isolation-test"; // présent dans le titre de A et de B (préfixe)
+    const forA = await a.client.rpc("search_notes", { query: word });
+    assert.ifError(forA.error);
+    const idsA = forA.data!.map((n: { id: string }) => n.id);
+    assert.ok(idsA.includes(noteA.id));
+    assert.ok(!idsA.includes(noteB.id));
+    const forB = await b.client.rpc("search_notes", { query: word });
+    assert.ifError(forB.error);
+    const idsB = forB.data!.map((n: { id: string }) => n.id);
+    assert.ok(idsB.includes(noteB.id));
+    assert.ok(!idsB.includes(noteA.id));
+    const anon = await newClient().rpc("search_notes", { query: word });
+    assert.ok(anon.error, "l'appel sans connexion doit être refusé");
+  });
 });
