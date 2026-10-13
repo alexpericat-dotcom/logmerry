@@ -103,3 +103,12 @@
 - Vérification avec le vrai Mistral et le compte fictif A (script jetable, même logique que l'action) : 3 notes indexées au 1er clic, 0 au 2e, extraits identiques, la note de B reste « en attente ». `npm test` 49/49, `npm run test:isolation` 18/18, lint, tsc, build.
 - Revue par un relecteur indépendant : 3 correctifs (« en attente » avant « en échec », journal serveur des erreurs, message « déjà indexées »), 6 constats écartés (triage dans la spec).
 - Essai sur la preview (compte du propriétaire) : page Paramètres, compteur et bouton : OK. Story 8.4 terminée ; sprint 3 (stories 8.1 à 8.4) terminé.
+
+## 2026-10-14 — Story 8.5 : Retrouver les passages pertinents (sprint 4)
+
+- Prompt : « Story 8.5 », via `bmad-build` ; spec `spec-8-5-retrouver-les-passages-pertinents.md`. Branche `feat/sprint-4-recherche-par-sens`, créée depuis la branche du sprint 3 (PR #3 pas encore fusionnée).
+- Mesure avant d'écrire la spec (textes fictifs, `mistral-embed`) : les scores sont très resserrés. Passages pertinents : meilleur score 0,79 à 0,82 ; questions sans rapport : 0,72 à 0,73, et même une recette de gâteau atteint 0,66 à 0,72. Seuil de départ proposé pour la story 8.6 : 0,76, provisoire, à régler sur le jeu de test (8.14). Le seuil reste un paramètre de l'appelant.
+- Sixième migration : fonction `match_chunks(query_embedding, match_threshold, match_count)` en `security invoker`, `search_path` vide, filtre explicite sur `owner_id`, plafond de 20 lignes, balayage itératif de l'index HNSW (traite le point reporté de la revue 8.1), droits refusés à `anon`.
+- Bug rencontré : la base refusait le réglage `hnsw.iterative_scan` de la fonction (« permission denied to set parameter ») car pgvector n'était pas chargé dans la session ; un `select '[1]'::extensions.vector;` en tête de migration règle le problème. Rien n'avait été appliqué au premier essai. L'outil MCP a appliqué la migration cette fois.
+- Test à deux comptes écrit d'abord et vu rouge (la fonction n'existait pas), puis vert : A retrouve ses extraits classés, rien sous le seuil, limite et plafond de 20, B ne reçoit aucun extrait de A, anonyme refusé (42501), vecteur de mauvaise dimension refusé. `test:isolation` 19/19, `npm test` 49/49, lint, tsc, build.
+- Revue par 3 sous-agents : 4 correctifs (plafond et `match_count` à 0 ou négatif testés, erreur de dimension précisée, assertion de B moins fragile, journal), 1 report (`strict_order` quand le volume grandit), 7 constats écartés (triage dans la spec).
