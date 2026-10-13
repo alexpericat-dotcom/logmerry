@@ -27,3 +27,11 @@
 - Écart repéré : le bouton de thème n'avait pas de nom accessible → `aria-label` ajouté.
 - Revue par 3 sous-agents : 4 correctifs (erreur de déconnexion lisible barre repliée, test des pages et constante `HOME_PATH`, repère `aside`, références `/protected` de la doc), un point reporté (vérification propre à chaque page), le reste écarté avec preuve dans la spec.
 - Contrôles manuels sur la preview : connexion et barre, repli mémorisé au rechargement, lien « Aller au contenu », thème clair/sombre, déconnexion puis `/aujourd-hui` renvoyé à la connexion : tous OK. Story 1.3 terminée.
+
+## 2026-10-13 — Story 2.1 : Créer et lister mes notes
+
+- Prompt : « Story 2.1 », via `bmad-build` ; spec `spec-2-1-creer-et-lister-mes-notes.md`.
+- Première migration : table `notes` (RLS, 4 policies sur `owner_id`), SQL montré puis approuvé avant application via le MCP Supabase. Contrôles après application : RLS active, 4 policies présentes, aucun avertissement sur `notes`.
+- Code : liste `/notes` (état vide, ordre récent → ancien), création `/notes/nouvelle`, validation du titre en fonction pure testée.
+- Remarque : le CLI Supabase n'est pas installé ; la migration passe par le MCP, le fichier de `supabase/migrations/` porte la version enregistrée par Supabase.
+- Revue par 3 sous-agents : 7 correctifs (session vérifiée avant validation, erreurs réseau gérées, titre compté en points de code, texte limité à 50 000 caractères et caractère nul retiré, écran d'erreur français avec « Réessayer », débordement des titres longs, découpe d'extrait sans casser les emoji), trois reports (test de l'action et RLS à deux comptes en 2.3, pagination en 2.4, contrainte de longueur côté base avec la migration de la 2.2).
