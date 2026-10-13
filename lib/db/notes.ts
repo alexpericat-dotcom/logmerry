@@ -9,11 +9,12 @@ export type Note = {
   body: string;
   status: "draft" | "active";
   type: NoteType;
+  index_status: "pending" | "indexed" | "failed";
   created_at: string;
   updated_at: string;
 };
 
-const COLUMNS = "id, title, body, status, type, created_at, updated_at";
+const COLUMNS = "id, title, body, status, type, index_status, created_at, updated_at";
 
 /** Mes notes (filtrées par type si demandé), de la plus récente à la plus ancienne ; la RLS limite aux miennes. */
 export async function listNotes(type: NoteType | null = null): Promise<Note[]> {

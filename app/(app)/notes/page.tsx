@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { IndexStatus } from "@/components/index-status";
 import { Button } from "@/components/ui/button";
 import { listNotes } from "@/lib/db/notes";
 import {
@@ -97,9 +98,10 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
                   {formatDateTime(note.created_at)}
                 </time>
               </div>
-              <div className="mt-1 flex gap-2">
+              <div className="mt-1 flex flex-wrap gap-2">
                 <Badge variant="secondary">{NOTE_TYPE_LABELS[note.type]}</Badge>
                 {note.status === "draft" && <Badge variant="outline">Brouillon</Badge>}
+                <IndexStatus status={note.index_status} />
               </div>
               {note.body && (
                 <p className="mt-1 break-words text-sm text-muted-foreground">
