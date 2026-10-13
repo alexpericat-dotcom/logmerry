@@ -14,6 +14,8 @@ import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { toHistory, type MessageRow } from "../lib/domain/history.ts";
+
 function env(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variable manquante : ${name} (voir .env.local et .env.test.local)`);
@@ -52,6 +54,7 @@ describe("isolation des notes entre deux comptes fictifs", () => {
   const cleanup = async () => {
     for (const account of [a, b]) {
       if (!account) continue;
+      await account.client.from("messages").delete().like("content", `${PREFIX}%`); // historique de test (les citations partent en cascade)
       const { error } = await account.client.from("notes").delete().like("title", `${PREFIX}%`);
       if (error) console.warn(`Nettoyage incomplet : ${error.message}`);
     }
@@ -359,5 +362,83 @@ describe("isolation des notes entre deux comptes fictifs", () => {
 
     const bad = await match(a.client, "[0.1,0.2,0.3]", 0.5);
     assert.match(bad.error?.message ?? "", /dimension/i, "un vecteur de 3 valeurs est refusé (1024 attendues)");
+  });
+
+  test("historique : chacun ne voit que le sien ; une citation ne peut viser que mes notes et mes extraits ; rien ne se modifie ; suppression de la note : citation orpheline", async () => {
+    const msg = (client: typeof a.client, role: "user" | "assistant", content: string) =>
+      client.from("messages").insert({ role, content }).select("id").single();
+    const mA = await msg(a.client, "assistant", `${PREFIX} réponse de A`);
+    assert.ifError(mA.error);
+    const mB = await msg(b.client, "assistant", `${PREFIX} réponse de B`);
+    assert.ifError(mB.error);
+    const own = await a.client.from("messages").select("owner_id").eq("id", mA.data!.id).single();
+    assert.equal(own.data!.owner_id, a.userId, "owner_id rempli par la base");
+
+    // Lecture : B ne voit pas les messages de A, ni par liste ni par identifiant.
+    const listB = await b.client.from("messages").select("id");
+    assert.ifError(listB.error);
+    assert.ok(!listB.data!.some((m) => m.id === mA.data!.id));
+    const directB = await b.client.from("messages").select("id").eq("id", mA.data!.id).maybeSingle();
+    assert.equal(directB.data, null);
+
+    // Écriture hostile : au nom d'un autre, ou une citation sur le message d'un autre, ou vers la note d'un autre.
+    const fake = await b.client.from("messages").insert({ role: "user", content: `${PREFIX} faux`, owner_id: a.userId });
+    assert.equal(fake.error?.code, "42501");
+    const onOther = await b.client.from("message_citations").insert({ message_id: mA.data!.id, position: 0 });
+    assert.equal(onOther.error?.code, "42501", "B ne peut pas ajouter une citation au message de A");
+    const toOtherNote = await a.client.from("message_citations").insert({ message_id: mA.data!.id, position: 0, note_id: noteB.id });
+    assert.equal(toOtherNote.error?.code, "42501", "A ne peut pas citer la note de B");
+
+    // Citation légitime (note et extrait à moi), puis lecture jointe, immutabilité et suppression de la note.
+    const temp = await a.client.from("notes").insert({ title: `${PREFIX} citée puis supprimée`, body: "x" }).select("id").single();
+    assert.ifError(temp.error);
+    const chunkA = await a.client.from("note_chunks")
+      .insert({ note_id: temp.data!.id, chunk_index: 0, content: "extrait cité", embedding_model: "test-model" }).select("id").single();
+    assert.ifError(chunkA.error);
+    const chunkB = await b.client.from("note_chunks")
+      .insert({ note_id: noteB.id, chunk_index: 50, content: "extrait de B", embedding_model: "test-model" }).select("id").single();
+    assert.ifError(chunkB.error);
+    const toOtherChunk = await a.client.from("message_citations").insert({ message_id: mA.data!.id, position: 0, chunk_id: chunkB.data!.id });
+    assert.equal(toOtherChunk.error?.code, "42501", "A ne peut pas citer l'extrait de B");
+    const ok = await a.client.from("message_citations")
+      .insert({ message_id: mA.data!.id, position: 0, note_id: temp.data!.id, chunk_id: chunkA.data!.id }).select("id").single();
+    assert.ifError(ok.error);
+
+    // Lecture jointe réelle (même requête que l'application) : forme renvoyée par la base, ordre, isolation.
+    const JOINED = "id, role, content, created_at, message_citations(id, position, note_id, chunk_id, notes(title), note_chunks(content))";
+    const read = await a.client.from("messages").select(JOINED).like("content", `${PREFIX}%`).order("created_at", { ascending: false });
+    assert.ifError(read.error);
+    const history = toHistory(read.data as unknown as MessageRow[]);
+    assert.deepEqual(history.map((m) => m.text), [], "un message de réponse seul n'ouvre pas l'historique (pas de question avant)");
+    const withQuestion = await a.client.from("messages").insert({ role: "user", content: `${PREFIX} question de A`, created_at: new Date(Date.now() - 1000).toISOString() });
+    assert.ifError(withQuestion.error);
+    const read2 = await a.client.from("messages").select(JOINED).like("content", `${PREFIX}%`).order("created_at", { ascending: false });
+    assert.ifError(read2.error);
+    const h2 = toHistory(read2.data as unknown as MessageRow[]);
+    assert.deepEqual(h2.map((m) => m.role), ["user", "assistant"]);
+    assert.deepEqual(h2[1].sources[0], { id: ok.data!.id, noteId: temp.data!.id, title: `${PREFIX} citée puis supprimée`, content: "extrait cité" });
+    const readB = await b.client.from("messages").select(JOINED).like("content", `${PREFIX}%`);
+    assert.ifError(readB.error);
+    assert.ok(!(readB.data as { content: string }[]).some((m) => m.content.includes("de A")), "B ne lit rien de l'historique de A");
+    const seenB = await b.client.from("message_citations").select("id");
+    assert.ifError(seenB.error);
+    assert.ok(!seenB.data!.some((c) => c.id === ok.data!.id), "B ne voit pas la citation de A");
+    const upd = await a.client.from("messages").update({ content: "changé" }).eq("id", mA.data!.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0, "un message ne se modifie pas");
+    const updC = await a.client.from("message_citations").update({ position: 5 }).eq("id", ok.data!.id).select("id");
+    assert.ok(updC.error || updC.data!.length === 0, "une citation ne se modifie pas");
+    const dup = await a.client.from("message_citations").insert({ message_id: mA.data!.id, position: 0 });
+    assert.equal(dup.error?.code, "23505", "une position par message");
+
+    await a.client.from("notes").delete().eq("id", temp.data!.id);
+    const after = await a.client.from("message_citations").select("note_id").eq("id", ok.data!.id).single();
+    assert.ifError(after.error);
+    assert.equal(after.data!.note_id, null, "la note supprimée : la citation reste, sans référence (« source supprimée »)");
+
+    const delB = await b.client.from("messages").delete().eq("id", mA.data!.id).select("id");
+    assert.equal(delB.data?.length ?? 0, 0, "B ne supprime pas le message de A");
+    const anon = await newClient().from("messages").select("id");
+    assert.ifError(anon.error);
+    assert.deepEqual(anon.data, []);
   });
 });
