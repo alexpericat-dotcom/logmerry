@@ -291,3 +291,9 @@
 - Constat d'Alex : en thème clair, tout le logo prenait la couleur du texte, donc la voile devenait noire.
 - Fait : en thème clair, le logo est blanc cassé sur un badge sombre (carré arrondi), comme l'image d'origine : la voile reste blanche ; en thème sombre, logo clair sans badge. Même principe pour l'icône d'onglet. Vérifié dans Chrome, clair et sombre.
 - Fond du thème clair : le #F7F6F2 paraît trop blanc. 4 propositions (`docs/refonte/fonds_clairs.py`, aperçus `apercu-fond-*.html`) : sable chaud, lavande brume, rose poudré, gris-bleu froid. Un fond plus foncé fait échouer quelques contrastes (succès, bordure de champ, focus) : le script assombrit seulement les jetons concernés (petites variations) et revérifie tout (texte ≥ 4,5, éléments ≥ 3). Le dégradé « couchant » prend le fond choisi comme départ (sinon une bande blanche apparaît). En attente du choix d'Alex.
+
+## 2026-10-14 — Fond clair « sable chaud » (choix A d'Alex)
+
+- Appliqué : fond `#F0E9DC`, surface `#E6DECE`, filet et survol `#D3C9B5` ; jetons assombris par le script pour garder les contrastes : bordure de champ `#797E89`, focus `#DF417C`, succès `#097145`, attention et marqueur `#954F00`, graphique 2 `#0F8E6E` (celui-ci échouait à 2,89 sur la surface ; la distance de daltonisme reste à 30,1). Dégradés clairs partis du sable (plus de bande blanche), icône de l'onglet alignée.
+- DESIGN.md (tableau des contrastes inclus), `globals.css` (régénéré depuis DESIGN.md), test de référence mis à jour ; 118 tests, lint et build passent, `contrastes.py` à 0 problème, texte du « couchant » clair mesuré à 11,01 au pire pixel. Vérifié dans Chrome sur la page « Nouvelle note » en thème clair.
+- Ratios les plus bas en clair : texte 4,54 (succès sur surface), éléments d'interface 3,03 (focus sur surface) : serrés mais conformes.

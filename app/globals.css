@@ -8,40 +8,40 @@
 @layer base {
   :root {
     color-scheme: light; /* les contrôles natifs (menu déroulant, défilement, saisie) suivent le thème de l'application, pas celui du système */
-    --background: 48 23.8% 95.9%; /* #F7F6F2 */
+    --background: 39 40% 90.2%; /* #F0E9DC */
     --foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --card: 46.7 22% 92%; /* #EFEDE6 */
+    --card: 40 32.4% 85.5%; /* #E6DECE */
     --card-foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --popover: 46.7 22% 92%; /* #EFEDE6 */
+    --popover: 40 32.4% 85.5%; /* #E6DECE */
     --popover-foreground: 220 16.7% 7.1%; /* #0F1115 */
     --primary: 232 100% 55.7%; /* #1D3BFF */
     --primary-foreground: 0 0% 100%; /* #FFFFFF */
     --action-foreground: 220 16.7% 7.1%; /* #0F1115 : texte des boutons d'action */
-    --secondary: 46.7 22% 92%; /* #EFEDE6 */
+    --secondary: 40 32.4% 85.5%; /* #E6DECE */
     --secondary-foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --muted: 46.7 22% 92%; /* #EFEDE6 */
+    --muted: 40 32.4% 85.5%; /* #E6DECE */
     --muted-foreground: 222.9 12.3% 33.5%; /* #4B5160 */
-    --accent: 46.2 14.6% 82.5%; /* #D9D6CC */
+    --accent: 40 25.4% 76.9%; /* #D3C9B5 */
     --accent-foreground: 220 16.7% 7.1%; /* #0F1115 */
     --destructive: 3.2 71.3% 41%; /* #B3261E */
     --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --filet: 46.2 14.6% 82.5%; /* #D9D6CC */
-    --border: 46.2 14.6% 82.5%; /* #D9D6CC */
-    --input: 220 6.3% 53.1%; /* #80858F */
-    --ring: 337.5 71.4% 57.5%; /* #E0457F */
-    --success: 154.8 84.8% 25.9%; /* #0A7A4B */
-    --warning: 31.9 100% 30.2%; /* #9A5200 */
-    --marker: 31.9 100% 30.2%; /* #9A5200 */
+    --filet: 40 25.4% 76.9%; /* #D3C9B5 */
+    --border: 40 25.4% 76.9%; /* #D3C9B5 */
+    --input: 221.2 6.3% 50.6%; /* #797E89 */
+    --ring: 337.6 71.2% 56.5%; /* #DF417C */
+    --success: 154.6 85.2% 23.9%; /* #097145 */
+    --warning: 31.8 100% 29.2%; /* #954F00 */
+    --marker: 31.8 100% 29.2%; /* #954F00 */
     --chart-1: 0 79.7% 25.1%; /* #730D0D */
-    --chart-2: 164.9 80.4% 32%; /* #109372 */
+    --chart-2: 164.9 80.9% 30.8%; /* #0F8E6E */
     --chart-3: 44.9 80.4% 32%; /* #937210 */
     --chart-4: 255 50% 25.1%; /* #302060 */
     --chart-5: 300 80.4% 40%; /* #B814B8 */
     --radius: 0.5rem;
     /* Dégradés de DESIGN.md (statiques, jamais animés). « couchant » : texte dans les 45 % du haut seulement. */
     --gradient-action: linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%); /* boutons d'action ; texte --action-foreground */
-    --gradient-1: linear-gradient(160deg, #F7F6F2, #EFEDE6);
-    --gradient-2: radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242, 112, 154, 0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220, 212, 245, 0) 100%), linear-gradient(#F7F6F2, #F7F6F2);
+    --gradient-1: linear-gradient(160deg, #F0E9DC, #E6DECE);
+    --gradient-2: radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242, 112, 154, 0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220, 212, 245, 0) 100%), linear-gradient(#F0E9DC, #F0E9DC);
   }
   .dark {
     color-scheme: dark;

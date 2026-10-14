@@ -150,9 +150,9 @@ test("chaque thème déclare son color-scheme : les contrôles natifs (menu dér
   assert.ok(/select option\s*\{[^}]*--popover/.test(css), "options du menu déroulant colorées par les jetons");
 });
 
-test("valeurs de référence de DESIGN.md : texte sur fond 17,47 (clair) et 16,84 (sombre), bouton clair 6,73", () => {
+test("valeurs de référence de DESIGN.md : texte sur fond 15,65 (clair) et 16,84 (sombre), bouton clair 6,73", () => {
   const l = tokens(":root"), d = tokens(".dark");
-  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 17.47) < 0.1);
+  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 15.65) < 0.1);
   assert.ok(Math.abs(contrast(d["foreground"], d["background"]) - 16.84) < 0.1);
   assert.ok(Math.abs(contrast(l["primary-foreground"], l["primary"]) - 6.73) < 0.1);
 });
