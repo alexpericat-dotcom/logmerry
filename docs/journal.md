@@ -308,3 +308,8 @@
 ## 2026-10-14 — Retour mobile reporté
 
 - Alex a essayé la preview sur son Pixel 6a : la liste de notes lui plaît sur ordinateur, mais le rendu mobile « n'est pas dingue ». À traiter plus tard : story R8 (mobile) ajoutée à `docs/refonte/stories.md`. Je n'ai pas de détail sur ce qui gêne : à relever écran par écran sur le téléphone avant de corriger (captures bienvenues).
+
+## 2026-10-14 — Refonte R2 : composants (périmètre réel) et correction d'une erreur
+
+- Erreur de ma part corrigée : j'avais dit à Alex qu'il n'y a pas de raccourci pour l'assistant et que l'entrée « Demander à l'assistant » de ⌘K n'était pas construite. **C'est faux** : ⌘K (ou Ctrl+K) ouvre la palette, la première entrée « Demander à l'assistant : <saisie> » envoie la question au panneau (vu à l'écran). Je n'avais pas relu le code de la palette avant de répondre. Ce qui manque : un raccourci direct qui ouvre le panneau sans passer par la palette.
+- R2 : déjà livrés au fil des retours (bouton en dégradé, gras et focus rose ; champ et menu déroulant stylés ; pastilles ; états). Ajouté : la palette ⌘K passe sur le jeton `popover`. Tableau de données et carte KPI reportés à R4/R5 : sans écran qui les utilise, ils ne seraient pas vérifiables (et resteraient du code mort). Vérifié à l'écran, palette ouverte, thème clair et sombre.
