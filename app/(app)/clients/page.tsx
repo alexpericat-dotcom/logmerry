@@ -37,12 +37,14 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
 
   if (total === 0) {
     return (
-      <div className="flex max-w-2xl flex-col items-start gap-4">
-        <p className="text-muted-foreground">
-          Tu n&apos;as pas encore de fiche. Une fiche, c&apos;est un prospect ou un client : un nom et d&apos;où il vient, pour savoir à qui tu as affaire.
-        </p>
+      <>
+        <PageBanner
+          title="Clients"
+          className="self-stretch"
+          description="Tu n'as pas encore de fiche. Une fiche, c'est un prospect ou un client : un nom et d'où il vient, pour savoir à qui tu as affaire."
+        />
         {createButton}
-      </div>
+      </>
     );
   }
 
@@ -64,7 +66,8 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
   ];
 
   return (
-    <div className="flex flex-col items-start gap-4">
+    <>
+      <PageBanner title="Clients" className="self-stretch" />
       <div className="flex w-full flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="flex flex-col gap-2">
           <FilterChips
@@ -92,15 +95,21 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
       ) : (
         <DataTable caption="Mes prospects et clients" columns={columns} rows={rows} rowKey={(c) => c.id} sorted={{ key: view.tri, dir: view.ordre }} />
       )}
-    </div>
+    </>
   );
 }
 
 export default function ClientsPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <div className="flex flex-col gap-6">
-      <PageBanner title="Clients" />
-      <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
+    <div className="flex flex-col items-start gap-6">
+      <Suspense
+        fallback={
+          <>
+            <PageBanner title="Clients" className="self-stretch" />
+            <p className="text-muted-foreground">Chargement…</p>
+          </>
+        }
+      >
         <ClientsList searchParams={searchParams} />
       </Suspense>
     </div>

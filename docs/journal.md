@@ -336,3 +336,8 @@
 - Tests : `test:isolation` 26/26 (6 nouveaux cas sur les fiches : visibilité, modification, suppression, création au nom d'un autre, anonyme, contraintes, `updated_at`) ; 131 tests unitaires ; parcours complet vérifié dans Chrome sur l'application locale (création, filtres, tri, `aria-sort`, modification, suppression, retour à vide).
 - Reste : relecture indépendante (étape 4), puis présentation.
 - Relecture indépendante de la story 3.1 (3 relecteurs sans contexte, 36 constats, triés un par un dans le journal de triage de la spec) : 5 corrigés (tri alphabétique par libellé français au lieu de l'ordre des enums, liste et total issus d'une seule lecture, logique de vue rendue pure avec 6 tests, ligne de tableau entièrement cliquable comme le prévoit le DESIGN, commentaire obsolète), 3 reportés (tests des Server Actions, succès et focus des formulaires, `on delete` vers les clients), le reste rejeté avec preuve. 137 tests, lint et build passent ; parcours rejoué dans Chrome.
+
+## 2026-10-14 — Explication au bas du bandeau (clients vides, cockpit)
+
+- Demande d'Alex : le texte « Tu n'as pas encore de fiche… » et celui du cockpit doivent être intégrés en bas du bandeau.
+- Fait : `PageBanner` accepte une `description`, posée au bas du bandeau. Choix de ma part, à valider : un cartouche presque opaque (fond de la page à 90 %) porte le texte, car le bas du dégradé est la zone colorée où aucun texte n'est validé (règle des 45 % du haut) ; le contraste reste celui du texte sur le fond de la page. DESIGN.md et `docs/ui-rules.md` mis à jour. Appliqué à Clients (état vide) et Aujourd'hui ; l'état vide des Notes garde son texte sous le bandeau (non demandé). Vérifié dans Chrome, clair et sombre.
