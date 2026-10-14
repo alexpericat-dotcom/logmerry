@@ -313,3 +313,9 @@
 
 - Erreur de ma part corrigée : j'avais dit à Alex qu'il n'y a pas de raccourci pour l'assistant et que l'entrée « Demander à l'assistant » de ⌘K n'était pas construite. **C'est faux** : ⌘K (ou Ctrl+K) ouvre la palette, la première entrée « Demander à l'assistant : <saisie> » envoie la question au panneau (vu à l'écran). Je n'avais pas relu le code de la palette avant de répondre. Ce qui manque : un raccourci direct qui ouvre le panneau sans passer par la palette.
 - R2 : déjà livrés au fil des retours (bouton en dégradé, gras et focus rose ; champ et menu déroulant stylés ; pastilles ; états). Ajouté : la palette ⌘K passe sur le jeton `popover`. Tableau de données et carte KPI reportés à R4/R5 : sans écran qui les utilise, ils ne seraient pas vérifiables (et resteraient du code mort). Vérifié à l'écran, palette ouverte, thème clair et sombre.
+
+## 2026-10-14 — Refonte R3 : écrans existants
+
+- Revue écran par écran (Aujourd'hui, Notes, Nouvelle note, Paramètres, connexion, mot de passe oublié, nouveau mot de passe, lien invalide), clair et sombre.
+- Trouvé et corrigé : (1) les trois pages d'authentification autres que la connexion étaient restées sur un fond uni sans logo : composant `AuthShell` (scène B) partagé par les quatre ; (2) page Paramètres : toute la phrase de comptage était en mono et « 0 notes » prenait un pluriel : seuls les chiffres sont en mono, accord corrigé (0 et 1 au singulier).
+- Constat sans correction : le libellé de la barre latérale « Cockpit » et le titre de page « Aujourd'hui » diffèrent (préexistant, à trancher avec l'epic 5).
