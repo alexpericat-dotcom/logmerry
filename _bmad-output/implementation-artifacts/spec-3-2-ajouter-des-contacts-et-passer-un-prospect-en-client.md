@@ -2,7 +2,7 @@
 title: 'Story 3.2 : Ajouter des contacts et passer un prospect en client'
 type: 'feature'
 created: '2026-10-15'
-status: 'draft'
+status: 'ready-for-dev'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
