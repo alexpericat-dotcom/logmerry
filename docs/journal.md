@@ -341,3 +341,8 @@
 
 - Demande d'Alex : le texte « Tu n'as pas encore de fiche… » et celui du cockpit doivent être intégrés en bas du bandeau.
 - Fait : `PageBanner` accepte une `description`, posée au bas du bandeau. Choix de ma part, à valider : un cartouche presque opaque (fond de la page à 90 %) porte le texte, car le bas du dégradé est la zone colorée où aucun texte n'est validé (règle des 45 % du haut) ; le contraste reste celui du texte sur le fond de la page. DESIGN.md et `docs/ui-rules.md` mis à jour. Appliqué à Clients (état vide) et Aujourd'hui ; l'état vide des Notes garde son texte sous le bandeau (non demandé). Vérifié dans Chrome, clair et sombre.
+
+## 2026-10-14 — Filtres dans le bandeau (Notes et Clients)
+
+- Demande d'Alex : inclure les filtres dans la bannière des catégories « Notes » et « Clients ».
+- Fait : `PageBanner` accepte `actions` (bouton principal en haut à droite, dans la zone calme) et `children` (filtres, au bas dans le même cartouche presque opaque que l'explication). Notes : filtres de type et « Brouillons » ; Clients : filtres de statut et d'origine. Le bouton « Créer une note / fiche » passe dans le bandeau (choix de ma part : sans les filtres, il restait seul sur sa ligne). L'état vide des Notes passe en simple phrase sous le bandeau ; celui des Clients garde l'explication dans le bandeau. Vérifié dans Chrome (fiches et notes de test créées puis supprimées, aucune donnée laissée).
