@@ -327,3 +327,11 @@
 - Revue écran par écran (Aujourd'hui, Notes, Nouvelle note, Paramètres, connexion, mot de passe oublié, nouveau mot de passe, lien invalide), clair et sombre.
 - Trouvé et corrigé : (1) les trois pages d'authentification autres que la connexion étaient restées sur un fond uni sans logo : composant `AuthShell` (scène B) partagé par les quatre ; (2) page Paramètres : toute la phrase de comptage était en mono et « 0 notes » prenait un pluriel : seuls les chiffres sont en mono, accord corrigé (0 et 1 au singulier).
 - Constat sans correction : le libellé de la barre latérale « Cockpit » et le titre de page « Aujourd'hui » diffèrent (préexistant, à trancher avec l'epic 5).
+
+## 2026-10-14 — Story 3.1 : gérer mes prospects et clients (implémentation)
+
+- Spec approuvée avec les choix d'Alex : modification et suppression incluses (1b), aucun champ facultatif au-delà du nom, du statut et de l'origine (2a). Téléphone, adresse et remarque libre notés dans `deferred-work.md` (Alex a demandé où seraient les coordonnées : l'e-mail d'un contact viendra à la story 3.2, le reste n'est prévu nulle part).
+- Migration `clients` (enums statut et origine, RLS, `updated_at`) : SQL montré, approuvé par Alex, appliqué via MCP (version 20261014174338) ; `get_advisors` : rien de nouveau.
+- Code : règles pures et 6 tests (`lib/domain/clients.ts`), accès aux données, 3 Server Actions, tableau réutilisable `DataTable`, filtres en liens, pastille de statut (prospect en signature, client en succès), pages liste, création, fiche (modifier, supprimer avec confirmation), entrée « Clients » activée.
+- Tests : `test:isolation` 26/26 (6 nouveaux cas sur les fiches : visibilité, modification, suppression, création au nom d'un autre, anonyme, contraintes, `updated_at`) ; 131 tests unitaires ; parcours complet vérifié dans Chrome sur l'application locale (création, filtres, tri, `aria-sort`, modification, suppression, retour à vide).
+- Reste : relecture indépendante (étape 4), puis présentation.

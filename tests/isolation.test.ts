@@ -442,3 +442,98 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     assert.deepEqual(anon.data, []);
   });
 });
+
+describe("isolation des fiches clients entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let fA: { id: string };
+  let fB: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      const { error } = await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+      if (error) console.warn(`Nettoyage des fiches incomplet : ${error.message}`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const ra = await a.client.from("clients").insert({ name: `${PREFIX} fiche de A`, origin: "demo" }).select("id").single();
+    assert.ifError(ra.error);
+    fA = ra.data!;
+    const rb = await b.client.from("clients").insert({ name: `${PREFIX} fiche de B`, origin: "friend", status: "client" }).select("id").single();
+    assert.ifError(rb.error);
+    fB = rb.data!;
+  });
+
+  after(cleanup);
+
+  test("A retrouve sa fiche ; owner_id rempli par la base ; statut par défaut « prospect » ; chacun voit la sienne", async () => {
+    const { data, error } = await a.client.from("clients").select("owner_id, status, origin").eq("id", fA.id).single();
+    assert.ifError(error);
+    assert.deepEqual(data, { owner_id: a.userId, status: "prospect", origin: "demo" });
+    const forB = await b.client.from("clients").select("id").eq("id", fB.id).maybeSingle();
+    assert.equal(forB.data?.id, fB.id);
+  });
+
+  test("A ne voit pas la fiche de B (liste ni identifiant) et inversement", async () => {
+    const listA = await a.client.from("clients").select("id");
+    assert.ifError(listA.error);
+    assert.ok(!listA.data!.some((c) => c.id === fB.id));
+    const listB = await b.client.from("clients").select("id");
+    assert.ok(!listB.data!.some((c) => c.id === fA.id));
+    const direct = await a.client.from("clients").select("id").eq("id", fB.id).maybeSingle();
+    assert.equal(direct.data, null);
+  });
+
+  test("B ne modifie ni ne supprime la fiche de A ; B ne crée pas de fiche au nom de A ni ne lui donne la sienne", async () => {
+    const upd = await b.client.from("clients").update({ name: `${PREFIX} piratée` }).eq("id", fA.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0, "mise à jour refusée");
+    const del = await b.client.from("clients").delete().eq("id", fA.id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+    const still = await a.client.from("clients").select("name").eq("id", fA.id).single();
+    assert.equal(still.data!.name, `${PREFIX} fiche de A`);
+    const forged = await b.client.from("clients").insert({ name: `${PREFIX} forgée`, origin: "demo", owner_id: a.userId });
+    assert.equal(forged.error?.code, "42501");
+    const give = await b.client.from("clients").update({ owner_id: a.userId }).eq("id", fB.id).select("id");
+    assert.ok(give.error || give.data!.length === 0, "donner sa fiche à A refusé");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("clients").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    const ins = await anon.from("clients").insert({ name: `${PREFIX} anonyme`, origin: "demo" });
+    assert.ok(ins.error);
+    const del = await anon.from("clients").delete().eq("id", fA.id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+  });
+
+  test("la base refuse un nom vide ou d'espaces, un nom de plus de 200 caractères, un statut ou une origine inconnus, une origine absente", async () => {
+    for (const [label, row] of [
+      ["nom vide", { name: "", origin: "demo" }],
+      ["nom d'espaces", { name: "   ", origin: "demo" }],
+      ["nom trop long", { name: "x".repeat(201), origin: "demo" }],
+      ["statut inconnu", { name: `${PREFIX} s`, origin: "demo", status: "perdu" }],
+      ["origine inconnue", { name: `${PREFIX} o`, origin: "inconnue" }],
+      ["origine absente", { name: `${PREFIX} a` }],
+    ] as const) {
+      const r = await a.client.from("clients").insert(row);
+      assert.ok(r.error, `« ${label} » aurait dû être refusé`);
+    }
+  });
+
+  test("modifier une fiche met à jour updated_at (déclencheur) ; passer en client ne change ni l'identifiant ni la date de création", async () => {
+    const before = await a.client.from("clients").select("created_at, updated_at").eq("id", fA.id).single();
+    await new Promise((r) => setTimeout(r, 50));
+    const upd = await a.client.from("clients").update({ status: "client" }).eq("id", fA.id).select("id, status, created_at, updated_at").single();
+    assert.ifError(upd.error);
+    assert.equal(upd.data!.id, fA.id);
+    assert.equal(upd.data!.status, "client");
+    assert.equal(upd.data!.created_at, before.data!.created_at);
+    assert.ok(new Date(upd.data!.updated_at) > new Date(before.data!.updated_at));
+  });
+});

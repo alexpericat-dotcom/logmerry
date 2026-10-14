@@ -2,7 +2,8 @@
 title: 'Story 3.1 : Gérer mes prospects et clients'
 type: 'feature'
 created: '2026-10-14'
-status: 'ready-for-dev'
+status: 'in-progress'
+baseline_commit: 'f1df8d6d63b0fcf3a3197bc325a34b262f76849f'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -57,15 +58,15 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `supabase/migrations/<version>_clients.sql` -- enums, table, index `(owner_id, created_at desc)`, RLS, contraintes -- migration (SQL montré avant application)
-- [ ] `lib/domain/clients.ts` + test -- enums, libellés, validation, lecture des paramètres, tri -- règles pures testées
-- [ ] `lib/db/clients.ts` -- liste filtrée et triée, création -- accès aux données sous RLS
-- [ ] `app/(app)/clients/actions.ts` -- `createClientRecord`, `updateClientRecord`, `deleteClientRecord` (Server Actions) -- écriture
-- [ ] `components/data-table.tsx` -- tableau réutilisable (légende, `aria-sort`, tri par liens) -- composant du DESIGN
-- [ ] `app/(app)/clients/page.tsx`, `nouvelle/page.tsx`, `[id]/page.tsx`, `components/client-form.tsx`, `components/client-status.tsx`, `components/delete-client.tsx` -- pages, formulaire et suppression avec confirmation -- interface
-- [ ] `lib/nav.ts` -- activer « Clients » -- navigation
-- [ ] `tests/isolation.test.ts` -- cas `clients` -- isolation
-- [ ] `docs/journal.md` -- entrée de la story
+- [x] `supabase/migrations/<version>_clients.sql` -- enums, table, index `(owner_id, created_at desc)`, RLS, contraintes -- migration (SQL montré avant application)
+- [x] `lib/domain/clients.ts` + test -- enums, libellés, validation, lecture des paramètres, tri -- règles pures testées
+- [x] `lib/db/clients.ts` -- liste filtrée et triée, création -- accès aux données sous RLS
+- [x] `app/(app)/clients/actions.ts` -- `createClientRecord`, `updateClientRecord`, `deleteClientRecord` (Server Actions) -- écriture
+- [x] `components/data-table.tsx` -- tableau réutilisable (légende, `aria-sort`, tri par liens) -- composant du DESIGN
+- [x] `app/(app)/clients/page.tsx`, `nouvelle/page.tsx`, `[id]/page.tsx`, `components/client-form.tsx`, `components/client-status.tsx`, `components/delete-client.tsx` -- pages, formulaire et suppression avec confirmation -- interface
+- [x] `lib/nav.ts` -- activer « Clients » -- navigation
+- [x] `tests/isolation.test.ts` -- cas `clients` -- isolation
+- [x] `docs/journal.md` -- entrée de la story
 
 **Acceptance Criteria:**
 - Given aucune fiche, when j'ouvre « Clients », then je vois une phrase d'explication et « Créer une fiche ».
@@ -76,6 +77,13 @@ context:
 - Given la migration appliquée, then `get_advisors` (sécurité) ne signale rien de nouveau.
 
 ## Implementation Notes
+
+- Migration appliquée le 2026-10-14 (version 20261014174338, fichier renommé) ; `get_advisors` : seul l'avertissement déjà connu sur la protection des mots de passe divulgués, rien de nouveau.
+- Ajouts non prévus au Code Map : `lib/supabase/with-session.ts` (le `withSession` des notes n'est pas exporté ; les notes ne sont pas refactorées), `components/filter-chips.tsx`, `app/(app)/clients/error.tsx`, variante de pastille « signature » (prospect).
+- Le tri est piloté par l'adresse et ses en-têtes sont des liens (le DESIGN parlait de boutons) : l'état vit dans l'URL, sans JavaScript.
+- Compteur : « 3 fiches » / « 12 fiches sur 40 » (et non « clients » : la liste mêle prospects et clients).
+- Vérifié dans Chrome sur l'application locale (compte de démonstration A) : liste vide, erreurs de formulaire, création de 3 fiches, filtre statut + origine, tri avec `aria-sort`, valeurs d'adresse inconnues ignorées, modification, suppression avec confirmation (focus sur « Annuler »), retour à la liste vide.
+- Écart connu avec la matrice : la redirection sans session et l'échec de la base ne sont pas testés automatiquement (même choix que pour les notes : colle fine des Server Actions) ; l'accès anonyme à la table est lui testé (isolation).
 
 ## Spec Change Log
 
