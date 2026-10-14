@@ -207,3 +207,10 @@
 
 - Constat du propriétaire sur la preview (capture) : en thème clair, le menu déroulant « Type » d'une note s'ouvre en sombre avec une ligne bleue, incohérent avec le reste. Cause : l'application ne déclarait aucun `color-scheme` ; les contrôles natifs du navigateur (menu déroulant, défilement, champs) suivent donc le mode du système (sombre chez le propriétaire) et non le thème de l'application.
 - Correctif : `color-scheme: light` dans `:root` et `dark` dans `.dark`, options du menu colorées par les jetons (`popover`). Vérifié dans Chrome piloté, système forcé en sombre : application en clair → menu en schéma clair, options `rgb(236, 226, 206)` et texte `rgb(34, 51, 0)` ; application en sombre → options `rgb(46, 67, 16)` et texte clair. Limite : le menu natif n'est pas capturable en mode sans écran, la ligne survolée garde la couleur d'accent du système (non stylable) ; test `lib/theme.test.ts` ajouté (115 tests). Défaut de la story 1.4 : le thème n'avait été vérifié que sur les éléments de la page, pas sur les contrôles natifs.
+
+## 2026-10-14 — Refonte d'identité visuelle : propositions (aucun code modifié)
+
+- Demande : brief UX en 4 livrables (audit, 3 palettes, 2 polices, 3 aperçus), puis attente du choix. Branche dédiée `feat/refonte-identite-visuelle`.
+- Fait : scripts `docs/refonte/` (contrastes, écart de teinte, simulation de daltonisme), `propositions.md`, trois aperçus HTML autonomes.
+- Correction en cours de route : les premiers jeux de couleurs de graphique échouaient au test de daltonisme (écart 2 à 11 sur 15 requis) ; une recherche automatique a remplacé les choix « à l'œil » (écart 28 à 30). Une bordure de champ du cobalt (2,91:1) a été assombrie.
+- Acceptation / refus : en attente du choix du propriétaire.
