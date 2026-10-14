@@ -93,14 +93,14 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <div className="flex flex-col items-start gap-6">
-      <div className="flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
         <Filters current={type} draftOnly={draftOnly} />
         {createButton}
       </div>
       {notes.length === 0 ? (
         <p className="text-muted-foreground">{draftOnly ? "Aucun brouillon. Les notes à documenter plus tard apparaissent ici." : "Aucune note de ce type."}</p>
       ) : (
-        <ul className="flex w-full max-w-2xl flex-col gap-3">
+        <ul className="flex w-full flex-col gap-3">
           {notes.map((note) => (
             <li key={note.id} className="rounded-md border bg-card p-3">
               <div className="flex items-start justify-between gap-3">

@@ -239,3 +239,10 @@
 - Fait : `gradient-action` (violet pâle, rose, corail, 135°) sur tous les boutons d'action, texte `action-foreground` (encre), contraste mesuré sur les pixels : 6,77 au pire. Composant `PageBanner` en tête d'Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note (titre seul en haut, zone calme).
 - Conséquence de la demande : le cobalt n'est plus le fond des boutons ; il reste pour liens, focus, élément actif. DESIGN.md et `docs/ui-rules.md` le disent maintenant ; le bandeau, d'abord prévu pour le cockpit seul, couvre tous les écrans principaux.
 - Limite : seul le dégradé d'action sur un fond de test (clair et sombre) a été vu à l'écran ; les pages réelles demandent une connexion que je n'ai pas.
+
+## 2026-10-14 — Écran Notes : largeur adaptée et recherche par sens compacte (retour d'Alex sur la preview)
+
+- Constat : le bandeau occupait toute la largeur, la liste de notes restait bloquée à 42 rem ; le cadre « Chercher par sens » était trop haut.
+- Fait : liste, filtres et recherche par sens passent en pleine largeur (elles suivent donc le bandeau, y compris quand le panneau de l'assistant est ouvert) ; le détail de « Chercher par sens » est replié derrière une icône d'info (survol, focus clavier ou toucher), lu par les lecteurs d'écran via `aria-describedby`.
+- Décision de ma part : la phrase sur l'envoi à Mistral AI reste visible en une ligne sous le champ (règle RGPD du projet), seul le détail d'usage est masqué.
+- Limite : vu seulement par construction (CSS généré et tests), pas à l'écran sur la page connectée.
