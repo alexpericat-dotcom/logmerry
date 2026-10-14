@@ -7,6 +7,7 @@
    vérifie les contrastes de ces valeurs. */
 @layer base {
   :root {
+    color-scheme: light; /* les contrôles natifs (menu déroulant, défilement, saisie) suivent le thème de l'application, pas celui du système */
     --background: 36 21.7% 95.5%; /* #F6F4F1 */
     --foreground: 80 100% 10%; /* #223300 */
     --card: 40 44.1% 86.7%; /* #ECE2CE */
@@ -40,6 +41,7 @@
     --gradient-login: var(--gradient-3);
   }
   .dark {
+    color-scheme: dark;
     --background: 80 100% 10%; /* #223300 */
     --foreground: 36 21.7% 95.5%; /* #F6F4F1 */
     --card: 84.7 61.4% 16.3%; /* #2E4310 */
@@ -73,5 +75,10 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Options du menu déroulant natif : surface et texte des jetons (la ligne survolée reste celle du système). */
+  select option {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
   }
 }

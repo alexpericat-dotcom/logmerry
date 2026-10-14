@@ -210,3 +210,8 @@
 - Vérification avec le vrai Claude (compte fictif A) : résumé fidèle d'un compte rendu avec chiffres ; note piégée (« IGNORE TES CONSIGNES… ») résumée sans suivre les ordres ; B ne peut pas lire la note de A. Captures Chrome piloté dans les deux thèmes. `npm test` 121/121, lint, tsc, build.
 - Revue par un relecteur indépendant : 4 correctifs (réponse coupée ou refusée jamais affichée, vraie liste de puces, focus, avertissement sur l'envoi à Anthropic) et le journal ; 7 constats écartés (triage dans la spec).
 - Reste : essai sur la preview.
+
+## 2026-10-14 — Menu déroulant incohérent avec le thème (correctif de la story 1.4)
+
+- Constat du propriétaire sur la preview (capture) : en thème clair, le menu déroulant « Type » d'une note s'ouvre en sombre avec une ligne bleue, incohérent avec le reste. Cause : l'application ne déclarait aucun `color-scheme` ; les contrôles natifs du navigateur (menu déroulant, défilement, champs) suivent donc le mode du système (sombre chez le propriétaire) et non le thème de l'application.
+- Correctif : `color-scheme: light` dans `:root` et `dark` dans `.dark`, options du menu colorées par les jetons (`popover`). Vérifié dans Chrome piloté, système forcé en sombre : application en clair → menu en schéma clair, options `rgb(236, 226, 206)` et texte `rgb(34, 51, 0)` ; application en sombre → options `rgb(46, 67, 16)` et texte clair. Limite : le menu natif n'est pas capturable en mode sans écran, la ligne survolée garde la couleur d'accent du système (non stylable) ; test `lib/theme.test.ts` ajouté (115 tests). Défaut de la story 1.4 : le thème n'avait été vérifié que sur les éléments de la page, pas sur les contrôles natifs.
