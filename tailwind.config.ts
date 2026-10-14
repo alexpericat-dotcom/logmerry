@@ -42,16 +42,18 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        // États et marqueur de DESIGN.md : toujours avec une icône et un texte, jamais la couleur seule.
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        "warning-icon": "hsl(var(--warning-icon))",
+        marker: "hsl(var(--marker))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        chart: {
-          "1": "hsl(var(--chart-1))",
-          "2": "hsl(var(--chart-2))",
-          "3": "hsl(var(--chart-3))",
-          "4": "hsl(var(--chart-4))",
-          "5": "hsl(var(--chart-5))",
-        },
+      },
+      backgroundImage: {
+        // Dégradés de DESIGN.md (statiques, jamais animés) ; « login » : scène B, clair ou sombre selon le thème.
+        "gradient-login": "var(--gradient-login)",
       },
       borderRadius: {
         lg: "var(--radius)",

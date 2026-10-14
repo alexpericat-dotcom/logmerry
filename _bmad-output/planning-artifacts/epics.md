@@ -155,6 +155,18 @@ En tant que propriétaire connecté, je veux une zone privée avec barre latéra
 
 ---
 
+### Story 1.4 : Appliquer le thème LogMerry
+
+*Ajoutée le 13 octobre 2026, après le sprint 6 : l'exigence UX-DR2 (jetons de `DESIGN.md`) n'était portée par aucune story ; l'application tournait sur les valeurs par défaut du gabarit.*
+
+En tant que propriétaire, je veux que l'application porte les couleurs et la typographie choisies dans la conception, afin que tout écran construit ensuite parte des bons jetons.
+
+**Critères d'acceptation :**
+
+**Étant donné** `DESIGN.md`, **quand** j'ouvre l'application en mode clair puis sombre, **alors** les couleurs sont celles des jetons sémantiques (fond, texte, carte, primaire, accent, bordure, anneau de focus, états succès, avertissement, erreur) et la police est Plus Jakarta Sans.
+**Et** les contrastes de texte sont de 4,5:1 au moins dans les deux thèmes pour les couples de jetons utilisés (vérifiés par un test automatique), et aucun état ne repose sur la couleur seule.
+**Et** les pages existantes (connexion, cockpit, notes, paramètres, panneau de l'assistant) s'affichent correctement dans les deux thèmes, sans couleur écrite en dur hors des jetons.
+
 ## Epic 2 : Mes notes
 
 J'écris et organise mes notes, je les retrouve par mots-clés, et je sais que mon compte est isolé des autres. Aucune IA ici.
