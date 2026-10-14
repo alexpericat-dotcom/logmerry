@@ -80,3 +80,23 @@ export async function deleteClientRecord(id: string): Promise<DeleteClientState>
   revalidatePath("/clients");
   redirect("/clients");
 }
+
+export type PromoteState = { message?: string };
+
+/** « Passer en client » : change le statut de ma fiche ; les contacts (et tout le reste) ne bougent pas. */
+export async function promoteToClient(id: string): Promise<PromoteState> {
+  const result = await withSession(async (supabase): Promise<WriteOutcome> => {
+    if (!isUuid(id)) return "not-found";
+    const { data, error } = await supabase.from("clients").update({ status: "client" }).eq("id", id).select("id");
+    if (error) return "error";
+    return data?.length ? "saved" : "not-found";
+  });
+
+  if (result.status === "signed-out") redirect("/auth/login");
+  if (result.status === "failed" || result.value === "error") return { message: "Changement impossible pour le moment. Réessaie." };
+  if (result.value === "not-found") return { message: NOT_FOUND };
+
+  revalidatePath("/clients");
+  revalidatePath(`/clients/${id}`);
+  return {};
+}

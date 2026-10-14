@@ -537,3 +537,125 @@ describe("isolation des fiches clients entre deux comptes fictifs", () => {
     assert.ok(new Date(upd.data!.updated_at) > new Date(before.data!.updated_at));
   });
 });
+
+describe("isolation des contacts entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let clientA: { id: string };
+  let clientB: { id: string };
+  let cA: { id: string };
+  let cB: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      // La suppression des fiches de test emporte leurs contacts (cascade).
+      const { error } = await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+      if (error) console.warn(`Nettoyage des contacts incomplet : ${error.message}`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const fa = await a.client.from("clients").insert({ name: `${PREFIX} fiche contacts A`, origin: "demo" }).select("id").single();
+    assert.ifError(fa.error);
+    clientA = fa.data!;
+    const fb = await b.client.from("clients").insert({ name: `${PREFIX} fiche contacts B`, origin: "demo" }).select("id").single();
+    assert.ifError(fb.error);
+    clientB = fb.data!;
+    const ca = await a.client.from("contacts").insert({ client_id: clientA.id, name: "Claire de A", email: "claire@a.example", phone: "06 00 00 00 01", address: "1 rue A\nParis", job_title: "Directrice" }).select("id").single();
+    assert.ifError(ca.error);
+    cA = ca.data!;
+    const cb = await b.client.from("contacts").insert({ client_id: clientB.id, name: "Basile de B" }).select("id").single();
+    assert.ifError(cb.error);
+    cB = cb.data!;
+  });
+
+  after(cleanup);
+
+  test("chacun voit ses contacts ; owner_id rempli par la base ; champs facultatifs absents = null", async () => {
+    const own = await a.client.from("contacts").select("owner_id, email, phone").eq("id", cA.id).single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.owner_id, a.userId);
+    const bare = await b.client.from("contacts").select("job_title, email, phone, address").eq("id", cB.id).single();
+    assert.deepEqual(bare.data, { job_title: null, email: null, phone: null, address: null });
+  });
+
+  test("A ne voit pas le contact de B (liste ni identifiant) et inversement", async () => {
+    const listA = await a.client.from("contacts").select("id");
+    assert.ok(!listA.data!.some((c) => c.id === cB.id));
+    assert.ok(!(await b.client.from("contacts").select("id")).data!.some((c) => c.id === cA.id));
+    assert.equal((await a.client.from("contacts").select("id").eq("id", cB.id).maybeSingle()).data, null);
+  });
+
+  test("B ne modifie ni ne supprime le contact de A", async () => {
+    const upd = await b.client.from("contacts").update({ name: "piraté" }).eq("id", cA.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0);
+    const del = await b.client.from("contacts").delete().eq("id", cA.id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+    assert.equal((await a.client.from("contacts").select("name").eq("id", cA.id).single()).data!.name, "Claire de A");
+  });
+
+  test("B ne peut pas rattacher un contact à la fiche de A (même avec son propre owner_id), ni déplacer le sien vers elle", async () => {
+    const onA = await b.client.from("contacts").insert({ client_id: clientA.id, name: `${PREFIX} intrus` });
+    assert.equal(onA.error?.code, "42501", "insertion sur la fiche d'un autre refusée");
+    const move = await b.client.from("contacts").update({ client_id: clientA.id }).eq("id", cB.id).select("id");
+    assert.ok(move.error || move.data!.length === 0, "déplacement vers la fiche d'un autre refusé");
+    const forged = await b.client.from("contacts").insert({ client_id: clientB.id, name: `${PREFIX} forgé`, owner_id: a.userId });
+    assert.equal(forged.error?.code, "42501", "owner_id d'un autre refusé");
+    const give = await b.client.from("contacts").update({ owner_id: a.userId }).eq("id", cB.id).select("id");
+    assert.ok(give.error || give.data!.length === 0, "donner son contact à A refusé");
+    assert.equal((await a.client.from("contacts").select("id").eq("client_id", clientA.id)).data!.length, 1, "la fiche de A n'a reçu aucun contact étranger");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("contacts").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    assert.ok((await anon.from("contacts").insert({ client_id: clientA.id, name: `${PREFIX} anonyme` })).error);
+    assert.equal((await anon.from("contacts").delete().eq("id", cA.id).select("id")).data?.length ?? 0, 0);
+  });
+
+  test("la base refuse : nom vide, fonction ou adresse vides ou trop longues, e-mail mal formé ou trop long, téléphone trop long, fiche absente", async () => {
+    const ok = { client_id: clientA.id };
+    for (const [label, row] of [
+      ["nom vide", { ...ok, name: "  " }],
+      ["nom trop long", { ...ok, name: "x".repeat(201) }],
+      ["fonction vide", { ...ok, name: "n", job_title: "" }],
+      ["fonction trop longue", { ...ok, name: "n", job_title: "j".repeat(201) }],
+      ["e-mail sans @", { ...ok, name: "n", email: "pas-un-mail" }],
+      ["e-mail avec espace", { ...ok, name: "n", email: "a b@c.fr" }],
+      ["e-mail trop long", { ...ok, name: "n", email: `${"a".repeat(250)}@x.fr` }],
+      ["téléphone trop long", { ...ok, name: "n", phone: "1".repeat(31) }],
+      ["téléphone vide", { ...ok, name: "n", phone: "" }],
+      ["adresse trop longue", { ...ok, name: "n", address: "a".repeat(501) }],
+      ["sans fiche", { name: "n" }],
+      ["fiche inexistante", { client_id: "00000000-0000-0000-0000-000000000000", name: "n" }],
+    ] as const) {
+      const r = await a.client.from("contacts").insert(row);
+      assert.ok(r.error, `« ${label} » aurait dû être refusé`);
+    }
+  });
+
+  test("modifier un contact met à jour updated_at ; supprimer la fiche supprime ses contacts (cascade)", async () => {
+    const before = await a.client.from("contacts").select("updated_at").eq("id", cA.id).single();
+    await new Promise((r) => setTimeout(r, 50));
+    const upd = await a.client.from("contacts").update({ job_title: "Gérante" }).eq("id", cA.id).select("updated_at").single();
+    assert.ifError(upd.error);
+    assert.ok(new Date(upd.data!.updated_at) > new Date(before.data!.updated_at));
+    const extra = await a.client.from("clients").insert({ name: `${PREFIX} fiche éphémère`, origin: "demo" }).select("id").single();
+    const ephem = await a.client.from("contacts").insert({ client_id: extra.data!.id, name: "Éphémère" }).select("id").single();
+    assert.ifError(ephem.error);
+    await a.client.from("clients").delete().eq("id", extra.data!.id);
+    assert.equal((await a.client.from("contacts").select("id").eq("id", ephem.data!.id).maybeSingle()).data, null, "le contact a disparu avec sa fiche");
+  });
+
+  test("passer en client : le statut change, les contacts restent", async () => {
+    await a.client.from("clients").update({ status: "prospect" }).eq("id", clientA.id);
+    const up = await a.client.from("clients").update({ status: "client" }).eq("id", clientA.id).select("status").single();
+    assert.equal(up.data!.status, "client");
+    assert.equal((await a.client.from("contacts").select("id").eq("client_id", clientA.id)).data!.length, 1);
+  });
+});

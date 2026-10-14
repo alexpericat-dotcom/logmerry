@@ -2,7 +2,8 @@
 title: 'Story 3.2 : Ajouter des contacts et passer un prospect en client'
 type: 'feature'
 created: '2026-10-15'
-status: 'ready-for-dev'
+status: 'in-progress'
+baseline_commit: 'c383dc36ff0249429157e1081a9b33df3f9ca335'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -57,13 +58,13 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `supabase/migrations/<version>_contacts.sql` -- table, index, RLS avec vérification de la fiche -- migration (SQL montré avant application)
-- [ ] `lib/domain/contacts.ts` + test -- validation (nom, fonction, e-mail, téléphone, adresse), champs vides = absents -- règle pure testée
-- [ ] `lib/db/contacts.ts` -- liste des contacts d'une fiche -- accès sous RLS
-- [ ] `app/(app)/clients/contact-actions.ts` et `actions.ts` -- ajout, modification et suppression de contact, « Passer en client » -- écritures
-- [ ] `app/(app)/clients/[id]/page.tsx`, `components/contact-form.tsx` (ajout et modification), `components/delete-contact.tsx`, `components/promote-client.tsx`, `components/delete-client.tsx` -- section contacts, bouton, texte de suppression -- interface
-- [ ] `tests/isolation.test.ts` -- cas `contacts` -- isolation
-- [ ] `docs/journal.md` -- entrée de la story
+- [x] `supabase/migrations/<version>_contacts.sql` -- table, index, RLS avec vérification de la fiche -- migration (SQL montré avant application)
+- [x] `lib/domain/contacts.ts` + test -- validation (nom, fonction, e-mail, téléphone, adresse), champs vides = absents -- règle pure testée
+- [x] `lib/db/contacts.ts` -- liste des contacts d'une fiche -- accès sous RLS
+- [x] `app/(app)/clients/contact-actions.ts` et `actions.ts` -- ajout, modification et suppression de contact, « Passer en client » -- écritures
+- [x] `app/(app)/clients/[id]/page.tsx`, `components/contact-form.tsx` (ajout et modification), `components/delete-contact.tsx`, `components/promote-client.tsx`, `components/delete-client.tsx` -- section contacts, bouton, texte de suppression -- interface
+- [x] `tests/isolation.test.ts` -- cas `contacts` -- isolation
+- [x] `docs/journal.md` -- entrée de la story
 
 **Acceptance Criteria:**
 - Given une fiche prospect, when j'ajoute un contact avec un nom, then il apparaît sur la fiche ; avec un e-mail mal formé, then une erreur en ligne nomme le champ.
@@ -73,6 +74,12 @@ context:
 - Given la migration appliquée, then `get_advisors` (sécurité) ne signale rien de nouveau.
 
 ## Implementation Notes
+
+- Migration appliquée le 2026-10-15 (version 20261014230836, fichier renommé) ; `get_advisors` : seul l'avertissement déjà connu, rien de nouveau. Isolation 34/34 (8 cas `contacts`).
+- Écart au Code Map : « Passer en client » est dans `app/(app)/clients/actions.ts` (`promoteToClient`), le bouton dans l'en-tête de la page fiche (`actions` du bandeau) ; `components/contacts-section.tsx` regroupe la liste, l'ajout, la modification en place et la suppression avec confirmation (pas de `delete-contact.tsx` séparé).
+- `addContact` lit d'abord la fiche pour distinguer « fiche disparue » d'une erreur de base ; la RLS refuse de toute façon une fiche étrangère.
+- Vérifié dans Chrome (compte de démonstration A, fiche de test supprimée ensuite) : liste vide, erreurs en ligne (nom, e-mail), ajout avec tous les champs, modification (téléphone vidé = `null` en base), passage en client (contacts conservés, bouton disparu, statut en base), suppression avec confirmation (focus sur « Annuler »).
+- Écart connu avec la matrice : la redirection sans session et l'échec de la base ne sont pas testés automatiquement (même choix que les notes et les fiches) ; l'accès anonyme à la table l'est.
 
 ## Spec Change Log
 

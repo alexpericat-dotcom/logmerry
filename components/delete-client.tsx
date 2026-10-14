@@ -51,7 +51,7 @@ export function DeleteClient({ id }: { id: string }) {
       <p id="delete-question" className="font-semibold">
         Supprimer cette fiche ?
       </p>
-      <p className="text-sm text-muted-foreground">Cette action est définitive.</p>
+      <p className="text-sm text-muted-foreground">Cette action est définitive. Ses contacts seront supprimés aussi.</p>
       {message}
       <div className="flex gap-3">
         <Button type="submit" variant="destructive" disabled={pending}>
