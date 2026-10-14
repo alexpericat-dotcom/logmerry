@@ -111,12 +111,12 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
                 </h2>
                 <time
                   dateTime={note.created_at}
-                  className="shrink-0 text-sm font-mono tabular-nums text-muted-foreground"
+                  className="shrink-0 pt-0.5 text-xs font-mono tabular-nums text-muted-foreground"
                 >
                   {formatDateTime(note.created_at)}
                 </time>
               </div>
-              <div className="mt-1 flex flex-wrap gap-2">
+              <div className="mt-1.5 flex flex-wrap gap-1">
                 <Badge variant="secondary">{NOTE_TYPE_LABELS[note.type]}</Badge>
                 {note.status === "draft" && <Badge variant="outline">Brouillon</Badge>}
                 <IndexStatus status={note.index_status} />

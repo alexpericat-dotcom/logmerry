@@ -297,3 +297,10 @@
 - Appliqué : fond `#F0E9DC`, surface `#E6DECE`, filet et survol `#D3C9B5` ; jetons assombris par le script pour garder les contrastes : bordure de champ `#797E89`, focus `#DF417C`, succès `#097145`, attention et marqueur `#954F00`, graphique 2 `#0F8E6E` (celui-ci échouait à 2,89 sur la surface ; la distance de daltonisme reste à 30,1). Dégradés clairs partis du sable (plus de bande blanche), icône de l'onglet alignée.
 - DESIGN.md (tableau des contrastes inclus), `globals.css` (régénéré depuis DESIGN.md), test de référence mis à jour ; 118 tests, lint et build passent, `contrastes.py` à 0 problème, texte du « couchant » clair mesuré à 11,01 au pire pixel. Vérifié dans Chrome sur la page « Nouvelle note » en thème clair.
 - Ratios les plus bas en clair : texte 4,54 (succès sur surface), éléments d'interface 3,03 (focus sur surface) : serrés mais conformes.
+
+## 2026-10-14 — Liste de notes : pastilles discrètes sur fond coloré, date plus petite, CTA en gras
+
+- Constat d'Alex : type, « Brouillon » et « Indexée » trop gros et espacés ; sans fond, ils gênaient la lecture du titre ; date trop grande ; CTA à mettre en gras.
+- Cause du manque de fond : la variante « secondaire » avait la même couleur que la carte en thème sombre (invisible).
+- Fait : pastilles à 11 px, hauteur 20 px, marge interne réduite, écart de 4 px ; type sur fond `accent` ; « Brouillon » en pointillé sur fond `accent` léger ; états (indexée, attente) sur fond teinté de leur couleur. Piège évité : le texte coloré sur son propre fond teinté tombait à 3,98:1 en thème clair (sous 4,5) ; le texte est donc en encre et seule l'icône porte la couleur de l'état. Date de la liste en 12 px. Boutons d'action en gras (`font-semibold`).
+- Vérifié sur une page de test avec le CSS réel, clair et sombre ; pas sur la page connectée (le compte de démonstration local n'a pas de note).
