@@ -63,3 +63,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-appliquer-le-theme-logmerry.md`
   summary: tester le contraste du texte sur les dégradés (Forest sur dégradé 1 et 2, Chalk sur dégradé 5) quand ils seront utilisés, avec le portfolio public et le bandeau du Cockpit.
   evidence: les paires validées de `DESIGN.md` (10,60 ; 7,47 ; 6,65) ne sont pas encore couvertes par un test, car aucun écran n'utilise ces dégradés avec du texte.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Téléphone et adresse (postale) d'un client ou d'un contact, et remarque libre sur une fiche.
+  evidence: Non prévus par l'epic 3 (un contact n'a que nom et e-mail facultatif, story 3.2) ; Alex a demandé où seraient e-mail, coordonnées et adresse ; à décider avec la story 3.2.

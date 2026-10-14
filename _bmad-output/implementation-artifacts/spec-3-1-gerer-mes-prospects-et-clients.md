@@ -16,13 +16,15 @@ context:
 
 **Problem:** LogMerry n'a pas de CRM : impossible de noter à qui j'ai affaire, et l'entrée « Clients » de la barre latérale est inactive.
 
-**Approach:** une migration crée la table `clients` (statut prospect/client, étiquette d'origine, RLS) ; une page `/clients` affiche un tableau triable, filtrable par statut et par origine ; une page `/clients/nouvelle` crée une fiche (nom et origine obligatoires). Le tableau est un composant réutilisable (missions, factures plus tard).
+**Approach:** une migration crée la table `clients` (statut prospect/client, étiquette d'origine, RLS) ; une page `/clients` affiche un tableau triable, filtrable par statut et par origine ; une page `/clients/nouvelle` crée une fiche (nom et origine obligatoires) ; une page fiche `/clients/[id]` permet de la modifier (nom, statut, origine) et de la supprimer après confirmation. Le tableau est un composant réutilisable (missions, factures plus tard).
 
 ## Boundaries & Constraints
 
 **Always:** SQL montré puis approuvé avant application ; fichier de migration nommé avec la version enregistrée par Supabase ; `owner_id uuid not null default auth.uid()` + RLS (select, insert, update, delete sur `owner_id = (select auth.uid())`) ; enums Postgres `client_status` (prospect, client ; défaut prospect) et `client_origin` (client réel, formation, ami, démo) ; nom 1 à 200 caractères (contrainte base et validation serveur, même décompte) ; filtres et tri dans l'adresse (`?statut=&origine=&tri=&ordre=`), valeur inconnue ignorée ; `<table>` natif avec légende masquée, `aria-sort` sur la colonne triée, nom = lien dans la 1re cellule ; statut en pastille icône + mot (prospect : icône et couleur de signature distinctes des couleurs d'état) ; état `role="status"` « 12 clients sur 40 » après filtre ; liste vide = phrase d'explication + action « Créer une fiche » ; tutoiement, bandeau d'en-tête de page, boutons d'action ; test d'isolation étendu à `clients`.
 
-**Never:** contacts et passage prospect → client (story 3.2) ; lien avec les notes (3.3) ; recherche ⌘K dans les clients (3.7) ; missions, devis ; import de fichiers ; détection de doublons ; service externe ; nouvelle dépendance.
+**Décisions du propriétaire :** modification et suppression incluses dans cette story (calquées sur les notes) ; aucun champ facultatif en dehors du nom, du statut et de l'origine (pas de remarque, d'e-mail, de téléphone ni d'adresse : les contacts avec e-mail viennent à la story 3.2).
+
+**Never:** remarque libre, téléphone, adresse ; contacts et passage prospect → client (story 3.2) ; lien avec les notes (3.3) ; recherche ⌘K dans les clients (3.7) ; missions, devis ; import de fichiers ; détection de doublons ; service externe ; nouvelle dépendance.
 
 ## I/O & Edge-Case Matrix
 
@@ -33,16 +35,13 @@ context:
 | Filtre | `?statut=client&origine=demo` | seules les fiches correspondantes ; « N clients sur M » | valeur inconnue : ignorée |
 | Tri | `?tri=nom&ordre=desc` | ordre demandé, `aria-sort` sur la colonne | tri inconnu : date de création, récent d'abord |
 | Aucune fiche | compte neuf | phrase d'explication + « Créer une fiche » | N/A |
+| Modification | fiche existante, nouveau nom, statut ou origine | fiche mise à jour, tableau à jour | mêmes erreurs que la création ; fiche supprimée entre-temps : « Cette fiche n'existe plus. » |
+| Suppression | « Supprimer cette fiche » puis confirmation (focus sur « Annuler ») | fiche supprimée, retour au tableau | échec : message, fiche conservée |
 | Autre compte | fiche d'un autre compte | jamais visible, jamais modifiable | RLS |
 | Sans session | action appelée sans connexion | redirection vers `/auth/login` | N/A |
 | Erreur de la base | échec d'écriture ou de lecture | « Enregistrement impossible. Réessaie. » / message de page d'erreur | message visible |
 
 </frozen-after-approval>
-
-## Open Questions
-
-1. **Modifier et supprimer une fiche dans cette story ?** — options : (a) création et liste seulement, comme l'énoncé de l'epic (une faute de frappe ne se corrige pas avant la story 3.2, et on ne peut pas retirer une fiche de démonstration) / (b) ajouter une page fiche `/clients/[id]` avec modification et suppression après confirmation, calquée sur les notes (un peu plus long, mais l'epic n'en a pas d'autre moment pour corriger ou supprimer avant 3.2).
-2. **Champs facultatifs d'une fiche** — options : (a) aucun autre champ que nom, statut et origine (le plus simple ; les coordonnées viendront avec les contacts de la story 3.2) / (b) ajouter une remarque libre facultative (jusqu'à 2 000 caractères) pour noter un contexte tout de suite.
 
 ## Code Map
 
@@ -50,7 +49,7 @@ context:
 - `lib/domain/notes.ts` -- modèle de validation (`validateNoteInput`, `isUuid`, décompte en points de code) ; nouveau `lib/domain/clients.ts` (enums, libellés, validation, lecture des paramètres d'adresse, tri) + test
 - `lib/db/notes.ts` -- modèle de lecture sous RLS (`createClient()` serveur) ; nouveau `lib/db/clients.ts`
 - `app/(app)/notes/actions.ts` -- `withSession` (non exporté) et schéma signed-out → `redirect` à refaire dans `app/(app)/clients/actions.ts`
-- `app/(app)/notes/page.tsx` + `nouvelle/page.tsx` + `components/note-form.tsx` -- modèle des pages liste/création ; filtres en liens avec `aria-current`
+- `app/(app)/notes/page.tsx` + `nouvelle/page.tsx` + `[id]/page.tsx` + `components/note-form.tsx` + `components/delete-note.tsx` -- modèle des pages liste, création, modification et de la suppression avec confirmation ; filtres en liens avec `aria-current`
 - `components/page-banner.tsx`, `components/ui/badge.tsx` -- bandeau et pastilles à utiliser ; `components/ui/table.tsx` n'existe pas : créer `components/data-table.tsx` (tableau réutilisable)
 - `lib/nav.ts` -- passer « Clients » à `available: true`
 - `tests/isolation.test.ts` -- ajouter les cas `clients` ; schéma de l'abonnement des comptes A et B à suivre
@@ -61,9 +60,9 @@ context:
 - [ ] `supabase/migrations/<version>_clients.sql` -- enums, table, index `(owner_id, created_at desc)`, RLS, contraintes -- migration (SQL montré avant application)
 - [ ] `lib/domain/clients.ts` + test -- enums, libellés, validation, lecture des paramètres, tri -- règles pures testées
 - [ ] `lib/db/clients.ts` -- liste filtrée et triée, création -- accès aux données sous RLS
-- [ ] `app/(app)/clients/actions.ts` -- `createClientRecord` (Server Action) -- écriture
+- [ ] `app/(app)/clients/actions.ts` -- `createClientRecord`, `updateClientRecord`, `deleteClientRecord` (Server Actions) -- écriture
 - [ ] `components/data-table.tsx` -- tableau réutilisable (légende, `aria-sort`, tri par liens) -- composant du DESIGN
-- [ ] `app/(app)/clients/page.tsx`, `nouvelle/page.tsx`, `components/client-form.tsx`, `components/client-status.tsx` -- pages et formulaire -- interface
+- [ ] `app/(app)/clients/page.tsx`, `nouvelle/page.tsx`, `[id]/page.tsx`, `components/client-form.tsx`, `components/client-status.tsx`, `components/delete-client.tsx` -- pages, formulaire et suppression avec confirmation -- interface
 - [ ] `lib/nav.ts` -- activer « Clients » -- navigation
 - [ ] `tests/isolation.test.ts` -- cas `clients` -- isolation
 - [ ] `docs/journal.md` -- entrée de la story
@@ -72,6 +71,7 @@ context:
 - Given aucune fiche, when j'ouvre « Clients », then je vois une phrase d'explication et « Créer une fiche ».
 - Given le formulaire, when je saisis un nom et choisis une origine, then la fiche apparaît dans le tableau en statut prospect.
 - Given plusieurs fiches, when je filtre par statut ou origine, then le tableau et le compteur suivent ; when je clique un en-tête, then l'ordre change et `aria-sort` l'indique.
+- Given une fiche, when je la modifie ou la supprime (après confirmation), then le tableau le reflète ; when la suppression échoue, then la fiche reste.
 - Given une fiche d'un autre compte, when je liste ou ouvre son adresse, then rien n'apparaît (prouvé par `npm run test:isolation`).
 - Given la migration appliquée, then `get_advisors` (sécurité) ne signale rien de nouveau.
 
