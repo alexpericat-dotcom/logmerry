@@ -30,7 +30,7 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
   const { rows, total } = viewClients(await listAllClients(), view);
 
   const createButton = (
-    <Button asChild size="sm" className="shrink-0">
+    <Button asChild size="lg" className="shrink-0">
       <Link href="/clients/nouvelle">Créer une fiche</Link>
     </Button>
   );

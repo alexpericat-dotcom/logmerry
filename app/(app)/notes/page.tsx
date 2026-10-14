@@ -83,7 +83,7 @@ function Filters({
 
 function CreateNoteButton() {
   return (
-    <Button asChild size="sm" className="shrink-0">
+    <Button asChild size="lg" className="shrink-0">
       <Link href="/notes/nouvelle">Créer une note</Link>
     </Button>
   );

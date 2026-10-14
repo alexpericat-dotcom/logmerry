@@ -25,7 +25,7 @@ export function SenseSearch() {
   return (
     <section
       aria-labelledby="sense-title"
-      className="flex w-full flex-col gap-1 rounded-md border border-primary/30 bg-primary/10 p-3"
+      className="flex w-full flex-col gap-1 rounded-md border border-primary/30 bg-primary/10 px-6 py-3"
     >
       {/* Détail masqué : il apparaît au survol, au focus clavier ou au toucher du bouton ; il reste lu par les lecteurs d'écran (aria-describedby). */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -49,7 +49,8 @@ export function SenseSearch() {
           >
             Pose une question : tu vois les passages de tes notes que
             l&apos;assistant retrouverait, par sens (avec un score) et par
-            mots-clés. Seules les notes indexées sont cherchées.
+            mots-clés. Seules les notes indexées sont cherchées. Ta question est
+            envoyée à Mistral AI : n&apos;y mets pas de données réelles de clients.
           </p>
         </div>
         <form action={action} className="flex min-w-64 flex-1 gap-2">
@@ -63,7 +64,7 @@ export function SenseSearch() {
             maxLength={SENSE_QUERY_MAX}
             autoComplete="off"
             placeholder="Ta question…"
-            aria-describedby="sense-help sense-privacy"
+            aria-describedby="sense-help"
             defaultValue={state.question ?? ""}
           />
           <Button type="submit" disabled={pending}>
@@ -71,10 +72,7 @@ export function SenseSearch() {
           </Button>
         </form>
       </div>
-      <p id="sense-privacy" className="text-xs text-muted-foreground">
-        Ta question est envoyée à Mistral AI : n&apos;y mets pas de données
-        réelles de clients.
-      </p>
+
       <div role="status" aria-live="polite" className="empty:sr-only">
         {state.message && (
           <p className="text-sm text-destructive">{state.message}</p>
