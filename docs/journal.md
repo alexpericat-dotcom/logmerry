@@ -252,3 +252,9 @@
 - Constat : les anneaux de focus restaient en cobalt (ancien bleu), y compris dans la barre latérale.
 - Fait : `ring` passe au rose de la famille des boutons d'action (#E0457F en clair, #F2709A en sombre ; 3,65 et 6,85 sur le papier). Un dégradé ne peut pas servir de contour de focus : j'ai pris un rose uni. Les boutons ont un décalage de 2 px pour que l'anneau rose reste visible autour d'un bouton rose. DESIGN.md, `docs/ui-rules.md` et les scripts de contraste mis à jour ; 118 tests passent.
 - Question laissée ouverte : l'élément actif (barre latérale, filtre sélectionné) et les liens restent en cobalt, conformément à DESIGN.md.
+
+## 2026-10-14 — Sources de l'assistant compactées (retour d'Alex)
+
+- Constat : chaque source était un encart de 4 lignes avec deux boutons ; plusieurs sources mangeaient le panneau.
+- Fait : une source = une ligne (numéro, titre en lien vers la note, mention « extrait modifié depuis » si besoin) ; l'extrait et « Copier » sont repliés dans un « Extrait » (le bouton « Ouvrir » disparaît, le titre est le lien). Source supprimée : une ligne grise. Le nom accessible reste « Source N : titre ».
+- Limite : vu sur une page de test avec le CSS de l'application, pas sur la page connectée.
