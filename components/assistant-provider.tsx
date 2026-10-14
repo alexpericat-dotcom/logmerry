@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
+import { purgeHistory } from "@/app/(app)/history-actions";
 import type { HistoryMessage, StoredSource } from "@/lib/domain/history";
 
 export type AssistantMessage = { id: string; role: "user" | "assistant"; text: string; sources?: StoredSource[] };
@@ -20,6 +21,8 @@ type Assistant = {
   closePanel: () => void;
   ask: (question: string) => Promise<void>;
   retry: () => Promise<void>;
+  /** Supprime tout l'historique enregistré puis vide le panneau ; rend `false` si la suppression a échoué (le panneau garde ses messages). */
+  purge: () => Promise<boolean>;
 };
 
 const AssistantContext = createContext<Assistant | null>(null);
@@ -115,9 +118,24 @@ export function AssistantProvider({
     await send(lastQuestion.current, false);
   }, [send]);
 
+  const purge = useCallback(async () => {
+    if (busy.current) return false; // pas de suppression pendant qu'une réponse arrive
+    try {
+      const r = await purgeHistory();
+      if (!r.ok) return false;
+    } catch {
+      return false;
+    }
+    setMessages([]);
+    setError(null);
+    setDraft("");
+    lastQuestion.current = "";
+    return true;
+  }, []);
+
   const value = useMemo(
-    () => ({ isOpen, historyFailed, messages, pending, error, draft, setDraft, openPanel, closePanel, ask, retry }),
-    [isOpen, historyFailed, messages, pending, error, draft, openPanel, closePanel, ask, retry],
+    () => ({ isOpen, historyFailed, messages, pending, error, draft, setDraft, openPanel, closePanel, ask, retry, purge }),
+    [isOpen, historyFailed, messages, pending, error, draft, openPanel, closePanel, ask, retry, purge],
   );
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;
 }

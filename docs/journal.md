@@ -207,3 +207,115 @@
 
 - Constat du propriétaire sur la preview (capture) : en thème clair, le menu déroulant « Type » d'une note s'ouvre en sombre avec une ligne bleue, incohérent avec le reste. Cause : l'application ne déclarait aucun `color-scheme` ; les contrôles natifs du navigateur (menu déroulant, défilement, champs) suivent donc le mode du système (sombre chez le propriétaire) et non le thème de l'application.
 - Correctif : `color-scheme: light` dans `:root` et `dark` dans `.dark`, options du menu colorées par les jetons (`popover`). Vérifié dans Chrome piloté, système forcé en sombre : application en clair → menu en schéma clair, options `rgb(236, 226, 206)` et texte `rgb(34, 51, 0)` ; application en sombre → options `rgb(46, 67, 16)` et texte clair. Limite : le menu natif n'est pas capturable en mode sans écran, la ligne survolée garde la couleur d'accent du système (non stylable) ; test `lib/theme.test.ts` ajouté (115 tests). Défaut de la story 1.4 : le thème n'avait été vérifié que sur les éléments de la page, pas sur les contrôles natifs.
+
+## 2026-10-14 — Refonte d'identité visuelle : propositions (aucun code modifié)
+
+- Demande : brief UX en 4 livrables (audit, 3 palettes, 2 polices, 3 aperçus), puis attente du choix. Branche dédiée `feat/refonte-identite-visuelle`.
+- Fait : scripts `docs/refonte/` (contrastes, écart de teinte, simulation de daltonisme), `propositions.md`, trois aperçus HTML autonomes.
+- Correction en cours de route : les premiers jeux de couleurs de graphique échouaient au test de daltonisme (écart 2 à 11 sur 15 requis) ; une recherche automatique a remplacé les choix « à l'œil » (écart 28 à 30). Une bordure de champ du cobalt (2,91:1) a été assombrie.
+- Acceptation / refus : en attente du choix du propriétaire.
+
+## 2026-10-14 — Refonte : choix du propriétaire et mise à jour du contrat
+
+- Choix d'Alex : direction 2 « Cobalt », polices B (Hanken Grotesk + IBM Plex Mono). Proposé et accepté tel quel ; olive et ultraviolet refusés (l'olive proche du succès, l'ultraviolet courant dans l'IA).
+- Fait (workflow bmad-ux, mode Update) : DESIGN.md et EXPERIENCE.md mis à jour, `docs/ui-rules.md`, `docs/refonte/stories.md`. Décision tracée dans le memlog.
+- Hypothèses de ma part, à corriger si tu les refuses : **rayons conservés** (4/6/8, pastilles), marqueur 90 % de la jauge sur la teinte « attention », jeton `warning-icon` supprimé (plus d'orange), noms shadcn gardés (`border` = `filet`).
+- Pas de code touché : le thème actuel (olive) reste en place jusqu'à la story R1.
+
+- Correction d'Alex : **il veut garder des dégradés**. Mon hypothèse « dégradés retirés » est refusée. Remplacée par 3 dégradés cobalt (scènes A, B, C), contrastes calculés (pire extrémité : 6,73 à 16,13), jamais derrière les zones de travail. Le reste des hypothèses est confirmé par Alex.
+- Correction d'Alex : **plus de panneau sans texte, et ce bleu ne convient pas**. `gradient-3` (cobalt saturé vers nuit) supprimé. Restent `gradient-1` et `gradient-2` (teinte cobalt pâle). La connexion (scène B) porte le nom du produit et une phrase (« Ton cockpit d'activité. », texte proposé, à valider).
+- Correction d'Alex : le bleu des dégradés est remplacé par **un orange « couchant »** (papier vers #FFAE7A en clair, #161A21 vers #7A3510 en sombre). Contrastes du texte : 10,43 et 7,92. Risque que je signale : proche de la teinte « attention » ; atténué par l'usage en grand fond, sans icône ni mot d'état dessus.
+- Correction d'Alex (image de référence : noir, bleu nuit, violet, rose, corail) : mon dégradé orange-brun était « marron ». `gradient-2` devient un dégradé « couchant » multi-couches (deux radiaux sur fond noir ; en clair, papier, lavande, rose, corail). Texte limité aux 45 % du haut, contraste mesuré sur les pixels du rendu Chrome : 12,01 (sombre), 11,78 (clair). Leçon : un dégradé à deux stops linéaires ne peut pas imiter cette image.
+
+## 2026-10-14 — Refonte R1 : jetons Cobalt et polices dans le code
+
+- Fait : `app/globals.css` régénéré depuis DESIGN.md (valeurs HSL calculées par script, pas recopiées), jetons `filet` et `chart-1..5` ajoutés, `warning-icon` supprimé, dégradés `gradient-1` et `gradient-2` « couchant » (clair et sombre) ; `tailwind.config.ts` (couleurs, polices, `bg-gradient-sunset`) ; Hanken Grotesk + IBM Plex Mono via `next/font` ; panneau de connexion avec texte ; chiffres existants en `font-mono tabular-nums`.
+- Tests : `lib/theme.test.ts` adapté (conformité DESIGN.md, contrastes, graphiques, écart de teinte signature/états, polices) : 117 tests passent ; lint et build OK. Vérifié dans Chrome sur la page de connexion, clair et sombre.
+- Bug trouvé en vérifiant : une couleur nue comme dernière couche d'un `background-image` est invalide (le panneau restait vide). Corrigé avec `linear-gradient(couleur, couleur)`, aussi dans DESIGN.md et palettes.py. Les aperçus HTML ne l'avaient pas révélé car ils utilisent le raccourci `background`.
+
+## 2026-10-14 — Boutons en dégradé et bandeaux d'en-tête (demande d'Alex sur la preview)
+
+- Constat d'Alex sur la preview : boutons encore en aplat, et les bandeaux de l'aperçu avaient disparu (je n'avais mis le dégradé que sur la page de connexion).
+- Fait : `gradient-action` (violet pâle, rose, corail, 135°) sur tous les boutons d'action, texte `action-foreground` (encre), contraste mesuré sur les pixels : 6,77 au pire. Composant `PageBanner` en tête d'Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note (titre seul en haut, zone calme).
+- Conséquence de la demande : le cobalt n'est plus le fond des boutons ; il reste pour liens, focus, élément actif. DESIGN.md et `docs/ui-rules.md` le disent maintenant ; le bandeau, d'abord prévu pour le cockpit seul, couvre tous les écrans principaux.
+- Limite : seul le dégradé d'action sur un fond de test (clair et sombre) a été vu à l'écran ; les pages réelles demandent une connexion que je n'ai pas.
+
+## 2026-10-14 — Écran Notes : largeur adaptée et recherche par sens compacte (retour d'Alex sur la preview)
+
+- Constat : le bandeau occupait toute la largeur, la liste de notes restait bloquée à 42 rem ; le cadre « Chercher par sens » était trop haut.
+- Fait : liste, filtres et recherche par sens passent en pleine largeur (elles suivent donc le bandeau, y compris quand le panneau de l'assistant est ouvert) ; le détail de « Chercher par sens » est replié derrière une icône d'info (survol, focus clavier ou toucher), lu par les lecteurs d'écran via `aria-describedby`.
+- Décision de ma part : la phrase sur l'envoi à Mistral AI reste visible en une ligne sous le champ (règle RGPD du projet), seul le détail d'usage est masqué.
+- Limite : vu seulement par construction (CSS généré et tests), pas à l'écran sur la page connectée.
+
+## 2026-10-14 — Focus aux couleurs des boutons d'action (retour d'Alex)
+
+- Constat : les anneaux de focus restaient en cobalt (ancien bleu), y compris dans la barre latérale.
+- Fait : `ring` passe au rose de la famille des boutons d'action (#E0457F en clair, #F2709A en sombre ; 3,65 et 6,85 sur le papier). Un dégradé ne peut pas servir de contour de focus : j'ai pris un rose uni. Les boutons ont un décalage de 2 px pour que l'anneau rose reste visible autour d'un bouton rose. DESIGN.md, `docs/ui-rules.md` et les scripts de contraste mis à jour ; 118 tests passent.
+- Question laissée ouverte : l'élément actif (barre latérale, filtre sélectionné) et les liens restent en cobalt, conformément à DESIGN.md.
+
+## 2026-10-14 — Sources de l'assistant compactées (retour d'Alex)
+
+- Constat : chaque source était un encart de 4 lignes avec deux boutons ; plusieurs sources mangeaient le panneau.
+- Fait : une source = une ligne (numéro, titre en lien vers la note, mention « extrait modifié depuis » si besoin) ; l'extrait et « Copier » sont repliés dans un « Extrait » (le bouton « Ouvrir » disparaît, le titre est le lien). Source supprimée : une ligne grise. Le nom accessible reste « Source N : titre ».
+- Limite : vu sur une page de test avec le CSS de l'application, pas sur la page connectée.
+
+## 2026-10-14 — Menu déroulant de la liste « Type » et ligne des filtres (retour d'Alex)
+
+- Constat 1 : le menu déroulant restait gris/bleu système. Cause : `color-scheme` et les couleurs d'options ne changent pas la ligne choisie ni le cadre de la liste, qui sont dessinés par le système.
+- Fait : `appearance: base-select` (Chrome, avec `@supports`) rend la liste stylable : fond, bordure, survol, ligne choisie avec coche et ombre viennent des jetons. Vérifié à l'écran avec le vrai menu ouvert, clair et sombre (CDP, compte de démonstration local). Les navigateurs sans `base-select` (Safari, Firefox) gardent le menu système avec les couleurs d'options.
+- Constat 2 : « Créer une note » passait sous les filtres quand l'assistant est ouvert. Fait : puces plus serrées (espacement 6 px, marge interne 10 px) et bouton en taille réduite ; mesuré à 723 px de large (le cas de la capture), tout tient sur une ligne.
+- Limite : la ligne des filtres est vérifiée sur une page de test (le compte de démonstration local n'a pas de note).
+
+## 2026-10-14 — Connexion centrée, logo vectorisé, propositions de typographie du nom
+
+- Demande : centrer l'encart de connexion à l'écran ; vectoriser le logo (bateau viking dans une boussole) et l'ajouter ; proposer des typographies pour « LogMerry ».
+- Connexion : tout l'écran porte le dégradé « couchant » (scène B), le nom et le logo restent en haut dans la zone calme, le formulaire est centré dans l'espace restant. Vérifié dans Chrome, clair et sombre.
+- Logo : `docs/refonte/logo/vectoriser.py` (potracer) transforme l'image fournie en SVG monochrome (8 sous-chemins, 9,7 ko) ; 1re version inversée (fond vectorisé au lieu du logo), corrigée en inversant le masque ; vérifié clair, sombre et en 32 px. Ajouté : composant `LogoMark` (couleur du texte), en-tête de la barre latérale (masqué quand elle est repliée), page de connexion, icône de l'onglet (`app/icon.svg`, claire ou sombre selon le navigateur).
+- Typographie du nom : 6 propositions dans `docs/refonte/logo/typos-logmerry.html` (A Hanken, B Fraunces, C Bricolage Grotesque, D Sora, E Instrument Serif, F Plex Mono + Hanken). Choix à faire par Alex ; le nom reste en Hanken Grotesk d'ici là.
+- Hypothèse à confirmer : le logo est bien celui d'Alex (image fournie par lui), son vecteur est une trace automatique fidèle, sans retouche manuelle.
+
+## 2026-10-14 — Typographie du nom : option C, Bricolage Grotesque 700 (choix d'Alex)
+
+- Appliqué : police `font-brand` (next/font, auto-hébergée) pour « LogMerry » dans la barre latérale, la page de connexion et la page d'accueil, toujours avec le logo. DESIGN.md (rôle `wordmark`), `docs/ui-rules.md` (règle 11) et le test des polices mis à jour ; 118 tests passent.
+- Un bug de mon édition de DESIGN.md (le rôle inséré avait avalé la ligne `rounded:` du YAML) a été trouvé en relisant le fichier avant le commit et corrigé ; le test de conformité ne l'aurait pas signalé.
+
+## 2026-10-14 — Logo sur l'accueil, bouton « Vider la conversation »
+
+- Accueil : le logo (grand, centré) au-dessus de « LogMerry ».
+- Raccourci de l'assistant : il n'y en a pas. ⌘K / Ctrl+K ouvre la recherche de notes ; l'assistant s'ouvre par le bouton « Ouvrir l'assistant » de la barre latérale. L'entrée « Demander à l'assistant » dans ⌘K figure dans EXPERIENCE.md mais n'est pas encore construite.
+- Bouton « Vider la conversation » (corbeille, en haut du panneau, à côté de la croix) : confirmation en ligne (« Supprimer tout l'historique de l'assistant ? C'est définitif. », focus sur « Annuler », le choix sûr) puis suppression de tout l'historique du compte en base (citations en cascade) et panneau vidé ; message « Historique supprimé. » annoncé. Désactivé quand il n'y a rien à vider ou pendant une réponse. Fonction `clearHistory` + action `purgeHistory`, sous RLS.
+- Tests : `tests/purge.test.ts` (le compte B se vide, l'historique de A est identique ; ajouté à `test:leak`) ; flux vérifié dans le vrai navigateur sur l'application locale (compte de démonstration A : deux messages créés, annulation, suppression, base à 0, focus rendu au champ). Aucune donnée du compte personnel d'Alex touchée.
+
+## 2026-10-14 — Logo à voile blanche en thème clair, propositions de fond clair
+
+- Constat d'Alex : en thème clair, tout le logo prenait la couleur du texte, donc la voile devenait noire.
+- Fait : en thème clair, le logo est blanc cassé sur un badge sombre (carré arrondi), comme l'image d'origine : la voile reste blanche ; en thème sombre, logo clair sans badge. Même principe pour l'icône d'onglet. Vérifié dans Chrome, clair et sombre.
+- Fond du thème clair : le #F7F6F2 paraît trop blanc. 4 propositions (`docs/refonte/fonds_clairs.py`, aperçus `apercu-fond-*.html`) : sable chaud, lavande brume, rose poudré, gris-bleu froid. Un fond plus foncé fait échouer quelques contrastes (succès, bordure de champ, focus) : le script assombrit seulement les jetons concernés (petites variations) et revérifie tout (texte ≥ 4,5, éléments ≥ 3). Le dégradé « couchant » prend le fond choisi comme départ (sinon une bande blanche apparaît). En attente du choix d'Alex.
+
+## 2026-10-14 — Fond clair « sable chaud » (choix A d'Alex)
+
+- Appliqué : fond `#F0E9DC`, surface `#E6DECE`, filet et survol `#D3C9B5` ; jetons assombris par le script pour garder les contrastes : bordure de champ `#797E89`, focus `#DF417C`, succès `#097145`, attention et marqueur `#954F00`, graphique 2 `#0F8E6E` (celui-ci échouait à 2,89 sur la surface ; la distance de daltonisme reste à 30,1). Dégradés clairs partis du sable (plus de bande blanche), icône de l'onglet alignée.
+- DESIGN.md (tableau des contrastes inclus), `globals.css` (régénéré depuis DESIGN.md), test de référence mis à jour ; 118 tests, lint et build passent, `contrastes.py` à 0 problème, texte du « couchant » clair mesuré à 11,01 au pire pixel. Vérifié dans Chrome sur la page « Nouvelle note » en thème clair.
+- Ratios les plus bas en clair : texte 4,54 (succès sur surface), éléments d'interface 3,03 (focus sur surface) : serrés mais conformes.
+
+## 2026-10-14 — Liste de notes : pastilles discrètes sur fond coloré, date plus petite, CTA en gras
+
+- Constat d'Alex : type, « Brouillon » et « Indexée » trop gros et espacés ; sans fond, ils gênaient la lecture du titre ; date trop grande ; CTA à mettre en gras.
+- Cause du manque de fond : la variante « secondaire » avait la même couleur que la carte en thème sombre (invisible).
+- Fait : pastilles à 11 px, hauteur 20 px, marge interne réduite, écart de 4 px ; type sur fond `accent` ; « Brouillon » en pointillé sur fond `accent` léger ; états (indexée, attente) sur fond teinté de leur couleur. Piège évité : le texte coloré sur son propre fond teinté tombait à 3,98:1 en thème clair (sous 4,5) ; le texte est donc en encre et seule l'icône porte la couleur de l'état. Date de la liste en 12 px. Boutons d'action en gras (`font-semibold`).
+- Vérifié sur une page de test avec le CSS réel, clair et sombre ; pas sur la page connectée (le compte de démonstration local n'a pas de note).
+
+## 2026-10-14 — Retour mobile reporté
+
+- Alex a essayé la preview sur son Pixel 6a : la liste de notes lui plaît sur ordinateur, mais le rendu mobile « n'est pas dingue ». À traiter plus tard : story R8 (mobile) ajoutée à `docs/refonte/stories.md`. Je n'ai pas de détail sur ce qui gêne : à relever écran par écran sur le téléphone avant de corriger (captures bienvenues).
+
+## 2026-10-14 — Refonte R2 : composants (périmètre réel) et correction d'une erreur
+
+- Erreur de ma part corrigée : j'avais dit à Alex qu'il n'y a pas de raccourci pour l'assistant et que l'entrée « Demander à l'assistant » de ⌘K n'était pas construite. **C'est faux** : ⌘K (ou Ctrl+K) ouvre la palette, la première entrée « Demander à l'assistant : <saisie> » envoie la question au panneau (vu à l'écran). Je n'avais pas relu le code de la palette avant de répondre. Ce qui manque : un raccourci direct qui ouvre le panneau sans passer par la palette.
+- R2 : déjà livrés au fil des retours (bouton en dégradé, gras et focus rose ; champ et menu déroulant stylés ; pastilles ; états). Ajouté : la palette ⌘K passe sur le jeton `popover`. Tableau de données et carte KPI reportés à R4/R5 : sans écran qui les utilise, ils ne seraient pas vérifiables (et resteraient du code mort). Vérifié à l'écran, palette ouverte, thème clair et sombre.
+
+## 2026-10-14 — Refonte R3 : écrans existants
+
+- Revue écran par écran (Aujourd'hui, Notes, Nouvelle note, Paramètres, connexion, mot de passe oublié, nouveau mot de passe, lien invalide), clair et sombre.
+- Trouvé et corrigé : (1) les trois pages d'authentification autres que la connexion étaient restées sur un fond uni sans logo : composant `AuthShell` (scène B) partagé par les quatre ; (2) page Paramètres : toute la phrase de comptage était en mono et « 0 notes » prenait un pluriel : seuls les chiffres sont en mono, accord corrigé (0 et 1 au singulier).
+- Constat sans correction : le libellé de la barre latérale « Cockpit » et le titre de page « Aujourd'hui » diffèrent (préexistant, à trancher avec l'epic 5).

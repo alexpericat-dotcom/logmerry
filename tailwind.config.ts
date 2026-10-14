@@ -45,15 +45,31 @@ export default {
         // États et marqueur de DESIGN.md : toujours avec une icône et un texte, jamais la couleur seule.
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
-        "warning-icon": "hsl(var(--warning-icon))",
+        "action-foreground": "hsl(var(--action-foreground))",
         marker: "hsl(var(--marker))",
+        filet: "hsl(var(--filet))",
+        // Séries de graphiques : jamais la signature ni un état.
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        brand: ["var(--font-brand)", "var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
       backgroundImage: {
-        // Dégradés de DESIGN.md (statiques, jamais animés) ; « login » : scène B, clair ou sombre selon le thème.
-        "gradient-login": "var(--gradient-login)",
+        // Dégradés de DESIGN.md (statiques, jamais animés), clair ou sombre selon le thème.
+        "gradient-action": "var(--gradient-action)",
+        "gradient-subtle": "var(--gradient-1)",
+        "gradient-sunset": "var(--gradient-2)",
       },
       borderRadius: {
         lg: "var(--radius)",

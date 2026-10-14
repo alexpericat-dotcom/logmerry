@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { PageBanner } from "@/components/page-banner";
 import { updateNote } from "@/app/(app)/notes/actions";
 import { DeleteNote } from "@/components/delete-note";
 import { IndexStatus } from "@/components/index-status";
@@ -20,9 +21,9 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBanner title="Modifier la note" />
       <div>
-        <h1 className="text-3xl font-bold break-words">Modifier la note</h1>
-        <p className="mt-1 text-sm tabular-nums text-muted-foreground">
+        <p className="text-sm font-mono tabular-nums text-muted-foreground">
           Dernière modification : {formatDateTime(note.updated_at)}
         </p>
         <div className="mt-2 flex flex-col items-start gap-2">

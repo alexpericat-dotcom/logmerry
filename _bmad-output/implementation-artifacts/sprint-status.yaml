@@ -39,7 +39,7 @@ development_status:
   1-1-voir-logmerry-en-ligne: done
   1-2-me-connecter-et-me-déconnecter: done
   1-3-voir-mon-cockpit-vide-dans-la-barre-latérale: done
-  1-4-appliquer-le-thème-logmerry: review
+  1-4-appliquer-le-thème-logmerry: review  # thème olive remplacé par Cobalt (refonte R1)
   epic-1-retrospective: optional
 
   epic-2: in-progress

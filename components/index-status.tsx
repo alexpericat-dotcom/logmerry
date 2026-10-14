@@ -13,7 +13,7 @@ export function IndexStatus({ status }: { status: keyof typeof STATES }) {
   const { label, Icon, variant } = STATES[status];
   return (
     <Badge variant={variant}>
-      <Icon size={12} aria-hidden="true" />
+      <Icon size={11} aria-hidden="true" />
       {label}
     </Badge>
   );
