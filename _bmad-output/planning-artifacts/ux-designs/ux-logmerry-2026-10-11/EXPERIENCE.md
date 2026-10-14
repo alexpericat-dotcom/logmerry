@@ -1,7 +1,7 @@
 ---
 status: final
 created: 2026-10-11
-updated: 2026-10-12
+updated: 2026-10-14
 name: LogMerry
 sources:
   - _bmad-output/planning-artifacts/prds/prd-logmerry-2026-10-10/prd.md
@@ -23,7 +23,7 @@ Barre latérale fixe à gauche, repliable en icônes, le Cockpit en première en
 
 | Surface | Accessible depuis | But | Exigences |
 |---|---|---|---|
-| Connexion, inscription, mot de passe oublié | Lien d'accès, déconnexion | Accès sécurisé (scène B, dégradé décoratif) | FR-1 |
+| Connexion, inscription, mot de passe oublié | Lien d'accès, déconnexion | Accès sécurisé (page sobre, sans dégradé) | FR-1 |
 | Cockpit « Aujourd'hui » | Première entrée, ouverture de l'application | Tâches du jour avec motif, ligne de synthèse des éléments à documenter, jauge de plafond, chiffres étiquetés ([maquette](mockups/key-cockpit.html)) | FR-14, FR-15 |
 | Assistant (panneau) + Historique | Bouton ou raccourci, toute page ; historique dans le panneau | Question, réponse citée, échanges conservés ([maquette](mockups/key-assistant.html)) | FR-4, FR-5, FR-12 |
 | Notes (liste, éditeur, recherche) | Barre latérale | Base de connaissances, résumé généré | FR-3, FR-19, FR-20 |
@@ -73,7 +73,6 @@ Comportement ; l'aspect est dans `DESIGN.md`, Components.
 | Formulaires | **Champs obligatoires (minimum)** : prospect = nom + origine ; Mission = client + titre ; Étape = titre + date ; devis = montant + date d'envoi (statut « envoyé » par défaut ; « accepté », « refusé » ; remarque facultative ; accepté = Mission créée ou confirmée, refusé = tâche du Cockpit retirée ; pas de document) ; Échéance = date + source (FR-13 ; enregistrement refusé si la source manque). Tout le reste en divulgation progressive (« Plus de champs », modifiable plus tard). Libellé associé à chaque champ, erreur en ligne + récapitulatif. Champs requis : « (obligatoire) » dans le libellé + `aria-required`. Erreur : `aria-invalid` + `aria-describedby`, récapitulatif en tête (focus dessus, sans `role="alert"` en plus), ses liens déplacent le focus sur le champ. Date : saisie texte JJ/MM/AAAA, format indiqué dans le libellé, sélecteur `Calendar` optionnel navigable aux flèches ; date de vérification d'un Paramètre préremplie à aujourd'hui. Montant : `inputmode="decimal"`, virgule acceptée. `autocomplete` sur les champs d'identité. « Plus de champs » : `aria-expanded`/`aria-controls`. Toute information déjà saisie dans le parcours (client, Mission) est préremplie, jamais redemandée. |
 | Contact (portfolio public) | **MVP : `mailto-link`.** Lien « m'écrire » (`mailto:`), souligné, `{colors.primary}`, cible ≥ 24 px, focus visible `{colors.ring}`. Aucune écriture en base : la page reste en lecture seule (FR-16), aucun e-mail automatique. Vouvoiement autour (« Vous pouvez m'écrire »).<br>**Après MVP : `contact-form`.** Vouvoiement. Champs : nom, e-mail, message, tous avec libellé visible, `aria-required`, `autocomplete="name"`/`"email"`. Erreurs : récapitulatif en tête (focus) + erreur en ligne reliée par `aria-describedby`, saisie conservée. Envoi : bouton désactivé seulement pendant l'envoi ; succès dans une région `role="status"` (« Message envoyé. ») ; échec : message d'erreur + « Réessayer ». Anti-spam sans test cognitif : champ piège masqué (`aria-hidden`, `tabindex="-1"`), délai minimal de soumission, limitation de débit côté serveur ; aucun CAPTCHA à image, énigme ou calcul. Destination : table de demandes en insertion seule (voir Open items). |
 | `status-badge` | Voir `DESIGN.md`, Components (icône + texte, la couleur n'est qu'un renfort). |
-| `gradient-banner` | Voir `DESIGN.md`, Components. Décoratif, au-dessus de la liste des tâches uniquement ; ne porte que le titre de page en Forest. |
 | Sidebar | Libellé visible en texte ; quand la barre est repliée, `aria-label` ; page courante `aria-current="page"` + indicateur non coloré (règle F-03, Interaction Primitives) ; bouton de repli `aria-expanded`, état mémorisé ; infobulle au survol et au focus, survolable et fermable par Esc (WCAG 1.4.13). Téléphone (`Sheet`) : focus sur le premier lien à l'ouverture, retour au bouton à la fermeture. |
 | Toasts | Informatif : `role="status"`, 6 s minimum, pause au survol et au focus ; avec action : persistant jusqu'à fermeture ; fermables au clavier ; coin bas gauche, hors panneau et hors zone de focus. |
 | Éditeur de Note | `role="textbox"` multiligne nommé ; barre d'outils `role="toolbar"` à tabindex itinérant ; Tab sort de l'éditeur (pas de piège) ; Esc ne le quitte que sans menu ouvert ; fin de génération du résumé : `role="status"` « résumé généré ». |
@@ -110,7 +109,7 @@ Raccourcis **dans l'application** (une application web n'a pas de raccourci syst
 - **Focus** : visible partout (`{colors.ring}`), jamais masqué par la barre latérale, le panneau assistant ou un élément sticky (`scroll-padding` égal à la hauteur des éléments sticky). À l'ouverture du panneau le focus va au champ de saisie ; à la fermeture il revient à l'élément qui avait le focus avant l'ouverture (y compris quand l'ouverture vient du raccourci) ; s'il n'existe plus, au `h1` de la page.
 - **Réordonnancement** : voir `task-row`, Component Patterns (règle unique : focus sur la case, annonce `role="status"`).
 - Pas de glisser-déposer obligatoire ; pas de survol comme seule affordance.
-- Dégradés non animés ; `@media (prefers-reduced-motion: reduce)` : aucune animation : réordonnancement, panneau, `Skeleton` (sans pulsation), toasts et défilement doux changent d'état instantanément ; retour de satisfaction = coche + titre barré, sans mouvement ; indicateur d'attente en texte statique.
+- `@media (prefers-reduced-motion: reduce)` : aucune animation : réordonnancement, panneau, `Skeleton` (sans pulsation), toasts et défilement doux changent d'état instantanément ; retour de satisfaction = coche + titre barré, sans mouvement ; indicateur d'attente en texte statique.
 
 ## Accessibility Floor
 
@@ -128,7 +127,7 @@ Comportement ; les contrastes mesurés sont dans `DESIGN.md`, Colors (NFR-2).
 - Focus visible et non masqué ; ordre de tabulation = ordre de lecture.
 - Lien d'évitement « Aller au contenu » en premier arrêt sur toutes les pages, y compris la page publique (cible `#main` focalisable, `tabindex="-1"`) ; repères (`nav`, `main`, `aside`).
 - Formulaires : libellés associés, erreur en ligne, **récapitulatif d'erreurs** en tête de formulaire avec liens vers les champs.
-- `prefers-reduced-motion` respecté ; dégradés `aria-hidden` quand décoratifs.
+- `prefers-reduced-motion` respecté .
 - Panneau assistant : région nommée (`aside`), annonces limitées à l'état (voir `assistant-panel`) ; sources en liens ou boutons à cible d'au moins 24 px.
 
 ## Responsive & Platform

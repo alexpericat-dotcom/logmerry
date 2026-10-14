@@ -214,3 +214,10 @@
 - Fait : scripts `docs/refonte/` (contrastes, écart de teinte, simulation de daltonisme), `propositions.md`, trois aperçus HTML autonomes.
 - Correction en cours de route : les premiers jeux de couleurs de graphique échouaient au test de daltonisme (écart 2 à 11 sur 15 requis) ; une recherche automatique a remplacé les choix « à l'œil » (écart 28 à 30). Une bordure de champ du cobalt (2,91:1) a été assombrie.
 - Acceptation / refus : en attente du choix du propriétaire.
+
+## 2026-10-14 — Refonte : choix du propriétaire et mise à jour du contrat
+
+- Choix d'Alex : direction 2 « Cobalt », polices B (Hanken Grotesk + IBM Plex Mono). Proposé et accepté tel quel ; olive et ultraviolet refusés (l'olive proche du succès, l'ultraviolet courant dans l'IA).
+- Fait (workflow bmad-ux, mode Update) : DESIGN.md et EXPERIENCE.md mis à jour, `docs/ui-rules.md`, `docs/refonte/stories.md`. Décision tracée dans le memlog.
+- Hypothèses de ma part, à corriger si tu les refuses : **dégradés retirés** (la page de connexion devient sobre), **rayons conservés** (4/6/8, pastilles), marqueur 90 % de la jauge sur la teinte « attention », jeton `warning-icon` supprimé (plus d'orange), noms shadcn gardés (`border` = `filet`).
+- Pas de code touché : le thème actuel (olive) reste en place jusqu'à la story R1.
