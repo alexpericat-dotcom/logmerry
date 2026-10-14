@@ -1,6 +1,6 @@
 """Génère les 3 aperçus HTML autonomes : python3 docs/refonte/build_previews.py (sortie : docs/refonte/apercu-<direction>.html)."""
 import os
-from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK, GRADIENTS
+from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK, GRADIENTS, GRADIENT_SUNSET, GRADIENT_SUNSET
 
 FONTS = {
     "A": dict(nom="A · Inter + Fraunces + JetBrains Mono", ui="'Inter',system-ui,sans-serif", display="'Fraunces',Georgia,serif", mono="'JetBrains Mono',ui-monospace,monospace"),
@@ -35,9 +35,9 @@ input{font:14px var(--ui);padding:8px 10px;border:1px solid var(--rule-strong);b
 """
 
 def grad(theme):
-    return ";".join(f"--{n}:linear-gradient(160deg,{a},{b})" for n, (a, b, _) in GRADIENTS[theme].items())
+    return ";".join(f"--{n}:linear-gradient(160deg,{a},{b})" for n, (a, b, _) in GRADIENTS[theme].items()) + f";--gradient-2:{GRADIENT_SUNSET[theme]['css']}"
 
-BANNER = '<div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:16px 0 0"><p class="label" style="margin:0">Scène C · bandeau du cockpit (dégradé couchant)</p><p class="display" style="font-size:22px;margin:4px 0 0">Bonjour Alex, 3 choses à traiter</p></div><div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:8px 0 0;border-radius:8px"><p class="label" style="margin:0">Scène B · panneau de connexion (avec texte)</p><p class="display" style="font-size:22px;margin:4px 0 0">LogMerry</p><p style="margin:4px 0 0">Ton cockpit d&#39;activité.</p></div>'
+BANNER = '<div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px 20px 120px;margin:16px 0 0;border-radius:8px"><p class="label" style="margin:0">Scène C · bandeau du cockpit (dégradé couchant)</p><p class="display" style="font-size:22px;margin:4px 0 0">Bonjour Alex, 3 choses à traiter</p></div><div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px 20px 150px;margin:8px 0 0;border-radius:8px"><p class="label" style="margin:0">Scène B · panneau de connexion (texte en haut)</p><p class="display" style="font-size:22px;margin:4px 0 0">LogMerry</p><p style="margin:4px 0 0">Ton cockpit d&#39;activité.</p></div>'
 
 def page(key, p):
     fonts_js = {k: f"--ui:{f['ui']};--display:{f['display']};--mono:{f['mono']}" for k, f in FONTS.items()}

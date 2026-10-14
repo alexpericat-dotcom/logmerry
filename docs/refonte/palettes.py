@@ -37,6 +37,12 @@ PALETTES = {
 
 # Dégradés (160 degrés, statiques) : (début, fin, couleur de texte autorisée ou None). Teintes douces (papier vers orange couchant), jamais un statut ni une série de graphique.
 GRADIENTS = {
-    "light": {"gradient-1": ("#F7F6F2", "#EFEDE6", "#0F1115"), "gradient-2": ("#F7F6F2", "#FFAE7A", "#0F1115")},
-    "dark": {"gradient-1": ("#0E1014", "#161A21", "#F2F1EC"), "gradient-2": ("#161A21", "#7A3510", "#F2F1EC")},
+    "light": {"gradient-1": ("#F7F6F2", "#EFEDE6", "#0F1115")},
+    "dark": {"gradient-1": ("#0E1014", "#161A21", "#F2F1EC")},
+}
+
+# Dégradé « couchant » (référence d'Alex : noir en haut, bleu nuit, violet, rose, corail en bas à droite). Le texte se place dans les 45 % du haut.
+GRADIENT_SUNSET = {
+    "dark": dict(text="#F2F1EC", css="radial-gradient(90% 75% at 100% 100%, #F0643A 0%, #C2306A 38%, rgba(194,48,106,0) 100%), radial-gradient(85% 75% at 0% 80%, #7A3A9A 0%, #1B1F4A 50%, rgba(27,31,74,0) 100%), #05070C"),
+    "light": dict(text="#0F1115", css="radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242,112,154,0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220,212,245,0) 100%), #F7F6F2"),
 }

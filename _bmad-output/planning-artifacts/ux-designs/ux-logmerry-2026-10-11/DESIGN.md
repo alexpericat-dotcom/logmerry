@@ -64,9 +64,9 @@ colors:
   chart-4-dark: '#EBC247'
   chart-5-dark: '#EB4770'
 gradients:
-  # --gradient-* ; angle 160deg, statiques (jamais animés). Teintes douces uniquement : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
+  # --gradient-* ; angle 160deg, statiques (jamais animés). Gradient-2 : noir, bleu nuit, violet, rose, corail (références d'Alex) ; jamais un statut ni une série : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
   gradient-1: 'linear-gradient(160deg, #F7F6F2, #EFEDE6)'   # texte encre 16,13 (sombre : #0E1014 › #161A21, texte 15,42)
-  gradient-2: 'linear-gradient(160deg, #F7F6F2, #FFAE7A)'   # « couchant » : texte encre 10,43 (sombre : #161A21 › #7A3510, texte 7,92)
+  gradient-2: 'radial-gradient(90% 75% at 100% 100%, #F0643A, #C2306A 38%, transparent), radial-gradient(85% 75% at 0% 80%, #7A3A9A, #1B1F4A 50%, transparent), #05070C'   # « couchant », valeur SOMBRE (clair : docs/refonte/palettes.py, GRADIENT_SUNSET) ; texte dans les 45 % du haut, pire pixel 12,01 (clair 11,78)
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -199,14 +199,14 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 
 ### Dégradés (`--gradient-*`)
 
-Deux dégradés linéaires à 160°, statiques, **papier vers orange « couchant »** (choix d'Alex), jamais de bleu saturé en aplat (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
+Deux dégradés linéaires à 160°, statiques, **dégradé « couchant »** (noir, bleu nuit, violet, rose, corail, d'après l'image de référence d'Alex ; en clair : papier, lavande, rose, corail) (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (`gradient-1` : pire extrémité mesurée par `docs/refonte/contrastes.py` ; `gradient-2` : pixels du rendu mesurés par `docs/refonte/degrades.py`).
 
 | Jeton | Clair | Sombre | Texte autorisé | Usage |
 |---|---|---|---|---|
 | `{gradients.gradient-1}` | papier › surface | #0E1014 › #161A21 | encre (16,13 ; sombre 15,42) | Bandeau discret |
-| `{gradients.gradient-2}` | papier › orange couchant #FFAE7A | #161A21 › brun orangé #7A3510 | encre (10,43 ; sombre 7,92) | Portfolio public, bandeau du Cockpit, panneau de connexion (avec texte) |
+| `{gradients.gradient-2}` | papier › lavande › rose › corail #FF8A5C (en bas à droite) | noir #05070C › bleu nuit › violet › magenta › corail #F0643A | encre / texte clair, **uniquement dans les 45 % du haut** (pire pixel mesuré 11,78 clair, 12,01 sombre) | Portfolio public, bandeau du Cockpit, panneau de connexion (avec texte) |
 
-Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-2}` portant le nom du produit et une phrase en encre, jamais un panneau sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Risque connu : l'orange couchant ressemble à la teinte « attention » (#9A5200) ; il reste un grand fond doux, **sans icône ni mot d'état** posés dessus, et le statut « attention » garde toujours son icône et son mot. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
+Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-2}` portant le nom du produit et une phrase en encre, jamais un panneau sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Règles du « couchant » : le **texte se place toujours dans les 45 % du haut** du panneau (la zone calme) ; le bas, coloré, reste sans texte ni icône. Risque connu : le corail et le magenta ressemblent à la teinte « erreur » et à `chart-5` ; ils restent un grand fond doux, sans icône ni mot d'état posés dessus, et les statuts gardent leur icône et leur mot. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
 
 Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décore, il ne délimite aucun contrôle.
 
