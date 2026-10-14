@@ -304,3 +304,7 @@
 - Cause du manque de fond : la variante « secondaire » avait la même couleur que la carte en thème sombre (invisible).
 - Fait : pastilles à 11 px, hauteur 20 px, marge interne réduite, écart de 4 px ; type sur fond `accent` ; « Brouillon » en pointillé sur fond `accent` léger ; états (indexée, attente) sur fond teinté de leur couleur. Piège évité : le texte coloré sur son propre fond teinté tombait à 3,98:1 en thème clair (sous 4,5) ; le texte est donc en encre et seule l'icône porte la couleur de l'état. Date de la liste en 12 px. Boutons d'action en gras (`font-semibold`).
 - Vérifié sur une page de test avec le CSS réel, clair et sombre ; pas sur la page connectée (le compte de démonstration local n'a pas de note).
+
+## 2026-10-14 — Retour mobile reporté
+
+- Alex a essayé la preview sur son Pixel 6a : la liste de notes lui plaît sur ordinateur, mais le rendu mobile « n'est pas dingue ». À traiter plus tard : story R8 (mobile) ajoutée à `docs/refonte/stories.md`. Je n'ai pas de détail sur ce qui gêne : à relever écran par écran sur le téléphone avant de corriger (captures bienvenues).

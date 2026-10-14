@@ -11,4 +11,6 @@
 | R6 | Factures | après l'epic 4 |
 | R7 | Vitrine publique | après l'epic 6 |
 
+| R8 | Mobile | Reprise de l'affichage sur téléphone (retour d'Alex sur Pixel 6a, 2026-10-14 : « pas dingue ») : barre latérale, bandeau, assistant plein écran, filtres, pastilles, cibles tactiles ≥ 44 px ; à tester sur le vrai téléphone, écran par écran |
+
 R4 à R7 suivent les epics fonctionnels : leurs écrans n'existent pas encore.
