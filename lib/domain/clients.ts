@@ -75,8 +75,36 @@ export function clientsHref(view: Partial<ClientView>): string {
 /** Sens du prochain clic sur un en-tête : croissant d'abord, puis inversé si la colonne est déjà triée. */
 export const nextDir = (view: ClientView, key: ClientSortKey): SortDir => (view.tri === key && view.ordre === "asc" ? "desc" : "asc");
 
-/** « 12 clients sur 40 » (fiches affichées sur fiches au total). */
+/** « 12 fiches sur 40 » (fiches affichées sur fiches au total). */
 export function countLabel(shown: number, total: number): string {
   const noun = (n: number) => (n > 1 ? "fiches" : "fiche");
   return shown === total ? `${total} ${noun(total)}` : `${shown} ${noun(shown)} sur ${total}`;
+}
+
+export type ClientRow = { id: string; name: string; status: ClientStatus; origin: ClientOrigin; created_at: string };
+
+const collator = new Intl.Collator("fr", { sensitivity: "base" });
+
+/** Valeur de tri d'une colonne : libellés français (alphabétique, accents et casse ignorés), pas l'ordre des enums de la base. */
+function sortValue(row: ClientRow, key: ClientSortKey): string {
+  if (key === "nom") return row.name;
+  if (key === "statut") return CLIENT_STATUS_LABELS[row.status];
+  if (key === "origine") return CLIENT_ORIGIN_LABELS[row.origin];
+  return row.created_at;
+}
+
+/**
+ * Filtre et trie mes fiches (toutes lues d'un coup, la RLS les limite aux miennes) ; `total` = nombre de fiches sans filtre,
+ * calculé sur la même lecture que la liste (jamais deux chiffres de deux requêtes).
+ * ponytail : tout en mémoire, suffisant pour quelques dizaines de fiches ; pagination côté base au-delà de 1 000.
+ */
+export function viewClients<T extends ClientRow>(all: T[], view: ClientView): { rows: T[]; total: number } {
+  const dir = view.ordre === "asc" ? 1 : -1;
+  const rows = all
+    .filter((c) => (!view.statut || c.status === view.statut) && (!view.origine || c.origin === view.origine))
+    .sort((a, b) => {
+      const primary = view.tri === "creee" ? (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0) : collator.compare(sortValue(a, view.tri), sortValue(b, view.tri));
+      return dir * primary || (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0); // à égalité : la plus récente d'abord
+    });
+  return { rows, total: all.length };
 }

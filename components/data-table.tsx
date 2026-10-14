@@ -56,7 +56,7 @@ export function DataTable<T>({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b last:border-b-0 hover:bg-accent/40">
+            <tr key={rowKey(row)} className="relative border-b last:border-b-0 hover:bg-accent/40">
               {columns.map((c) => (
                 <td key={c.key} className={cn("px-3 py-2", c.align === "right" && "text-right font-mono tabular-nums")}>
                   {c.render(row)}

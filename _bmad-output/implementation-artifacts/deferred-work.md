@@ -67,3 +67,13 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
   summary: Téléphone et adresse (postale) d'un client ou d'un contact, et remarque libre sur une fiche.
   evidence: Non prévus par l'epic 3 (un contact n'a que nom et e-mail facultatif, story 3.2) ; Alex a demandé où seraient e-mail, coordonnées et adresse ; à décider avec la story 3.2.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Tester les Server Actions des notes et des fiches (zéro ligne touchée → « n'existe plus », session absente, identifiant invalide) avec `next/navigation` et `next/cache` remplacés.
+  evidence: Retirer `.select("id")` ou inverser `data?.length` ferait afficher un succès sur une fiche d'un autre compte ; le test d'isolation ne vérifie que la base. Choix repris des notes (colle fine), à revoir.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Après l'envoi d'un formulaire (notes, fiches) : message de succès et focus sur le premier champ en erreur.
+  evidence: Relecteur aveugle ; commun à tous les formulaires, à traiter avec l'accessibilité (story 7.2).
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Décider le comportement `on delete` des clés étrangères vers `clients` (missions, devis, factures) : refuser ou conserver, et le dire dans le message de suppression.
+  evidence: Le message actuel dit « définitif » ; dès qu'une mission référence une fiche, la suppression doit être pensée (story 3.4).

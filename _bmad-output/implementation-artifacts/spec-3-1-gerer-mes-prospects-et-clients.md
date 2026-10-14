@@ -2,7 +2,7 @@
 title: 'Story 3.1 : Gérer mes prospects et clients'
 type: 'feature'
 created: '2026-10-14'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: 'f1df8d6d63b0fcf3a3197bc325a34b262f76849f'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -88,6 +88,31 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+| Constat (relecteur) | Verdict | Route | Preuve / décision |
+|---|---|---|---|
+| Tri par statut et origine dans l'ordre des enums, pas alphabétique ; tri par nom selon la collation (aveugle) | medium | patch | l'ordre « Client réel, Formation, Ami, Démo » n'est pas alphabétique ; tri fait en code sur les libellés français (`viewClients`), 6 tests |
+| Liste et total issus de deux requêtes qui peuvent se contredire (aveugle, cas limites) | medium | patch | même cause que ci-dessus : une seule lecture, filtre et total calculés dessus |
+| Logique filtre / tri / total de `listClients` sans test (lacune de vérification) | medium | patch | rendue pure et testée (`viewClients`) ; 137 tests |
+| Ligne de tableau d'aspect cliquable mais seul le nom est un lien (aveugle) | low | patch | le DESIGN prévoit le lien étendu à la ligne : `after:absolute after:inset-0`, vérifié au clic dans Chrome |
+| Commentaire de `countLabel` obsolète (« clients ») (cas limites, lacune) | low | patch | corrigé |
+| Tests des Server Actions absents (mapping zéro ligne → « n'existe plus », session, UUID) | medium | defer | même colle fine que pour les notes, choix déjà fait ; risque réel mais pas propre à cette story : noté pour notes et clients |
+| Origine « démo » en conflit avec la règle « pas de colonne fictif » (aveugle) | false | rejeté | « démo » est une étiquette d'origine voulue par l'epic et le PRD ; la séparation démo/réel reste `owner_id` |
+| Pas de contrôle de concurrence à la modification, deux onglets (aveugle, cas limites) | low | rejeté | application mono-utilisateur ; le correctif ajoute un champ caché et un cas de conflit |
+| Liste non bornée au-delà de 1 000 fiches (aveugle, cas limites) | low | rejeté | quelques dizaines de fiches visées ; limite documentée dans `viewClients` (commentaire `ponytail`) |
+| `isUuid` importé du domaine des notes (aveugle) | low | rejeté | dépendance de développeur sans panne ; déplacer le helper touche tous les imports des notes |
+| Erreurs jamais journalisées ; `error` de l'écran d'erreur ignoré (aveugle) | low | rejeté | même schéma que les notes ; aucun contenu client ne doit être journalisé |
+| Pas de message de succès ni de focus sur le premier champ en erreur après soumission (aveugle) | medium | defer | commun à tous les formulaires (notes comprises), à traiter ensemble (story 7.2, accessibilité) |
+| Migration : pas d'index sur statut/origine, `revoke anon`, comportement `on delete` des futures clés (aveugle, cas limites) | low | rejeté / defer | index inutile à cette échelle ; `anon` n'a aucune policy, comme les notes ; `on delete` des missions et factures à décider à la story 3.4 (noté) |
+| `btrim` ne retire que les espaces : un nom en tabulations passe la base (cas limites) | low | rejeté | seule l'application écrit, elle retire tous les blancs ; une contrainte plus stricte demande une migration de plus |
+| Statut inconnu renvoyé après erreur : la liste affiche la première option (cas limites) | low | rejeté | requête falsifiée à la main uniquement |
+| Message de suppression qui reste après « Annuler » ; fiche déjà supprimée : l'utilisateur reste sur la page (cas limites) | low | rejeté | schéma copié des notes, cosmétique |
+| Validation après la vérification de session ; `revalidatePath` d'autres routes ; `?tri=creee` sans ordre en croissant (cas limites) | low / false | rejeté | pas d'autre route qui lit les fiches ; croissant voulu quand l'ordre est donné |
+| `withSession` pourrait avaler une exception de contrôle de Next (cas limites) | false | rejeté | la redirection est appelée hors du `try`, seules des requêtes Supabase s'y exécutent |
+| Action publique appelée avec un identifiant arbitraire (cas limites) | false | rejeté | `isUuid` + RLS (prouvé par le test d'isolation) ; noté par le relecteur comme acceptable |
+| `aria-current="page"` dans les filtres, deux repères de navigation en plus (aveugle) | low | rejeté | même usage que la liste des notes |
+| Aucun conseil d'import ou de convention démo dans l'état vide ; entrée « création » absente de `lib/db/clients.ts` (aveugle, cas limites) | low | rejeté | import hors périmètre ; la création est dans l'action (comme les notes), l'énoncé de tâche est approximatif |
+| Journal non mis à jour (aveugle) | false | rejeté | `docs/journal.md` mis à jour ; le diff relu l'excluait |
 
 ## Design Notes
 

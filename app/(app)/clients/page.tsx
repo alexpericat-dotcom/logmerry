@@ -6,7 +6,7 @@ import { DataTable, type Column } from "@/components/data-table";
 import { FilterChips } from "@/components/filter-chips";
 import { PageBanner } from "@/components/page-banner";
 import { Button } from "@/components/ui/button";
-import { listClients, type ClientRecord } from "@/lib/db/clients";
+import { listAllClients, type ClientRecord } from "@/lib/db/clients";
 import {
   CLIENT_ORIGINS,
   CLIENT_ORIGIN_LABELS,
@@ -16,6 +16,7 @@ import {
   countLabel,
   nextDir,
   parseClientView,
+  viewClients,
   type ClientSortKey,
 } from "@/lib/domain/clients";
 import { formatDateTime } from "@/lib/format";
@@ -26,7 +27,7 @@ type SearchParams = Promise<{ statut?: string | string[]; origine?: string | str
 
 async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
   const view = parseClientView(await searchParams);
-  const { rows, total } = await listClients(view);
+  const { rows, total } = viewClients(await listAllClients(), view);
 
   const createButton = (
     <Button asChild size="sm" className="shrink-0">
@@ -52,7 +53,7 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
       label: "Nom",
       sortHref: sortHref("nom"),
       render: (c) => (
-        <Link href={`/clients/${c.id}`} className="font-semibold underline-offset-4 hover:underline">
+        <Link href={`/clients/${c.id}`} className="font-semibold underline-offset-4 after:absolute after:inset-0 hover:underline">
           {c.name}
         </Link>
       ),

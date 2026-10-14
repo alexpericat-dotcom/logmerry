@@ -1,6 +1,6 @@
 import "server-only";
 
-import { CLIENT_SORT_COLUMNS, type ClientOrigin, type ClientStatus, type ClientView } from "@/lib/domain/clients";
+import type { ClientOrigin, ClientStatus } from "@/lib/domain/clients";
 import { createClient } from "@/lib/supabase/server";
 
 export type ClientRecord = {
@@ -14,16 +14,12 @@ export type ClientRecord = {
 
 const COLUMNS = "id, name, status, origin, created_at, updated_at";
 
-/** Mes fiches filtrées et triées (la RLS limite aux miennes) et leur nombre total sans filtre. */
-export async function listClients(view: ClientView): Promise<{ rows: ClientRecord[]; total: number }> {
+/** Toutes mes fiches, de la plus récente à la plus ancienne (la RLS limite aux miennes) ; le filtre et le tri sont dans `viewClients`. */
+export async function listAllClients(): Promise<ClientRecord[]> {
   const supabase = await createClient();
-  let query = supabase.from("clients").select(COLUMNS).order(CLIENT_SORT_COLUMNS[view.tri], { ascending: view.ordre === "asc" });
-  if (view.tri !== "creee") query = query.order("created_at", { ascending: false }); // ordre stable entre deux fiches égales
-  if (view.statut) query = query.eq("status", view.statut);
-  if (view.origine) query = query.eq("origin", view.origine);
-  const [list, count] = await Promise.all([query, supabase.from("clients").select("id", { count: "exact", head: true })]);
-  if (list.error || count.error) throw new Error("Impossible de charger les fiches.");
-  return { rows: list.data as ClientRecord[], total: count.count ?? 0 };
+  const { data, error } = await supabase.from("clients").select(COLUMNS).order("created_at", { ascending: false });
+  if (error) throw new Error("Impossible de charger les fiches.");
+  return data as ClientRecord[];
 }
 
 /** Une de mes fiches, ou null si l'identifiant est inconnu ou appartient à un autre compte. */

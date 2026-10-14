@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_NAME_MAX, clientsHref, countLabel, nextDir, parseClientView, validateClientInput } from "./clients.ts";
+import { CLIENT_NAME_MAX, clientsHref, countLabel, nextDir, parseClientView, validateClientInput, viewClients, type ClientRow } from "./clients.ts";
 
 test("création : nom et origine obligatoires, nom nettoyé", () => {
   const ok = validateClientInput({ name: "  Atelier Brume \u0000 ", status: "prospect", origin: "demo" });
@@ -44,4 +44,46 @@ test("compteur : « 12 fiches sur 40 », singulier à 0 et 1", () => {
   assert.equal(countLabel(0, 0), "0 fiche");
   assert.equal(countLabel(1, 40), "1 fiche sur 40");
   assert.equal(countLabel(40, 40), "40 fiches");
+});
+
+const row = (id: string, name: string, status: ClientRow["status"], origin: ClientRow["origin"], created_at: string): ClientRow => ({ id, name, status, origin, created_at });
+const ROWS = [
+  row("1", "Atelier Brume", "client", "real_client", "2026-10-01T10:00:00Z"),
+  row("2", "école Lanterne", "prospect", "demo", "2026-10-03T10:00:00Z"),
+  row("3", "Coopérative Aval", "prospect", "training", "2026-10-02T10:00:00Z"),
+  row("4", "Zélie", "client", "friend", "2026-10-04T10:00:00Z"),
+];
+const ids = (rows: ClientRow[]) => rows.map((r) => r.id).join(",");
+
+test("liste : par défaut la plus récente d'abord, total = toutes les fiches", () => {
+  const v = viewClients(ROWS, parseClientView({}));
+  assert.equal(ids(v.rows), "4,2,3,1");
+  assert.equal(v.total, 4);
+});
+
+test("filtres : statut, origine, les deux ; le total ignore les filtres ; aucun résultat possible", () => {
+  assert.equal(ids(viewClients(ROWS, parseClientView({ statut: "prospect" })).rows), "2,3");
+  assert.equal(ids(viewClients(ROWS, parseClientView({ origine: "friend" })).rows), "4");
+  const both = viewClients(ROWS, parseClientView({ statut: "client", origine: "demo" }));
+  assert.deepEqual([both.rows.length, both.total], [0, 4]);
+});
+
+test("tri par nom : alphabétique, accents et casse ignorés (« école » entre Coopérative et Zélie), les deux sens", () => {
+  assert.equal(ids(viewClients(ROWS, parseClientView({ tri: "nom", ordre: "asc" })).rows), "1,3,2,4");
+  assert.equal(ids(viewClients(ROWS, parseClientView({ tri: "nom", ordre: "desc" })).rows), "4,2,3,1");
+});
+
+test("tri par statut et par origine : par libellé français, pas dans l'ordre des enums de la base", () => {
+  // Client < Prospect ; à égalité, la plus récente d'abord
+  assert.equal(ids(viewClients(ROWS, parseClientView({ tri: "statut", ordre: "asc" })).rows), "4,1,2,3");
+  // Ami < Client réel < Démo < Formation
+  assert.equal(ids(viewClients(ROWS, parseClientView({ tri: "origine", ordre: "asc" })).rows), "4,1,2,3");
+});
+
+test("tri par date de création : croissant et décroissant", () => {
+  assert.equal(ids(viewClients(ROWS, parseClientView({ tri: "creee", ordre: "asc" })).rows), "1,3,2,4");
+});
+
+test("liste vide : total 0, aucune erreur", () => {
+  assert.deepEqual(viewClients([], parseClientView({ statut: "client" })), { rows: [], total: 0 });
 });
