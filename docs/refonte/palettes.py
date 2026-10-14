@@ -34,3 +34,9 @@ PALETTES = {
                      signature="#B49BFF", on_signature="#100E16", success="#5FD3A0", attention="#F5B547", danger="#FF8A80"),
     },
 }
+
+# Dégradés (160 degrés, statiques) : (début, fin, couleur de texte autorisée ou None). Cobalt uniquement, jamais un statut ni une série de graphique.
+GRADIENTS = {
+    "light": {"gradient-1": ("#F7F6F2", "#EFEDE6", "#0F1115"), "gradient-2": ("#F7F6F2", "#D5DCFF", "#0F1115"), "gradient-3": ("#1D3BFF", "#0A1466", "#FFFFFF")},
+    "dark": {"gradient-1": ("#0E1014", "#161A21", "#F2F1EC"), "gradient-2": ("#161A21", "#1B2566", "#F2F1EC"), "gradient-3": ("#1D3BFF", "#0A1466", "#FFFFFF")},
+}

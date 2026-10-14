@@ -63,6 +63,11 @@ colors:
   chart-3-dark: '#B275F0'
   chart-4-dark: '#EBC247'
   chart-5-dark: '#EB4770'
+gradients:
+  # --gradient-* ; angle 160deg, statiques (jamais animés). Cobalt uniquement : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
+  gradient-1: 'linear-gradient(160deg, #F7F6F2, #EFEDE6)'   # texte encre 16,13 (sombre : #0E1014 › #161A21, texte 15,42)
+  gradient-2: 'linear-gradient(160deg, #F7F6F2, #D5DCFF)'   # texte encre 13,96 (sombre : #161A21 › #1B2566, texte 12,35)
+  gradient-3: 'linear-gradient(160deg, #1D3BFF, #0A1466)'   # texte blanc 6,73, identique en clair et en sombre
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -158,7 +163,7 @@ spacing:
 
 ## Brand & Style
 
-LogMerry projette quatre qualités, dans cet ordre de lecture en dix secondes : **rigoureux, efficace, soigné, réfléchi**. Le style retenu est **éditorial suisse** : papier chaud, encre quasi noire, **une seule couleur vive** (le cobalt), hiérarchie par la typographie et par des **filets** de 1 px plutôt que par des ombres ou des aplats décoratifs. Pas de glassmorphism, **pas de dégradé** (retirés à la refonte du 2026-10-14). Les chiffres (montants, dates, durées) sont en police mono, gros dans le cockpit.
+LogMerry projette quatre qualités, dans cet ordre de lecture en dix secondes : **rigoureux, efficace, soigné, réfléchi**. Le style retenu est **éditorial suisse** : papier chaud, encre quasi noire, **une seule couleur vive** (le cobalt), hiérarchie par la typographie et par des **filets** de 1 px plutôt que par des ombres ou des aplats décoratifs. Pas de glassmorphism, des **dégradés cobalt** comme accent ponctuel (conservés à la demande d'Alex, voir Colors), jamais une surface de travail. Les chiffres (montants, dates, durées) sont en police mono, gros dans le cockpit.
 
 Maquettes de référence : les aperçus de la refonte ([cobalt](../../../../docs/refonte/apercu-2-cobalt.html), avec bascule clair/sombre) et le dossier [docs/refonte/propositions.md](../../../../docs/refonte/propositions.md). Les maquettes `mockups/` datent de la palette olive et sont **périmées** pour les couleurs et les dégradés ; elles restent valables pour la structure des écrans. DESIGN.md et EXPERIENCE.md l'emportent en cas de conflit.
 
@@ -193,6 +198,18 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 | Ratio le plus bas, texte | 4,60 (succès sur surface) | 6,38 |
 | Ratio le plus bas, non-texte | 3,16 (bordure de champ sur surface) | 3,63 |
 
+### Dégradés (`--gradient-*`)
+
+Trois dégradés linéaires à 160°, statiques, **cobalt uniquement** (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
+
+| Jeton | Clair | Sombre | Texte autorisé | Usage |
+|---|---|---|---|---|
+| `{gradients.gradient-1}` | papier › surface | #0E1014 › #161A21 | encre (16,13 ; sombre 15,42) | Bandeau discret |
+| `{gradients.gradient-2}` | papier › cobalt pâle #D5DCFF | #161A21 › cobalt nuit #1B2566 | encre (13,96 ; sombre 12,35) | Portfolio public, bandeau d'en-tête du Cockpit |
+| `{gradients.gradient-3}` | cobalt #1D3BFF › nuit #0A1466 | identique | blanc (6,73) | Panneau décoratif de connexion (sans texte) |
+
+Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-3}`, `aria-hidden`, sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
+
 Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décore, il ne délimite aucun contrôle.
 
 ## Typography
@@ -207,7 +224,7 @@ Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décor
 
 ## Elevation & Depth
 
-Profondeur tonale et **filets**, pas d'ombres décoratives : papier, puis surface `{colors.card}` rare, séparés par un filet `{colors.filet}`. Ombre shadcn par défaut réservée aux popovers et dialogues. Aucune ombre sur les lignes de tâches.
+Profondeur tonale et **filets**, pas d'ombres décoratives (les dégradés des scènes A, B, C sont des accents, pas de la profondeur) : papier, puis surface `{colors.card}` rare, séparés par un filet `{colors.filet}`. Ombre shadcn par défaut réservée aux popovers et dialogues. Aucune ombre sur les lignes de tâches.
 
 ## Shapes
 
@@ -226,6 +243,7 @@ Seuls les composants propres à LogMerry sont spécifiés ; leur comportement es
 | `status-badge` | Pastille `{rounded.full}` : icône + mot, couleur d'état en complément (succès, attention, erreur) ; le statut « prospect » utilise la signature avec une icône distincte, jamais une couleur de statut. |
 | `assistant-panel` | Panneau ancré à droite, fond `{colors.popover}`, bordure `{colors.border}`, rayon `{rounded.lg}`. Réponse en `{typography.body}`, puces lisibles en diagonale, sources dessous. |
 | `citation-chip` | Puce `{rounded.full}`, fond `{colors.muted}`, bordure `{colors.border}`, titre de la Note source ; focus visible `{colors.ring}`. |
+| `gradient-banner` | Bandeau d'en-tête du Cockpit : `{gradients.gradient-2}`, texte `{colors.foreground}` ; hors de la zone des tâches. |
 | `data-table` | Shadcn Table sur `{colors.card}`, lignes séparées par `{colors.border}`, en-têtes `{typography.label}`, chiffres tabulaires alignés à droite. |
 | `backlog-summary` | Ligne plate sous la liste des tâches du Cockpit : icône lucide + texte `{typography.label}` en `{colors.muted-foreground}` (7,34 sur papier en clair, 8,37 en sombre) ; le libellé est un lien `{colors.foreground}` souligné. Sans fond, sans bordure, sans case : ce n'est pas une tâche. |
 | `contact-form` | **Après MVP** (au MVP : simple lien « m'écrire » `{colors.primary}`, souligné, focus `{colors.ring}`). Formulaire du portfolio public : shadcn Input, Textarea et Button, libellés visibles au-dessus des champs, bordures `{colors.input}`, rayon `{rounded.sm}`, erreurs en `{colors.destructive}` avec icône + texte. Comportement : EXPERIENCE.md, Component Patterns. |
@@ -237,11 +255,12 @@ Seuls les composants propres à LogMerry sont spécifiés ; leur comportement es
 | Doubler chaque information d'état d'une icône et d'un mot | Utiliser la couleur seule (jauge, statut, succès, erreur, case cochée) |
 | Réserver le cobalt à la signature (bouton, lien, focus, actif) | Utiliser le cobalt pour un statut ou une série de graphique |
 | Réserver le marqueur 90 % à la jauge, sans texte, sur fond papier | Placer la jauge dans une carte Surface |
-| Séparer par des filets de 1 px | Ajouter ombres décoratives, dégradés ou aplats colorés |
+| Séparer par des filets de 1 px | Ajouter des ombres décoratives ou des aplats colorés |
+| Limiter les dégradés aux scènes A, B, C avec les paires validées | Placer un dégradé derrière tâches, tableaux, jauge ou chat, ou y mettre une couleur de statut |
 | Délimiter un champ avec `{colors.input}` (≥ 3:1) | Délimiter un champ avec le seul filet |
 | Utiliser les jetons `chart-*` pour les séries, avec légende | Réutiliser la signature ou un statut dans un graphique |
 | Mettre en mono tabulaire tout montant, date et durée | Laisser des chiffres proportionnels dans un tableau ou la jauge |
 | Définir chaque jeton en clair et en sombre ensemble | Livrer un thème sans son pendant |
 | Étiqueter « estimation » tout montant calculé | Présenter un montant calculé comme officiel |
 | Hériter des composants shadcn par défaut | Redessiner Dialog, Sheet, Command sans raison de marque |
-| Respecter `prefers-reduced-motion` et `forced-colors` | Ignorer `prefers-reduced-motion` ou `forced-colors` |
+| Respecter `prefers-reduced-motion` et `forced-colors`, ne jamais animer un dégradé | Ignorer `prefers-reduced-motion` ou `forced-colors`, animer un dégradé |

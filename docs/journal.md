@@ -219,5 +219,7 @@
 
 - Choix d'Alex : direction 2 « Cobalt », polices B (Hanken Grotesk + IBM Plex Mono). Proposé et accepté tel quel ; olive et ultraviolet refusés (l'olive proche du succès, l'ultraviolet courant dans l'IA).
 - Fait (workflow bmad-ux, mode Update) : DESIGN.md et EXPERIENCE.md mis à jour, `docs/ui-rules.md`, `docs/refonte/stories.md`. Décision tracée dans le memlog.
-- Hypothèses de ma part, à corriger si tu les refuses : **dégradés retirés** (la page de connexion devient sobre), **rayons conservés** (4/6/8, pastilles), marqueur 90 % de la jauge sur la teinte « attention », jeton `warning-icon` supprimé (plus d'orange), noms shadcn gardés (`border` = `filet`).
+- Hypothèses de ma part, à corriger si tu les refuses : **rayons conservés** (4/6/8, pastilles), marqueur 90 % de la jauge sur la teinte « attention », jeton `warning-icon` supprimé (plus d'orange), noms shadcn gardés (`border` = `filet`).
 - Pas de code touché : le thème actuel (olive) reste en place jusqu'à la story R1.
+
+- Correction d'Alex : **il veut garder des dégradés**. Mon hypothèse « dégradés retirés » est refusée. Remplacée par 3 dégradés cobalt (scènes A, B, C), contrastes calculés (pire extrémité : 6,73 à 16,13), jamais derrière les zones de travail. Le reste des hypothèses est confirmé par Alex.

@@ -5,7 +5,7 @@ la signature ne se confond avec aucun statut (écart de teinte >= 40 degrés) ; 
 trois formes de daltonisme (écart Lab >= 15, simulation de Machado 2009 à sévérité 1).
 """
 import colorsys, itertools, sys
-from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK
+from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK, GRADIENTS
 
 def rgb(h): h = h.lstrip("#"); return [int(h[i:i+2], 16) / 255 for i in (0, 2, 4)]
 def lin(c): return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
@@ -71,6 +71,10 @@ def run():
     for theme, charts in (("clair", CHARTS_LIGHT), ("sombre", CHARTS_DARK)):
         d, qui = cvd_min(charts); ok = d >= 15; problems += not ok
         print(f"\n{'OK   ' if ok else 'ÉCHEC'} graphiques {theme} : écart minimal en daltonisme = {d:.1f} (>= 15) ({qui})")
+    for theme, gs in GRADIENTS.items():
+        for nom, (a, b, txt) in gs.items():
+            r = min(ratio(a, txt), ratio(b, txt)); ok = r >= 4.5; problems += not ok
+            print(f"{'OK   ' if ok else 'ÉCHEC'} dégradé {nom} ({theme}) : texte {txt} / pire extrémité = {r:.2f} (>= 4,5)")
     print(f"\n{problems} problème(s)")
     return problems
 

@@ -1,6 +1,6 @@
 """Génère les 3 aperçus HTML autonomes : python3 docs/refonte/build_previews.py (sortie : docs/refonte/apercu-<direction>.html)."""
 import os
-from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK
+from palettes import PALETTES, CHARTS_LIGHT, CHARTS_DARK, GRADIENTS
 
 FONTS = {
     "A": dict(nom="A · Inter + Fraunces + JetBrains Mono", ui="'Inter',system-ui,sans-serif", display="'Fraunces',Georgia,serif", mono="'JetBrains Mono',ui-monospace,monospace"),
@@ -34,16 +34,21 @@ input{font:14px var(--ui);padding:8px 10px;border:1px solid var(--rule-strong);b
 .hint{color:var(--muted);font-size:13px}a{color:var(--signature)}
 """
 
+def grad(theme):
+    return ";".join(f"--{n}:linear-gradient(160deg,{a},{b})" for n, (a, b, _) in GRADIENTS[theme].items())
+
+BANNER = '<div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:16px 0 0"><p class="label" style="margin:0">Scène C · bandeau du cockpit (dégradé cobalt)</p><p class="display" style="font-size:22px;margin:4px 0 0">Bonjour Alex, 3 choses à traiter</p></div><div aria-hidden="true" style="background:var(--gradient-3);height:64px;margin:8px 0 0;border-radius:8px"></div><p class="hint" style="margin:4px 0 0">Scène B · panneau décoratif de connexion, sans texte</p>'
+
 def page(key, p):
     fonts_js = {k: f"--ui:{f['ui']};--display:{f['display']};--mono:{f['mono']}" for k, f in FONTS.items()}
-    return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    return f"""<!doctype html><html lang="fr" data-font="B"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aperçu direction {key} : {p['nom']}</title><link rel="stylesheet" href="{LINK}">
-<style>:root{{color-scheme:light;{vars_(p['light'], CHARTS_LIGHT)}}}:root[data-theme=dark]{{color-scheme:dark;{vars_(p['dark'], CHARTS_DARK)}}}:root{{{fonts_js['A']}}}:root[data-font=B]{{{fonts_js['B']}}}{CSS}</style></head><body>
+<style>:root{{color-scheme:light;{vars_(p['light'], CHARTS_LIGHT)};{grad('light') if key=='2-cobalt' else ''}}}:root[data-theme=dark]{{color-scheme:dark;{vars_(p['dark'], CHARTS_DARK)};{grad('dark') if key=='2-cobalt' else ''}}}:root{{{fonts_js['A']}}}:root[data-font=B]{{{fonts_js['B']}}}{CSS}</style></head><body>
 <div class="bar"><strong>Direction {key} : {p['nom']}</strong> <span class="hint">Données fictives. Aperçu statique.</span>
-<button id="t" aria-pressed="false">Thème sombre</button><button id="f" aria-pressed="false">Typo B : Hanken + Plex Mono</button>
+<button id="t" aria-pressed="false">Thème sombre</button><button id="f" aria-pressed="true">Typo A : Inter + Fraunces</button>
 <a href="#cockpit">Aujourd'hui</a><a href="#clients">Clients</a><a href="#fiche">Fiche client</a></div>
 <div class="app"><nav class="side" aria-label="Navigation"><a href="#cockpit" aria-current="page">Aujourd'hui</a><a href="#clients">Clients</a><a href="#fiche">Missions</a><a href="#fiche">Factures</a><a href="#fiche">Notes</a><a href="#fiche">Assistant</a></nav><main>
-<section id="cockpit"><p class="label">Mercredi 14 octobre</p><h1 class="display">Aujourd'hui</h1>
+<section id="cockpit"><p class="label">Mercredi 14 octobre</p><h1 class="display">Aujourd'hui</h1>{BANNER if key=='2-cobalt' else ''}
 <div class="kpis" style="margin-top:16px"><div class="kpi"><span class="label">CA encaissé 2026</span><span class="num">18 420 €</span><div class="gauge" role="img" aria-label="Plafond estimé : 21 % utilisé" style="margin-top:8px"><i style="width:21%"></i></div><span class="hint">21 % du plafond (estimation)</span></div>
 <div class="kpi"><span class="label">Factures en retard</span><span class="num bad">2</span><span class="pill bad">⚠ En retard</span></div>
 <div class="kpi"><span class="label">Charge de la semaine</span><span class="num">24 h</span><span class="hint">sur 32 h</span></div></div>
