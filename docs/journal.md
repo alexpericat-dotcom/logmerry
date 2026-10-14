@@ -278,3 +278,10 @@
 
 - Appliqué : police `font-brand` (next/font, auto-hébergée) pour « LogMerry » dans la barre latérale, la page de connexion et la page d'accueil, toujours avec le logo. DESIGN.md (rôle `wordmark`), `docs/ui-rules.md` (règle 11) et le test des polices mis à jour ; 118 tests passent.
 - Un bug de mon édition de DESIGN.md (le rôle inséré avait avalé la ligne `rounded:` du YAML) a été trouvé en relisant le fichier avant le commit et corrigé ; le test de conformité ne l'aurait pas signalé.
+
+## 2026-10-14 — Logo sur l'accueil, bouton « Vider la conversation »
+
+- Accueil : le logo (grand, centré) au-dessus de « LogMerry ».
+- Raccourci de l'assistant : il n'y en a pas. ⌘K / Ctrl+K ouvre la recherche de notes ; l'assistant s'ouvre par le bouton « Ouvrir l'assistant » de la barre latérale. L'entrée « Demander à l'assistant » dans ⌘K figure dans EXPERIENCE.md mais n'est pas encore construite.
+- Bouton « Vider la conversation » (corbeille, en haut du panneau, à côté de la croix) : confirmation en ligne (« Supprimer tout l'historique de l'assistant ? C'est définitif. », focus sur « Annuler », le choix sûr) puis suppression de tout l'historique du compte en base (citations en cascade) et panneau vidé ; message « Historique supprimé. » annoncé. Désactivé quand il n'y a rien à vider ou pendant une réponse. Fonction `clearHistory` + action `purgeHistory`, sous RLS.
+- Tests : `tests/purge.test.ts` (le compte B se vide, l'historique de A est identique ; ajouté à `test:leak`) ; flux vérifié dans le vrai navigateur sur l'application locale (compte de démonstration A : deux messages créés, annulation, suppression, base à 0, focus rendu au champ). Aucune donnée du compte personnel d'Alex touchée.

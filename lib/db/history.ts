@@ -19,6 +19,13 @@ export async function listHistory(supabase: SupabaseClient): Promise<HistoryMess
   return toHistory(data as unknown as MessageRow[]);
 }
 
+/** Supprime tout MON historique (la RLS limite la suppression à mes lignes ; les citations suivent en cascade). Rend le nombre de messages supprimés. */
+export async function clearHistory(supabase: SupabaseClient): Promise<number> {
+  const { data, error } = await supabase.from("messages").delete().not("id", "is", null).select("id");
+  if (error) throw new Error(`purge ${error.code ?? ""}`.trim());
+  return data.length;
+}
+
 /** Enregistre un échange vérifié : ma question, la réponse et ses citations (références, jamais une copie du texte). Rend les identifiants des messages enregistrés. Lève une erreur sans contenu en cas d'échec. */
 export async function saveExchange(supabase: SupabaseClient, question: string, answer: string, sources: Source[]): Promise<string[]> {
   // Une seule insertion pour les deux messages ; horodatages explicites pour garder l'ordre question puis réponse.
