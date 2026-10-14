@@ -2,7 +2,7 @@
 title: 'Story 3.1 : Gérer mes prospects et clients'
 type: 'feature'
 created: '2026-10-14'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'f1df8d6d63b0fcf3a3197bc325a34b262f76849f'
 route: 'dispatch'
 review_loop_iteration: 0
