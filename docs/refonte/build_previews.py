@@ -78,6 +78,6 @@ document.getElementById('f').onclick=e=>{{const b=r.dataset.font!=='B';r.dataset
 if(matchMedia('(prefers-color-scheme: dark)').matches)document.getElementById('t').click();</script></body></html>"""
 
 here = os.path.dirname(os.path.abspath(__file__))
-for key, p in PALETTES.items():
+for key, p in (PALETTES.items() if __name__ == "__main__" else []):
     open(os.path.join(here, f"apercu-{key}.html"), "w", encoding="utf-8").write(page(key, p))
     print("écrit", f"apercu-{key}.html")
