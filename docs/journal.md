@@ -265,3 +265,11 @@
 - Fait : `appearance: base-select` (Chrome, avec `@supports`) rend la liste stylable : fond, bordure, survol, ligne choisie avec coche et ombre viennent des jetons. Vérifié à l'écran avec le vrai menu ouvert, clair et sombre (CDP, compte de démonstration local). Les navigateurs sans `base-select` (Safari, Firefox) gardent le menu système avec les couleurs d'options.
 - Constat 2 : « Créer une note » passait sous les filtres quand l'assistant est ouvert. Fait : puces plus serrées (espacement 6 px, marge interne 10 px) et bouton en taille réduite ; mesuré à 723 px de large (le cas de la capture), tout tient sur une ligne.
 - Limite : la ligne des filtres est vérifiée sur une page de test (le compte de démonstration local n'a pas de note).
+
+## 2026-10-14 — Connexion centrée, logo vectorisé, propositions de typographie du nom
+
+- Demande : centrer l'encart de connexion à l'écran ; vectoriser le logo (bateau viking dans une boussole) et l'ajouter ; proposer des typographies pour « LogMerry ».
+- Connexion : tout l'écran porte le dégradé « couchant » (scène B), le nom et le logo restent en haut dans la zone calme, le formulaire est centré dans l'espace restant. Vérifié dans Chrome, clair et sombre.
+- Logo : `docs/refonte/logo/vectoriser.py` (potracer) transforme l'image fournie en SVG monochrome (8 sous-chemins, 9,7 ko) ; 1re version inversée (fond vectorisé au lieu du logo), corrigée en inversant le masque ; vérifié clair, sombre et en 32 px. Ajouté : composant `LogoMark` (couleur du texte), en-tête de la barre latérale (masqué quand elle est repliée), page de connexion, icône de l'onglet (`app/icon.svg`, claire ou sombre selon le navigateur).
+- Typographie du nom : 6 propositions dans `docs/refonte/logo/typos-logmerry.html` (A Hanken, B Fraunces, C Bricolage Grotesque, D Sora, E Instrument Serif, F Plex Mono + Hanken). Choix à faire par Alex ; le nom reste en Hanken Grotesk d'ici là.
+- Hypothèse à confirmer : le logo est bien celui d'Alex (image fournie par lui), son vecteur est une trace automatique fidèle, sans retouche manuelle.
