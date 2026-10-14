@@ -232,3 +232,10 @@
 - Fait : `app/globals.css` régénéré depuis DESIGN.md (valeurs HSL calculées par script, pas recopiées), jetons `filet` et `chart-1..5` ajoutés, `warning-icon` supprimé, dégradés `gradient-1` et `gradient-2` « couchant » (clair et sombre) ; `tailwind.config.ts` (couleurs, polices, `bg-gradient-sunset`) ; Hanken Grotesk + IBM Plex Mono via `next/font` ; panneau de connexion avec texte ; chiffres existants en `font-mono tabular-nums`.
 - Tests : `lib/theme.test.ts` adapté (conformité DESIGN.md, contrastes, graphiques, écart de teinte signature/états, polices) : 117 tests passent ; lint et build OK. Vérifié dans Chrome sur la page de connexion, clair et sombre.
 - Bug trouvé en vérifiant : une couleur nue comme dernière couche d'un `background-image` est invalide (le panneau restait vide). Corrigé avec `linear-gradient(couleur, couleur)`, aussi dans DESIGN.md et palettes.py. Les aperçus HTML ne l'avaient pas révélé car ils utilisent le raccourci `background`.
+
+## 2026-10-14 — Boutons en dégradé et bandeaux d'en-tête (demande d'Alex sur la preview)
+
+- Constat d'Alex sur la preview : boutons encore en aplat, et les bandeaux de l'aperçu avaient disparu (je n'avais mis le dégradé que sur la page de connexion).
+- Fait : `gradient-action` (violet pâle, rose, corail, 135°) sur tous les boutons d'action, texte `action-foreground` (encre), contraste mesuré sur les pixels : 6,77 au pire. Composant `PageBanner` en tête d'Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note (titre seul en haut, zone calme).
+- Conséquence de la demande : le cobalt n'est plus le fond des boutons ; il reste pour liens, focus, élément actif. DESIGN.md et `docs/ui-rules.md` le disent maintenant ; le bandeau, d'abord prévu pour le cockpit seul, couvre tous les écrans principaux.
+- Limite : seul le dégradé d'action sur un fond de test (clair et sombre) a été vu à l'écran ; les pages réelles demandent une connexion que je n'ai pas.

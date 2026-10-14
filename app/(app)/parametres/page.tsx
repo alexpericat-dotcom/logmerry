@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { PageBanner } from "@/components/page-banner";
 import { IndexAllNotes } from "@/components/index-all-notes";
 import { countIndexStatuses } from "@/lib/db/notes";
 
@@ -29,7 +30,7 @@ async function IndexSection() {
 export default function ParametresPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold">Paramètres</h1>
+      <PageBanner title="Paramètres" />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <IndexSection />
       </Suspense>

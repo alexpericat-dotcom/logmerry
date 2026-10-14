@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { PageBanner } from "@/components/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { IndexStatus } from "@/components/index-status";
 import { SenseSearch } from "@/components/sense-search";
@@ -136,7 +137,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
 export default function NotesPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold">Notes</h1>
+      <PageBanner title="Notes" />
       <SenseSearch />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <NotesList searchParams={searchParams} />

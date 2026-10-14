@@ -108,11 +108,11 @@ test("chaque jeton existe dans les deux thèmes, dégradés compris (un thème n
   assert.deepEqual(Object.keys(tokens(".dark")).sort(), Object.keys(tokens(":root")).sort());
   const css = read("app/globals.css");
   const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
-  for (const g of ["--gradient-1", "--gradient-2"]) {
+  for (const g of ["--gradient-1", "--gradient-2", "--gradient-action"]) {
     assert.ok(css.slice(light, dark).includes(`${g}:`), `${g} clair absent`);
     assert.ok(css.slice(dark).includes(`${g}:`), `${g} sombre absent`);
   }
-  for (const name of ["background", "foreground", "card", "primary", "accent", "destructive", "success", "warning", "marker", "filet", "border", "input", "ring", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5"]) {
+  for (const name of ["background", "foreground", "card", "primary", "accent", "destructive", "success", "warning", "marker", "action-foreground", "filet", "border", "input", "ring", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5"]) {
     assert.ok(name in tokens(":root"), `jeton ${name} absent`);
   }
   assert.ok(!("warning-icon" in tokens(":root")), "warning-icon a été supprimé (plus d'orange dans la palette)");
@@ -125,6 +125,14 @@ test("la signature n'est ni un état ni une série de graphique (écart de teint
       const d = Math.abs(t["primary"][0] - t[state][0]) % 360;
       assert.ok(Math.min(d, 360 - d) >= 40, `${block} : primary trop proche de ${state}`);
     }
+  }
+});
+
+test("le bouton d'action utilise le dégradé d'action et son texte dédié, et chaque page porte un bandeau", () => {
+  const button = read("components/ui/button.tsx");
+  assert.ok(/bg-gradient-action[^"]*text-action-foreground/.test(button), "bouton par défaut : dégradé d'action");
+  for (const page of ["app/(app)/notes/page.tsx", "app/(app)/parametres/page.tsx", "app/(app)/aujourd-hui/page.tsx", "app/(app)/notes/nouvelle/page.tsx"]) {
+    assert.ok(read(page).includes("<PageBanner"), `${page} : bandeau absent`);
   }
 });
 

@@ -45,6 +45,7 @@ export default {
         // États et marqueur de DESIGN.md : toujours avec une icône et un texte, jamais la couleur seule.
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        "action-foreground": "hsl(var(--action-foreground))",
         marker: "hsl(var(--marker))",
         filet: "hsl(var(--filet))",
         // Séries de graphiques : jamais la signature ni un état.
@@ -65,6 +66,7 @@ export default {
       },
       backgroundImage: {
         // Dégradés de DESIGN.md (statiques, jamais animés), clair ou sombre selon le thème.
+        "gradient-action": "var(--gradient-action)",
         "gradient-subtle": "var(--gradient-1)",
         "gradient-sunset": "var(--gradient-2)",
       },

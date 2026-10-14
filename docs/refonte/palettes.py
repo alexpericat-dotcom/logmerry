@@ -46,3 +46,6 @@ GRADIENT_SUNSET = {
     "dark": dict(text="#F2F1EC", css="radial-gradient(90% 75% at 100% 100%, #F0643A 0%, #C2306A 38%, rgba(194,48,106,0) 100%), radial-gradient(85% 75% at 0% 80%, #7A3A9A 0%, #1B1F4A 50%, rgba(27,31,74,0) 100%), linear-gradient(#05070C, #05070C)"),
     "light": dict(text="#0F1115", css="radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242,112,154,0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220,212,245,0) 100%), linear-gradient(#F7F6F2, #F7F6F2)"),
 }
+
+# Dégradé d'action (boutons) : même famille que le « couchant », resserré pour que le texte reste lisible sur toute la surface. Identique en clair et en sombre.
+GRADIENT_ACTION = dict(text="#0F1115", css="linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%)")
