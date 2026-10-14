@@ -224,3 +224,4 @@
 
 - Correction d'Alex : **il veut garder des dégradés**. Mon hypothèse « dégradés retirés » est refusée. Remplacée par 3 dégradés cobalt (scènes A, B, C), contrastes calculés (pire extrémité : 6,73 à 16,13), jamais derrière les zones de travail. Le reste des hypothèses est confirmé par Alex.
 - Correction d'Alex : **plus de panneau sans texte, et ce bleu ne convient pas**. `gradient-3` (cobalt saturé vers nuit) supprimé. Restent `gradient-1` et `gradient-2` (teinte cobalt pâle). La connexion (scène B) porte le nom du produit et une phrase (« Ton cockpit d'activité. », texte proposé, à valider).
+- Correction d'Alex : le bleu des dégradés est remplacé par **un orange « couchant »** (papier vers #FFAE7A en clair, #161A21 vers #7A3510 en sombre). Contrastes du texte : 10,43 et 7,92. Risque que je signale : proche de la teinte « attention » ; atténué par l'usage en grand fond, sans icône ni mot d'état dessus.

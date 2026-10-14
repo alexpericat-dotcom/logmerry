@@ -64,9 +64,9 @@ colors:
   chart-4-dark: '#EBC247'
   chart-5-dark: '#EB4770'
 gradients:
-  # --gradient-* ; angle 160deg, statiques (jamais animés). Cobalt uniquement : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
+  # --gradient-* ; angle 160deg, statiques (jamais animés). Teintes douces uniquement : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
   gradient-1: 'linear-gradient(160deg, #F7F6F2, #EFEDE6)'   # texte encre 16,13 (sombre : #0E1014 › #161A21, texte 15,42)
-  gradient-2: 'linear-gradient(160deg, #F7F6F2, #D5DCFF)'   # texte encre 13,96 (sombre : #161A21 › #1B2566, texte 12,35)
+  gradient-2: 'linear-gradient(160deg, #F7F6F2, #FFAE7A)'   # « couchant » : texte encre 10,43 (sombre : #161A21 › #7A3510, texte 7,92)
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -199,14 +199,14 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 
 ### Dégradés (`--gradient-*`)
 
-Deux dégradés linéaires à 160°, statiques, **teinte cobalt pâle uniquement, jamais de cobalt saturé en aplat** (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
+Deux dégradés linéaires à 160°, statiques, **papier vers orange « couchant »** (choix d'Alex), jamais de bleu saturé en aplat (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
 
 | Jeton | Clair | Sombre | Texte autorisé | Usage |
 |---|---|---|---|---|
 | `{gradients.gradient-1}` | papier › surface | #0E1014 › #161A21 | encre (16,13 ; sombre 15,42) | Bandeau discret |
-| `{gradients.gradient-2}` | papier › cobalt pâle #D5DCFF | #161A21 › #1B2566 | encre (13,96 ; sombre 12,35) | Portfolio public, bandeau d'en-tête du Cockpit |
+| `{gradients.gradient-2}` | papier › orange couchant #FFAE7A | #161A21 › brun orangé #7A3510 | encre (10,43 ; sombre 7,92) | Portfolio public, bandeau du Cockpit, panneau de connexion (avec texte) |
 
-Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-2}` portant le nom du produit et une phrase en encre, jamais un panneau sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
+Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-2}` portant le nom du produit et une phrase en encre, jamais un panneau sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Risque connu : l'orange couchant ressemble à la teinte « attention » (#9A5200) ; il reste un grand fond doux, **sans icône ni mot d'état** posés dessus, et le statut « attention » garde toujours son icône et son mot. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
 
 Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décore, il ne délimite aucun contrôle.
 
