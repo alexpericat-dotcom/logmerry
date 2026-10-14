@@ -110,7 +110,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
                 </h2>
                 <time
                   dateTime={note.created_at}
-                  className="shrink-0 text-sm tabular-nums text-muted-foreground"
+                  className="shrink-0 text-sm font-mono tabular-nums text-muted-foreground"
                 >
                   {formatDateTime(note.created_at)}
                 </time>

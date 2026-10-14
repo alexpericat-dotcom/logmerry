@@ -66,7 +66,7 @@ colors:
 gradients:
   # --gradient-* ; angle 160deg, statiques (jamais animés). Gradient-2 : noir, bleu nuit, violet, rose, corail (références d'Alex) ; jamais un statut ni une série : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
   gradient-1: 'linear-gradient(160deg, #F7F6F2, #EFEDE6)'   # texte encre 16,13 (sombre : #0E1014 › #161A21, texte 15,42)
-  gradient-2: 'radial-gradient(90% 75% at 100% 100%, #F0643A, #C2306A 38%, transparent), radial-gradient(85% 75% at 0% 80%, #7A3A9A, #1B1F4A 50%, transparent), #05070C'   # « couchant », valeur SOMBRE (clair : docs/refonte/palettes.py, GRADIENT_SUNSET) ; texte dans les 45 % du haut, pire pixel 12,01 (clair 11,78)
+  gradient-2: 'radial-gradient(90% 75% at 100% 100%, #F0643A, #C2306A 38%, transparent), radial-gradient(85% 75% at 0% 80%, #7A3A9A, #1B1F4A 50%, transparent), linear-gradient(#05070C, #05070C)'   # « couchant », valeur SOMBRE (clair : docs/refonte/palettes.py, GRADIENT_SUNSET) ; texte dans les 45 % du haut, pire pixel 12,01 (clair 11,78)
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:

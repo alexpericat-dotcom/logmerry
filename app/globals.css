@@ -2,70 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Thème LogMerry : jetons de DESIGN.md (clair et sombre ensemble), en HSL « H S% L% » pour garder les
+/* Thème LogMerry, direction « Cobalt » : jetons de DESIGN.md (clair et sombre ensemble), en HSL « H S% L% » pour garder les
    modificateurs d'opacité de Tailwind ; la valeur d'origine est rappelée en commentaire. Un test (lib/theme.test.ts)
-   vérifie les contrastes de ces valeurs. */
+   vérifie la conformité à DESIGN.md et les contrastes. */
 @layer base {
   :root {
     color-scheme: light; /* les contrôles natifs (menu déroulant, défilement, saisie) suivent le thème de l'application, pas celui du système */
-    --background: 36 21.7% 95.5%; /* #F6F4F1 */
-    --foreground: 80 100% 10%; /* #223300 */
-    --card: 40 44.1% 86.7%; /* #ECE2CE */
-    --card-foreground: 80 100% 10%; /* #223300 */
-    --popover: 40 44.1% 86.7%; /* #ECE2CE */
-    --popover-foreground: 80 100% 10%; /* #223300 */
-    --primary: 75.2 61.7% 22.5%; /* #4B5D16 */
-    --primary-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --secondary: 40 44.1% 86.7%; /* #ECE2CE */
-    --secondary-foreground: 80 100% 10%; /* #223300 */
-    --muted: 40 44.1% 86.7%; /* #ECE2CE */
-    --muted-foreground: 75.2 61.7% 22.5%; /* #4B5D16 */
-    --accent: 42.9 39.2% 75.5%; /* #D9CBA8 */
-    --accent-foreground: 80 100% 10%; /* #223300 */
-    --destructive: 0 69.4% 35.9%; /* #9B1C1C */
-    --destructive-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --border: 75.2 61.7% 22.5%; /* #4B5D16 */
-    --input: 75.2 61.7% 22.5%; /* #4B5D16 */
-    --ring: 75.2 61.7% 22.5%; /* #4B5D16 */
-    --success: 143.2 59.7% 26.3%; /* #1B6B3A */
-    --warning: 34.4 100% 23.9%; /* #7A4600 */
-    --warning-icon: 34.4 100% 23.9%; /* #7A4600 : icône d'avertissement seule, jamais le texte */
-    --marker: 21.5 86.9% 47.8%; /* #E45C10 */
+    --background: 48 23.8% 95.9%; /* #F7F6F2 */
+    --foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --card: 46.7 22% 92%; /* #EFEDE6 */
+    --card-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --popover: 46.7 22% 92%; /* #EFEDE6 */
+    --popover-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --primary: 232 100% 55.7%; /* #1D3BFF */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --secondary: 46.7 22% 92%; /* #EFEDE6 */
+    --secondary-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --muted: 46.7 22% 92%; /* #EFEDE6 */
+    --muted-foreground: 222.9 12.3% 33.5%; /* #4B5160 */
+    --accent: 46.2 14.6% 82.5%; /* #D9D6CC */
+    --accent-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --destructive: 3.2 71.3% 41%; /* #B3261E */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --filet: 46.2 14.6% 82.5%; /* #D9D6CC */
+    --border: 46.2 14.6% 82.5%; /* #D9D6CC */
+    --input: 220 6.3% 53.1%; /* #80858F */
+    --ring: 232 100% 55.7%; /* #1D3BFF */
+    --success: 154.8 84.8% 25.9%; /* #0A7A4B */
+    --warning: 31.9 100% 30.2%; /* #9A5200 */
+    --marker: 31.9 100% 30.2%; /* #9A5200 */
+    --chart-1: 0 79.7% 25.1%; /* #730D0D */
+    --chart-2: 164.9 80.4% 32%; /* #109372 */
+    --chart-3: 44.9 80.4% 32%; /* #937210 */
+    --chart-4: 255 50% 25.1%; /* #302060 */
+    --chart-5: 300 80.4% 40%; /* #B814B8 */
     --radius: 0.5rem;
-    /* Dégradés de DESIGN.md (160°, statiques) ; --gradient-login : scène B, clair. */
-    --gradient-1: linear-gradient(160deg, #F6F4F1, #ECE2CE);
-    --gradient-2: linear-gradient(160deg, #ECE2CE, #F2B635);
-    --gradient-3: linear-gradient(160deg, #F2B635, #E45C10);
-    --gradient-4: linear-gradient(160deg, #F2B635, #4B5D16, #223300);
-    --gradient-5: linear-gradient(160deg, #4B5D16, #223300);
-    --gradient-login: var(--gradient-3);
+    /* Dégradés de DESIGN.md (statiques, jamais animés). « couchant » : texte dans les 45 % du haut seulement. */
+    --gradient-1: linear-gradient(160deg, #F7F6F2, #EFEDE6);
+    --gradient-2: radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242, 112, 154, 0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220, 212, 245, 0) 100%), linear-gradient(#F7F6F2, #F7F6F2);
   }
   .dark {
     color-scheme: dark;
-    --background: 80 100% 10%; /* #223300 */
-    --foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --card: 84.7 61.4% 16.3%; /* #2E4310 */
-    --card-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --popover: 84.7 61.4% 16.3%; /* #2E4310 */
-    --popover-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --primary: 41 87.9% 57.8%; /* #F2B635 */
-    --primary-foreground: 80 100% 10%; /* #223300 */
-    --secondary: 84.7 61.4% 16.3%; /* #2E4310 */
-    --secondary-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --muted: 84.7 61.4% 16.3%; /* #2E4310 */
-    --muted-foreground: 40 44.1% 86.7%; /* #ECE2CE */
-    --accent: 87 53.4% 26.1%; /* #46661F */
-    --accent-foreground: 36 21.7% 95.5%; /* #F6F4F1 */
-    --destructive: 5.3 100% 80.2%; /* #FFA39A */
-    --destructive-foreground: 80 100% 10%; /* #223300 */
-    --border: 73.8 29.8% 59.8%; /* #A9B77A */
-    --input: 73.8 29.8% 59.8%; /* #A9B77A */
-    --ring: 41 87.9% 57.8%; /* #F2B635 */
-    --success: 139.2 53.4% 71.4%; /* #8FDDA8 */
-    --warning: 41 87.9% 57.8%; /* #F2B635 */
-    --warning-icon: 21.5 86.9% 47.8%; /* #E45C10 : icône d'avertissement seule, jamais le texte */
-    --marker: 41 87.9% 57.8%; /* #F2B635 */
-    --gradient-login: var(--gradient-4); /* scène B, sombre */
+    --background: 220 17.6% 6.7%; /* #0E1014 */
+    --foreground: 50 18.7% 93.7%; /* #F2F1EC */
+    --card: 218.2 20% 10.8%; /* #161A21 */
+    --card-foreground: 50 18.7% 93.7%; /* #F2F1EC */
+    --popover: 218.2 20% 10.8%; /* #161A21 */
+    --popover-foreground: 50 18.7% 93.7%; /* #F2F1EC */
+    --primary: 230.5 100% 75.3%; /* #8195FF */
+    --primary-foreground: 220 17.6% 6.7%; /* #0E1014 */
+    --secondary: 218.2 20% 10.8%; /* #161A21 */
+    --secondary-foreground: 50 18.7% 93.7%; /* #F2F1EC */
+    --muted: 218.2 20% 10.8%; /* #161A21 */
+    --muted-foreground: 222 12.7% 69%; /* #A6ACBA */
+    --accent: 221.2 16% 19.6%; /* #2A2F3A */
+    --accent-foreground: 50 18.7% 93.7%; /* #F2F1EC */
+    --destructive: 4.7 100% 75.1%; /* #FF8A80 */
+    --destructive-foreground: 220 17.6% 6.7%; /* #0E1014 */
+    --filet: 221.2 16% 19.6%; /* #2A2F3A */
+    --border: 221.2 16% 19.6%; /* #2A2F3A */
+    --input: 223.4 12% 47.3%; /* #6A7287 */
+    --ring: 230.5 100% 75.3%; /* #8195FF */
+    --success: 153.6 56.9% 60%; /* #5FD3A0 */
+    --warning: 37.9 89.7% 62%; /* #F5B547 */
+    --marker: 37.9 89.7% 62%; /* #F5B547 */
+    --chart-1: 195.1 80.4% 70%; /* #75D1F0 */
+    --chart-2: 90.6 50.5% 80.2%; /* #CCE6B3 */
+    --chart-3: 269.8 80.4% 70%; /* #B275F0 */
+    --chart-4: 45 80.4% 60%; /* #EBC247 */
+    --chart-5: 345 80.4% 60%; /* #EB4770 */
+    --gradient-1: linear-gradient(160deg, #0E1014, #161A21);
+    --gradient-2: radial-gradient(90% 75% at 100% 100%, #F0643A 0%, #C2306A 38%, rgba(194, 48, 106, 0) 100%), radial-gradient(85% 75% at 0% 80%, #7A3A9A 0%, #1B1F4A 50%, rgba(27, 31, 74, 0) 100%), linear-gradient(#05070C, #05070C);
   }
 }
 
@@ -74,7 +81,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
   }
   /* Options du menu déroulant natif : surface et texte des jetons (la ligne survolée reste celle du système). */
   select option {

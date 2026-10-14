@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -13,11 +13,9 @@ export const metadata: Metadata = {
   description: "Cockpit personnel pour piloter une activité de conseil No-Code / IA.",
 };
 
-// Plus Jakarta Sans (titres et corps) remplace Geist : DESIGN.md, Typography.
-const jakarta = Plus_Jakarta_Sans({
-  display: "swap",
-  subsets: ["latin"],
-});
+// Hanken Grotesk (interface, titres, corps) et IBM Plex Mono (chiffres) remplacent Geist : DESIGN.md, Typography.
+const sans = Hanken_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-sans" });
+const mono = IBM_Plex_Mono({ display: "swap", subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export default function RootLayout({
   children,
@@ -26,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${jakarta.className} antialiased`}>
+      <body className={`${sans.variable} ${mono.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

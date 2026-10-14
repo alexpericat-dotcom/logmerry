@@ -53,7 +53,7 @@ export function SenseSearch() {
                 <Link href={`/notes/${r.noteId}`} className="min-w-0 break-words font-semibold underline-offset-4 hover:underline">
                   {r.title}
                 </Link>
-                <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                <span className="shrink-0 text-sm font-mono tabular-nums text-muted-foreground">
                   {r.score === null ? "mot-clé" : `score ${formatScore(r.score)}`}
                 </span>
               </div>

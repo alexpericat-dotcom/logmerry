@@ -16,7 +16,7 @@ async function IndexSection() {
         L&apos;assistant ne retrouve que les notes indexées. Les textes sont envoyés à Mistral AI pour être
         vectorisés : n&apos;y mets pas de données réelles de clients.
       </p>
-      <p className="tabular-nums">
+      <p className="font-mono tabular-nums">
         {c.indexed} note{c.indexed === 1 ? "" : "s"} indexée{c.indexed === 1 ? "" : "s"} sur {c.total}
         {c.pending > 0 && `, ${c.pending} en attente`}
         {c.failed > 0 && `, ${c.failed} en échec`}.

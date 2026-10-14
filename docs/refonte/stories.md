@@ -3,7 +3,7 @@
 | N° | Story | Contenu |
 |---|---|---|
 | R0 | Contrat | DESIGN.md, EXPERIENCE.md, `docs/ui-rules.md` (fait) |
-| R1 | Jetons et polices | `app/globals.css` (jetons clair/sombre, `filet`, `chart-1..5`, dégradés recolorés (« couchant » multi-couches) (`gradient-1..2`), suppression de `warning-icon`), `tailwind.config.ts`, `next/font` Hanken Grotesk + IBM Plex Mono, `lib/theme.test.ts` adapté |
+| R1 (fait) | Jetons et polices | `app/globals.css` (jetons clair/sombre, `filet`, `chart-1..5`, dégradés recolorés (« couchant » multi-couches) (`gradient-1..2`), suppression de `warning-icon`), `tailwind.config.ts`, `next/font` Hanken Grotesk + IBM Plex Mono, `lib/theme.test.ts` adapté |
 | R2 | Composants | bouton, champ, tableau, pastille de statut, carte KPI, palette ⌘K |
 | R3 | Écrans existants | page de connexion (scène B avec texte), notes, assistant, recherche |
 | R4 | Cockpit | « Aujourd'hui » (chiffres mono, jauge, tâches) : après l'epic 5 |

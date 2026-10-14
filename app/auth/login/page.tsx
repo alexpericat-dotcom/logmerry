@@ -8,8 +8,11 @@ export default function Page() {
           <LoginForm />
         </div>
       </div>
-      {/* Scène B de DESIGN.md : panneau décoratif en dégradé (3 en clair, 4 en sombre), sans texte ni information. */}
-      <div aria-hidden="true" className="hidden bg-gradient-login lg:block" />
+      {/* Scène B de DESIGN.md : panneau « couchant » ; le texte reste dans la zone calme, en haut. */}
+      <div className="hidden bg-gradient-sunset p-10 lg:block">
+        <p className="text-2xl font-bold">LogMerry</p>
+        <p className="mt-1 text-sm">Ton cockpit d&apos;activité.</p>
+      </div>
     </div>
   );
 }

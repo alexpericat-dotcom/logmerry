@@ -78,10 +78,11 @@ const TEXT: [string, string][] = [
   ["success", "background"], ["success", "card"], ["warning", "background"], ["warning", "card"],
 ];
 const NON_TEXT: [string, string][] = [
-  ["border", "background"], ["border", "card"], ["input", "background"],
+  ["input", "background"], ["input", "card"],
   ["ring", "background"], ["ring", "card"], ["ring", "popover"],
-  ["marker", "background"], ["warning-icon", "background"], ["warning-icon", "card"],
-];
+  ["marker", "background"], ["marker", "card"],
+  ...[1, 2, 3, 4, 5].flatMap((n): [string, string][] => [[`chart-${n}`, "background"], [`chart-${n}`, "card"]]),
+]; // le filet (border, filet) est décoratif : il ne délimite aucun contrôle et n'est pas soumis à 3:1
 
 for (const [name, block] of [["clair", ":root"], ["sombre", ".dark"]] as const) {
   test(`thème ${name} : texte à 4,5:1 au moins pour chaque couple de jetons utilisé`, () => {
@@ -93,7 +94,7 @@ for (const [name, block] of [["clair", ":root"], ["sombre", ".dark"]] as const) 
     }
   });
 
-  test(`thème ${name} : bordures, focus, marqueur et icône d'avertissement à 3:1 au moins`, () => {
+  test(`thème ${name} : bordures de champ, focus, marqueur et séries de graphiques à 3:1 au moins`, () => {
     const t = tokens(block);
     for (const [fg, bg] of NON_TEXT) {
       assert.ok(t[fg] && t[bg], `jeton absent : ${fg} ou ${bg}`);
@@ -103,15 +104,34 @@ for (const [name, block] of [["clair", ":root"], ["sombre", ".dark"]] as const) 
   });
 }
 
-test("chaque jeton existe dans les deux thèmes, dégradé de connexion compris (un thème ne se livre jamais sans son pendant)", () => {
+test("chaque jeton existe dans les deux thèmes, dégradés compris (un thème ne se livre jamais sans son pendant)", () => {
   assert.deepEqual(Object.keys(tokens(".dark")).sort(), Object.keys(tokens(":root")).sort());
   const css = read("app/globals.css");
   const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
-  assert.ok(/--gradient-login:\s*var\(--gradient-3\)/.test(css.slice(light, dark)), "dégradé de connexion clair (dégradé 3)");
-  assert.ok(/--gradient-login:\s*var\(--gradient-4\)/.test(css.slice(dark)), "dégradé de connexion sombre (dégradé 4)");
-  for (const name of ["background", "foreground", "card", "primary", "accent", "destructive", "success", "warning", "warning-icon", "marker", "border", "ring"]) {
+  for (const g of ["--gradient-1", "--gradient-2"]) {
+    assert.ok(css.slice(light, dark).includes(`${g}:`), `${g} clair absent`);
+    assert.ok(css.slice(dark).includes(`${g}:`), `${g} sombre absent`);
+  }
+  for (const name of ["background", "foreground", "card", "primary", "accent", "destructive", "success", "warning", "marker", "filet", "border", "input", "ring", "chart-1", "chart-2", "chart-3", "chart-4", "chart-5"]) {
     assert.ok(name in tokens(":root"), `jeton ${name} absent`);
   }
+  assert.ok(!("warning-icon" in tokens(":root")), "warning-icon a été supprimé (plus d'orange dans la palette)");
+});
+
+test("la signature n'est ni un état ni une série de graphique (écart de teinte de 40° au moins avec success, warning, destructive)", () => {
+  for (const block of [":root", ".dark"] as const) {
+    const t = tokens(block);
+    for (const state of ["success", "warning", "destructive"]) {
+      const d = Math.abs(t["primary"][0] - t[state][0]) % 360;
+      assert.ok(Math.min(d, 360 - d) >= 40, `${block} : primary trop proche de ${state}`);
+    }
+  }
+});
+
+test("polices : Hanken Grotesk (interface) et IBM Plex Mono (chiffres), auto-hébergées par next/font", () => {
+  const layout = read("app/layout.tsx");
+  assert.ok(/Hanken_Grotesk/.test(layout) && /IBM_Plex_Mono/.test(layout));
+  assert.ok(!/Plus_Jakarta_Sans/.test(layout), "l'ancienne police est encore importée");
 });
 
 test("chaque thème déclare son color-scheme : les contrôles natifs (menu déroulant) suivent le thème de l'application et non celui du système", () => {
@@ -122,11 +142,11 @@ test("chaque thème déclare son color-scheme : les contrôles natifs (menu dér
   assert.ok(/select option\s*\{[^}]*--popover/.test(css), "options du menu déroulant colorées par les jetons");
 });
 
-test("valeurs de référence de DESIGN.md : texte sur fond 12,41 (clair et sombre), bouton clair 6,65", () => {
+test("valeurs de référence de DESIGN.md : texte sur fond 17,47 (clair) et 16,84 (sombre), bouton clair 6,73", () => {
   const l = tokens(":root"), d = tokens(".dark");
-  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 12.41) < 0.1);
-  assert.ok(Math.abs(contrast(d["foreground"], d["background"]) - 12.41) < 0.1);
-  assert.ok(Math.abs(contrast(l["primary-foreground"], l["primary"]) - 6.65) < 0.1);
+  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 17.47) < 0.1);
+  assert.ok(Math.abs(contrast(d["foreground"], d["background"]) - 16.84) < 0.1);
+  assert.ok(Math.abs(contrast(l["primary-foreground"], l["primary"]) - 6.73) < 0.1);
 });
 
 /** Fichiers de l'interface (hors tests) : app, components, lib. */
