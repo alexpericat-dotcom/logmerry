@@ -114,6 +114,14 @@ test("chaque jeton existe dans les deux thèmes, dégradé de connexion compris 
   }
 });
 
+test("chaque thème déclare son color-scheme : les contrôles natifs (menu déroulant) suivent le thème de l'application et non celui du système", () => {
+  const css = read("app/globals.css");
+  const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
+  assert.ok(/color-scheme:\s*light/.test(css.slice(light, dark)), "color-scheme: light dans :root");
+  assert.ok(/color-scheme:\s*dark/.test(css.slice(dark, dark + 200)), "color-scheme: dark dans .dark");
+  assert.ok(/select option\s*\{[^}]*--popover/.test(css), "options du menu déroulant colorées par les jetons");
+});
+
 test("valeurs de référence de DESIGN.md : texte sur fond 12,41 (clair et sombre), bouton clair 6,65", () => {
   const l = tokens(":root"), d = tokens(".dark");
   assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 12.41) < 0.1);
