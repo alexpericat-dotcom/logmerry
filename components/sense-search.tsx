@@ -27,36 +27,25 @@ export function SenseSearch() {
       aria-labelledby="sense-title"
       className="flex w-full flex-col gap-1 rounded-md border border-primary/30 bg-primary/10 px-6 py-3"
     >
-      {/* Détail masqué : il apparaît au survol, au focus clavier ou au toucher du bouton ; il reste lu par les lecteurs d'écran (aria-describedby). */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="group/help relative flex shrink-0 items-center gap-2">
-          <h2 id="sense-title" className="text-base font-semibold">
-            Chercher par sens
-          </h2>
+      <h2 id="sense-title" className="sr-only">
+        Chercher par sens
+      </h2>
+      {/* Le « i » est dans le champ : le détail apparaît au survol, au focus clavier ou au toucher ; il reste lu par les lecteurs d'écran (aria-describedby). */}
+      <form action={action} className="flex gap-2">
+        <Label htmlFor="question" className="sr-only">
+          Ta question
+        </Label>
+        <div className="relative flex-1">
           <button
             type="button"
             aria-label="Comment ça marche ?"
             aria-expanded={helpOpen}
             aria-controls="sense-help"
             onClick={() => setHelpOpen((v) => !v)}
-            className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+            className="peer absolute left-1.5 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Info className="size-4" aria-hidden="true" />
           </button>
-          <p
-            id="sense-help"
-            className={`absolute left-0 top-full z-10 mt-1 max-w-xl rounded-md border bg-popover p-3 text-sm text-popover-foreground shadow-md group-focus-within/help:block group-hover/help:block ${helpOpen ? "block" : "hidden"}`}
-          >
-            Pose une question : tu vois les passages de tes notes que
-            l&apos;assistant retrouverait, par sens (avec un score) et par
-            mots-clés. Seules les notes indexées sont cherchées. Ta question est
-            envoyée à Mistral AI : n&apos;y mets pas de données réelles de clients.
-          </p>
-        </div>
-        <form action={action} className="flex min-w-64 flex-1 gap-2">
-          <Label htmlFor="question" className="sr-only">
-            Ta question
-          </Label>
           <Input
             id="question"
             name="question"
@@ -66,12 +55,23 @@ export function SenseSearch() {
             placeholder="Ta question…"
             aria-describedby="sense-help"
             defaultValue={state.question ?? ""}
+            className="pl-9"
           />
-          <Button type="submit" disabled={pending}>
-            {pending ? "Recherche…" : "Chercher"}
-          </Button>
-        </form>
-      </div>
+          <p
+            id="sense-help"
+            className={`absolute left-0 top-full z-10 mt-1 max-w-xl rounded-md border bg-popover p-3 text-sm text-popover-foreground shadow-md peer-hover:block peer-focus-visible:block ${helpOpen ? "block" : "hidden"}`}
+          >
+            Pose une question : tu vois les passages de tes notes que
+            l&apos;assistant retrouverait, par sens (avec un score) et par
+            mots-clés. Seules les notes indexées sont cherchées. Ta question est
+            envoyée à Mistral AI : n&apos;y mets pas de données réelles de
+            clients.
+          </p>
+        </div>
+        <Button type="submit" disabled={pending}>
+          {pending ? "Recherche…" : "Chercher"}
+        </Button>
+      </form>
 
       <div role="status" aria-live="polite" className="empty:sr-only">
         {state.message && (
