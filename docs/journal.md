@@ -223,3 +223,4 @@
 - Pas de code touché : le thème actuel (olive) reste en place jusqu'à la story R1.
 
 - Correction d'Alex : **il veut garder des dégradés**. Mon hypothèse « dégradés retirés » est refusée. Remplacée par 3 dégradés cobalt (scènes A, B, C), contrastes calculés (pire extrémité : 6,73 à 16,13), jamais derrière les zones de travail. Le reste des hypothèses est confirmé par Alex.
+- Correction d'Alex : **plus de panneau sans texte, et ce bleu ne convient pas**. `gradient-3` (cobalt saturé vers nuit) supprimé. Restent `gradient-1` et `gradient-2` (teinte cobalt pâle). La connexion (scène B) porte le nom du produit et une phrase (« Ton cockpit d'activité. », texte proposé, à valider).

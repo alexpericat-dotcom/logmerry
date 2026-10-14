@@ -37,7 +37,7 @@ input{font:14px var(--ui);padding:8px 10px;border:1px solid var(--rule-strong);b
 def grad(theme):
     return ";".join(f"--{n}:linear-gradient(160deg,{a},{b})" for n, (a, b, _) in GRADIENTS[theme].items())
 
-BANNER = '<div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:16px 0 0"><p class="label" style="margin:0">Scène C · bandeau du cockpit (dégradé cobalt)</p><p class="display" style="font-size:22px;margin:4px 0 0">Bonjour Alex, 3 choses à traiter</p></div><div aria-hidden="true" style="background:var(--gradient-3);height:64px;margin:8px 0 0;border-radius:8px"></div><p class="hint" style="margin:4px 0 0">Scène B · panneau décoratif de connexion, sans texte</p>'
+BANNER = '<div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:16px 0 0"><p class="label" style="margin:0">Scène C · bandeau du cockpit (dégradé cobalt)</p><p class="display" style="font-size:22px;margin:4px 0 0">Bonjour Alex, 3 choses à traiter</p></div><div style="background:var(--gradient-2);border:1px solid var(--rule);padding:20px;margin:8px 0 0;border-radius:8px"><p class="label" style="margin:0">Scène B · panneau de connexion (avec texte)</p><p class="display" style="font-size:22px;margin:4px 0 0">LogMerry</p><p style="margin:4px 0 0">Ton cockpit d&#39;activité.</p></div>'
 
 def page(key, p):
     fonts_js = {k: f"--ui:{f['ui']};--display:{f['display']};--mono:{f['mono']}" for k, f in FONTS.items()}

@@ -23,7 +23,7 @@ Barre latérale fixe à gauche, repliable en icônes, le Cockpit en première en
 
 | Surface | Accessible depuis | But | Exigences |
 |---|---|---|---|
-| Connexion, inscription, mot de passe oublié | Lien d'accès, déconnexion | Accès sécurisé (scène B, dégradé décoratif) | FR-1 |
+| Connexion, inscription, mot de passe oublié | Lien d'accès, déconnexion | Accès sécurisé (scène B : panneau dégradé avec nom du produit) | FR-1 |
 | Cockpit « Aujourd'hui » | Première entrée, ouverture de l'application | Tâches du jour avec motif, ligne de synthèse des éléments à documenter, jauge de plafond, chiffres étiquetés ([maquette](mockups/key-cockpit.html)) | FR-14, FR-15 |
 | Assistant (panneau) + Historique | Bouton ou raccourci, toute page ; historique dans le panneau | Question, réponse citée, échanges conservés ([maquette](mockups/key-assistant.html)) | FR-4, FR-5, FR-12 |
 | Notes (liste, éditeur, recherche) | Barre latérale | Base de connaissances, résumé généré | FR-3, FR-19, FR-20 |

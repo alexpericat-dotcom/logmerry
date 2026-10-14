@@ -67,7 +67,6 @@ gradients:
   # --gradient-* ; angle 160deg, statiques (jamais animés). Cobalt uniquement : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
   gradient-1: 'linear-gradient(160deg, #F7F6F2, #EFEDE6)'   # texte encre 16,13 (sombre : #0E1014 › #161A21, texte 15,42)
   gradient-2: 'linear-gradient(160deg, #F7F6F2, #D5DCFF)'   # texte encre 13,96 (sombre : #161A21 › #1B2566, texte 12,35)
-  gradient-3: 'linear-gradient(160deg, #1D3BFF, #0A1466)'   # texte blanc 6,73, identique en clair et en sombre
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -200,15 +199,14 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 
 ### Dégradés (`--gradient-*`)
 
-Trois dégradés linéaires à 160°, statiques, **cobalt uniquement** (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
+Deux dégradés linéaires à 160°, statiques, **teinte cobalt pâle uniquement, jamais de cobalt saturé en aplat** (aucune couleur de statut ni de graphique). Seules les paires texte/dégradé validées sont autorisées (pire extrémité mesurée par `docs/refonte/contrastes.py`).
 
 | Jeton | Clair | Sombre | Texte autorisé | Usage |
 |---|---|---|---|---|
 | `{gradients.gradient-1}` | papier › surface | #0E1014 › #161A21 | encre (16,13 ; sombre 15,42) | Bandeau discret |
-| `{gradients.gradient-2}` | papier › cobalt pâle #D5DCFF | #161A21 › cobalt nuit #1B2566 | encre (13,96 ; sombre 12,35) | Portfolio public, bandeau d'en-tête du Cockpit |
-| `{gradients.gradient-3}` | cobalt #1D3BFF › nuit #0A1466 | identique | blanc (6,73) | Panneau décoratif de connexion (sans texte) |
+| `{gradients.gradient-2}` | papier › cobalt pâle #D5DCFF | #161A21 › #1B2566 | encre (13,96 ; sombre 12,35) | Portfolio public, bandeau d'en-tête du Cockpit |
 
-Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-3}`, `aria-hidden`, sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
+Trois scènes, et pas d'autre : **A** portfolio public (`{gradients.gradient-2}`) ; **B** page de connexion (panneau `{gradients.gradient-2}` portant le nom du produit et une phrase en encre, jamais un panneau sans texte) ; **C** bandeau d'en-tête du Cockpit (`{gradients.gradient-2}`). Jamais derrière tâches, tableaux, jauge ou chat. Pas d'animation ; s'ils étaient un jour animés, l'animation ne tournerait que sous `prefers-reduced-motion: no-preference`, la version statique restant la valeur par défaut.
 
 Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décore, il ne délimite aucun contrôle.
 
