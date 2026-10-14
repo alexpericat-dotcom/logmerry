@@ -131,11 +131,11 @@ export function AppSidebar({
                   aria-current={current ? "page" : undefined}
                   className={cn(
                     base,
-                    "hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current ? "neon bg-accent/60 font-bold" : "border-transparent",
+                    "group border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                    current && "font-bold",
                   )}
                 >
-                  <Icon size={16} aria-hidden="true" />
+                  <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
                   <span className={labelClass}>{item.label}</span>
                 </Link>
               </li>
