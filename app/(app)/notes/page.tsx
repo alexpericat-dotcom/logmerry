@@ -31,7 +31,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
   const drafts = { label: "Brouillons", href: "/notes?statut=brouillon" };
   return (
     <nav aria-label="Filtrer les notes">
-      <ul className="flex flex-wrap gap-2">
+      <ul className="flex flex-wrap gap-1.5">
         {items.map((item) => {
           const active = !draftOnly && item.type === current;
           return (
@@ -40,7 +40,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-8 items-center rounded-full border px-3 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                  "inline-flex min-h-8 items-center rounded-full border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
                   active ? "border-primary bg-accent font-bold" : "border-input",
                 )}
               >
@@ -54,7 +54,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
             href={drafts.href}
             aria-current={draftOnly ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-8 items-center rounded-full border px-3 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+              "inline-flex min-h-8 items-center rounded-full border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
               draftOnly ? "border-primary bg-accent font-bold" : "border-input",
             )}
           >
@@ -73,7 +73,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
   const notes = await listNotes(type, draftOnly ? "draft" : null);
 
   const createButton = (
-    <Button asChild>
+    <Button asChild size="sm" className="shrink-0">
       <Link href="/notes/nouvelle">Créer une note</Link>
     </Button>
   );
@@ -93,7 +93,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <div className="flex flex-col items-start gap-6">
-      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+      <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <Filters current={type} draftOnly={draftOnly} />
         {createButton}
       </div>

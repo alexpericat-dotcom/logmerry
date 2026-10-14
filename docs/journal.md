@@ -258,3 +258,10 @@
 - Constat : chaque source était un encart de 4 lignes avec deux boutons ; plusieurs sources mangeaient le panneau.
 - Fait : une source = une ligne (numéro, titre en lien vers la note, mention « extrait modifié depuis » si besoin) ; l'extrait et « Copier » sont repliés dans un « Extrait » (le bouton « Ouvrir » disparaît, le titre est le lien). Source supprimée : une ligne grise. Le nom accessible reste « Source N : titre ».
 - Limite : vu sur une page de test avec le CSS de l'application, pas sur la page connectée.
+
+## 2026-10-14 — Menu déroulant de la liste « Type » et ligne des filtres (retour d'Alex)
+
+- Constat 1 : le menu déroulant restait gris/bleu système. Cause : `color-scheme` et les couleurs d'options ne changent pas la ligne choisie ni le cadre de la liste, qui sont dessinés par le système.
+- Fait : `appearance: base-select` (Chrome, avec `@supports`) rend la liste stylable : fond, bordure, survol, ligne choisie avec coche et ombre viennent des jetons. Vérifié à l'écran avec le vrai menu ouvert, clair et sombre (CDP, compte de démonstration local). Les navigateurs sans `base-select` (Safari, Firefox) gardent le menu système avec les couleurs d'options.
+- Constat 2 : « Créer une note » passait sous les filtres quand l'assistant est ouvert. Fait : puces plus serrées (espacement 6 px, marge interne 10 px) et bouton en taille réduite ; mesuré à 723 px de large (le cas de la capture), tout tient sur une ligne.
+- Limite : la ligne des filtres est vérifiée sur une page de test (le compte de démonstration local n'a pas de note).
