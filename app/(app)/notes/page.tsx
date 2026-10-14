@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { PageBanner } from "@/components/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { IndexStatus } from "@/components/index-status";
 import { SenseSearch } from "@/components/sense-search";
@@ -30,7 +31,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
   const drafts = { label: "Brouillons", href: "/notes?statut=brouillon" };
   return (
     <nav aria-label="Filtrer les notes">
-      <ul className="flex flex-wrap gap-2">
+      <ul className="flex flex-wrap gap-1.5">
         {items.map((item) => {
           const active = !draftOnly && item.type === current;
           return (
@@ -39,7 +40,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-8 items-center rounded-full border px-3 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                  "inline-flex min-h-8 items-center rounded-full border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
                   active ? "border-primary bg-accent font-bold" : "border-input",
                 )}
               >
@@ -53,7 +54,7 @@ function Filters({ current, draftOnly }: { current: NoteType | null; draftOnly: 
             href={drafts.href}
             aria-current={draftOnly ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-8 items-center rounded-full border px-3 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+              "inline-flex min-h-8 items-center rounded-full border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
               draftOnly ? "border-primary bg-accent font-bold" : "border-input",
             )}
           >
@@ -72,7 +73,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
   const notes = await listNotes(type, draftOnly ? "draft" : null);
 
   const createButton = (
-    <Button asChild>
+    <Button asChild size="sm" className="shrink-0">
       <Link href="/notes/nouvelle">Créer une note</Link>
     </Button>
   );
@@ -92,14 +93,14 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <div className="flex flex-col items-start gap-6">
-      <div className="flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+      <div className="flex w-full flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <Filters current={type} draftOnly={draftOnly} />
         {createButton}
       </div>
       {notes.length === 0 ? (
         <p className="text-muted-foreground">{draftOnly ? "Aucun brouillon. Les notes à documenter plus tard apparaissent ici." : "Aucune note de ce type."}</p>
       ) : (
-        <ul className="flex w-full max-w-2xl flex-col gap-3">
+        <ul className="flex w-full flex-col gap-3">
           {notes.map((note) => (
             <li key={note.id} className="rounded-md border bg-card p-3">
               <div className="flex items-start justify-between gap-3">
@@ -110,12 +111,12 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
                 </h2>
                 <time
                   dateTime={note.created_at}
-                  className="shrink-0 text-sm tabular-nums text-muted-foreground"
+                  className="shrink-0 pt-0.5 text-xs font-mono tabular-nums text-muted-foreground"
                 >
                   {formatDateTime(note.created_at)}
                 </time>
               </div>
-              <div className="mt-1 flex flex-wrap gap-2">
+              <div className="mt-1.5 flex flex-wrap gap-1">
                 <Badge variant="secondary">{NOTE_TYPE_LABELS[note.type]}</Badge>
                 {note.status === "draft" && <Badge variant="outline">Brouillon</Badge>}
                 <IndexStatus status={note.index_status} />
@@ -136,7 +137,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
 export default function NotesPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold">Notes</h1>
+      <PageBanner title="Notes" />
       <SenseSearch />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <NotesList searchParams={searchParams} />

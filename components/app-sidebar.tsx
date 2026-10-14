@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useAssistant } from "@/components/assistant-provider";
+import { LogoMark } from "@/components/logo-mark";
 import { LogoutButton } from "@/components/logout-button";
 import { SearchPalette } from "@/components/search-palette";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -68,7 +69,10 @@ export function AppSidebar({
       )}
     >
       <div className="flex h-14 items-center justify-between px-2">
-        <span className={cn("px-2 font-semibold", labelClass)}>LogMerry</span>
+        <span className="flex items-center gap-2 px-2">
+          <LogoMark className={cn("size-6", collapsed ? "hidden" : "hidden md:block")} />
+          <span className={cn("font-brand text-lg font-bold tracking-tight", labelClass)}>LogMerry</span>
+        </span>
         <Button
           variant="ghost"
           size="icon"

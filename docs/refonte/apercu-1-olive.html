@@ -1,0 +1,54 @@
+<!doctype html><html lang="fr" data-font="B"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aperçu direction 1-olive : Olive affinée</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>:root{color-scheme:light;--paper:#F6F4F1;--surface:#EEEAE0;--ink:#161D0B;--muted:#505B3C;--rule:#D5D0C2;--rule-strong:#7A8161;--signature:#4B5D16;--on-signature:#F6F4F1;--success:#0B6E66;--attention:#9A4A00;--danger:#B3261E;--chart-1:#730D0D;--chart-2:#0F8E6E;--chart-3:#937210;--chart-4:#302060;--chart-5:#B814B8;}:root[data-theme=dark]{color-scheme:dark;--paper:#12160B;--surface:#1B2111;--ink:#F0EDE2;--muted:#B4BBA0;--rule:#333B24;--rule-strong:#7C8860;--signature:#BFD35F;--on-signature:#12160B;--success:#4FD1C0;--attention:#FF9F43;--danger:#FF8A80;--chart-1:#75D1F0;--chart-2:#CCE6B3;--chart-3:#B275F0;--chart-4:#EBC247;--chart-5:#EB4770;}:root{--ui:'Inter',system-ui,sans-serif;--display:'Fraunces',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,monospace}:root[data-font=B]{--ui:'Hanken Grotesk',system-ui,sans-serif;--display:'Hanken Grotesk',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 var(--ui);font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0}.display{font:600 32px/1.15 var(--display);letter-spacing:-.01em}.label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-bottom:1px solid var(--rule);background:var(--surface)}
+.bar button,.btn{font:500 14px var(--ui);border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);padding:8px 14px;border-radius:6px;min-height:36px;cursor:pointer}
+.btn.primary{background:var(--signature);color:var(--on-signature);border-color:var(--signature)}
+:focus-visible{outline:2px solid var(--signature);outline-offset:2px}
+.app{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 56px)}@media(max-width:760px){.app{grid-template-columns:1fr}.side{display:none}}
+.side{border-right:1px solid var(--rule);padding:16px}.side a{display:block;padding:8px 10px;border-radius:6px;color:var(--ink);text-decoration:none}.side a[aria-current]{background:var(--surface);box-shadow:inset 2px 0 var(--signature);font-weight:600}
+main{padding:24px 24px 48px;max-width:980px}section{margin-top:32px}.row{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)}
+.pill{display:inline-flex;gap:6px;align-items:center;font:500 12px var(--ui);padding:2px 10px;border-radius:999px;border:1px solid currentColor}
+.ok{color:var(--success)}.warn{color:var(--attention)}.bad{color:var(--danger)}.sig{color:var(--signature)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;border:1px solid var(--rule)}.kpi{padding:16px;border-right:1px solid var(--rule)}.kpi .num{font-size:28px;font-weight:500;display:block}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-weight:500}th,td{padding:10px 8px;border-bottom:1px solid var(--rule)}td.r,th.r{text-align:right}
+.gauge{height:10px;background:var(--surface);border:1px solid var(--rule-strong);border-radius:999px;overflow:hidden}.gauge i{display:block;height:100%;background:var(--chart-1)}
+input{font:14px var(--ui);padding:8px 10px;border:1px solid var(--rule-strong);border-radius:6px;background:var(--paper);color:var(--ink);min-height:36px}
+.chips span{display:inline-block;margin:0 8px 8px 0}.swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.hint{color:var(--muted);font-size:13px}a{color:var(--signature)}
+</style></head><body>
+<div class="bar"><strong>Direction 1-olive : Olive affinée</strong> <span class="hint">Données fictives. Aperçu statique.</span>
+<button id="t" aria-pressed="false">Thème sombre</button><button id="f" aria-pressed="true">Typo A : Inter + Fraunces</button>
+<a href="#cockpit">Aujourd'hui</a><a href="#clients">Clients</a><a href="#fiche">Fiche client</a></div>
+<div class="app"><nav class="side" aria-label="Navigation"><a href="#cockpit" aria-current="page">Aujourd'hui</a><a href="#clients">Clients</a><a href="#fiche">Missions</a><a href="#fiche">Factures</a><a href="#fiche">Notes</a><a href="#fiche">Assistant</a></nav><main>
+<section id="cockpit"><p class="label">Mercredi 14 octobre</p><h1 class="display">Aujourd'hui</h1>
+<div class="kpis" style="margin-top:16px"><div class="kpi"><span class="label">CA encaissé 2026</span><span class="num">18 420 €</span><div class="gauge" role="img" aria-label="Plafond estimé : 21 % utilisé" style="margin-top:8px"><i style="width:21%"></i></div><span class="hint">21 % du plafond (estimation)</span></div>
+<div class="kpi"><span class="label">Factures en retard</span><span class="num bad">2</span><span class="pill bad">⚠ En retard</span></div>
+<div class="kpi"><span class="label">Charge de la semaine</span><span class="num">24 h</span><span class="hint">sur 32 h</span></div></div>
+<h2 style="margin-top:28px;font:600 18px var(--ui)">À faire</h2>
+<div class="row"><span class="bad" aria-hidden="true">⚠</span><div>Relancer la facture F-2026-014 <span class="hint">(Atelier Brume, 12 jours)</span></div><span class="pill bad">En retard</span></div>
+<div class="row"><span class="warn" aria-hidden="true">◷</span><div>Déclaration trimestrielle <span class="hint">dans 6 jours</span></div><span class="pill warn">Bientôt</span></div>
+<div class="row"><span class="ok" aria-hidden="true">✓</span><div>Devis Maison Orme envoyé <span class="hint">hier</span></div><span class="pill ok">Fait</span></div>
+<div class="row"><span class="sig" aria-hidden="true">●</span><div>Préparer le rendez-vous Studio Lanterne</div><button class="btn primary">Ouvrir la note</button></div></section>
+<section id="clients"><h1 class="display" style="font-size:28px">Clients</h1><p><label class="label" for="q">Rechercher</label><br><input id="q" placeholder="Nom, ville…" style="width:260px"> <button class="btn">Nouveau client</button></p>
+<table><thead><tr><th>Nom</th><th>Statut</th><th>Origine</th><th class="r">CA 2026</th></tr></thead><tbody>
+<tr><td>Atelier Brume</td><td><span class="pill ok">✓ Client</span></td><td>Recommandation</td><td class="r num">6 800 €</td></tr>
+<tr><td>Studio Lanterne</td><td><span class="pill sig">◆ Prospect</span></td><td>LinkedIn</td><td class="r num">0 €</td></tr>
+<tr><td>Maison Orme</td><td><span class="pill warn">◷ Devis envoyé</span></td><td>Site web</td><td class="r num">0 €</td></tr>
+<tr><td>Coopérative Aval</td><td><span class="pill ok">✓ Client</span></td><td>Événement</td><td class="r num">11 620 €</td></tr></tbody></table></section>
+<section id="fiche"><p class="label">Client</p><h1 class="display">Atelier Brume</h1><p class="hint">Atelier de céramique, Rennes · client depuis mars 2026</p>
+<div class="kpis"><div class="kpi"><span class="label">Missions</span><span class="num">2</span></div><div class="kpi"><span class="label">Facturé</span><span class="num">6 800 €</span></div><div class="kpi"><span class="label">Dû</span><span class="num bad">1 200 €</span></div></div>
+<h2 style="margin-top:24px;font:600 18px var(--ui)">Graphique : encaissements par mois</h2>
+<svg viewBox="0 0 320 90" width="100%" style="max-width:420px" role="img" aria-label="Encaissements par mois, légende ci-dessous"><g>
+<rect x="20" y="50" width="40" height="30" fill="var(--chart-1)"/><rect x="80" y="25" width="40" height="55" fill="var(--chart-2)"/><rect x="140" y="40" width="40" height="40" fill="var(--chart-3)"/><rect x="200" y="10" width="40" height="70" fill="var(--chart-4)"/><rect x="260" y="30" width="40" height="50" fill="var(--chart-5)"/></g></svg>
+<p class="chips"><span><i class="swatch" style="background:var(--chart-1)"></i>Mois 1</span><span><i class="swatch" style="background:var(--chart-2)"></i>Mois 2</span><span><i class="swatch" style="background:var(--chart-3)"></i>Mois 3</span><span><i class="swatch" style="background:var(--chart-4)"></i>Mois 4</span><span><i class="swatch" style="background:var(--chart-5)"></i>Mois 5</span></p>
+<h2 style="font:600 18px var(--ui)">Notes liées</h2><div class="row"><span aria-hidden="true">▤</span><div>Rendez-vous de cadrage, 2 mars</div><a href="#fiche">Ouvrir</a></div>
+<p class="hint" style="margin-top:24px">Assistant : « Le délai de paiement convenu est de 30 jours » <a href="#fiche">[Rendez-vous de cadrage]</a></p></section>
+</main></div>
+<script>const r=document.documentElement,q=(k,v)=>{try{return localStorage.getItem(k)}catch(e){return null}};
+document.getElementById('t').onclick=e=>{const d=r.dataset.theme!=='dark';r.dataset.theme=d?'dark':'light';e.target.setAttribute('aria-pressed',d);e.target.textContent=d?'Thème clair':'Thème sombre'};
+document.getElementById('f').onclick=e=>{const b=r.dataset.font!=='B';r.dataset.font=b?'B':'A';e.target.setAttribute('aria-pressed',b);e.target.textContent=b?'Typo A : Inter + Fraunces':'Typo B : Hanken + Plex Mono'};
+if(matchMedia('(prefers-color-scheme: dark)').matches)document.getElementById('t').click();</script></body></html>

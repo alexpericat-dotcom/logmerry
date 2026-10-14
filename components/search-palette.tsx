@@ -124,7 +124,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
           if (outside) e.currentTarget.close();
         }}
-        className="m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-background p-3 text-foreground shadow-lg backdrop:bg-black/50"
+        className="m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg backdrop:bg-black/50"
       >
         <Input
           role="combobox"

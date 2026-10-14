@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { AssistantDraftButton } from "@/components/assistant-draft-button";
 import { useAssistant } from "@/components/assistant-provider";
@@ -17,6 +17,9 @@ export function AssistantPanel() {
   const a = useAssistant();
   const input = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [purgeStatus, setPurgeStatus] = useState("");
   const last = a.messages.at(-1);
   const lastAnswer = last?.role === "assistant" ? last : null;
 
@@ -38,6 +41,18 @@ export function AssistantPanel() {
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, closePanel]);
 
+  // La confirmation de suppression prend le focus sur « Annuler » (le choix sûr).
+  useEffect(() => {
+    if (confirming) cancel.current?.focus();
+  }, [confirming]);
+
+  const doPurge = async () => {
+    const ok = await a.purge();
+    setConfirming(false);
+    setPurgeStatus(ok ? "Historique supprimé." : "Suppression impossible pour le moment. Réessaie.");
+    input.current?.focus();
+  };
+
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [a.messages.length, a.pending, a.error]);
@@ -51,10 +66,41 @@ export function AssistantPanel() {
     >
       <div className="flex items-center justify-between border-b p-3">
         <h2 className="font-semibold">Assistant</h2>
-        <Button variant="ghost" size="icon" aria-label="Fermer l'assistant" onClick={a.closePanel}>
-          <X size={16} aria-hidden="true" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Vider la conversation"
+            title="Vider la conversation"
+            disabled={a.pending || (a.messages.length === 0 && !a.error)}
+            onClick={() => {
+              setPurgeStatus("");
+              setConfirming(true);
+            }}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+          </Button>
+          <Button variant="ghost" size="icon" aria-label="Fermer l'assistant" onClick={a.closePanel}>
+            <X size={16} aria-hidden="true" />
+          </Button>
+        </div>
       </div>
+      {confirming && (
+        <div role="alertdialog" aria-label="Confirmer la suppression" className="flex flex-col gap-2 border-b p-3 text-sm">
+          <p>Supprimer tout l&apos;historique de l&apos;assistant ? C&apos;est définitif.</p>
+          <div className="flex gap-2">
+            <Button type="button" variant="destructive" size="sm" onClick={() => void doPurge()}>
+              Supprimer
+            </Button>
+            <Button ref={cancel} type="button" variant="outline" size="sm" onClick={() => setConfirming(false)}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
+      <p role="status" className="px-3 text-sm text-muted-foreground">
+        {purgeStatus}
+      </p>
 
       <div className="flex-1 overflow-y-auto p-3">
         {a.historyFailed && (
