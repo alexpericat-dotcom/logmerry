@@ -160,12 +160,18 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
             <div className="flex gap-2">
               <dt className="text-muted-foreground">Téléphone</dt>
               <dd className="font-mono tabular-nums">
-                <a
-                  href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
-                  className="text-primary underline underline-offset-4"
-                >
-                  {contact.phone}
-                </a>
+                {/* Lien d'appel seulement pour un numéro « pur » (chiffres, espaces, + ( ) . -) : une extension ou une mention en lettres ferait composer un mauvais numéro. */}
+                {/^[+\d\s().-]+$/.test(contact.phone) &&
+                /\d/.test(contact.phone) ? (
+                  <a
+                    href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+                    className="text-primary underline underline-offset-4"
+                  >
+                    {contact.phone}
+                  </a>
+                ) : (
+                  contact.phone
+                )}
               </dd>
             </div>
           )}
@@ -198,6 +204,13 @@ export function ContactsSection({
   const addButton = useRef<HTMLButtonElement>(null);
   const wasAdding = useRef(false);
   const done = useCallback(() => setAdding(false), []);
+  // Après une suppression, la ligne disparaît avec le focus : il passe au titre de la section au lieu de se perdre.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const count = useRef(contacts.length);
+  useEffect(() => {
+    if (contacts.length < count.current) heading.current?.focus();
+    count.current = contacts.length;
+  }, [contacts.length]);
   useEffect(() => {
     if (!adding && wasAdding.current) addButton.current?.focus();
     wasAdding.current = adding;
@@ -208,7 +221,12 @@ export function ContactsSection({
       aria-labelledby="contacts-title"
       className="flex max-w-2xl flex-col gap-3"
     >
-      <h2 id="contacts-title" className="text-xl font-semibold">
+      <h2
+        ref={heading}
+        id="contacts-title"
+        tabIndex={-1}
+        className="text-xl font-semibold focus:outline-none"
+      >
         Contacts{" "}
         <span
           className="font-mono text-base font-normal tabular-nums text-muted-foreground"

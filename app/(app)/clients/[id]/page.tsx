@@ -33,6 +33,7 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
         Dernière modification : {formatDateTime(client.updated_at)}
       </p>
       <ClientForm
+        key={`${client.status}-${client.updated_at}`}
         action={updateClientRecord.bind(null, id)}
         initial={{
           name: client.name,

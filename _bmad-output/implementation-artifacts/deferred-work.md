@@ -84,3 +84,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
   summary: « Contact principal » par fiche (un seul).
   evidence: Alex a dit « on garde pour plus tard » ; demande une règle de base garantissant l'unicité par fiche.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: Tester aussi les Server Actions des contacts (ajout, modification, suppression) et `promoteToClient`, avec la même solution que pour les notes et les fiches.
+  evidence: Relecteurs (lacune de vérification) : changer `promoteToClient` en `status: "prospect"` ou retirer `.select("id")` laisserait tous les tests passer.

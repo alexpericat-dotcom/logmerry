@@ -2,7 +2,7 @@
 title: 'Story 3.2 : Ajouter des contacts et passer un prospect en client'
 type: 'feature'
 created: '2026-10-15'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'c383dc36ff0249429157e1081a9b33df3f9ca335'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -84,6 +84,26 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+| Constat (relecteur) | Verdict | Route | Preuve / décision |
+|---|---|---|---|
+| Formulaire de la fiche non réinitialisé après « Passer en client » : l'enregistrer remettrait le statut à prospect (cas limites) | high | patch | champ non contrôlé gardant sa valeur initiale ; `key` sur le statut et la date de modification ; mesuré dans Chrome : le menu affiche « client » après promotion |
+| Le focus se perd après la suppression d'un contact (cas limites) | medium | patch | la ligne disparaît avec le bouton focalisé ; le focus passe au titre de la section, mesuré (`contacts-title`) |
+| Lien `tel:` faux pour un numéro avec lettres ou extension (aveugle, cas limites) | medium | patch | « 06 12 (poste 3) » composerait « 06123 » ; lien seulement pour un numéro de chiffres, espaces et `+ ( ) . -` |
+| Test « passer en client » auto-réalisé : la remise à prospect n'est pas vérifiée (aveugle, lacune) | low | patch | les deux étapes sont maintenant vérifiées, départ prospect compris ; 34/34 |
+| Tests des Server Actions (ajout, modification, suppression, promotion) absents (lacune ×2) | medium | defer | même choix que notes et fiches, entrée de `deferred-work.md` étendue aux contacts |
+| `promoteToClient` sans condition `status = prospect` (aveugle, cas limites ×2, lacune) | low | rejeté | seuls deux statuts existent : l'appliquer à un client ne change rien ; double clic inoffensif |
+| Pas de revalidation sur les chemins « n'existe plus » (cas limites ×3) | low | rejeté | seulement deux onglets en désaccord ; un rechargement efface la ligne |
+| Ligne de contact figée si modifiée ailleurs, `updated_at` absent du type, pas de détection de conflit (aveugle, cas limites) | low | rejeté | mono-utilisateur, comme la fiche |
+| Regex d'e-mail JS (`\s`) et Postgres (`[[:space:]]`) non identiques ; `a@b` accepté (aveugle, cas limites, lacune) | low | rejeté | validation volontairement simple (spec) ; écart seulement sur des espaces exotiques, et la base refuse alors proprement |
+| `FormData` pouvant contenir un fichier (cas limites) | low | rejeté | requête fabriquée à la main ; même schéma que les autres actions |
+| Course « fiche supprimée entre la lecture et l'insertion » : message générique (cas limites) | low | rejeté | la base refuse (code 42501 ou 23503) sans écrire ; seul le message diffère |
+| `ContactForm` bloqué sur d'anciennes valeurs, `onDone` répété (aveugle) | false | rejeté | le formulaire est démonté à l'annulation et à la réussite ; `onDone` est un `useCallback` stable |
+| `written!` sur une union (aveugle) | low | rejeté | écart de type sans panne : les deux branches s'excluent |
+| Migration : pas d'unicité d'e-mail, pas de `revoke anon`, `set_updated_at` à vérifier, pas de retour arrière, SQL non montré (aveugle) | false | rejeté | pas de règle de doublon voulue (spec) ; `anon` n'a aucune règle ; `set_updated_at` est utilisée par la table des fiches ; SQL montré et approuvé dans la conversation |
+| Accessibilité : pas de message de succès, `aria-label` du compteur, nombre de contacts dans le message de suppression, pas de confirmation à l'annulation d'une saisie (aveugle) | low | rejeté / defer | succès des formulaires déjà reporté (story 7.2) ; le reste est cosmétique |
+| Reformatage de lignes non modifiées dans `[id]/page.tsx` (aveugle) | low | rejeté | cosmétique |
+| Écarts avec le Design Notes et la tâche `delete-contact.tsx` (cas limites, affirmations) | low | rejeté | le formulaire remplace la ligne pendant la modification ; fichier unique consigné dans les Implementation Notes |
 
 ## Design Notes
 

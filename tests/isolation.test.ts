@@ -653,8 +653,11 @@ describe("isolation des contacts entre deux comptes fictifs", () => {
   });
 
   test("passer en client : le statut change, les contacts restent", async () => {
-    await a.client.from("clients").update({ status: "prospect" }).eq("id", clientA.id);
+    const reset = await a.client.from("clients").update({ status: "prospect" }).eq("id", clientA.id).select("status").single();
+    assert.ifError(reset.error);
+    assert.equal(reset.data!.status, "prospect", "départ : prospect");
     const up = await a.client.from("clients").update({ status: "client" }).eq("id", clientA.id).select("status").single();
+    assert.ifError(up.error);
     assert.equal(up.data!.status, "client");
     assert.equal((await a.client.from("contacts").select("id").eq("client_id", clientA.id)).data!.length, 1);
   });

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-15-2026 10:00
+last_updated: 10-15-2026 11:30
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -51,7 +51,7 @@ development_status:
 
   epic-3: in-progress
   3-1-gérer-mes-prospects-et-clients: review
-  3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: in-progress
+  3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: review
   3-3-lier-une-note-à-un-client-ou-un-prospect: backlog
   3-4-créer-des-missions: backlog
   3-5-découper-une-mission-en-étapes: backlog
