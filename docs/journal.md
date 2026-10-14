@@ -246,3 +246,9 @@
 - Fait : liste, filtres et recherche par sens passent en pleine largeur (elles suivent donc le bandeau, y compris quand le panneau de l'assistant est ouvert) ; le détail de « Chercher par sens » est replié derrière une icône d'info (survol, focus clavier ou toucher), lu par les lecteurs d'écran via `aria-describedby`.
 - Décision de ma part : la phrase sur l'envoi à Mistral AI reste visible en une ligne sous le champ (règle RGPD du projet), seul le détail d'usage est masqué.
 - Limite : vu seulement par construction (CSS généré et tests), pas à l'écran sur la page connectée.
+
+## 2026-10-14 — Focus aux couleurs des boutons d'action (retour d'Alex)
+
+- Constat : les anneaux de focus restaient en cobalt (ancien bleu), y compris dans la barre latérale.
+- Fait : `ring` passe au rose de la famille des boutons d'action (#E0457F en clair, #F2709A en sombre ; 3,65 et 6,85 sur le papier). Un dégradé ne peut pas servir de contour de focus : j'ai pris un rose uni. Les boutons ont un décalage de 2 px pour que l'anneau rose reste visible autour d'un bouton rose. DESIGN.md, `docs/ui-rules.md` et les scripts de contraste mis à jour ; 118 tests passent.
+- Question laissée ouverte : l'élément actif (barre latérale, filtre sélectionné) et les liens restent en cobalt, conformément à DESIGN.md.

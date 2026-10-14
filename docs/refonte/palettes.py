@@ -21,9 +21,9 @@ PALETTES = {
         "nom": "Cobalt",
         "idee": "Papier chaud, encre noire, un bleu électrique de type éditorial suisse. Aucun statut n'est bleu : la signature ne se confond avec rien.",
         "light": dict(paper="#F7F6F2", surface="#EFEDE6", ink="#0F1115", muted="#4B5160", rule="#D9D6CC", rule_strong="#80858F",
-                      signature="#1D3BFF", on_signature="#FFFFFF", success="#0A7A4B", attention="#9A5200", danger="#B3261E"),
+                      signature="#1D3BFF", ring="#E0457F", on_signature="#FFFFFF", success="#0A7A4B", attention="#9A5200", danger="#B3261E"),
         "dark": dict(paper="#0E1014", surface="#161A21", ink="#F2F1EC", muted="#A6ACBA", rule="#2A2F3A", rule_strong="#6A7287",
-                     signature="#8195FF", on_signature="#0E1014", success="#5FD3A0", attention="#F5B547", danger="#FF8A80"),
+                     signature="#8195FF", ring="#F2709A", on_signature="#0E1014", success="#5FD3A0", attention="#F5B547", danger="#FF8A80"),
     },
     "3-ultraviolet": {
         "nom": "Ultraviolet",

@@ -37,7 +37,7 @@ def checks(theme, t, charts):
     for s in ("success", "attention", "danger"):
         add(f"{s} (texte et icône) / papier", t[s], t["paper"], 4.5); add(f"{s} / surface", t[s], t["surface"], 4.5)
     add("bordure de champ / papier", t["rule_strong"], t["paper"], 3.0); add("bordure de champ / surface", t["rule_strong"], t["surface"], 3.0)
-    add("anneau de focus (signature) / papier", t["signature"], t["paper"], 3.0)
+    add("anneau de focus / papier", t.get("ring", t["signature"]), t["paper"], 3.0); add("anneau de focus / surface", t.get("ring", t["signature"]), t["surface"], 3.0)
     for i, c in enumerate(charts, 1):
         add(f"graphique {i} / papier", c, t["paper"], 3.0); add(f"graphique {i} / surface", c, t["surface"], 3.0)
     return out

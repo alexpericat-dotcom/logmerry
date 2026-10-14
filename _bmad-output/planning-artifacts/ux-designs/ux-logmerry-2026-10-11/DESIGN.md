@@ -24,7 +24,7 @@ colors:
   filet: '#D9D6CC'                 # filet décoratif de 1 px (séparation de lignes, de sections) ; pas d'exigence 3:1
   border: '#D9D6CC'                # = filet (nom shadcn)
   input: '#80858F'                 # bordure de champ, de case et de séparation de grande section : 3:1 exigé
-  ring: '#1D3BFF'
+  ring: '#E0457F'                  # anneau de focus : famille des boutons d'action (rose), ≥ 3:1 sur papier et surface
   marker: '#9A5200'                # marqueur 90 % de la jauge, sans texte (même teinte que warning)
   success: '#0A7A4B'
   warning: '#9A5200'               # statut « attention »
@@ -54,7 +54,7 @@ colors:
   filet-dark: '#2A2F3A'
   border-dark: '#2A2F3A'
   input-dark: '#6A7287'
-  ring-dark: '#8195FF'
+  ring-dark: '#F2709A'
   marker-dark: '#F5B547'
   success-dark: '#5FD3A0'
   warning-dark: '#F5B547'
@@ -176,7 +176,7 @@ Le produit hérite de shadcn/ui (style `new-york`, base `neutral`, icônes `luci
 Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe `-dark`). Les valeurs sont calculées et testées dans `docs/refonte/palettes.py` et `docs/refonte/contrastes.py`.
 
 - **Papier `{colors.background}`** : fond de page. **Surface `{colors.card}`** : cartes, panneaux, lignes de tableau, utilisée avec parcimonie. **Encre `{colors.foreground}`** : texte. **`{colors.muted-foreground}`** : texte secondaire (≥ 4,5:1 sur papier et sur surface).
-- **Cobalt `{colors.primary}`** : la **signature**. Lien, case cochée, anneau de focus (`{colors.ring}`), élément actif de la barre latérale. En sombre : `{colors.primary-dark}`, texte de bouton `{colors.primary-foreground-dark}`. Anneau de focus de 2 px décalé de 2 px sur le fond.
+- **Cobalt `{colors.primary}`** : la **signature**. Lien, case cochée, élément actif de la barre latérale (le focus a sa propre couleur, voir ci-dessous). En sombre : `{colors.primary-dark}`. **Focus** : anneau `{colors.ring}` (rose, famille des boutons d'action) de 2 px décalé de 2 px sur le fond, pour rester visible autour d'un bouton rose ; 3,65 sur papier clair, 6,85 en sombre.
 - **Filet `{colors.filet}`** (= `{colors.border}`) : séparation décorative de 1 px (lignes, sections). Pas d'exigence de contraste, **jamais seul pour délimiter un champ**. **Bordure de champ `{colors.input}`** : champs, cases, séparations de grande section, ≥ 3:1 sur papier et sur surface.
 - **États (toujours icône + mot)** : succès `{colors.success}`, attention `{colors.warning}`, erreur `{colors.destructive}` ; équivalents `-dark` en sombre. Trois jetons séparés, ≥ 4,5:1 en texte, **aucun n'est bleu** : la signature ne se confond avec aucun statut (écart de teinte ≥ 77°).
 - **Marqueur `{colors.marker}`** : uniquement le marqueur 90 % de la jauge de plafond (FR-14 règle 3), sans texte, même teinte que l'attention. La jauge repose sur le fond papier, jamais dans une carte Surface.
@@ -196,7 +196,7 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 | Attention | 5,42 / 5,01 | 10,50 / 9,62 |
 | Erreur | 6,04 / 5,58 | 8,34 / 7,64 |
 | Bordure de champ | 3,43 / 3,16 | 3,96 / 3,63 |
-| Focus (signature) | 6,22 / 5,74 | 6,96 / 6,38 |
+| Focus (anneau rose) | 3,65 / 3,37 | 6,85 / 6,28 |
 | Ratio le plus bas, texte | 4,60 (succès sur surface) | 6,38 |
 | Ratio le plus bas, non-texte | 3,16 (bordure de champ sur surface) | 3,63 |
 
