@@ -55,7 +55,7 @@ function Filters({
                 className={cn(
                   "inline-flex min-h-8 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
                   active
-                    ? "border-primary bg-accent font-bold"
+                    ? "neon bg-accent font-bold"
                     : "border-input",
                 )}
               >
@@ -70,7 +70,7 @@ function Filters({
             aria-current={draftOnly ? "page" : undefined}
             className={cn(
               "inline-flex min-h-8 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-              draftOnly ? "border-primary bg-accent font-bold" : "border-input",
+              draftOnly ? "neon bg-accent font-bold" : "border-input",
             )}
           >
             {drafts.label}

@@ -16,7 +16,7 @@ export function FilterChips({ label, items }: { label: string; items: FilterChip
               aria-current={item.active ? "page" : undefined}
               className={cn(
                 "inline-flex min-h-8 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                item.active ? "border-primary bg-accent font-bold" : "border-input",
+                item.active ? "neon bg-accent font-bold" : "border-input",
               )}
             >
               {item.label}

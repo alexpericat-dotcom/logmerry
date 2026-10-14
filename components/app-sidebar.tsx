@@ -132,7 +132,7 @@ export function AppSidebar({
                   className={cn(
                     base,
                     "hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current ? "border-primary bg-accent font-bold" : "border-transparent",
+                    current ? "neon bg-accent/60 font-bold" : "border-transparent",
                   )}
                 >
                   <Icon size={16} aria-hidden="true" />
