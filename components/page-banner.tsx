@@ -6,8 +6,8 @@ const cartridge = "rounded-md bg-background/90 px-3 py-2 text-foreground";
 
 /**
  * Bandeau d'en-tête d'écran (DESIGN.md, `gradient-banner`) : le titre reste en haut à gauche, dans la zone calme du dégradé « couchant »,
- * l'action principale (`actions`) en haut à droite. L'explication (`description`) et les filtres (`children`) se placent au bas,
- * dans un cartouche presque opaque : aucun texte ne repose directement sur la zone colorée.
+ * l'action principale (`actions`) en haut à droite. L'explication (`description`) se place au bas dans un cartouche presque opaque ; les filtres (`children`) se placent au bas aussi,
+ * chacun avec son propre fond presque opaque : aucun texte ne repose directement sur la zone colorée.
  */
 export function PageBanner({
   title,
@@ -31,7 +31,7 @@ export function PageBanner({
       {(description || children) && (
         <div className="flex flex-col gap-2">
           {description && <p className={cn(cartridge, "max-w-2xl text-sm")}>{description}</p>}
-          {children && <div className={cn(cartridge, "flex flex-col gap-2")}>{children}</div>}
+          {children && <div className="flex flex-col gap-2">{children}</div>}
         </div>
       )}
     </header>
