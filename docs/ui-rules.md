@@ -14,8 +14,9 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 8. **Chaque jeton existe en clair et en sombre.** Un jeton sans pendant ne passe pas la revue.
 9. **Focus visible partout** : anneau `ring` rose de 2 px décalé de 2 px ; navigation complète au clavier.
 10. **Composants shadcn par défaut** (Dialog, Sheet, Command, Popover, Toast, Tabs, Skeleton, Separator, Table), recolorés par les jetons ; on ne redessine pas sans raison de marque.
-11. **Les contrôles natifs suivent le thème** (`color-scheme`, options de `select`).
-12. **`prefers-reduced-motion` et `forced-colors` respectés.**
+11. **Le nom « LogMerry » s'écrit en Bricolage Grotesque 700 (`font-brand`) avec le logo, et nulle part ailleurs.**
+12. **Les contrôles natifs suivent le thème** (`color-scheme`, options de `select`).
+13. **`prefers-reduced-motion` et `forced-colors` respectés.**
 
 ## Les 5 règles les plus risquées et comment les tester sur un vrai écran
 

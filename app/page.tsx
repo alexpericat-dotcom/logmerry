@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-8 p-5 text-center">
       <div className="flex flex-col gap-4 max-w-xl">
-        <h1 className="text-4xl font-bold">LogMerry</h1>
+        <h1 className="font-brand text-4xl font-bold tracking-tight">LogMerry</h1>
         <p className="text-lg text-muted-foreground">
           Ton cockpit pour piloter ton activité de conseil : tâches du jour,
           clients, missions, factures, et un assistant qui répond à partir de

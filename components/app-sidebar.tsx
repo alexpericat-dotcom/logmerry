@@ -71,7 +71,7 @@ export function AppSidebar({
       <div className="flex h-14 items-center justify-between px-2">
         <span className="flex items-center gap-2 px-2">
           <LogoMark className={cn("size-6", collapsed ? "hidden" : "hidden md:block")} />
-          <span className={cn("font-semibold", labelClass)}>LogMerry</span>
+          <span className={cn("font-brand text-lg font-bold tracking-tight", labelClass)}>LogMerry</span>
         </span>
         <Button
           variant="ghost"

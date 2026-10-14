@@ -99,7 +99,11 @@ typography:
     fontWeight: '500'
     lineHeight: '1.5'
     fontFeatureSettings: '"tnum"'   # font-variant-numeric: tabular-nums
-rounded:rounded:
+  wordmark:
+    fontFamily: 'Bricolage Grotesque'   # logotype « LogMerry » uniquement (choix d'Alex, option C)
+    fontWeight: '700'
+    letterSpacing: -0.02em
+rounded:
   sm: 4px
   md: 6px
   lg: 8px          # = --radius 0.5rem de globals.css
@@ -215,7 +219,7 @@ Le filet (1,34 en clair, 1,42 en sombre) est volontairement sous 3:1 : il décor
 
 ## Typography
 
-**Hanken Grotesk** pour l'interface, les titres (graisse 700 en `{typography.display}`) et le corps ; **IBM Plex Mono** pour les chiffres (`{typography.numeric}`), tous deux sous licence SIL OFL, auto-hébergés par `next/font` (aucune requête vers Google à l'exécution). Ils remplacent Geist du gabarit. Les chiffres tabulaires de Hanken Grotesk n'ont pas été vérifiés : c'est pourquoi les montants sont en mono. Rôles : `{typography.display}` (titres de page, portfolio), `{typography.heading}`, `{typography.body}`, `{typography.label}` (motifs, badges, en-têtes de colonnes). `{typography.numeric}` (IBM Plex Mono) : **chiffres tabulaires** (`font-variant-numeric: tabular-nums`) sur tous les montants, dates et durées, alignés à droite dans les tableaux. Tailles de police exprimées en `rem` (zoom et préférences du navigateur respectés). Langue : `<html lang="fr">` (voir EXPERIENCE.md, Accessibility Floor).
+**Hanken Grotesk** pour l'interface, les titres (graisse 700 en `{typography.display}`) et le corps ; **IBM Plex Mono** pour les chiffres (`{typography.numeric}`), tous deux sous licence SIL OFL, auto-hébergés par `next/font` (aucune requête vers Google à l'exécution). Ils remplacent Geist du gabarit. **Bricolage Grotesque 700** sert uniquement au logotype « LogMerry » (`{typography.wordmark}`, classe `font-brand`) : barre latérale, page de connexion, page d'accueil ; jamais dans le corps ni les titres de page. Le logo (bateau dans une boussole) l'accompagne (`LogoMark`). Les chiffres tabulaires de Hanken Grotesk n'ont pas été vérifiés : c'est pourquoi les montants sont en mono. Rôles : `{typography.display}` (titres de page, portfolio), `{typography.heading}`, `{typography.body}`, `{typography.label}` (motifs, badges, en-têtes de colonnes). `{typography.numeric}` (IBM Plex Mono) : **chiffres tabulaires** (`font-variant-numeric: tabular-nums`) sur tous les montants, dates et durées, alignés à droite dans les tableaux. Tailles de police exprimées en `rem` (zoom et préférences du navigateur respectés). Langue : `<html lang="fr">` (voir EXPERIENCE.md, Accessibility Floor).
 
 **Liens dans le texte** : soulignés en permanence, couleur `{colors.primary}` (clair) / `{colors.primary-dark}` (sombre) ; soulignement conservé au survol et au focus. **Placeholder** : `{colors.muted-foreground}` (≥ 4,5:1), jamais seul comme libellé. **Désactivé** : opacité 50 % + `aria-disabled`, jamais le seul moyen d'indiquer un état.
 

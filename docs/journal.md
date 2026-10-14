@@ -273,3 +273,8 @@
 - Logo : `docs/refonte/logo/vectoriser.py` (potracer) transforme l'image fournie en SVG monochrome (8 sous-chemins, 9,7 ko) ; 1re version inversée (fond vectorisé au lieu du logo), corrigée en inversant le masque ; vérifié clair, sombre et en 32 px. Ajouté : composant `LogoMark` (couleur du texte), en-tête de la barre latérale (masqué quand elle est repliée), page de connexion, icône de l'onglet (`app/icon.svg`, claire ou sombre selon le navigateur).
 - Typographie du nom : 6 propositions dans `docs/refonte/logo/typos-logmerry.html` (A Hanken, B Fraunces, C Bricolage Grotesque, D Sora, E Instrument Serif, F Plex Mono + Hanken). Choix à faire par Alex ; le nom reste en Hanken Grotesk d'ici là.
 - Hypothèse à confirmer : le logo est bien celui d'Alex (image fournie par lui), son vecteur est une trace automatique fidèle, sans retouche manuelle.
+
+## 2026-10-14 — Typographie du nom : option C, Bricolage Grotesque 700 (choix d'Alex)
+
+- Appliqué : police `font-brand` (next/font, auto-hébergée) pour « LogMerry » dans la barre latérale, la page de connexion et la page d'accueil, toujours avec le logo. DESIGN.md (rôle `wordmark`), `docs/ui-rules.md` (règle 11) et le test des polices mis à jour ; 118 tests passent.
+- Un bug de mon édition de DESIGN.md (le rôle inséré avait avalé la ligne `rounded:` du YAML) a été trouvé en relisant le fichier avant le commit et corrigé ; le test de conformité ne l'aurait pas signalé.

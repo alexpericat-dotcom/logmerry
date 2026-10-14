@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -15,6 +15,8 @@ export const metadata: Metadata = {
 
 // Hanken Grotesk (interface, titres, corps) et IBM Plex Mono (chiffres) remplacent Geist : DESIGN.md, Typography.
 const sans = Hanken_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-sans" });
+// Bricolage Grotesque 700 : le nom « LogMerry » seulement (logotype).
+const brand = Bricolage_Grotesque({ display: "swap", subsets: ["latin"], weight: ["700"], variable: "--font-brand" });
 const mono = IBM_Plex_Mono({ display: "swap", subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export default function RootLayout({
@@ -24,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${sans.variable} ${mono.variable} font-sans antialiased`}>
+      <body className={`${sans.variable} ${mono.variable} ${brand.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

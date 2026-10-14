@@ -138,7 +138,7 @@ test("le bouton d'action utilise le dégradé d'action et son texte dédié, et 
 
 test("polices : Hanken Grotesk (interface) et IBM Plex Mono (chiffres), auto-hébergées par next/font", () => {
   const layout = read("app/layout.tsx");
-  assert.ok(/Hanken_Grotesk/.test(layout) && /IBM_Plex_Mono/.test(layout));
+  assert.ok(/Hanken_Grotesk/.test(layout) && /IBM_Plex_Mono/.test(layout) && /Bricolage_Grotesque/.test(layout), "polices du thème");
   assert.ok(!/Plus_Jakarta_Sans/.test(layout), "l'ancienne police est encore importée");
 });
 

@@ -8,7 +8,7 @@ export default function Page() {
       <header className="flex items-center gap-3">
         <LogoMark className="size-10" />
         <div>
-          <p className="text-2xl font-bold leading-none">LogMerry</p>
+          <p className="font-brand text-3xl font-bold leading-none tracking-tight">LogMerry</p>
           <p className="mt-1 text-sm">Ton cockpit d&apos;activité.</p>
         </div>
       </header>
