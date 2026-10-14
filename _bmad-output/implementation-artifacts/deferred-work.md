@@ -77,3 +77,10 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
   summary: Décider le comportement `on delete` des clés étrangères vers `clients` (missions, devis, factures) : refuser ou conserver, et le dire dans le message de suppression.
   evidence: Le message actuel dit « définitif » ; dès qu'une mission référence une fiche, la suppression doit être pensée (story 3.4).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: Adresse et téléphone sur la fiche client elle-même (entreprise), à saisir avec l'epic 4 (factures).
+  evidence: Alex a dit « plus tard » ; l'adresse d'une entreprise appartient à la fiche plus qu'à un contact, et les factures en auront besoin.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: « Contact principal » par fiche (un seul).
+  evidence: Alex a dit « on garde pour plus tard » ; demande une règle de base garantissant l'unicité par fiche.
