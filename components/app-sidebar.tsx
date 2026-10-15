@@ -115,7 +115,7 @@ export function AppSidebar({
         !menuOpen && "max-md:invisible",
       )}
     >
-      <div className="flex h-14 items-center justify-between px-2">
+      <div className="flex h-14 items-center justify-between border-b border-filet px-2">
         <span className="flex items-center gap-2 px-2">
           <LogoMark className={cn("size-8 dark:size-6", collapsed && "md:hidden")} />
           <span className={cn("font-pixel text-lg font-bold tracking-wide dark:font-brand dark:tracking-tight", labelClass)}>LogMerry</span>
@@ -143,7 +143,7 @@ export function AppSidebar({
         </Button>
       </div>
 
-      <div className="flex flex-col gap-1 px-2 pb-2">
+      <div className="mb-2 flex flex-col gap-1 border-b border-filet px-2 py-2">
         <SearchPalette labelClass={labelClass} />
         <button
           type="button"
