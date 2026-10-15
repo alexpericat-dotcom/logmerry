@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 
+import { TypedText } from "@/components/typed-text";
 import { cn } from "@/lib/utils";
 
 const cartridge = "rounded-md border bg-card px-3 py-2 text-foreground dark:border-0 dark:bg-background/90";
@@ -63,7 +64,7 @@ export function PageBanner({
       </div>
       {(description || children) && (
         <div className="relative flex flex-col gap-2">
-          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "mt-20 md:mr-36 md:mt-0 dark:ml-auto dark:mt-0 dark:md:mr-0")}>{description}</p>}
+          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "mt-20 md:mr-36 md:mt-0 dark:ml-auto dark:mt-0 dark:md:mr-0")}>{hero ? <TypedText text={description} /> : description}</p>}
           {children && <div className="flex flex-col gap-2">{children}</div>}
         </div>
       )}

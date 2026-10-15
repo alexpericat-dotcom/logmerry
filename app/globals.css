@@ -100,6 +100,21 @@
   }
 }
 
+/* Curseur du texte « écrit en direct » (TypedText) : clignote, sans animation si le mouvement est réduit. */
+@keyframes typed-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.typed-caret {
+  animation: typed-blink 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .typed-caret {
+    animation: none;
+  }
+}
+
 /* « Néon » : l'élément sélectionné (catégorie de la barre latérale, filtre actif) s'allume : contour de la couleur d'accent des actions et halo. L'état reste aussi porté par le gras et aria-current. */
 @layer components {
   /* Clair : l'élément sélectionné est une pastille orange cernée de marine, à ombre dure (le gras et aria-current portent aussi l'état). */
