@@ -2,7 +2,7 @@
 title: 'Story 3.3 : Lier une note à un client ou un prospect'
 type: 'feature'
 created: '2026-10-15'
-status: 'draft'
+status: 'review'
 baseline_commit: 'ca45d24'
 route: 'dispatch'
 context:
