@@ -25,7 +25,7 @@ export function SenseSearch() {
   return (
     <section
       aria-labelledby="sense-title"
-      className="flex w-full flex-col gap-1 rounded-md border border-primary/30 bg-primary/10 px-6 py-3"
+      className="flex w-full flex-col gap-1 rounded-md border border-border bg-primary/10 px-6 py-3 shadow-hard"
     >
       <h2 id="sense-title" className="sr-only">
         Chercher par sens

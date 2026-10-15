@@ -17,6 +17,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -192,7 +193,7 @@ export function AppSidebar({
                   className={cn(
                     base,
                     "group border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current && "font-bold",
+                    current && "border-foreground bg-accent font-bold",
                   )}
                 >
                   <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
@@ -205,11 +206,17 @@ export function AppSidebar({
       </nav>
 
       <div className="flex flex-col gap-2 border-t p-2">
-        {email && (
-          <p className={cn("truncate px-2 text-xs text-muted-foreground", labelClass)}>
-            {email}
-          </p>
-        )}
+        <div className="flex items-center gap-2 px-1">
+          <Image
+            src="/images/alex-portrait.png"
+            alt=""
+            width={32}
+            height={32}
+            unoptimized
+            className="size-8 shrink-0 border-2 object-cover [image-rendering:pixelated]"
+          />
+          {email && <p className={cn("min-w-0 truncate text-xs text-muted-foreground", labelClass)}>{email}</p>}
+        </div>
         <LogoutButton compact={collapsed} />
         <ThemeSwitcher />
       </div>
