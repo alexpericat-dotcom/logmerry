@@ -109,7 +109,7 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
   }
 
   return (
-    <li className="rounded-md border bg-card p-3 md:col-span-1">
+    <li className="flex flex-col gap-3 rounded-md border bg-card p-3 md:col-span-1">
       <div className="flex items-start gap-3">
         <div
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-foreground"
@@ -126,30 +126,8 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
           )}
         </div>
       </div>
-      {mode === "view" && (
-        <div className="mt-2 flex gap-2">
-          <Button
-            ref={editButton}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setMode("edit")}
-          >
-            Modifier<span className="sr-only"> {contact.name}</span>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-destructive"
-            onClick={() => setMode("delete")}
-          >
-            Supprimer<span className="sr-only"> {contact.name}</span>
-          </Button>
-        </div>
-      )}
       {(contact.email || contact.phone || contact.address) && (
-        <dl className="mt-2 grid gap-1 text-sm">
+        <dl className="grid gap-1 text-sm">
           {contact.email && (
             <div className="flex gap-2 max-md:items-center">
               <dt className="text-muted-foreground">E-mail</dt>
@@ -191,6 +169,28 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
             </div>
           )}
         </dl>
+      )}
+      {mode === "view" && (
+        <div className="mt-auto flex justify-end gap-2 border-t border-filet pt-3">
+          <Button
+            ref={editButton}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setMode("edit")}
+          >
+            Modifier<span className="sr-only"> {contact.name}</span>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-destructive"
+            onClick={() => setMode("delete")}
+          >
+            Supprimer<span className="sr-only"> {contact.name}</span>
+          </Button>
+        </div>
       )}
       {mode === "delete" && (
         <DeleteContact contact={contact} onCancel={close} />

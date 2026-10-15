@@ -17,6 +17,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -101,8 +102,8 @@ export function AppSidebar({
         >
           <Menu size={20} aria-hidden="true" />
         </Button>
-        <LogoMark className="size-6" />
-        <span className="font-brand text-lg font-bold tracking-tight">LogMerry</span>
+        <LogoMark className="size-8 dark:size-6" />
+        <span className="font-pixel text-lg font-bold tracking-wide dark:font-brand dark:tracking-tight">LogMerry</span>
       </div>
       {menuOpen && <div className="fixed inset-0 z-30 bg-foreground/40 md:hidden" aria-hidden="true" onClick={() => setMenuOpen(false)} />}
     <aside
@@ -114,10 +115,10 @@ export function AppSidebar({
         !menuOpen && "max-md:invisible",
       )}
     >
-      <div className="flex h-14 items-center justify-between px-2">
+      <div className="flex h-14 items-center justify-between border-b border-filet px-2">
         <span className="flex items-center gap-2 px-2">
-          <LogoMark className={cn("size-6", collapsed && "md:hidden")} />
-          <span className={cn("font-brand text-lg font-bold tracking-tight", labelClass)}>LogMerry</span>
+          <LogoMark className={cn("size-8 dark:size-6", collapsed && "md:hidden")} />
+          <span className={cn("font-pixel text-lg font-bold tracking-wide dark:font-brand dark:tracking-tight", labelClass)}>LogMerry</span>
         </span>
         <Button
           ref={closeButton}
@@ -142,7 +143,7 @@ export function AppSidebar({
         </Button>
       </div>
 
-      <div className="flex flex-col gap-1 px-2 pb-2">
+      <div className="mb-2 flex flex-col gap-1 border-b border-filet px-2 py-2">
         <SearchPalette labelClass={labelClass} />
         <button
           type="button"
@@ -153,7 +154,7 @@ export function AppSidebar({
           }}
           aria-expanded={assistant.isOpen}
           title={assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}
-          className="flex h-9 w-full items-center gap-3 rounded-md border-l-[3px] border-transparent px-2 text-sm max-md:h-11 hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:rounded-md dark:border-0 dark:border-l-[3px] dark:hover:border-transparent"
         >
           <MessageSquare size={16} aria-hidden="true" />
           <span className={labelClass}>{assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}</span>
@@ -165,7 +166,7 @@ export function AppSidebar({
           {NAV_ITEMS.map((item) => {
             const Icon = ICONS[item.icon];
             const base =
-              "flex h-9 items-center gap-3 rounded-md border-l-[3px] px-2 text-sm max-md:h-11";
+              "flex h-9 items-center gap-3 rounded-sm border px-2 text-sm max-md:h-11 dark:rounded-md dark:border-0 dark:border-l-[3px]";
             if (!item.available) {
               return (
                 <li key={item.href}>
@@ -191,11 +192,11 @@ export function AppSidebar({
                   aria-current={current ? "page" : undefined}
                   className={cn(
                     base,
-                    "group border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current && "font-bold",
+                    "group border-transparent hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:hover:border-transparent dark:hover:bg-transparent",
+                    current && "neon-light font-bold",
                   )}
                 >
-                  <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
+                  <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "dark:neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
                   <span className={labelClass}>{item.label}</span>
                 </Link>
               </li>
@@ -205,11 +206,17 @@ export function AppSidebar({
       </nav>
 
       <div className="flex flex-col gap-2 border-t p-2">
-        {email && (
-          <p className={cn("truncate px-2 text-xs text-muted-foreground", labelClass)}>
-            {email}
-          </p>
-        )}
+        <div className="flex items-center gap-2 px-1 dark:block dark:px-0">
+          <Image
+            src="/images/alex-portrait.png"
+            alt=""
+            width={32}
+            height={32}
+            unoptimized
+            className="size-8 shrink-0 border-2 object-cover [image-rendering:pixelated] dark:hidden"
+          />
+          {email && <p className={cn("min-w-0 truncate text-xs text-muted-foreground dark:px-2", labelClass)}>{email}</p>}
+        </div>
         <LogoutButton compact={collapsed} />
         <ThemeSwitcher />
       </div>

@@ -13,4 +13,6 @@
 
 | R8 | Mobile | Reprise de l'affichage sur téléphone (retour d'Alex sur Pixel 6a, 2026-10-14 : « pas dingue ») : barre latérale, bandeau, assistant plein écran, filtres, pastilles, cibles tactiles ≥ 44 px ; à tester sur le vrai téléphone, écran par écran |
 
+| R9 | Arcade clair | Nouveau thème clair rétro pixel (2026-10-15) : combinaison « bandeau et connexion Arcade clair, listes et formulaires Pixel sobre » ; jetons clairs, traits marine, ombres dures, Pixelify Sans, accents `tone-*`, portrait et scènes d'Alex, DESIGN.md et règles mis à jour. Le sombre est inchangé. À essayer sur le vrai téléphone |
+
 R4 à R7 suivent les epics fonctionnels : leurs écrans n'existent pas encore.

@@ -32,11 +32,11 @@ export function DataTable<T>({
   sorted?: { key: string; dir: "asc" | "desc" };
 }) {
   return (
-    <div role="region" aria-label={caption} tabIndex={0} className="w-full overflow-x-auto rounded-md border bg-card">
+    <div role="region" aria-label={caption} tabIndex={0} className="w-full overflow-x-auto rounded-md border bg-card shadow-hard">
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b text-left text-xs text-muted-foreground">
+          <tr className="border-b border-filet text-left text-xs text-muted-foreground">
             {columns.map((c) => (
               <th
                 key={c.key}
@@ -58,7 +58,7 @@ export function DataTable<T>({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={rowKey(row)} className="relative border-b last:border-b-0 hover:bg-accent/40">
+            <tr key={rowKey(row)} className="relative border-b border-filet last:border-b-0 hover:bg-accent/40">
               {columns.map((c) => (
                 <td key={c.key} className={cn("px-3 py-2", c.align === "right" && "text-right font-mono tabular-nums", c.hideOnMobile && "max-md:hidden")}>
                   {c.render(row)}

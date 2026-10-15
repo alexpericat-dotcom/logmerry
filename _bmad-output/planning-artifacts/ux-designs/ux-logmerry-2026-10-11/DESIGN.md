@@ -1,30 +1,30 @@
 ---
 status: final
 created: 2026-10-11
-updated: 2026-10-14
+updated: 2026-10-15
 name: LogMerry
 description: Cockpit personnel de conseil No-Code/IA avec assistant RAG. shadcn/ui (new-york, base neutral, lucide) sur Next.js + Tailwind 3 + next-themes ; ce DESIGN.md ne spécifie que la couche de marque (palette Cobalt, polices Hanken Grotesk et IBM Plex Mono, filets, composants propres). Il l'emporte sur toute maquette. Refonte du 2026-10-14 (direction 2 « Cobalt », polices B) : voir docs/refonte/propositions.md.
 colors:
-  # Clair (fond « sable chaud », choix d'Alex du 2026-10-14). Jetons sémantiques ; les noms shadcn sont réutilisés, la valeur est surchargée. Source des valeurs : docs/refonte/palettes.py (clé 2-cobalt).
-  background: '#F0E9DC'            # papier
-  foreground: '#0F1115'            # encre
-  card: '#E6DECE'                  # surface (second papier, rare)
-  card-foreground: '#0F1115'
-  popover: '#E6DECE'
-  popover-foreground: '#0F1115'
-  muted: '#E6DECE'
-  muted-foreground: '#4B5160'      # texte secondaire
+  # Clair, direction « Arcade clair » (2026-10-15, remplace le sable chaud du 2026-10-14) : fond ciel très pâle, encre marine, traits marine de 2 px, accents turquoise, violet, orange, rose, jaune. Jetons sémantiques ; les noms shadcn sont réutilisés, la valeur est surchargée. Source des valeurs : docs/refonte/palettes.py (clé 2-cobalt).
+  background: '#F7FAFF'            # papier
+  foreground: '#1B1F4B'            # encre
+  card: '#FFFFFF'                  # surface (second papier, rare)
+  card-foreground: '#1B1F4B'
+  popover: '#FFFFFF'
+  popover-foreground: '#1B1F4B'
+  muted: '#EAF1FB'
+  muted-foreground: '#4B4F78'      # texte secondaire
   primary: '#1D3BFF'               # signature : bouton, lien, focus, élément actif. Jamais un statut ni une série de graphique
   primary-foreground: '#FFFFFF'
-  action-foreground: '#0F1115'    # texte des boutons d'action (dégradé d'action), identique en clair et en sombre
-  secondary: '#E6DECE'
-  secondary-foreground: '#0F1115'
-  accent: '#D3C9B5'                # élément actif / survol / sélection clavier (jamais seul : indicateur non coloré obligatoire, voir EXPERIENCE.md)
-  accent-foreground: '#0F1115'
-  filet: '#D3C9B5'                 # filet décoratif de 1 px (séparation de lignes, de sections) ; pas d'exigence 3:1
-  border: '#D3C9B5'                # = filet (nom shadcn)
-  input: '#797E89'                 # bordure de champ, de case et de séparation de grande section : 3:1 exigé
-  ring: '#C85A00'                  # anneau de focus et « néon » de l'élément sélectionné : orange des boutons d'action, ≥ 3:1 sur papier et surface
+  action-foreground: '#1B1F4B'    # texte des boutons d'action (dégradé d'action), identique en clair et en sombre
+  secondary: '#EAF1FB'
+  secondary-foreground: '#1B1F4B'
+  accent: '#FFE9A8'                # élément actif / survol / sélection clavier (jamais seul : indicateur non coloré obligatoire, voir EXPERIENCE.md)
+  accent-foreground: '#1B1F4B'
+  filet: '#C9D6EA'                 # filet décoratif de 1 px (séparation de lignes, de sections) ; pas d'exigence 3:1
+  border: '#1B1F4B'                # = filet (nom shadcn)
+  input: '#1B1F4B'                 # bordure de champ, de case et de séparation de grande section : 3:1 exigé
+  ring: '#1D3BFF'                  # anneau de focus et « néon » de l'élément sélectionné : orange des boutons d'action, ≥ 3:1 sur papier et surface
   marker: '#954F00'                # marqueur 90 % de la jauge, sans texte (même teinte que warning)
   success: '#097145'
   warning: '#954F00'               # statut « attention »
@@ -36,6 +36,12 @@ colors:
   chart-4: '#302060'
   chart-5: '#B814B8'
   # Sombre
+  display: '#E4600B'               # titres pixel (texte de grande taille seulement : 3,36:1 sur le fond)
+  tone-teal: '#46D9C8'             # accents décoratifs (barres de titre, étoiles, ombres de titre) : jamais du texte
+  tone-violet: '#A996F0'
+  tone-orange: '#FF9A4D'           # aussi la pastille « sélectionné » et le bouton d'action
+  tone-pink: '#FF8FB3'
+  tone-yellow: '#FFD95A'
   background-dark: '#0E1014'
   foreground-dark: '#F2F1EC'
   card-dark: '#161A21'
@@ -65,11 +71,17 @@ colors:
   chart-3-dark: '#B275F0'
   chart-4-dark: '#EBC247'
   chart-5-dark: '#EB4770'
+  display-dark: '#FF9A4D'
+  tone-teal-dark: '#46D9C8'
+  tone-violet-dark: '#A996F0'
+  tone-orange-dark: '#FF9A4D'
+  tone-pink-dark: '#FF8FB3'
+  tone-yellow-dark: '#FFD95A'
 gradients:
   # --gradient-* ; angle 160deg, statiques (jamais animés). Gradient-2 : noir, bleu nuit, violet, rose, corail (références d'Alex) ; jamais un statut ni une série : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
-  gradient-1: 'linear-gradient(160deg, #F0E9DC, #E6DECE)'   # texte encre 14,13 (sombre : #0E1014 › #161A21, texte 15,42)
+  gradient-1: 'linear-gradient(160deg, #F7FAFF, #EAF1FB)'   # texte encre 14,13 (sombre : #0E1014 › #161A21, texte 15,42)
   gradient-2: 'radial-gradient(90% 75% at 100% 100%, #F0643A, #C2306A 38%, transparent), radial-gradient(85% 75% at 0% 80%, #7A3A9A, #1B1F4A 50%, transparent), linear-gradient(#05070C, #05070C)'   # « couchant », valeur SOMBRE (clair : docs/refonte/palettes.py, GRADIENT_SUNSET) ; texte dans les 45 % du haut, pire pixel 12,01 (clair 11,01)
-  gradient-action: 'linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%)'   # boutons d'action, coucher de soleil jaune-orangé ; texte encre #0F1115 ; identique en clair et en sombre
+  gradient-action: 'linear-gradient(180deg, #FFB45C 0%, #FF9A4D 100%)'   # boutons d'action, coucher de soleil jaune-orangé ; texte encre #0F1115 ; identique en clair et en sombre
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -99,6 +111,10 @@ typography:
     fontWeight: '500'
     lineHeight: '1.5'
     fontFeatureSettings: '"tnum"'   # font-variant-numeric: tabular-nums
+  pixel:
+    fontFamily: 'Pixelify Sans'   # titres de bandeau et étiquettes de grande taille seulement (jamais le texte courant) ; capitales, deux tons : display + ombre tone-teal
+    fontWeight: '700'
+    letterSpacing: 0.02em
   wordmark:
     fontFamily: 'Bricolage Grotesque'   # logotype « LogMerry » uniquement (choix d'Alex, option C)
     fontWeight: '700'
@@ -106,7 +122,7 @@ typography:
 rounded:
   sm: 4px
   md: 6px
-  lg: 8px          # = --radius 0.5rem de globals.css
+  lg: 8px          # sombre : --radius 0.5rem ; clair : --radius 0.1875rem (coins presque droits, pixel)
   full: 9999px
 spacing:
   '1': 4px
@@ -174,6 +190,20 @@ LogMerry projette quatre qualités, dans cet ordre de lecture en dix secondes : 
 Maquettes de référence : les aperçus de la refonte ([cobalt](../../../../docs/refonte/apercu-2-cobalt.html), avec bascule clair/sombre) et le dossier [docs/refonte/propositions.md](../../../../docs/refonte/propositions.md). Les maquettes `mockups/` datent de la palette olive et sont **périmées** pour les couleurs et les dégradés ; elles restent valables pour la structure des écrans. DESIGN.md et EXPERIENCE.md l'emportent en cas de conflit.
 
 Le produit hérite de shadcn/ui (style `new-york`, base `neutral`, icônes `lucide`, `next-themes`). Ce document ne décrit que la couche de marque. Les composants shadcn non listés (Dialog, Sheet, Command, Popover, Toast, Tabs, Skeleton, Separator, Table) gardent leurs spécifications par défaut, recolorés par les jetons ci-dessous.
+
+## Direction « Arcade clair » (thème clair, 2026-10-15)
+
+Le thème clair adopte un style web rétro en pixel art (référence d'Alex), en clair. Combinaison retenue : le bandeau d'accueil et la connexion de « Arcade clair », les listes et formulaires de « Pixel sobre ».
+
+- **Fond et encre** : fond ciel très pâle `background`, cartes blanches, texte et traits en marine `foreground` / `border`.
+- **Traits** : bordures de 2 px marine (`--border-w`), ombre dure de 3 px sans flou (`shadow-hard`) sur boutons, cartes, tableaux, bandeaux ; coins presque droits (`--radius` 3 px). En sombre : 1 px, pas d'ombre, rayon 8 px (inchangé).
+- **Accents** : `tone-teal`, `tone-violet`, `tone-orange`, `tone-pink`, `tone-yellow`, décoratifs, jamais du texte. Une carte de note porte une barre de 6 px par type : note violet, procédure turquoise, modèle orange, FAQ rose (le type reste écrit dans la pastille).
+- **Titres** : Pixelify Sans en capitales, deux tons (`display` et ombre `tone-teal`), texte de grande taille seulement. Le texte courant reste Hanken Grotesk ; le logotype de la barre latérale reste Bricolage Grotesque.
+- **Bandeau** (`gradient-2` en clair) : ciel pâle à grille fine de 16 px (`--banner-size`) ; `hero` (cockpit) : pas de décor (l'étoile violette et l'écran au portrait ont été retirés le 2026-10-15).
+- **Sélection** : une pastille orange cernée de marine à ombre dure (`.neon` en clair) ; le gras et `aria-current` portent aussi l'état. En sombre, le néon d'origine.
+- **Focus** : anneau cobalt (`ring`) de 2 px décalé de 2 px.
+- **Images** (`public/images/`) : portrait (barre latérale), scène « chemise bleue » (premier écran et connexion, clair), scène « t-shirt » (écran du bandeau du cockpit, image entière), scène de nuit (premier écran, côté futur), logo en pixels `logo-pixel.svg` (36 × 36 tiré du vecteur ; remplace le logo vectoriel en clair seulement). Décoratives (`alt=""`), `image-rendering: pixelated`. Le nom « LogMerry » et le slogan de la connexion sont en Pixelify Sans en clair.
+- Les règles de contraste ne changent pas : texte 4,5:1, éléments d'interface 3:1 ; `display` est limité à 3:1 (grand texte).
 
 ## Colors
 
