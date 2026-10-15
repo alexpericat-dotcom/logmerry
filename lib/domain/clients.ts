@@ -108,3 +108,23 @@ export function viewClients<T extends ClientRow>(all: T[], view: ClientView): { 
     });
   return { rows, total: all.length };
 }
+
+/** Minuscules sans accents : « École » et « ecole » se valent. */
+const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/**
+ * Recherche dans mes fiches : chaque mot de la saisie doit apparaître dans le nom (accents et casse ignorés) ;
+ * les noms qui commencent par la saisie passent d'abord, puis l'ordre alphabétique. `limit` résultats au plus.
+ * ponytail : sur la liste lue d'un coup (quelques dizaines de fiches) ; une colonne indexée au-delà de 1 000.
+ */
+export function matchClients<T extends { name: string }>(all: T[], query: string, limit = 8): T[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const needle = words.join(" ");
+  return all
+    .map((c) => ({ c, name: fold(c.name) }))
+    .filter(({ name }) => words.every((w) => name.includes(w)))
+    .sort((a, b) => Number(b.name.startsWith(needle)) - Number(a.name.startsWith(needle)) || a.name.localeCompare(b.name, "fr"))
+    .slice(0, limit)
+    .map(({ c }) => c);
+}

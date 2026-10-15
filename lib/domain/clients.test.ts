@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_NAME_MAX, clientsHref, countLabel, nextDir, parseClientView, validateClientInput, viewClients, type ClientRow } from "./clients.ts";
+import { CLIENT_NAME_MAX, clientsHref, countLabel, nextDir, parseClientView, validateClientInput, matchClients, viewClients, type ClientRow } from "./clients.ts";
 
 test("création : nom et origine obligatoires, nom nettoyé", () => {
   const ok = validateClientInput({ name: "  Atelier Brume \u0000 ", status: "prospect", origin: "demo" });
@@ -86,4 +86,16 @@ test("tri par date de création : croissant et décroissant", () => {
 
 test("liste vide : total 0, aucune erreur", () => {
   assert.deepEqual(viewClients([], parseClientView({ statut: "client" })), { rows: [], total: 0 });
+});
+
+test("recherche de fiches : accents et casse ignorés, tous les mots requis, début de nom d'abord, limite", () => {
+  const all = [{ name: "Coopérative Aval" }, { name: "École Lanterne" }, { name: "Atelier Brume" }, { name: "Brume & Fils" }, { name: "Zélie" }];
+  assert.deepEqual(matchClients(all, "ecole").map((c) => c.name), ["École Lanterne"]);
+  assert.deepEqual(matchClients(all, "LANTERNE école").map((c) => c.name), ["École Lanterne"], "ordre des mots libre");
+  assert.deepEqual(matchClients(all, "brume").map((c) => c.name), ["Brume & Fils", "Atelier Brume"], "le nom qui commence par la saisie passe d'abord");
+  assert.deepEqual(matchClients(all, "brume lanterne"), [], "tous les mots sont requis");
+  assert.deepEqual(matchClients(all, "   "), []);
+  assert.equal(matchClients(Array.from({ length: 20 }, (_, i) => ({ name: `Client ${i}` })), "client").length, 8);
+  assert.equal(matchClients(Array.from({ length: 20 }, (_, i) => ({ name: `Client ${i}` })), "client", 3).length, 3);
+  assert.deepEqual(matchClients(all, "%"), [], "les caractères spéciaux n'ont aucun effet");
 });
