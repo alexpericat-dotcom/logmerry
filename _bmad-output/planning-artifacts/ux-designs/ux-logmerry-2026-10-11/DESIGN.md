@@ -24,7 +24,7 @@ colors:
   filet: '#D3C9B5'                 # filet décoratif de 1 px (séparation de lignes, de sections) ; pas d'exigence 3:1
   border: '#D3C9B5'                # = filet (nom shadcn)
   input: '#797E89'                 # bordure de champ, de case et de séparation de grande section : 3:1 exigé
-  ring: '#DF417C'                  # anneau de focus : famille des boutons d'action (rose), ≥ 3:1 sur papier et surface
+  ring: '#C85A00'                  # anneau de focus et « néon » de l'élément sélectionné : orange des boutons d'action, ≥ 3:1 sur papier et surface
   marker: '#954F00'                # marqueur 90 % de la jauge, sans texte (même teinte que warning)
   success: '#097145'
   warning: '#954F00'               # statut « attention »
@@ -54,7 +54,7 @@ colors:
   filet-dark: '#2A2F3A'
   border-dark: '#2A2F3A'
   input-dark: '#6A7287'
-  ring-dark: '#F2709A'
+  ring-dark: '#FFA94D'
   marker-dark: '#F5B547'
   success-dark: '#5FD3A0'
   warning-dark: '#F5B547'
@@ -69,7 +69,7 @@ gradients:
   # --gradient-* ; angle 160deg, statiques (jamais animés). Gradient-2 : noir, bleu nuit, violet, rose, corail (références d'Alex) ; jamais un statut ni une série : ni statut ni série de graphique. Valeurs sombres entre parenthèses dans les commentaires.
   gradient-1: 'linear-gradient(160deg, #F0E9DC, #E6DECE)'   # texte encre 14,13 (sombre : #0E1014 › #161A21, texte 15,42)
   gradient-2: 'radial-gradient(90% 75% at 100% 100%, #F0643A, #C2306A 38%, transparent), radial-gradient(85% 75% at 0% 80%, #7A3A9A, #1B1F4A 50%, transparent), linear-gradient(#05070C, #05070C)'   # « couchant », valeur SOMBRE (clair : docs/refonte/palettes.py, GRADIENT_SUNSET) ; texte dans les 45 % du haut, pire pixel 12,01 (clair 11,01)
-  gradient-action: 'linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%)'   # boutons d'action ; texte encre #0F1115, pire pixel 6,77 sur toute la surface ; identique en clair et en sombre
+  gradient-action: 'linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%)'   # boutons d'action, coucher de soleil jaune-orangé ; texte encre #0F1115 ; identique en clair et en sombre
 typography:
   # Hanken Grotesk (titres et corps) et IBM Plex Mono (chiffres) remplacent Geist. Chiffres tabulaires sur montants et dates.
   display:
@@ -180,7 +180,7 @@ Le produit hérite de shadcn/ui (style `new-york`, base `neutral`, icônes `luci
 Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe `-dark`). Les valeurs sont calculées et testées dans `docs/refonte/palettes.py` et `docs/refonte/contrastes.py`.
 
 - **Papier `{colors.background}`** : fond de page. **Surface `{colors.card}`** : cartes, panneaux, lignes de tableau, utilisée avec parcimonie. **Encre `{colors.foreground}`** : texte. **`{colors.muted-foreground}`** : texte secondaire (≥ 4,5:1 sur papier et sur surface).
-- **Cobalt `{colors.primary}`** : la **signature**. Lien, case cochée, élément actif de la barre latérale (le focus a sa propre couleur, voir ci-dessous). En sombre : `{colors.primary-dark}`. **Focus** : anneau `{colors.ring}` (rose, famille des boutons d'action) de 2 px décalé de 2 px sur le fond, pour rester visible autour d'un bouton rose ; 3,35 sur papier clair, 6,85 en sombre.
+- **Cobalt `{colors.primary}`** : la **signature**. Lien, case cochée, élément actif de la barre latérale (le focus a sa propre couleur, voir ci-dessous). En sombre : `{colors.primary-dark}`. **Néon** : dans la barre latérale, c'est **l'icône** qui s'allume (couleur `{colors.ring}` et halo de même couleur, classe `.neon-icon`), au survol, au focus et pour la catégorie active, sans cadre ni fond ; le libellé de la catégorie active est en gras et porte `aria-current`, jamais le halo seul. Pour un filtre actif (bandeaux), le **contour** s'allume : 1 px `{colors.ring}` et halo extérieur et intérieur, classe `.neon`. **Focus** : anneau `{colors.ring}` (orange des boutons d'action) de 2 px décalé de 2 px sur le fond, pour rester visible autour d'un bouton orange ; 3,54 sur papier clair, 10,00 en sombre.
 - **Filet `{colors.filet}`** (= `{colors.border}`) : séparation décorative de 1 px (lignes, sections). Pas d'exigence de contraste, **jamais seul pour délimiter un champ**. **Bordure de champ `{colors.input}`** : champs, cases, séparations de grande section, ≥ 3:1 sur papier et sur surface.
 - **États (toujours icône + mot)** : succès `{colors.success}`, attention `{colors.warning}`, erreur `{colors.destructive}` ; équivalents `-dark` en sombre. Trois jetons séparés, ≥ 4,5:1 en texte, **aucun n'est bleu** : la signature ne se confond avec aucun statut (écart de teinte ≥ 77°).
 - **Marqueur `{colors.marker}`** : uniquement le marqueur 90 % de la jauge de plafond (FR-14 règle 3), sans texte, même teinte que l'attention. La jauge repose sur le fond papier, jamais dans une carte Surface.
@@ -200,9 +200,9 @@ Les jetons sont sémantiques et définis ensemble en clair et en sombre (suffixe
 | Attention | 5,12 / 4,62 | 10,50 / 9,62 |
 | Erreur | 5,41 / 4,89 | 8,34 / 7,64 |
 | Bordure de champ | 3,37 / 3,04 | 3,96 / 3,63 |
-| Focus (anneau rose) | 3,35 / 3,03 | 6,85 / 6,28 |
+| Focus et « néon » (anneau orange) | 3,54 / 3,19 | 10,00 / 9,17 |
 | Ratio le plus bas, texte | 4,54 (succès sur surface) | 6,38 |
-| Ratio le plus bas, non-texte | 3,03 (focus sur surface) | 3,63 |
+| Ratio le plus bas, non-texte | 3,04 (bordure de champ sur surface) | 3,63 |
 
 ### Dégradés (`--gradient-*`)
 
@@ -241,14 +241,16 @@ Seuls les composants propres à LogMerry sont spécifiés ; leur comportement es
 
 | Composant | Spécification visuelle |
 |---|---|
-| `button-primary` | **Bouton d'action** : fond `{gradients.gradient-action}` (violet pâle › rose › corail, 135°), texte `{colors.action-foreground}` (6,77 au pire pixel), rayon `{rounded.md}`, hauteur minimale 36 px ; survol : légèrement éclairci ; désactivé : opacité 50 %. Le cobalt ne sert plus de fond de bouton. |
+| `button-primary` | **Bouton d'action** : fond `{gradients.gradient-action}` (jaune › orange › orange vif, 135°), texte `{colors.action-foreground}` (6,77 au pire pixel), rayon `{rounded.md}`, hauteur minimale 36 px ; survol : légèrement éclairci ; désactivé : opacité 50 %. Le cobalt ne sert plus de fond de bouton. |
 | `task-row` | Fond `{colors.card}`, bordure `{colors.filet}`, rayon `{rounded.md}`. Case à cocher à gauche (bordure `{colors.input}`), titre en `{typography.body}` gras, **motif** (`task-motif`) sous le titre : icône lucide + texte `{typography.label}` en `{colors.muted-foreground}`. Tâche cochée : titre barré et icône de coche, pas seulement une teinte. |
 | `plafond-bar` | Barre type bullet chart : remplissage `{colors.primary}`, marqueur vertical 90 % `{colors.marker}` de 3 px, entouré d'un liseré de 2 px `{colors.background}` et dépassant de 4 px de chaque côté de la piste (marqueur contre fond : 5,12 en clair, 10,50 en sombre). La barre ne contient aucun texte. Fond de piste `{colors.background}` ; piste à bordure `{colors.input}`. Le chiffre et le seuil s'affichent à côté, en `{typography.numeric}`. Marqueur `aria-hidden`. Jamais dans une carte Surface. En `forced-colors: active`, piste, remplissage et marqueur passent par `border`/`outline` (`Highlight`/`CanvasText`), pas seulement `background`. |
 | `estimation-label` | Étiquette « estimation » : bordure `{colors.border}`, rayon `{rounded.sm}`, icône + texte `{typography.label}`. Accompagne tout montant calculé. |
 | `status-badge` | Pastille `{rounded.full}` : icône + mot, couleur d'état en complément (succès, attention, erreur) ; le statut « prospect » utilise la signature avec une icône distincte, jamais une couleur de statut. |
 | `assistant-panel` | Panneau ancré à droite, fond `{colors.popover}`, bordure `{colors.border}`, rayon `{rounded.lg}`. Réponse en `{typography.body}`, puces lisibles en diagonale, sources dessous. |
 | `citation-chip` | Puce `{rounded.full}`, fond `{colors.muted}`, bordure `{colors.border}`, titre de la Note source ; focus visible `{colors.ring}`. |
-| `gradient-banner` | **Bandeau d'en-tête de chaque écran principal** (Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note) : `{gradients.gradient-2}`, rayon `{rounded.lg}`, filet `{colors.filet}`, titre de page en `{colors.foreground}` posé **en haut** (zone calme, 45 % du haut) ; hauteur d'environ 170 px pour que le dégradé se voie ; titre seul, sur une ligne. Au-dessus du contenu, jamais derrière. |
+| `gradient-banner` | **Bandeau d'en-tête de chaque écran principal** (Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note) : `{gradients.gradient-2}`, rayon `{rounded.lg}`, filet `{colors.filet}`, titre de page en `{colors.foreground}` posé **en haut** (zone calme, 45 % du haut) ; hauteur d'environ 170 px pour que le dégradé se voie ; titre sur une ligne, en haut ; une **explication courte facultative** (état vide, cockpit sans tâche) se place au bas du bandeau, dans un cartouche presque opaque (`{colors.background}` à 90 %, texte `{colors.foreground}`) ; les **filtres** (pastilles) sont posés directement sur le bandeau, chacune avec son propre fond `{colors.background}` à 90 % : le texte ne repose jamais directement sur la zone colorée du dégradé. Au-dessus du contenu, jamais derrière. |
+| `client-card` | Carte de la **fiche** (page d'un client ou prospect) : grande (`{rounded.lg}`, bordure de 2 px `{colors.filet}`, fond `{gradients.gradient-1}`), tuile d'icône (bâtiment) de 56 px, nom en `{typography.heading}` gras, puis statut, origine et dates. Bouton « Modifier » (lien vers la page de modification). |
+| `contact-card` | Carte d'un **contact**, plus petite que la fiche : `{rounded.md}`, fond `{colors.card}`, **avatar rond** d'initiales (`{colors.primary}` à 15 %), nom, fonction, e-mail, téléphone, adresse, boutons « Modifier » et « Supprimer » ; en grille de deux colonnes sous le titre « Contacts ». La différence de taille, de forme (tuile carrée contre avatar rond) et de fond permet de distinguer la fiche et ses contacts d'un coup d'œil. |
 | `data-table` | Shadcn Table sur `{colors.card}`, lignes séparées par `{colors.border}`, en-têtes `{typography.label}`, chiffres tabulaires alignés à droite. |
 | `backlog-summary` | Ligne plate sous la liste des tâches du Cockpit : icône lucide + texte `{typography.label}` en `{colors.muted-foreground}` (7,34 sur papier en clair, 8,37 en sombre) ; le libellé est un lien `{colors.foreground}` souligné. Sans fond, sans bordure, sans case : ce n'est pas une tâche. |
 | `contact-form` | **Après MVP** (au MVP : simple lien « m'écrire » `{colors.primary}`, souligné, focus `{colors.ring}`). Formulaire du portfolio public : shadcn Input, Textarea et Button, libellés visibles au-dessus des champs, bordures `{colors.input}`, rayon `{rounded.sm}`, erreurs en `{colors.destructive}` avec icône + texte. Comportement : EXPERIENCE.md, Component Patterns. |

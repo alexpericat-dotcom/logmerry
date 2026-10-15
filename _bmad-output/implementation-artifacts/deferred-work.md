@@ -63,3 +63,28 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-appliquer-le-theme-logmerry.md`
   summary: tester le contraste du texte sur les dégradés (Forest sur dégradé 1 et 2, Chalk sur dégradé 5) quand ils seront utilisés, avec le portfolio public et le bandeau du Cockpit.
   evidence: les paires validées de `DESIGN.md` (10,60 ; 7,47 ; 6,65) ne sont pas encore couvertes par un test, car aucun écran n'utilise ces dégradés avec du texte.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Téléphone et adresse (postale) d'un client ou d'un contact, et remarque libre sur une fiche.
+  evidence: Non prévus par l'epic 3 (un contact n'a que nom et e-mail facultatif, story 3.2) ; Alex a demandé où seraient e-mail, coordonnées et adresse ; à décider avec la story 3.2.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Tester les Server Actions des notes et des fiches (zéro ligne touchée → « n'existe plus », session absente, identifiant invalide) avec `next/navigation` et `next/cache` remplacés.
+  evidence: Retirer `.select("id")` ou inverser `data?.length` ferait afficher un succès sur une fiche d'un autre compte ; le test d'isolation ne vérifie que la base. Choix repris des notes (colle fine), à revoir.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Après l'envoi d'un formulaire (notes, fiches) : message de succès et focus sur le premier champ en erreur.
+  evidence: Relecteur aveugle ; commun à tous les formulaires, à traiter avec l'accessibilité (story 7.2).
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
+  summary: Décider le comportement `on delete` des clés étrangères vers `clients` (missions, devis, factures) : refuser ou conserver, et le dire dans le message de suppression.
+  evidence: Le message actuel dit « définitif » ; dès qu'une mission référence une fiche, la suppression doit être pensée (story 3.4).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: Adresse et téléphone sur la fiche client elle-même (entreprise), à saisir avec l'epic 4 (factures).
+  evidence: Alex a dit « plus tard » ; l'adresse d'une entreprise appartient à la fiche plus qu'à un contact, et les factures en auront besoin.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: « Contact principal » par fiche (un seul).
+  evidence: Alex a dit « on garde pour plus tard » ; demande une règle de base garantissant l'unicité par fiche.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
+  summary: Tester aussi les Server Actions des contacts (ajout, modification, suppression) et `promoteToClient`, avec la même solution que pour les notes et les fiches.
+  evidence: Relecteurs (lacune de vérification) : changer `promoteToClient` en `status: "prospect"` ou retirer `.select("id")` laisserait tous les tests passer.

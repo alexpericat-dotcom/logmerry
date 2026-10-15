@@ -21,9 +21,9 @@ PALETTES = {
         "nom": "Cobalt",
         "idee": "Papier chaud, encre noire, un bleu électrique de type éditorial suisse. Aucun statut n'est bleu : la signature ne se confond avec rien.",
         "light": dict(paper="#F0E9DC", surface="#E6DECE", ink="#0F1115", muted="#4B5160", rule="#D3C9B5", rule_strong="#797E89",
-                      signature="#1D3BFF", ring="#DF417C", on_signature="#FFFFFF", success="#097145", attention="#954F00", danger="#B3261E"),
+                      signature="#1D3BFF", ring="#C85A00", on_signature="#FFFFFF", success="#097145", attention="#954F00", danger="#B3261E"),
         "dark": dict(paper="#0E1014", surface="#161A21", ink="#F2F1EC", muted="#A6ACBA", rule="#2A2F3A", rule_strong="#6A7287",
-                     signature="#8195FF", ring="#F2709A", on_signature="#0E1014", success="#5FD3A0", attention="#F5B547", danger="#FF8A80"),
+                     signature="#8195FF", ring="#FFA94D", on_signature="#0E1014", success="#5FD3A0", attention="#F5B547", danger="#FF8A80"),
     },
     "3-ultraviolet": {
         "nom": "Ultraviolet",
@@ -47,5 +47,5 @@ GRADIENT_SUNSET = {
     "light": dict(text="#0F1115", css="radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242,112,154,0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220,212,245,0) 100%), linear-gradient(#F0E9DC, #F0E9DC)"),
 }
 
-# Dégradé d'action (boutons) : même famille que le « couchant », resserré pour que le texte reste lisible sur toute la surface. Identique en clair et en sombre.
-GRADIENT_ACTION = dict(text="#0F1115", css="linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%)")
+# Dégradé d'action (boutons) : coucher de soleil jaune-orangé (choix d'Alex du 2026-10-15), resserré pour que le texte reste lisible sur toute la surface. Identique en clair et en sombre.
+GRADIENT_ACTION = dict(text="#0F1115", css="linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%)")

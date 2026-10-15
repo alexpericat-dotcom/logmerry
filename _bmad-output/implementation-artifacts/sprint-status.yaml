@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-13-2026 23:30
+last_updated: 10-15-2026 11:30
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -49,9 +49,9 @@ development_status:
   2-4-rechercher-dans-mes-notes-avec-k: done
   epic-2-retrospective: optional
 
-  epic-3: backlog
-  3-1-gérer-mes-prospects-et-clients: backlog
-  3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: backlog
+  epic-3: in-progress
+  3-1-gérer-mes-prospects-et-clients: review
+  3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: review
   3-3-lier-une-note-à-un-client-ou-un-prospect: backlog
   3-4-créer-des-missions: backlog
   3-5-découper-une-mission-en-étapes: backlog
@@ -102,7 +102,7 @@ development_status:
   8-10-retrouver-mon-historique: done
   8-11-dire-je-ne-trouve-pas-et-créer-une-note-à-documenter: done
   8-12-garde-fous-et-explication-des-estimations: backlog
-  8-13-résumé-automatique-d-une-note: backlog
+  8-13-résumé-automatique-d-une-note: review
   8-14-jeu-de-test-du-rag-et-score: done
   8-15-test-de-fuite-sur-l-assistant-et-l-historique: done
   epic-8-retrospective: optional

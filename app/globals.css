@@ -28,7 +28,7 @@
     --filet: 40 25.4% 76.9%; /* #D3C9B5 */
     --border: 40 25.4% 76.9%; /* #D3C9B5 */
     --input: 221.2 6.3% 50.6%; /* #797E89 */
-    --ring: 337.6 71.2% 56.5%; /* #DF417C */
+    --ring: 27 100% 39.2%; /* #C85A00 */
     --success: 154.6 85.2% 23.9%; /* #097145 */
     --warning: 31.8 100% 29.2%; /* #954F00 */
     --marker: 31.8 100% 29.2%; /* #954F00 */
@@ -39,7 +39,7 @@
     --chart-5: 300 80.4% 40%; /* #B814B8 */
     --radius: 0.5rem;
     /* Dégradés de DESIGN.md (statiques, jamais animés). « couchant » : texte dans les 45 % du haut seulement. */
-    --gradient-action: linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%); /* boutons d'action ; texte --action-foreground */
+    --gradient-action: linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%); /* boutons d'action ; texte --action-foreground */
     --gradient-1: linear-gradient(160deg, #F0E9DC, #E6DECE);
     --gradient-2: radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242, 112, 154, 0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220, 212, 245, 0) 100%), linear-gradient(#F0E9DC, #F0E9DC);
   }
@@ -65,7 +65,7 @@
     --filet: 221.2 16% 19.6%; /* #2A2F3A */
     --border: 221.2 16% 19.6%; /* #2A2F3A */
     --input: 223.4 12% 47.3%; /* #6A7287 */
-    --ring: 340.6 83.3% 69.4%; /* #F2709A */
+    --ring: 31 100% 65.1%; /* #FFA94D */
     --success: 153.6 56.9% 60%; /* #5FD3A0 */
     --warning: 37.9 89.7% 62%; /* #F5B547 */
     --marker: 37.9 89.7% 62%; /* #F5B547 */
@@ -74,9 +74,30 @@
     --chart-3: 269.8 80.4% 70%; /* #B275F0 */
     --chart-4: 45 80.4% 60%; /* #EBC247 */
     --chart-5: 345 80.4% 60%; /* #EB4770 */
-    --gradient-action: linear-gradient(135deg, #C9A6F0 0%, #F2709A 55%, #FF8A5C 100%);
+    --gradient-action: linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%);
     --gradient-1: linear-gradient(160deg, #0E1014, #161A21);
     --gradient-2: radial-gradient(90% 75% at 100% 100%, #F0643A 0%, #C2306A 38%, rgba(194, 48, 106, 0) 100%), radial-gradient(85% 75% at 0% 80%, #7A3A9A 0%, #1B1F4A 50%, rgba(27, 31, 74, 0) 100%), linear-gradient(#05070C, #05070C);
+  }
+}
+
+/* « Néon » : l'élément sélectionné (catégorie de la barre latérale, filtre actif) s'allume : contour de la couleur d'accent des actions et halo. L'état reste aussi porté par le gras et aria-current. */
+@layer components {
+  .neon {
+    border-color: hsl(var(--ring));
+    box-shadow:
+      0 0 0 1px hsl(var(--ring)),
+      0 0 12px hsl(var(--ring) / 0.55),
+      inset 0 0 10px hsl(var(--ring) / 0.25);
+  }
+  @media (forced-colors: active) {
+    .neon {
+      outline: 2px solid Highlight;
+    }
+  }
+  /* Néon sur une icône (barre latérale) : la couleur d'accent et un halo, sans cadre ni fond. */
+  .neon-icon {
+    color: hsl(var(--ring));
+    filter: drop-shadow(0 0 3px hsl(var(--ring) / 0.9)) drop-shadow(0 0 9px hsl(var(--ring) / 0.55));
   }
 }
 

@@ -15,6 +15,8 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "border-dashed border-input bg-accent/40 text-foreground",
+        // Signature (cobalt) : le statut « prospect », distinct des couleurs d'état.
+        signature: "border-transparent bg-primary/15 text-foreground [&_svg]:text-primary",
         // États (icône + texte, jamais la couleur seule) : succès et avertissement de DESIGN.md.
         // Fond teinté, texte en encre (lisible en clair comme en sombre) ; la couleur d'état est portée par l'icône.
         success: "border-transparent bg-success/15 text-foreground [&_svg]:text-success",

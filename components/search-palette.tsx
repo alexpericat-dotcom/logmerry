@@ -2,18 +2,30 @@
 
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
-import { searchNotes, type SearchResult } from "@/app/(app)/notes/search-actions";
+import {
+  searchNotes,
+  type ClientHit,
+  type SearchResult,
+} from "@/app/(app)/notes/search-actions";
 import { useAssistant } from "@/components/assistant-provider";
+import { ClientStatusBadge } from "@/components/client-status";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CLIENT_ORIGIN_LABELS } from "@/lib/domain/clients";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 import { SEARCH_MAX, normalizeQuery } from "@/lib/domain/search";
 import { cn } from "@/lib/utils";
 
 const DELAY_MS = 200;
+
+/** Une ligne de résultat : une note ou une fiche ; l'ordre de la liste est celui de la navigation au clavier. */
+type Item =
+  | { kind: "note"; id: string; note: SearchResult }
+  | { kind: "client"; id: string; client: ClientHit };
+const optionId = (item: Item) => `search-${item.kind}-${item.id}`;
 
 /** Bouton « Rechercher » + palette ⌘K / Ctrl+K (<dialog> natif : piège de focus, Échap et retour du focus). */
 export function SearchPalette({ labelClass }: { labelClass: string }) {
@@ -23,6 +35,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
   const latest = useRef(0);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [clients, setClients] = useState<ClientHit[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [answered, setAnswered] = useState(""); // requête à laquelle correspondent les résultats
   const [active, setActive] = useState(0);
@@ -31,7 +44,12 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.isComposing || e.key.toLowerCase() !== "k" || !(e.metaKey || e.ctrlKey)) return;
+      if (
+        e.isComposing ||
+        e.key.toLowerCase() !== "k" ||
+        !(e.metaKey || e.ctrlKey)
+      )
+        return;
       e.preventDefault();
       if (!dialog.current?.open) open();
     };
@@ -49,10 +67,15 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
       try {
         state = await searchNotes(q);
       } catch {
-        state = { results: [], message: "Recherche impossible pour le moment. Réessaie." };
+        state = {
+          results: [],
+          clients: [],
+          message: "Recherche impossible pour le moment. Réessaie.",
+        };
       }
       if (id !== latest.current) return; // réponse périmée
       setResults(state.results);
+      setClients(state.clients);
       setMessage(state.message ?? null);
       setActive(0);
       setAnswered(q);
@@ -62,22 +85,48 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   // Les résultats ne valent que pour la saisie à laquelle ils répondent.
   const done = !!q && answered === q;
-  const shown = useMemo(() => (done ? results : []), [done, results]);
+  const shown = useMemo<Item[]>(
+    () =>
+      done
+        ? [
+            ...results.map((note): Item => ({
+              kind: "note",
+              id: note.id,
+              note,
+            })),
+            ...clients.map((client): Item => ({
+              kind: "client",
+              id: client.id,
+              client,
+            })),
+          ]
+        : [],
+    [done, results, clients],
+  );
 
   // Entrée « Demander à l'assistant » en tête dès qu'une requête est saisie ; les résultats suivent.
   const hasAssistant = !!q;
   const total = (hasAssistant ? 1 : 0) + shown.length;
   const current = Math.min(active, Math.max(total - 1, 0)); // l'index peut être périmé quand les résultats changent
   const activeResult = hasAssistant ? shown[current - 1] : shown[current];
-  const activeId = !total ? undefined : hasAssistant && current === 0 ? "search-assistant" : activeResult ? `search-${activeResult.id}` : undefined;
+  const activeId = !total
+    ? undefined
+    : hasAssistant && current === 0
+      ? "search-assistant"
+      : activeResult
+        ? optionId(activeResult)
+        : undefined;
 
   useEffect(() => {
-    if (activeId) document.getElementById(activeId)?.scrollIntoView({ block: "nearest" });
+    if (activeId)
+      document.getElementById(activeId)?.scrollIntoView({ block: "nearest" });
   }, [activeId]);
 
-  const choose = (r: SearchResult) => {
+  const choose = (item: Item) => {
     dialog.current?.close();
-    router.push(`/notes/${r.id}`);
+    router.push(
+      item.kind === "note" ? `/notes/${item.id}` : `/clients/${item.id}`,
+    );
   };
 
   const askAssistant = () => {
@@ -96,7 +145,9 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
     e.preventDefault();
   };
 
-  const status = done ? (message ?? (shown.length ? "" : "Aucun résultat")) : "";
+  const status = done
+    ? (message ?? (shown.length ? "" : "Aucun résultat"))
+    : "";
 
   return (
     <>
@@ -113,7 +164,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
       <dialog
         ref={dialog}
-        aria-label="Rechercher dans mes notes"
+        aria-label="Rechercher dans mes notes et mes clients"
         onClose={() => {
           setQuery("");
           setAnswered("");
@@ -121,7 +172,11 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
         onClick={(e) => {
           // Seul le fond (hors du cadre) ferme ; le rembourrage du cadre ne ferme pas.
           const r = e.currentTarget.getBoundingClientRect();
-          const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+          const outside =
+            e.clientX < r.left ||
+            e.clientX > r.right ||
+            e.clientY < r.top ||
+            e.clientY > r.bottom;
           if (outside) e.currentTarget.close();
         }}
         className="m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg backdrop:bg-black/50"
@@ -131,15 +186,20 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           aria-expanded={total > 0}
           aria-controls="search-results"
           aria-activedescendant={activeId}
-          aria-label="Rechercher dans mes notes"
-          placeholder="Rechercher dans mes notes…"
+          aria-label="Rechercher dans mes notes et mes clients"
+          placeholder="Rechercher une note, un client, un prospect…"
           maxLength={SEARCH_MAX}
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onInputKey}
         />
-        <ul id="search-results" role="listbox" aria-label="Résultats" className="mt-2 max-h-80 overflow-y-auto">
+        <ul
+          id="search-results"
+          role="listbox"
+          aria-label="Résultats"
+          className="mt-2 max-h-80 overflow-y-auto"
+        >
           {hasAssistant && (
             <li
               id="search-assistant"
@@ -147,30 +207,80 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
               aria-selected={current === 0}
               onClick={askAssistant}
               onMouseMove={() => setActive(0)}
-              className={cn("cursor-pointer rounded-md px-2 py-2 font-medium", current === 0 && "bg-accent")}
+              className={cn(
+                "cursor-pointer rounded-md px-2 py-2 font-medium",
+                current === 0 && "bg-accent",
+              )}
             >
               Demander à l&apos;assistant : {q}
             </li>
           )}
-          {shown.map((r, i) => (
-            <li
-              key={r.id}
-              id={`search-${r.id}`}
-              role="option"
-              aria-selected={(hasAssistant ? i + 1 : i) === current}
-              onClick={() => choose(r)}
-              onMouseMove={() => setActive(hasAssistant ? i + 1 : i)}
-              className={cn("cursor-pointer rounded-md px-2 py-2", (hasAssistant ? i + 1 : i) === current && "bg-accent")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="truncate font-medium">{r.title}</span>
-                <Badge variant="secondary">{NOTE_TYPE_LABELS[r.type]}</Badge>
-              </div>
-              {r.excerpt && <p className="truncate text-sm text-muted-foreground">{r.excerpt}</p>}
-            </li>
-          ))}
+          {shown.map((item, i) => {
+            const index = hasAssistant ? i + 1 : i;
+            const group = item.kind === "note" ? "Notes" : "Clients";
+            const firstOfGroup = i === 0 || shown[i - 1].kind !== item.kind;
+            return (
+              <Fragment key={optionId(item)}>
+                {firstOfGroup && (
+                  <li
+                    role="presentation"
+                    className="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
+                    {group}
+                  </li>
+                )}
+                <li
+                  id={optionId(item)}
+                  role="option"
+                  aria-selected={index === current}
+                  onClick={() => choose(item)}
+                  onMouseMove={() => setActive(index)}
+                  className={cn(
+                    "cursor-pointer rounded-md px-2 py-2",
+                    index === current && "bg-accent",
+                  )}
+                >
+                  {item.kind === "note" ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">
+                          {item.note.title}
+                        </span>
+                        <Badge variant="secondary">
+                          {NOTE_TYPE_LABELS[item.note.type]}
+                        </Badge>
+                      </div>
+                      {item.note.excerpt && (
+                        <p className="truncate text-sm text-muted-foreground">
+                          {item.note.excerpt}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-medium">
+                        {item.client.name}
+                      </span>
+                      <ClientStatusBadge status={item.client.status} />
+                      <span className="shrink-0 text-sm text-muted-foreground">
+                        {item.client.via
+                          ? `via ${item.client.via}`
+                          : CLIENT_ORIGIN_LABELS[item.client.origin]}
+                      </span>
+                    </div>
+                  )}
+                </li>
+              </Fragment>
+            );
+          })}
         </ul>
-        <p role="status" className={cn("px-2 pt-2 text-sm text-muted-foreground", !status && "sr-only")}>
+        <p
+          role="status"
+          className={cn(
+            "px-2 pt-2 text-sm text-muted-foreground",
+            !status && "sr-only",
+          )}
+        >
           {status}
         </p>
       </dialog>
