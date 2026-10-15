@@ -23,11 +23,11 @@ export default function Page() {
         <CardContent className="flex flex-col gap-3 text-sm">
           <Link
             href="/auth/forgot-password"
-            className="underline underline-offset-4"
+            className="underline underline-offset-4 max-md:flex max-md:min-h-11 max-md:items-center"
           >
             Demander un nouveau lien
           </Link>
-          <Link href="/auth/login" className="underline underline-offset-4">
+          <Link href="/auth/login" className="underline underline-offset-4 max-md:flex max-md:min-h-11 max-md:items-center">
             Retour à la connexion
           </Link>
         </CardContent>
