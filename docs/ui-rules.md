@@ -34,6 +34,10 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 - Le décor d'accueil du bandeau (`PageBanner hero` : étoile violette, écran au portrait) sert au cockpit seulement, en clair seulement. La connexion (`AuthShell`) affiche la scène du café en clair, la scène de nuit en sombre.
 - Images dans `public/images/`, décoratives (`alt=""`), `image-rendering: pixelated`.
 
+## Premier écran (choix du thème)
+
+`/` est un choix explicite entre les deux thèmes, comme un lien entre le passé et le futur : à gauche **le passé** (clair, rétro pixel, scène du café), à droite **le futur** (sombre, néon, scène de nuit), le logo au centre sur un trait turquoise ; empilés sur téléphone. Chaque moitié montre son thème par les blocs `.light` et `.dark` (indépendants du thème du système) ; un clic enregistre le thème (`next-themes`) et ouvre l'application. Pas de texte de présentation ni de bouton « Se connecter ».
+
 ## Téléphone (sous 768 px, story R8)
 
 - Barre du haut fixe (menu, logo) ; la barre latérale devient un tiroir avec libellés, fermé par défaut, refermé à la navigation, au clic sur le fond, par Échap ou à l'ouverture de l'assistant ; fermé, il est invisible (hors parcours clavier et lecteur d'écran).

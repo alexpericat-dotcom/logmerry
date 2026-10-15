@@ -6,7 +6,8 @@
    modificateurs d'opacité de Tailwind ; la valeur d'origine est rappelée en commentaire. Un test (lib/theme.test.ts)
    vérifie la conformité à DESIGN.md et les contrastes. */
 @layer base {
-  :root {
+  :root,
+  .light {
     color-scheme: light; /* les contrôles natifs (menu déroulant, défilement, saisie) suivent le thème de l'application, pas celui du système */
     --background: 217.5 100% 98.4%; /* #F7FAFF */
     --foreground: 235 47.1% 20%; /* #1B1F4B */

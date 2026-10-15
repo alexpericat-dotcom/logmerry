@@ -13,7 +13,7 @@ type Hsl = [number, number, number];
 /** Jetons « --nom: H S% L% » d'un bloc de app/globals.css (`:root` pour le clair, `.dark` pour le sombre). */
 function tokens(block: ":root" | ".dark"): Record<string, Hsl> {
   const css = read("app/globals.css");
-  const start = css.indexOf(`  ${block} {`);
+  const start = css.indexOf(block === ":root" ? "  :root,\n  .light {" : `  ${block} {`);
   assert.ok(start >= 0, `bloc ${block} introuvable dans globals.css`);
   const body = css.slice(start, css.indexOf("\n  }", start));
   const out: Record<string, Hsl> = {};
@@ -107,7 +107,7 @@ for (const [name, block] of [["clair", ":root"], ["sombre", ".dark"]] as const) 
 test("chaque jeton existe dans les deux thèmes, dégradés compris (un thème ne se livre jamais sans son pendant)", () => {
   assert.deepEqual(Object.keys(tokens(".dark")).sort(), Object.keys(tokens(":root")).sort());
   const css = read("app/globals.css");
-  const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
+  const [light, dark] = [css.indexOf("  :root,\n  .light {"), css.indexOf("  .dark {")];
   for (const g of ["--gradient-1", "--gradient-2", "--gradient-action"]) {
     assert.ok(css.slice(light, dark).includes(`${g}:`), `${g} clair absent`);
     assert.ok(css.slice(dark).includes(`${g}:`), `${g} sombre absent`);
@@ -144,7 +144,7 @@ test("polices : Hanken Grotesk (interface) et IBM Plex Mono (chiffres), auto-hé
 
 test("chaque thème déclare son color-scheme : les contrôles natifs (menu déroulant) suivent le thème de l'application et non celui du système", () => {
   const css = read("app/globals.css");
-  const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
+  const [light, dark] = [css.indexOf("  :root,\n  .light {"), css.indexOf("  .dark {")];
   assert.ok(/color-scheme:\s*light/.test(css.slice(light, dark)), "color-scheme: light dans :root");
   assert.ok(/color-scheme:\s*dark/.test(css.slice(dark, dark + 200)), "color-scheme: dark dans .dark");
   assert.ok(/select option\s*\{[^}]*--popover/.test(css), "options du menu déroulant colorées par les jetons");
@@ -174,7 +174,7 @@ test("clair, direction Arcade : texte marine lisible sur chaque accent décorati
 
 test("clair, direction Arcade : traits et ombres portés par jetons (--border-w, --shadow-hard) dans les deux thèmes, police pixel déclarée", () => {
   const css = read("app/globals.css");
-  const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
+  const [light, dark] = [css.indexOf("  :root,\n  .light {"), css.indexOf("  .dark {")];
   for (const v of ["--border-w", "--shadow-hard", "--banner-size", "--radius"]) {
     assert.ok(css.slice(light, dark).includes(`${v}:`), `${v} clair absent`);
     assert.ok(css.slice(dark).includes(`${v}:`), `${v} sombre absent`);
