@@ -727,3 +727,96 @@ describe("lien d'une note à une fiche entre deux comptes fictifs", () => {
     assert.equal(after.data!.client_id, null, "note conservée, sans lien");
   });
 });
+
+describe("isolation des missions entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let clientA: { id: string };
+  let clientB: { id: string };
+  let mA: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const fa = await a.client.from("clients").insert({ name: `${PREFIX} fiche missions A`, origin: "demo" }).select("id").single();
+    assert.ifError(fa.error);
+    clientA = fa.data!;
+    const fb = await b.client.from("clients").insert({ name: `${PREFIX} fiche missions B`, origin: "demo" }).select("id").single();
+    assert.ifError(fb.error);
+    clientB = fb.data!;
+    const ma = await a.client.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} mission A` }).select("id").single();
+    assert.ifError(ma.error);
+    mA = ma.data!;
+  });
+
+  after(cleanup);
+
+  test("chacun voit ses missions ; owner_id et statut par défaut remplis par la base ; B ne voit rien de A", async () => {
+    const own = await a.client.from("missions").select("owner_id, status").eq("id", mA.id).single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.status, "in_progress");
+    assert.ok(!(await b.client.from("missions").select("id")).data!.some((m) => m.id === mA.id));
+    assert.equal((await b.client.from("missions").select("id").eq("id", mA.id).maybeSingle()).data, null);
+  });
+
+  test("B ne peut ni modifier ni supprimer la mission de A", async () => {
+    const upd = await b.client.from("missions").update({ title: "piraté" }).eq("id", mA.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0, "modification refusée");
+    const del = await b.client.from("missions").delete().eq("id", mA.id).select("id");
+    assert.ok(del.error || del.data!.length === 0, "suppression refusée");
+    assert.equal((await a.client.from("missions").select("title").eq("id", mA.id).single()).data!.title, `${PREFIX} mission A`);
+  });
+
+  test("B ne peut pas créer une mission sur la fiche de A, ni déplacer la sienne, ni forger un owner_id", async () => {
+    const onA = await b.client.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} intrus` });
+    assert.equal(onA.error?.code, "42501", "création sur la fiche d'un autre refusée");
+    const mine = await b.client.from("missions").insert({ client_id: clientB.id, title: `${PREFIX} mission B` }).select("id").single();
+    assert.ifError(mine.error);
+    const move = await b.client.from("missions").update({ client_id: clientA.id }).eq("id", mine.data!.id).select("id");
+    assert.ok(move.error || move.data!.length === 0, "déplacement vers la fiche d'un autre refusé");
+    const forged = await b.client.from("missions").insert({ client_id: clientB.id, title: `${PREFIX} forgé`, owner_id: a.userId });
+    assert.equal(forged.error?.code, "42501", "owner_id d'un autre refusé");
+    assert.equal((await a.client.from("missions").select("id").eq("client_id", clientA.id)).data!.length, 1, "la fiche de A n'a reçu aucune mission étrangère");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("missions").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    assert.ok((await anon.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} anonyme` })).error);
+    assert.equal((await anon.from("missions").delete().eq("id", mA.id).select("id")).data?.length ?? 0, 0);
+  });
+
+  test("la base refuse : titre vide ou trop long, statut inconnu, fin avant début, fiche absente", async () => {
+    const ok = { client_id: clientA.id };
+    for (const [label, row] of [
+      ["titre vide", { ...ok, title: "  " }],
+      ["titre trop long", { ...ok, title: "x".repeat(201) }],
+      ["statut inconnu", { ...ok, title: "t", status: "bientôt" }],
+      ["fin avant début", { ...ok, title: "t", start_date: "2026-10-20", end_date: "2026-10-10" }],
+      ["fiche absente", { client_id: "00000000-0000-0000-0000-000000000000", title: "t" }],
+    ] as const) {
+      assert.ok((await a.client.from("missions").insert(row)).error, `${label} refusé`);
+    }
+    assert.ifError((await a.client.from("missions").insert({ ...ok, title: `${PREFIX} dates égales`, start_date: "2026-10-10", end_date: "2026-10-10" })).error);
+  });
+
+  test("une fiche qui a des missions ne se supprime pas (la mission reste) ; sans mission, elle se supprime", async () => {
+    const del = await a.client.from("clients").delete().eq("id", clientA.id).select("id");
+    assert.equal(del.error?.code, "23503", "suppression refusée par la base");
+    assert.equal((await a.client.from("missions").select("id").eq("id", mA.id)).data!.length, 1, "la mission est conservée");
+    assert.ok((await a.client.from("clients").select("id").eq("id", clientA.id).maybeSingle()).data, "la fiche est conservée");
+    assert.ifError((await a.client.from("missions").delete().like("title", `${PREFIX}%`)).error);
+    assert.ifError((await a.client.from("clients").delete().eq("id", clientA.id)).error);
+  });
+});
