@@ -263,7 +263,9 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
                       </span>
                       <ClientStatusBadge status={item.client.status} />
                       <span className="shrink-0 text-sm text-muted-foreground">
-                        {CLIENT_ORIGIN_LABELS[item.client.origin]}
+                        {item.client.via
+                          ? `via ${item.client.via}`
+                          : CLIENT_ORIGIN_LABELS[item.client.origin]}
                       </span>
                     </div>
                   )}

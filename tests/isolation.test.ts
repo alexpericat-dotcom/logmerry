@@ -203,6 +203,17 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     assert.ok(anon.error, "l'appel sans connexion doit être refusé");
   });
 
+  test("recherche sans accents : « ecole » et « école » trouvent « École » (titre et corps), dans les deux sens ; B ne trouve rien de A", async () => {
+    const mk = await a.client.from("notes").insert([{ title: `${PREFIX} École fictive`, body: "Le détail se trouve à la crèche." }]).select("id").single();
+    assert.ifError(mk.error);
+    const ids = async (c: Account, query: string) => ((await c.client.rpc("search_notes", { query })).data ?? []).map((n: { id: string }) => n.id);
+    for (const q of ["ecole", "école", "ÉCOLE", "creche", "crèche", "ecole creche"]) {
+      assert.ok((await ids(a, q)).includes(mk.data!.id), `« ${q} » devrait trouver la note`);
+    }
+    assert.ok(!(await ids(b, "ecole")).includes(mk.data!.id), "B ne trouve pas la note de A");
+    assert.ok(!(await ids(a, "ecoles lointaines")).includes(mk.data!.id), "des mots absents ne trouvent rien");
+  });
+
   test("recherche : corps seul, début de mot, classement, ponctuation, mots vides, limite de 20", async () => {
     const tag = `zq${Date.now().toString(36)}`; // mot unique à cette exécution
     const ins = async (title: string, body: string) => {

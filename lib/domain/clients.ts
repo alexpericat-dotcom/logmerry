@@ -112,19 +112,32 @@ export function viewClients<T extends ClientRow>(all: T[], view: ClientView): { 
 /** Minuscules sans accents : « École » et « ecole » se valent. */
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
+export type SearchableContact = { client_id: string; name: string; job_title: string | null; email: string | null };
+
 /**
- * Recherche dans mes fiches : chaque mot de la saisie doit apparaître dans le nom (accents et casse ignorés) ;
- * les noms qui commencent par la saisie passent d'abord, puis l'ordre alphabétique. `limit` résultats au plus.
- * ponytail : sur la liste lue d'un coup (quelques dizaines de fiches) ; une colonne indexée au-delà de 1 000.
+ * Recherche dans mes fiches : chaque mot de la saisie doit apparaître (accents et casse ignorés) soit dans le nom de la fiche,
+ * soit dans un de ses contacts (nom, fonction, e-mail, et nom de la fiche : « claire brume » trouve la fiche Brume par Claire).
+ * Rang : nom qui commence par la saisie, autre nom correspondant, puis fiches trouvées par un contact (`via` = ce contact) ;
+ * ordre alphabétique à égalité. `limit` résultats au plus.
+ * ponytail : sur les listes lues d'un coup (quelques dizaines de fiches) ; une colonne indexée au-delà de 1 000.
  */
-export function matchClients<T extends { name: string }>(all: T[], query: string, limit = 8): T[] {
+export function matchClients<T extends { id: string; name: string }>(all: T[], query: string, limit = 8, contacts: SearchableContact[] = []): (T & { via?: string })[] {
   const words = fold(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const needle = words.join(" ");
-  return all
-    .map((c) => ({ c, name: fold(c.name) }))
-    .filter(({ name }) => words.every((w) => name.includes(w)))
-    .sort((a, b) => Number(b.name.startsWith(needle)) - Number(a.name.startsWith(needle)) || a.name.localeCompare(b.name, "fr"))
+  const has = (hay: string) => words.every((w) => hay.includes(w));
+  const hits: { c: T & { via?: string }; name: string; rank: number }[] = [];
+  for (const c of all) {
+    const name = fold(c.name);
+    if (has(name)) {
+      hits.push({ c, name, rank: name.startsWith(needle) ? 0 : 1 });
+      continue;
+    }
+    const viaContact = contacts.find((k) => k.client_id === c.id && has(fold([k.name, k.job_title ?? "", k.email ?? "", c.name].join(" "))));
+    if (viaContact) hits.push({ c: { ...c, via: viaContact.name }, name, rank: 2 });
+  }
+  return hits
+    .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "fr"))
     .slice(0, limit)
     .map(({ c }) => c);
 }

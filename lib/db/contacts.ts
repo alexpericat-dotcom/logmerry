@@ -28,3 +28,11 @@ export async function listContacts(clientId: string): Promise<ContactRecord[]> {
   if (error) throw new Error("Impossible de charger les contacts.");
   return data as ContactRecord[];
 }
+
+/** Les champs cherchables de tous mes contacts (la RLS limite aux miens) : pour retrouver une fiche à partir d'un contact. */
+export async function listAllContactsForSearch(): Promise<Pick<ContactRecord, "client_id" | "name" | "job_title" | "email">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("contacts").select("client_id, name, job_title, email");
+  if (error) throw new Error("Impossible de charger les contacts.");
+  return data as Pick<ContactRecord, "client_id" | "name" | "job_title" | "email">[];
+}

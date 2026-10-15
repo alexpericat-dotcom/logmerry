@@ -89,13 +89,31 @@ test("liste vide : total 0, aucune erreur", () => {
 });
 
 test("recherche de fiches : accents et casse ignorés, tous les mots requis, début de nom d'abord, limite", () => {
-  const all = [{ name: "Coopérative Aval" }, { name: "École Lanterne" }, { name: "Atelier Brume" }, { name: "Brume & Fils" }, { name: "Zélie" }];
-  assert.deepEqual(matchClients(all, "ecole").map((c) => c.name), ["École Lanterne"]);
-  assert.deepEqual(matchClients(all, "LANTERNE école").map((c) => c.name), ["École Lanterne"], "ordre des mots libre");
-  assert.deepEqual(matchClients(all, "brume").map((c) => c.name), ["Brume & Fils", "Atelier Brume"], "le nom qui commence par la saisie passe d'abord");
-  assert.deepEqual(matchClients(all, "brume lanterne"), [], "tous les mots sont requis");
-  assert.deepEqual(matchClients(all, "   "), []);
-  assert.equal(matchClients(Array.from({ length: 20 }, (_, i) => ({ name: `Client ${i}` })), "client").length, 8);
-  assert.equal(matchClients(Array.from({ length: 20 }, (_, i) => ({ name: `Client ${i}` })), "client", 3).length, 3);
-  assert.deepEqual(matchClients(all, "%"), [], "les caractères spéciaux n'ont aucun effet");
+  const all = ["Coopérative Aval", "École Lanterne", "Atelier Brume", "Brume & Fils", "Zélie"].map((name, i) => ({ id: String(i), name }));
+  const names = (q: string) => matchClients(all, q).map((c) => c.name);
+  assert.deepEqual(names("ecole"), ["École Lanterne"]);
+  assert.deepEqual(names("LANTERNE école"), ["École Lanterne"], "ordre des mots libre");
+  assert.deepEqual(names("brume"), ["Brume & Fils", "Atelier Brume"], "le nom qui commence par la saisie passe d'abord");
+  assert.deepEqual(names("brume lanterne"), [], "tous les mots sont requis");
+  assert.deepEqual(names("   "), []);
+  const many = Array.from({ length: 20 }, (_, i) => ({ id: String(i), name: `Client ${i}` }));
+  assert.equal(matchClients(many, "client").length, 8);
+  assert.equal(matchClients(many, "client", 3).length, 3);
+  assert.deepEqual(names("%"), [], "les caractères spéciaux n'ont aucun effet");
+});
+
+test("recherche de fiches par leurs contacts : nom, fonction, e-mail ; accents ignorés ; via = le contact ; noms de fiche d'abord", () => {
+  const all = [{ id: "a", name: "Atelier Brume" }, { id: "b", name: "Coopérative Aval" }, { id: "c", name: "Claire Conseil" }];
+  const contacts = [
+    { client_id: "a", name: "Élodie Martin", job_title: "Directrice", email: "elodie@brume.example" },
+    { client_id: "b", name: "Basile Roux", job_title: null, email: null },
+  ];
+  const r = (q: string) => matchClients(all, q, 8, contacts).map((c) => `${c.name}${c.via ? ` (via ${c.via})` : ""}`);
+  assert.deepEqual(r("elodie"), ["Atelier Brume (via Élodie Martin)"], "accents ignorés");
+  assert.deepEqual(r("directrice"), ["Atelier Brume (via Élodie Martin)"], "fonction");
+  assert.deepEqual(r("brume.example"), ["Atelier Brume (via Élodie Martin)"], "e-mail");
+  assert.deepEqual(r("elodie brume"), ["Atelier Brume (via Élodie Martin)"], "nom du contact et de la fiche ensemble");
+  assert.deepEqual(r("claire"), ["Claire Conseil"], "une fiche dont le nom correspond n'est pas « via » un contact");
+  assert.deepEqual(r("roux aval"), ["Coopérative Aval (via Basile Roux)"]);
+  assert.deepEqual(r("roux brume"), [], "un mot du contact d'une autre fiche ne compte pas");
 });

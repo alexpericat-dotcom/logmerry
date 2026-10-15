@@ -3,13 +3,15 @@
 import { redirect } from "next/navigation";
 
 import { listAllClients } from "@/lib/db/clients";
+import { listAllContactsForSearch } from "@/lib/db/contacts";
 import { matchClients, type ClientOrigin, type ClientStatus } from "@/lib/domain/clients";
 import { excerpt, type NoteType } from "@/lib/domain/notes";
 import { normalizeQuery } from "@/lib/domain/search";
 import { createClient } from "@/lib/supabase/server";
 
 export type SearchResult = { id: string; title: string; type: NoteType; excerpt: string };
-export type ClientHit = { id: string; name: string; status: ClientStatus; origin: ClientOrigin };
+/** `via` : le contact qui a fait trouver la fiche (absent quand c'est le nom de la fiche qui correspond). */
+export type ClientHit = { id: string; name: string; status: ClientStatus; origin: ClientOrigin; via?: string };
 export type SearchState = { results: SearchResult[]; clients: ClientHit[]; message?: string };
 
 const SEARCH_FAILED = "Recherche impossible pour le moment. Réessaie.";
@@ -28,8 +30,8 @@ export async function searchNotes(raw: string): Promise<SearchState> {
     if (authError || !claims?.claims) {
       signedOut = true;
     } else if (query) {
-      const [{ data, error }, all] = await Promise.all([supabase.rpc("search_notes", { query }), listAllClients()]);
-      clients = matchClients(all, query).map((c) => ({ id: c.id, name: c.name, status: c.status, origin: c.origin }));
+      const [{ data, error }, all, contacts] = await Promise.all([supabase.rpc("search_notes", { query }), listAllClients(), listAllContactsForSearch()]);
+      clients = matchClients(all, query, 8, contacts).map((c) => ({ id: c.id, name: c.name, status: c.status, origin: c.origin, via: c.via }));
       if (error) failed = true;
       else {
         results = (data ?? []).map((n: { id: string; title: string; body: string; type: NoteType }) => ({
