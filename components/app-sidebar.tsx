@@ -154,7 +154,7 @@ export function AppSidebar({
           }}
           aria-expanded={assistant.isOpen}
           title={assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}
-          className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:rounded-md dark:border-0 dark:border-l-[3px] dark:hover:border-transparent"
         >
           <MessageSquare size={16} aria-hidden="true" />
           <span className={labelClass}>{assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}</span>
@@ -166,7 +166,7 @@ export function AppSidebar({
           {NAV_ITEMS.map((item) => {
             const Icon = ICONS[item.icon];
             const base =
-              "flex h-9 items-center gap-3 rounded-sm border px-2 text-sm max-md:h-11";
+              "flex h-9 items-center gap-3 rounded-sm border px-2 text-sm max-md:h-11 dark:rounded-md dark:border-0 dark:border-l-[3px]";
             if (!item.available) {
               return (
                 <li key={item.href}>
@@ -192,8 +192,8 @@ export function AppSidebar({
                   aria-current={current ? "page" : undefined}
                   className={cn(
                     base,
-                    "group border-transparent hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current && "neon font-bold hover:bg-tone-orange dark:bg-accent dark:hover:bg-accent",
+                    "group border-transparent hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:hover:border-transparent dark:hover:bg-transparent",
+                    current && "neon-light font-bold",
                   )}
                 >
                   <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "dark:neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
@@ -206,16 +206,16 @@ export function AppSidebar({
       </nav>
 
       <div className="flex flex-col gap-2 border-t p-2">
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center gap-2 px-1 dark:block dark:px-0">
           <Image
             src="/images/alex-portrait.png"
             alt=""
             width={32}
             height={32}
             unoptimized
-            className="size-8 shrink-0 border-2 object-cover [image-rendering:pixelated]"
+            className="size-8 shrink-0 border-2 object-cover [image-rendering:pixelated] dark:hidden"
           />
-          {email && <p className={cn("min-w-0 truncate text-xs text-muted-foreground", labelClass)}>{email}</p>}
+          {email && <p className={cn("min-w-0 truncate text-xs text-muted-foreground dark:px-2", labelClass)}>{email}</p>}
         </div>
         <LogoutButton compact={collapsed} />
         <ThemeSwitcher />

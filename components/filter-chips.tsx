@@ -15,8 +15,8 @@ export function FilterChips({ label, items }: { label: string; items: FilterChip
               href={item.href}
               aria-current={item.active ? "page" : undefined}
               className={cn(
-                "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                item.active ? "neon font-bold dark:bg-accent" : "border-input bg-card",
+                "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 dark:rounded-full text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                item.active ? "neon font-bold dark:bg-accent" : "border-input bg-card dark:bg-background/90",
               )}
             >
               {item.label}

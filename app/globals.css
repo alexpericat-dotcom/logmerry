@@ -110,6 +110,16 @@
   .neon-icon {
     color: hsl(var(--primary));
   }
+  /* Pastille de sélection du clair seulement (barre latérale) : le sombre garde son icône allumée, sans cadre. */
+  html:not(.dark) .neon-light {
+    background-color: hsl(var(--tone-orange));
+    border-color: hsl(var(--border));
+    box-shadow: 2px 2px 0 hsl(var(--border));
+  }
+  html:not(.dark) .pixel-press:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+  }
   .dark .neon {
     background-color: transparent;
     border-color: hsl(var(--ring));

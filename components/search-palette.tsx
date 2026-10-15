@@ -156,7 +156,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
         onClick={open}
         title="Rechercher (⌘K)"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+        className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring dark:rounded-md dark:border-0 dark:border-l-[3px] dark:hover:border-transparent"
       >
         <Search size={16} aria-hidden="true" />
         <span className={labelClass}>Rechercher</span>

@@ -23,10 +23,10 @@ export const metadata = { title: "Notes · LogMerry" };
 
 /** Couleur de la barre du haut d'une carte, par type : l'information se voit sans lire (le type reste écrit dans la pastille). */
 const TYPE_TONE: Record<NoteType, string> = {
-  note: "border-t-tone-violet",
-  procedure: "border-t-tone-teal",
-  template: "border-t-tone-orange",
-  faq: "border-t-tone-pink",
+  note: "border-t-tone-violet dark:border-t-border",
+  procedure: "border-t-tone-teal dark:border-t-border",
+  template: "border-t-tone-orange dark:border-t-border",
+  faq: "border-t-tone-pink dark:border-t-border",
 };
 
 type SearchParams = Promise<{
@@ -61,10 +61,10 @@ function Filters({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                  "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 dark:rounded-full text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
                   active
                     ? "neon font-bold dark:bg-accent"
-                    : "border-input bg-card",
+                    : "border-input bg-card dark:bg-background/90",
                 )}
               >
                 {item.label}
@@ -77,8 +77,8 @@ function Filters({
             href={drafts.href}
             aria-current={draftOnly ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-              draftOnly ? "neon font-bold dark:bg-accent" : "border-input bg-card",
+              "inline-flex min-h-8 max-md:min-h-11 items-center rounded-sm border px-2.5 dark:rounded-full text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+              draftOnly ? "neon font-bold dark:bg-accent" : "border-input bg-card dark:bg-background/90",
             )}
           >
             {drafts.label}
@@ -134,7 +134,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
   ) : (
     <ul className="flex w-full flex-col gap-3">
       {notes.map((note) => (
-        <li key={note.id} className={cn("rounded-md border border-t-[6px] bg-card p-3 shadow-hard", TYPE_TONE[note.type])}>
+        <li key={note.id} className={cn("rounded-md border border-t-[6px] bg-card p-3 shadow-hard dark:border-t", TYPE_TONE[note.type])}>
           <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
             <h2 className="min-w-0 break-words font-semibold">
               <Link

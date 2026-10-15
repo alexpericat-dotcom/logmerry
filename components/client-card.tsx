@@ -15,7 +15,7 @@ export function ClientCard({ client }: { client: ClientRecord }) {
   return (
     <section
       aria-labelledby="fiche-title"
-      className="flex flex-col gap-4 rounded-lg border bg-gradient-subtle shadow-hard p-5 max-md:p-4"
+      className="flex flex-col gap-4 rounded-lg border bg-gradient-subtle shadow-hard dark:border-2 dark:border-filet p-5 max-md:p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-4 md:items-center max-md:gap-3">
