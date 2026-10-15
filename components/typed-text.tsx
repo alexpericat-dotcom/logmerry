@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 /**
  * Texte qui s'écrit au clavier, caractère par caractère, avec un curseur qui clignote (LogMerry « écrit en direct »).
  * Le texte complet est toujours présent : invisible pour réserver la place (pas de saut de mise en page) et pour les lecteurs d'écran ;
- * l'animation est ignorée (texte affiché d'un coup) si le système demande moins de mouvement.
+ * l'animation est ignorée (texte affiché d'un coup) si le système demande moins de mouvement, et une fois le texte écrit, elle ne se rejoue pas
+ * pendant la session du navigateur (`sessionStorage`) : on retrouve le texte directement en revenant sur la page.
  */
 export function TypedText({ text, startDelay = 500 }: { text: string; startDelay?: number }) {
   const [count, setCount] = useState(0);
@@ -14,7 +15,14 @@ export function TypedText({ text, startDelay = 500 }: { text: string; startDelay
   useEffect(() => {
     let i = 0;
     let timer: ReturnType<typeof setTimeout>;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const key = `typed:${text}`;
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(key) === "1";
+    } catch {
+      // stockage indisponible (navigation privée, données bloquées) : on rejoue l'animation
+    }
+    if (seen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       timer = setTimeout(() => {
         setCount(text.length);
         setCaret(false);
@@ -25,6 +33,11 @@ export function TypedText({ text, startDelay = 500 }: { text: string; startDelay
       i += 1;
       setCount(i);
       if (i >= text.length) {
+        try {
+          sessionStorage.setItem(key, "1");
+        } catch {
+          // sans stockage, l'animation se rejouera à la prochaine visite
+        }
         timer = setTimeout(() => setCaret(false), 1800); // le curseur s'éteint un peu après la fin
         return;
       }
