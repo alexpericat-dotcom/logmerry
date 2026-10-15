@@ -88,3 +88,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
   summary: Tester aussi les Server Actions des contacts (ajout, modification, suppression) et `promoteToClient`, avec la même solution que pour les notes et les fiches.
   evidence: Relecteurs (lacune de vérification) : changer `promoteToClient` en `status: "prospect"` ou retirer `.select("id")` laisserait tous les tests passer.
+
+- source_spec: idée d'Alex du 2026-10-15 (hors spec, à garder pour plus tard)
+  summary: pièces jointes aux notes : photos, documents (PDF, etc.) et enregistrements audio.
+  evidence: pas décidé ni cadré. Points à trancher le moment venu : stockage dans Supabase Storage (déjà dans la stack) avec une règle d'accès par propriétaire comme pour les tables ; limites de taille et de type ; effet sur le RAG (extraction du texte des documents, transcription des enregistrements, indexation et citation de la source) ; vie privée (les extraits partent chez Mistral AI et Anthropic : mention RGPD, aucune donnée réelle de client pendant le Workshop 8) ; suppression et purge au passage à l'outil pro (fichiers inclus) ; accès mobile (prise de photo, dictée). Probablement un epic à part après le MVP, à relier aux notes (epic 2) et à la base de connaissances.

@@ -14,7 +14,7 @@ const half =
 const frame =
   "overflow-hidden border-[3px] bg-card p-1 shadow-hard motion-safe:transition-transform motion-safe:group-hover:-translate-y-1";
 const picture =
-  "aspect-[7/10] h-[min(20rem,22svh)] w-auto object-cover [image-rendering:pixelated] md:h-[min(22rem,34svh)]";
+  "aspect-[7/10] h-[min(20rem,15svh)] w-auto object-cover [image-rendering:pixelated] md:h-[min(22rem,34svh)]";
 const cta =
   "inline-flex min-h-11 items-center rounded-md border bg-gradient-action px-6 font-semibold text-action-foreground shadow-hard";
 
@@ -44,11 +44,16 @@ export function ThemeChoice() {
   return (
     <main className="flex h-svh flex-col md:min-h-svh md:h-auto">
       {/* Clin d'œil à la navigation et au logo (un navire et sa boussole). */}
-      <h1 className="flex items-center justify-center gap-3 border-b-[3px] bg-background px-4 py-3 text-center text-sm font-semibold tracking-wide text-foreground md:text-base">
-        <Anchor aria-hidden="true" className="size-4 shrink-0" />
-        Choisis ton thème pour naviguer
-        <Anchor aria-hidden="true" className="size-4 shrink-0" />
-      </h1>
+      <header className="flex flex-col items-center gap-1 border-b-[3px] bg-background px-4 py-3 text-center text-foreground">
+        <h1 className="flex items-center justify-center gap-3 text-sm font-semibold tracking-wide md:text-base">
+          <Anchor aria-hidden="true" className="size-4 shrink-0" />
+          Choisis ton thème pour naviguer
+          <Anchor aria-hidden="true" className="size-4 shrink-0" />
+        </h1>
+        <p className="max-w-2xl text-xs text-muted-foreground md:text-sm">
+          Ton cockpit pour piloter ton activité de conseil : tâches du jour, clients, missions, factures, et un assistant qui répond à partir de tes notes.
+        </p>
+      </header>
       <div className="relative min-h-0 flex-1 overflow-hidden">
 
       <button
@@ -61,7 +66,7 @@ export function ThemeChoice() {
         aria-label="Choisir le thème rétro, clair en pixel art"
         disabled={chosen !== null}
         className={cn(
-          "light max-md:top-0 max-md:h-1/2 max-md:pb-14 md:left-0 md:w-1/2",
+          "light max-md:top-0 max-md:h-1/2 max-md:pb-16 md:left-0 md:w-1/2",
           chosen === "dark" && "max-md:-translate-y-full md:-translate-x-full",
           chosen === "light" && "max-md:h-full md:w-full",
           half,
@@ -78,9 +83,9 @@ export function ThemeChoice() {
       {/* Le lien entre les deux : un trait et le logo au centre. */}
       <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center md:inset-y-0 md:left-1/2 md:right-auto md:top-0 md:translate-y-0 md:-translate-x-1/2 motion-safe:transition-opacity motion-safe:duration-300", chosen && "opacity-0")}>
         <span className="absolute h-1 w-full bg-tone-teal md:h-full md:w-1" />
-        <span className="light relative flex size-24 items-center justify-center rounded-full border-[3px] bg-card shadow-hard md:size-28">
-          <LogoMark variant="classic" className={cn("absolute size-14 motion-safe:transition-opacity md:size-16", pixel ? "opacity-0" : "opacity-100")} />
-          <LogoMark variant="pixel" className={cn("absolute size-[72px] motion-safe:transition-opacity", pixel ? "opacity-100" : "opacity-0")} />
+        <span className="light relative flex size-20 items-center justify-center rounded-full border-[3px] bg-card shadow-hard md:size-28">
+          <LogoMark variant="classic" className={cn("absolute size-11 motion-safe:transition-opacity md:size-16", pixel ? "opacity-0" : "opacity-100")} />
+          <LogoMark variant="pixel" className={cn("absolute size-[54px] motion-safe:transition-opacity md:size-[72px]", pixel ? "opacity-100" : "opacity-0")} />
         </span>
       </div>
 
@@ -94,7 +99,7 @@ export function ThemeChoice() {
         aria-label="Choisir le thème futur, sombre néon"
         disabled={chosen !== null}
         className={cn(
-          "dark max-md:bottom-0 max-md:h-1/2 max-md:pt-14 md:right-0 md:w-1/2",
+          "dark max-md:bottom-0 max-md:h-1/2 max-md:pt-16 md:right-0 md:w-1/2",
           chosen === "light" && "max-md:translate-y-full md:translate-x-full",
           chosen === "dark" && "max-md:h-full md:w-full",
           half,
