@@ -31,21 +31,21 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
       {failed && (
         <span
           role="alert"
-          className={compact ? "sr-only" : "px-2 text-xs text-destructive"}
+          className={compact ? "px-2 text-xs text-destructive md:sr-only" : "px-2 text-xs text-destructive"}
         >
           Déconnexion impossible. Réessaie.
         </span>
       )}
       <Button
         variant="ghost"
-        size={compact ? "icon" : "sm"}
-        className={`${compact ? "" : "justify-start"} ${failed ? "text-destructive" : ""}`}
+        size="sm"
+        className={`justify-start ${compact ? "md:size-9 md:justify-center md:px-0" : ""} ${failed ? "text-destructive" : ""}`}
         onClick={logout}
         disabled={busy}
         title={failed ? "Déconnexion impossible. Réessaie." : "Se déconnecter"}
       >
         <LogOut size={16} aria-hidden="true" />
-        <span className={compact ? "sr-only" : "sr-only md:not-sr-only"}>
+        <span className={compact ? "md:sr-only" : ""}>
           Se déconnecter
         </span>
       </Button>

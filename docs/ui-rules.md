@@ -28,6 +28,13 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 | 4 : graphiques | Filtres de daltonisme du système (deutéranopie, protanopie, tritanopie) : chaque série reste identifiable avec sa légende. |
 | 9 : focus et natifs | Parcourir le cockpit à la touche Tab ; ouvrir un menu déroulant natif dans chaque thème. |
 
+## Téléphone (sous 768 px, story R8)
+
+- Barre du haut fixe (menu, logo) ; la barre latérale devient un tiroir avec libellés, fermé par défaut, refermé à la navigation, au clic sur le fond, par Échap ou à l'ouverture de l'assistant ; fermé, il est invisible (hors parcours clavier et lecteur d'écran).
+- Cibles tactiles de 44 px au moins : boutons, champs, menus, pastilles de filtre, liens e-mail et téléphone, « Annuler », lignes de la palette ⌘K (variante `max-md:`). Exception : un lien dans une phrase.
+- Marges de page et de bandeau réduites (16 px), bandeau de titre seul plus bas, tableau sans colonne de date (`hideOnMobile`), date d'une carte de note au-dessus du titre.
+- Vérification : émulation Pixel 6a (412 × 915, ×2,625) dans Chrome, clair et sombre, puis essai sur le vrai téléphone.
+
 ## Découpage de la refonte (une branche, un commit par story)
 
 Branche `feat/refonte-identite-visuelle`. Voir `docs/refonte/stories.md`.

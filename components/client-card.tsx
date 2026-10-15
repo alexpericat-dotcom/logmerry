@@ -15,32 +15,32 @@ export function ClientCard({ client }: { client: ClientRecord }) {
   return (
     <section
       aria-labelledby="fiche-title"
-      className="flex flex-col gap-4 rounded-lg border-2 border-filet bg-gradient-subtle p-5"
+      className="flex flex-col gap-4 rounded-lg border-2 border-filet bg-gradient-subtle p-5 max-md:p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 items-start gap-4 md:items-center max-md:gap-3">
           <div
-            className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground"
+            className="flex size-14 max-md:size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground"
             aria-hidden="true"
           >
-            <Building2 className="size-7" />
+            <Building2 className="size-7 max-md:size-5" />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Fiche
             </p>
-            <h2 id="fiche-title" className="break-words text-2xl font-bold">
+            <h2 id="fiche-title" className="break-words text-2xl font-bold max-md:text-xl">
               {client.name}
             </h2>
           </div>
         </div>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="max-md:w-full">
           <Link href={`/clients/${client.id}/modifier`}>
             Modifier<span className="sr-only"> la fiche {client.name}</span>
           </Link>
         </Button>
       </div>
-      <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm max-md:gap-x-4 lg:grid-cols-4">
         <div className="flex flex-col gap-1">
           <dt className="text-xs text-muted-foreground">Statut</dt>
           <dd>

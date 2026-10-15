@@ -80,7 +80,7 @@ export function UpdatePasswordForm({
                   <p>{formError}</p>
                   <Link
                     href="/auth/forgot-password"
-                    className="underline underline-offset-4"
+                    className="underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
                   >
                     Demander un nouveau lien
                   </Link>

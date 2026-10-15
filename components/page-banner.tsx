@@ -23,7 +23,7 @@ export function PageBanner({
   className?: string;
 }) {
   return (
-    <header className={cn("flex min-h-44 flex-col justify-between gap-6 rounded-lg border border-filet bg-gradient-sunset px-6 pb-5 pt-6", className)}>
+    <header className={cn("flex min-h-44 max-md:min-h-28 flex-col justify-between gap-6 rounded-lg border border-filet bg-gradient-sunset px-4 pb-4 pt-5 md:px-6 md:pb-5 md:pt-6", className)}>
       <div className="flex items-start justify-between gap-3">
         <h1 className="break-words text-3xl font-bold">{title}</h1>
         {actions}

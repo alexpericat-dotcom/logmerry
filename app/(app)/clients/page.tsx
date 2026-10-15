@@ -60,7 +60,7 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
     },
     { key: "statut", label: "Statut", sortHref: sortHref("statut"), render: (c) => <ClientStatusBadge status={c.status} /> },
     { key: "origine", label: "Origine", sortHref: sortHref("origine"), render: (c) => CLIENT_ORIGIN_LABELS[c.origin] },
-    { key: "creee", label: "Créée le", sortHref: sortHref("creee"), align: "right", render: (c) => formatDateTime(c.created_at) },
+    { key: "creee", label: "Créée le", sortHref: sortHref("creee"), align: "right", hideOnMobile: true, render: (c) => formatDateTime(c.created_at) },
   ];
 
   return (

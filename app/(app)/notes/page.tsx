@@ -53,7 +53,7 @@ function Filters({
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-8 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                  "inline-flex min-h-8 max-md:min-h-11 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
                   active
                     ? "neon bg-accent font-bold"
                     : "border-input",
@@ -69,7 +69,7 @@ function Filters({
             href={drafts.href}
             aria-current={draftOnly ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-8 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+              "inline-flex min-h-8 max-md:min-h-11 items-center rounded-full border bg-background/90 px-2.5 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
               draftOnly ? "neon bg-accent font-bold" : "border-input",
             )}
           >
@@ -127,7 +127,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
     <ul className="flex w-full flex-col gap-3">
       {notes.map((note) => (
         <li key={note.id} className="rounded-md border bg-card p-3">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
             <h2 className="min-w-0 break-words font-semibold">
               <Link
                 href={`/notes/${note.id}`}
@@ -138,7 +138,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
             </h2>
             <time
               dateTime={note.created_at}
-              className="shrink-0 pt-0.5 text-xs font-mono tabular-nums text-muted-foreground"
+              className="shrink-0 pt-0.5 text-xs font-mono tabular-nums text-muted-foreground max-sm:order-first"
             >
               {formatDateTime(note.created_at)}
             </time>
@@ -149,7 +149,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
               <Badge variant="outline">Brouillon</Badge>
             )}
             {note.client && note.client_id && (
-              <Link href={`/clients/${note.client_id}`} className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+              <Link href={`/clients/${note.client_id}`} className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring max-md:-my-2.5 max-md:py-2.5">
                 <Badge variant="outline">{note.client.name}</Badge>
               </Link>
             )}

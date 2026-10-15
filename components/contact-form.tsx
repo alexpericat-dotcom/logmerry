@@ -123,7 +123,7 @@ export function ContactForm({
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm underline underline-offset-4"
+          className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
         >
           Annuler
         </button>
