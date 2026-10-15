@@ -35,3 +35,13 @@ export function validateContactInput(input: ContactInput): { ok: true; value: Co
   if (Object.keys(errors).length) return { ok: false, errors };
   return { ok: true, value: { name, job_title: job || null, email: email || null, phone: phone || null, address: address || null } };
 }
+
+/** Initiales d'un nom pour l'avatar : première lettre des deux premiers mots (« Claire Martin » → « CM »), « ? » si rien. */
+export function initials(name: string): string {
+  const letters = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => [...w][0]?.toLocaleUpperCase("fr") ?? "");
+  return letters.join("") || "?";
+}

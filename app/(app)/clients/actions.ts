@@ -30,6 +30,8 @@ type WriteOutcome = "saved" | "not-found" | "error";
 async function save(
   values: { name: string; status: string; origin: string },
   write: (supabase: SupabaseClient, value: ClientValues) => Promise<WriteOutcome>,
+  /** Page où revenir après l'enregistrement : la liste après une création, la fiche après une modification. */
+  target = "/clients",
 ): Promise<ClientFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateClientInput(values);
@@ -45,7 +47,8 @@ async function save(
   if (result.value.outcome !== "saved") return { message: SAVE_FAILED, values };
 
   revalidatePath("/clients");
-  redirect("/clients");
+  revalidatePath(target);
+  redirect(target);
 }
 
 export async function createClientRecord(_prev: ClientFormState, formData: FormData): Promise<ClientFormState> {
@@ -62,7 +65,7 @@ export async function updateClientRecord(id: string, _prev: ClientFormState, for
     const { data, error } = await supabase.from("clients").update(value).eq("id", id).select("id");
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
-  });
+  }, `/clients/${id}`);
 }
 
 export async function deleteClientRecord(id: string): Promise<DeleteClientState> {

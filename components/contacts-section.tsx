@@ -17,6 +17,7 @@ import {
 import { ContactForm } from "@/components/contact-form";
 import { Button } from "@/components/ui/button";
 import type { ContactRecord } from "@/lib/db/contacts";
+import { initials } from "@/lib/domain/contacts";
 
 function DeleteContact({
   contact,
@@ -88,7 +89,7 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
 
   if (mode === "edit") {
     return (
-      <li>
+      <li className="md:col-span-2">
         <ContactForm
           idPrefix={`edit-${contact.id}`}
           action={updateContact.bind(null, contact.id)}
@@ -108,9 +109,15 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
   }
 
   return (
-    <li className="rounded-md border bg-card p-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+    <li className="rounded-md border bg-card p-3 md:col-span-1">
+      <div className="flex items-start gap-3">
+        <div
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-foreground"
+          aria-hidden="true"
+        >
+          {initials(contact.name)}
+        </div>
+        <div className="min-w-0 flex-1">
           <p className="break-words font-semibold">{contact.name}</p>
           {contact.job_title && (
             <p className="break-words text-sm text-muted-foreground">
@@ -118,29 +125,29 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
             </p>
           )}
         </div>
-        {mode === "view" && (
-          <div className="flex gap-2">
-            <Button
-              ref={editButton}
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setMode("edit")}
-            >
-              Modifier<span className="sr-only"> {contact.name}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-destructive"
-              onClick={() => setMode("delete")}
-            >
-              Supprimer<span className="sr-only"> {contact.name}</span>
-            </Button>
-          </div>
-        )}
       </div>
+      {mode === "view" && (
+        <div className="mt-2 flex gap-2">
+          <Button
+            ref={editButton}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setMode("edit")}
+          >
+            Modifier<span className="sr-only"> {contact.name}</span>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-destructive"
+            onClick={() => setMode("delete")}
+          >
+            Supprimer<span className="sr-only"> {contact.name}</span>
+          </Button>
+        </div>
+      )}
       {(contact.email || contact.phone || contact.address) && (
         <dl className="mt-2 grid gap-1 text-sm">
           {contact.email && (
@@ -195,9 +202,11 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
 /** Contacts d'une fiche : liste, ajout, modification et suppression sur place. */
 export function ContactsSection({
   clientId,
+  clientName,
   contacts,
 }: {
   clientId: string;
+  clientName: string;
   contacts: ContactRecord[];
 }) {
   const [adding, setAdding] = useState(false);
@@ -217,10 +226,7 @@ export function ContactsSection({
   }, [adding]);
 
   return (
-    <section
-      aria-labelledby="contacts-title"
-      className="flex max-w-2xl flex-col gap-3"
-    >
+    <section aria-labelledby="contacts-title" className="flex flex-col gap-3">
       <h2
         ref={heading}
         id="contacts-title"
@@ -237,12 +243,12 @@ export function ContactsSection({
       </h2>
       {contacts.length === 0 && !adding && (
         <p className="text-muted-foreground">
-          Aucun contact pour l&apos;instant. Ajoute les personnes avec qui tu es
-          en lien sur cette fiche.
+          Aucun contact pour {clientName} pour l&apos;instant. Ajoute les
+          personnes avec qui tu es en lien.
         </p>
       )}
       {contacts.length > 0 && (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 md:grid-cols-2">
           {contacts.map((c) => (
             <ContactItem key={c.id} contact={c} />
           ))}

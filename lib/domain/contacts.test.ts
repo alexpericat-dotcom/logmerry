@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CONTACT_ADDRESS_MAX, CONTACT_EMAIL_MAX, CONTACT_NAME_MAX, CONTACT_PHONE_MAX, isEmail, validateContactInput } from "./contacts.ts";
+import { CONTACT_ADDRESS_MAX, CONTACT_EMAIL_MAX, CONTACT_NAME_MAX, CONTACT_PHONE_MAX, initials, isEmail, validateContactInput } from "./contacts.ts";
 
 const base = { name: "Claire Martin", job_title: "", email: "", phone: "", address: "" };
 
@@ -42,4 +42,12 @@ test("toutes les erreurs sont rendues ensemble", () => {
   const r = validateContactInput({ name: "", job_title: "", email: "x", phone: "1".repeat(31), address: "" });
   assert.ok(!r.ok);
   if (!r.ok) assert.deepEqual(Object.keys(r.errors).sort(), ["email", "name", "phone"]);
+});
+
+test("initiales de l'avatar : deux premiers mots, majuscules, accents et émojis tolérés, « ? » si vide", () => {
+  assert.equal(initials("Claire Martin"), "CM");
+  assert.equal(initials("claire"), "C");
+  assert.equal(initials("  élodie   de la Roche "), "ÉD");
+  assert.equal(initials("😀 Max"), "😀M");
+  assert.equal(initials("   "), "?");
 });

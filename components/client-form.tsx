@@ -20,12 +20,14 @@ type Props = {
   action: (state: ClientFormState, formData: FormData) => Promise<ClientFormState>;
   initial?: { name: string; status: string; origin: string };
   submitLabel: string;
+  /** Lien du bouton « Annuler » (la liste par défaut). */
+  cancelHref?: string;
 };
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 
-export function ClientForm({ action, initial, submitLabel }: Props) {
+export function ClientForm({ action, initial, submitLabel, cancelHref = "/clients" }: Props) {
   const [state, formAction, pending] = useActionState<ClientFormState, FormData>(action, {});
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? { name: "", status: "prospect", origin: "" };
@@ -85,7 +87,7 @@ export function ClientForm({ action, initial, submitLabel }: Props) {
         <Button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </Button>
-        <Link href="/clients" className="text-sm underline underline-offset-4">
+        <Link href={cancelHref} className="text-sm underline underline-offset-4">
           Annuler
         </Link>
       </div>
