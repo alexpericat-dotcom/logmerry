@@ -1,5 +1,6 @@
 "use client";
 
+import { Anchor } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -33,8 +34,14 @@ export function ThemeChoice() {
   const pixel = over === "retro";
 
   return (
-    <main className="relative flex flex-col max-md:grid max-md:h-svh max-md:grid-rows-[repeat(2,minmax(0,1fr))] md:min-h-svh md:flex-row">
-      <h1 className="sr-only">Choisis ton thème</h1>
+    <main className="flex h-svh flex-col md:min-h-svh md:h-auto">
+      {/* Clin d'œil à la navigation et au logo (un navire et sa boussole). */}
+      <h1 className="flex items-center justify-center gap-3 border-b-[3px] bg-background px-4 py-3 text-center text-sm font-semibold tracking-wide text-foreground md:text-base">
+        <Anchor aria-hidden="true" className="size-4 shrink-0" />
+        Choisis ton thème pour naviguer
+        <Anchor aria-hidden="true" className="size-4 shrink-0" />
+      </h1>
+      <div className="relative flex min-h-0 flex-1 flex-col max-md:grid max-md:grid-rows-[repeat(2,minmax(0,1fr))] md:flex-row">
 
       <button
         type="button"
@@ -43,7 +50,7 @@ export function ThemeChoice() {
         onMouseLeave={() => setOver(null)}
         onFocus={() => setOver("retro")}
         onBlur={() => setOver(null)}
-        aria-label="Choisir le thème clair, rétro pixel"
+        aria-label="Choisir le thème rétro, clair en pixel art"
         className={cn("light max-md:pb-14", half)}
       >
         <span className={frame}>
@@ -51,7 +58,7 @@ export function ThemeChoice() {
         </span>
         <span className="font-pixel text-4xl font-bold uppercase leading-none tracking-wide text-display [text-shadow:3px_3px_0_hsl(var(--tone-teal))] md:text-6xl">Rétro</span>
         <span className="max-w-xs text-sm max-md:hidden">Pixel : ciel pâle, traits marine, accents turquoise et orange.</span>
-        <span className={cta}>Thème clair</span>
+        <span className={cta}>Thème rétro</span>
       </button>
 
       {/* Le lien entre les deux : un trait et le logo au centre. */}
@@ -70,7 +77,7 @@ export function ThemeChoice() {
         onMouseLeave={() => setOver(null)}
         onFocus={() => setOver("futur")}
         onBlur={() => setOver(null)}
-        aria-label="Choisir le thème sombre, néon futur"
+        aria-label="Choisir le thème futur, sombre néon"
         className={cn("dark max-md:pt-14", half)}
       >
         <span className={frame}>
@@ -78,8 +85,9 @@ export function ThemeChoice() {
         </span>
         <span className="text-4xl font-bold uppercase leading-none tracking-tight md:text-6xl">Futur</span>
         <span className="max-w-xs text-sm max-md:hidden">Néon : bleu nuit, dégradé couchant, contours lumineux.</span>
-        <span className={cta}>Thème sombre</span>
+        <span className={cta}>Thème futur</span>
       </button>
+      </div>
     </main>
   );
 }
