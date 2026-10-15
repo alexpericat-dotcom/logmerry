@@ -10,7 +10,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 
 const half =
-  "group relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center text-foreground outline-offset-[-8px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-ring max-md:gap-3 max-md:p-4 md:gap-5 md:p-8";
+  "group absolute flex flex-col items-center justify-center gap-4 bg-gradient-sunset bg-[length:var(--banner-size)] overflow-hidden p-6 text-center text-foreground transition-[width,height,transform] duration-700 ease-in-out outline-offset-[-8px] motion-reduce:transition-none focus-visible:outline focus-visible:outline-4 focus-visible:outline-ring max-md:gap-3 max-md:p-4 md:gap-5 md:p-8 max-md:inset-x-0 md:inset-y-0";
 const frame =
   "overflow-hidden border-[3px] bg-card p-1 shadow-hard motion-safe:transition-transform motion-safe:group-hover:-translate-y-1";
 const picture =
@@ -27,9 +27,17 @@ export function ThemeChoice() {
   const { setTheme } = useTheme();
   const router = useRouter();
   const [over, setOver] = useState<"retro" | "futur" | null>(null);
+  const [chosen, setChosen] = useState<"light" | "dark" | null>(null);
+  // Au clic, l'autre moitié sort de l'écran comme un volet (à gauche pour le rétro, à droite pour le futur ; vers le haut ou le bas sur téléphone),
+  // la moitié choisie s'étend, puis le thème est enregistré et l'application s'ouvre.
   const choose = (theme: "light" | "dark") => {
-    setTheme(theme);
-    router.push("/aujourd-hui");
+    if (chosen) return;
+    setChosen(theme);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(() => {
+      setTheme(theme);
+      router.push("/aujourd-hui");
+    }, reduced ? 0 : 750);
   };
   const pixel = over === "retro";
 
@@ -41,7 +49,7 @@ export function ThemeChoice() {
         Choisis ton thème pour naviguer
         <Anchor aria-hidden="true" className="size-4 shrink-0" />
       </h1>
-      <div className="relative flex min-h-0 flex-1 flex-col max-md:grid max-md:grid-rows-[repeat(2,minmax(0,1fr))] md:flex-row">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
 
       <button
         type="button"
@@ -51,7 +59,13 @@ export function ThemeChoice() {
         onFocus={() => setOver("retro")}
         onBlur={() => setOver(null)}
         aria-label="Choisir le thème rétro, clair en pixel art"
-        className={cn("light max-md:pb-14", half)}
+        disabled={chosen !== null}
+        className={cn(
+          "light max-md:top-0 max-md:h-1/2 max-md:pb-14 md:left-0 md:w-1/2",
+          chosen === "dark" && "max-md:-translate-y-full md:-translate-x-full",
+          chosen === "light" && "max-md:h-full md:w-full",
+          half,
+        )}
       >
         <span className={frame}>
           <Image src="/images/scene-chemise-bleue.png" alt="" width={248} height={354} unoptimized className={picture} />
@@ -62,7 +76,7 @@ export function ThemeChoice() {
       </button>
 
       {/* Le lien entre les deux : un trait et le logo au centre. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center md:inset-y-0 md:left-1/2 md:right-auto md:top-0 md:translate-y-0 md:-translate-x-1/2">
+      <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center md:inset-y-0 md:left-1/2 md:right-auto md:top-0 md:translate-y-0 md:-translate-x-1/2 motion-safe:transition-opacity motion-safe:duration-300", chosen && "opacity-0")}>
         <span className="absolute h-1 w-full bg-tone-teal md:h-full md:w-1" />
         <span className="light relative flex size-24 items-center justify-center rounded-full border-[3px] bg-card shadow-hard md:size-28">
           <LogoMark variant="classic" className={cn("absolute size-14 motion-safe:transition-opacity md:size-16", pixel ? "opacity-0" : "opacity-100")} />
@@ -78,7 +92,13 @@ export function ThemeChoice() {
         onFocus={() => setOver("futur")}
         onBlur={() => setOver(null)}
         aria-label="Choisir le thème futur, sombre néon"
-        className={cn("dark max-md:pt-14", half)}
+        disabled={chosen !== null}
+        className={cn(
+          "dark max-md:bottom-0 max-md:h-1/2 max-md:pt-14 md:right-0 md:w-1/2",
+          chosen === "light" && "max-md:translate-y-full md:translate-x-full",
+          chosen === "dark" && "max-md:h-full md:w-full",
+          half,
+        )}
       >
         <span className={frame}>
           <Image src="/images/scene-nuit.jpg" alt="" width={248} height={354} unoptimized className={cn(picture, "[object-position:25%_50%]")} />
