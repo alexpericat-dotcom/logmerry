@@ -8,6 +8,7 @@ import { IndexStatus } from "@/components/index-status";
 import { NoteSummary } from "@/components/note-summary";
 import { NoteForm } from "@/components/note-form";
 import { RetryIndexing } from "@/components/retry-indexing";
+import { listAllClients } from "@/lib/db/clients";
 import { getNote } from "@/lib/db/notes";
 import { isUuid } from "@/lib/domain/notes";
 import { formatDateTime } from "@/lib/format";
@@ -19,6 +20,7 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const note = await getNote(id);
   if (!note) notFound();
+  const clients = await listAllClients();
 
   return (
     <div className="flex flex-col gap-6">
@@ -35,7 +37,8 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
       <NoteSummary id={id} title={note.title} />
       <NoteForm
         action={updateNote.bind(null, id)}
-        initial={{ title: note.title, body: note.body, type: note.type }}
+        initial={{ title: note.title, body: note.body, type: note.type, client_id: note.client_id ?? "", new_name: "", new_origin: "" }}
+        clients={clients}
         submitLabel="Enregistrer les modifications"
       />
       <DeleteNote id={id} />
