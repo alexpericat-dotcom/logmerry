@@ -47,6 +47,15 @@ export default {
         warning: "hsl(var(--warning))",
         "action-foreground": "hsl(var(--action-foreground))",
         marker: "hsl(var(--marker))",
+        // Titres pixel (texte de grande taille seulement) et accents décoratifs : jamais du texte courant.
+        display: "hsl(var(--display))",
+        tone: {
+          teal: "hsl(var(--tone-teal))",
+          violet: "hsl(var(--tone-violet))",
+          orange: "hsl(var(--tone-orange))",
+          pink: "hsl(var(--tone-pink))",
+          yellow: "hsl(var(--tone-yellow))",
+        },
         filet: "hsl(var(--filet))",
         // Séries de graphiques : jamais la signature ni un état.
         chart: {
@@ -64,6 +73,7 @@ export default {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         brand: ["var(--font-brand)", "var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        pixel: ["var(--font-pixel)", "var(--font-sans)", "system-ui", "sans-serif"],
       },
       backgroundImage: {
         // Dégradés de DESIGN.md (statiques, jamais animés), clair ou sombre selon le thème.
@@ -71,6 +81,9 @@ export default {
         "gradient-subtle": "var(--gradient-1)",
         "gradient-sunset": "var(--gradient-2)",
       },
+      // Traits marine de 2 px en clair, 1 px en sombre (jeton --border-w) ; ombre dure en clair seulement.
+      borderWidth: { DEFAULT: "var(--border-w)" },
+      boxShadow: { hard: "var(--shadow-hard)" },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

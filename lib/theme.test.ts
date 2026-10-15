@@ -150,11 +150,37 @@ test("chaque thème déclare son color-scheme : les contrôles natifs (menu dér
   assert.ok(/select option\s*\{[^}]*--popover/.test(css), "options du menu déroulant colorées par les jetons");
 });
 
-test("valeurs de référence de DESIGN.md : texte sur fond 15,65 (clair) et 16,84 (sombre), bouton clair 6,73", () => {
+test("valeurs de référence de DESIGN.md : texte sur fond 14,93 (clair) et 16,84 (sombre), bouton clair 6,73", () => {
   const l = tokens(":root"), d = tokens(".dark");
-  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 15.65) < 0.1);
+  assert.ok(Math.abs(contrast(l["foreground"], l["background"]) - 14.93) < 0.1);
   assert.ok(Math.abs(contrast(d["foreground"], d["background"]) - 16.84) < 0.1);
   assert.ok(Math.abs(contrast(l["primary-foreground"], l["primary"]) - 6.73) < 0.1);
+});
+
+test("clair, direction Arcade : texte marine lisible sur chaque accent décoratif, titres pixel à 3:1 sur fond et carte (clair et sombre)", () => {
+  const t = tokens(":root");
+  for (const tone of ["tone-teal", "tone-violet", "tone-orange", "tone-pink", "tone-yellow", "accent"]) {
+    for (const fg of ["foreground", "action-foreground"]) {
+      assert.ok(contrast(t[fg], t[tone]) >= 4.5, `${fg} sur ${tone} = ${contrast(t[fg], t[tone]).toFixed(2)}`);
+    }
+  }
+  for (const block of [":root", ".dark"] as const) {
+    const x = tokens(block);
+    for (const bg of ["background", "card"]) {
+      assert.ok(contrast(x["display"], x[bg]) >= 3, `${block} : display sur ${bg} = ${contrast(x["display"], x[bg]).toFixed(2)} (3 attendu, grand texte)`);
+    }
+  }
+});
+
+test("clair, direction Arcade : traits et ombres portés par jetons (--border-w, --shadow-hard) dans les deux thèmes, police pixel déclarée", () => {
+  const css = read("app/globals.css");
+  const [light, dark] = [css.indexOf("  :root {"), css.indexOf("  .dark {")];
+  for (const v of ["--border-w", "--shadow-hard", "--banner-size", "--radius"]) {
+    assert.ok(css.slice(light, dark).includes(`${v}:`), `${v} clair absent`);
+    assert.ok(css.slice(dark).includes(`${v}:`), `${v} sombre absent`);
+  }
+  assert.ok(/Pixelify_Sans/.test(read("app/layout.tsx")), "Pixelify Sans importée");
+  assert.ok(/pixel:/.test(read("tailwind.config.ts")), "famille « pixel » déclarée");
 });
 
 /** Fichiers de l'interface (hors tests) : app, components, lib. */

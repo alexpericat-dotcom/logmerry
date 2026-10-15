@@ -8,27 +8,27 @@
 @layer base {
   :root {
     color-scheme: light; /* les contrôles natifs (menu déroulant, défilement, saisie) suivent le thème de l'application, pas celui du système */
-    --background: 39 40% 90.2%; /* #F0E9DC */
-    --foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --card: 40 32.4% 85.5%; /* #E6DECE */
-    --card-foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --popover: 40 32.4% 85.5%; /* #E6DECE */
-    --popover-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --background: 217.5 100% 98.4%; /* #F7FAFF */
+    --foreground: 235 47.1% 20%; /* #1B1F4B */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 235 47.1% 20%; /* #1B1F4B */
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 235 47.1% 20%; /* #1B1F4B */
     --primary: 232 100% 55.7%; /* #1D3BFF */
     --primary-foreground: 0 0% 100%; /* #FFFFFF */
-    --action-foreground: 220 16.7% 7.1%; /* #0F1115 : texte des boutons d'action */
-    --secondary: 40 32.4% 85.5%; /* #E6DECE */
-    --secondary-foreground: 220 16.7% 7.1%; /* #0F1115 */
-    --muted: 40 32.4% 85.5%; /* #E6DECE */
-    --muted-foreground: 222.9 12.3% 33.5%; /* #4B5160 */
-    --accent: 40 25.4% 76.9%; /* #D3C9B5 */
-    --accent-foreground: 220 16.7% 7.1%; /* #0F1115 */
+    --action-foreground: 235 47.1% 20%; /* #1B1F4B : texte des boutons d'action */
+    --secondary: 215.3 68% 95.1%; /* #EAF1FB */
+    --secondary-foreground: 235 47.1% 20%; /* #1B1F4B */
+    --muted: 215.3 68% 95.1%; /* #EAF1FB */
+    --muted-foreground: 234.7 23.1% 38.2%; /* #4B4F78 */
+    --accent: 44.8 100% 82.9%; /* #FFE9A8 */
+    --accent-foreground: 235 47.1% 20%; /* #1B1F4B */
     --destructive: 3.2 71.3% 41%; /* #B3261E */
     --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-    --filet: 40 25.4% 76.9%; /* #D3C9B5 */
-    --border: 40 25.4% 76.9%; /* #D3C9B5 */
-    --input: 221.2 6.3% 50.6%; /* #797E89 */
-    --ring: 27 100% 39.2%; /* #C85A00 */
+    --filet: 216.4 44% 85.3%; /* #C9D6EA */
+    --border: 235 47.1% 20%; /* #1B1F4B */
+    --input: 235 47.1% 20%; /* #1B1F4B */
+    --ring: 232 100% 55.7%; /* #1D3BFF */
     --success: 154.6 85.2% 23.9%; /* #097145 */
     --warning: 31.8 100% 29.2%; /* #954F00 */
     --marker: 31.8 100% 29.2%; /* #954F00 */
@@ -37,11 +37,20 @@
     --chart-3: 44.9 80.4% 32%; /* #937210 */
     --chart-4: 255 50% 25.1%; /* #302060 */
     --chart-5: 300 80.4% 40%; /* #B814B8 */
-    --radius: 0.5rem;
+    --display: 23.5 90.8% 46.9%; /* #E4600B : titres pixel, texte de grande taille seulement (3:1) */
+    --tone-teal: 173.1 65.9% 56.3%; /* #46D9C8 : accents décoratifs, jamais du texte */
+    --tone-violet: 252.7 75% 76.5%; /* #A996F0 */
+    --tone-orange: 26 100% 65.1%; /* #FF9A4D */
+    --tone-pink: 340.7 100% 78%; /* #FF8FB3 */
+    --tone-yellow: 46.2 100% 67.6%; /* #FFD95A */
+    --radius: 0.1875rem; /* coins presque droits (pixel) */
+    --border-w: 2px; /* traits marine épais ; 1 px en sombre */
+    --shadow-hard: 3px 3px 0 hsl(235 47.1% 20%); /* ombre dure, sans flou ; aucune en sombre */
+    --banner-size: 16px 16px, 16px 16px, auto; /* grille du bandeau */
     /* Dégradés de DESIGN.md (statiques, jamais animés). « couchant » : texte dans les 45 % du haut seulement. */
-    --gradient-action: linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%); /* boutons d'action ; texte --action-foreground */
-    --gradient-1: linear-gradient(160deg, #F0E9DC, #E6DECE);
-    --gradient-2: radial-gradient(90% 75% at 100% 100%, #FF8A5C 0%, #F2709A 38%, rgba(242, 112, 154, 0) 100%), radial-gradient(85% 75% at 0% 80%, #C9A6F0 0%, #DCD4F5 50%, rgba(220, 212, 245, 0) 100%), linear-gradient(#F0E9DC, #F0E9DC);
+    --gradient-action: linear-gradient(180deg, #FFB45C 0%, #FF9A4D 100%); /* boutons d'action : orange à plat, texte --action-foreground */
+    --gradient-1: linear-gradient(160deg, #F7FAFF, #EAF1FB);
+    --gradient-2: linear-gradient(#CFE6F5 1px, transparent 1px), linear-gradient(90deg, #CFE6F5 1px, transparent 1px), linear-gradient(160deg, #DDF3FF, #F6FBFF); /* bandeau « arcade » : ciel pâle à grille fine (la taille des cases est --banner-size) */
   }
   .dark {
     color-scheme: dark;
@@ -74,6 +83,16 @@
     --chart-3: 269.8 80.4% 70%; /* #B275F0 */
     --chart-4: 45 80.4% 60%; /* #EBC247 */
     --chart-5: 345 80.4% 60%; /* #EB4770 */
+    --display: 26 100% 65.1%; /* #FF9A4D */
+    --tone-teal: 173.1 65.9% 56.3%; /* #46D9C8 */
+    --tone-violet: 252.7 75% 76.5%; /* #A996F0 */
+    --tone-orange: 26 100% 65.1%; /* #FF9A4D */
+    --tone-pink: 340.7 100% 78%; /* #FF8FB3 */
+    --tone-yellow: 46.2 100% 67.6%; /* #FFD95A */
+    --radius: 0.5rem;
+    --border-w: 1px;
+    --shadow-hard: none;
+    --banner-size: auto;
     --gradient-action: linear-gradient(135deg, #FFD166 0%, #FF9F45 50%, #FF7A3D 100%);
     --gradient-1: linear-gradient(160deg, #0E1014, #161A21);
     --gradient-2: radial-gradient(90% 75% at 100% 100%, #F0643A 0%, #C2306A 38%, rgba(194, 48, 106, 0) 100%), radial-gradient(85% 75% at 0% 80%, #7A3A9A 0%, #1B1F4A 50%, rgba(27, 31, 74, 0) 100%), linear-gradient(#05070C, #05070C);
@@ -82,7 +101,17 @@
 
 /* « Néon » : l'élément sélectionné (catégorie de la barre latérale, filtre actif) s'allume : contour de la couleur d'accent des actions et halo. L'état reste aussi porté par le gras et aria-current. */
 @layer components {
+  /* Clair : l'élément sélectionné est une pastille orange cernée de marine, à ombre dure (le gras et aria-current portent aussi l'état). */
   .neon {
+    background-color: hsl(var(--tone-orange));
+    border-color: hsl(var(--border));
+    box-shadow: 2px 2px 0 hsl(var(--border));
+  }
+  .neon-icon {
+    color: hsl(var(--primary));
+  }
+  .dark .neon {
+    background-color: transparent;
     border-color: hsl(var(--ring));
     box-shadow:
       0 0 0 1px hsl(var(--ring)),
@@ -94,8 +123,8 @@
       outline: 2px solid Highlight;
     }
   }
-  /* Néon sur une icône (barre latérale) : la couleur d'accent et un halo, sans cadre ni fond. */
-  .neon-icon {
+  /* Sombre, néon sur une icône (barre latérale) : la couleur d'accent et un halo, sans cadre ni fond. */
+  .dark .neon-icon {
     color: hsl(var(--ring));
     filter: drop-shadow(0 0 3px hsl(var(--ring) / 0.9)) drop-shadow(0 0 9px hsl(var(--ring) / 0.55));
   }

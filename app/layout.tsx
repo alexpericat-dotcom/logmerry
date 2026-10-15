@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono, Pixelify_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -17,6 +17,8 @@ export const metadata: Metadata = {
 const sans = Hanken_Grotesk({ display: "swap", subsets: ["latin"], variable: "--font-sans" });
 // Bricolage Grotesque 700 : le nom « LogMerry » seulement (logotype).
 const brand = Bricolage_Grotesque({ display: "swap", subsets: ["latin"], weight: ["700"], variable: "--font-brand" });
+// Pixelify Sans : titres et étiquettes seulement (jamais le texte courant), classe `font-pixel`.
+const pixel = Pixelify_Sans({ display: "swap", subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-pixel" });
 const mono = IBM_Plex_Mono({ display: "swap", subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export default function RootLayout({
@@ -26,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${sans.variable} ${mono.variable} ${brand.variable} font-sans antialiased`}>
+      <body className={`${sans.variable} ${mono.variable} ${brand.variable} ${pixel.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
