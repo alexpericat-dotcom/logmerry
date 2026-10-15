@@ -2,7 +2,7 @@
 title: 'Story 3.4 : Créer des missions'
 type: 'feature'
 created: '2026-10-15'
-status: 'draft'
+status: 'ready-for-dev'
 baseline_commit: 'aec6daf'
 route: 'dispatch'
 context:
