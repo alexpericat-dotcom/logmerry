@@ -31,7 +31,7 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 ## Direction « Arcade clair » (story R9)
 
 - Accents décoratifs : `tone-teal`, `tone-violet`, `tone-orange`, `tone-pink`, `tone-yellow` (jamais du texte ; texte marine dessus ≥ 4,5:1, vérifié par `lib/theme.test.ts`). Une carte de note porte une barre de 6 px par type (violet, turquoise, orange, rose) ; le type reste écrit.
-- Le décor d'accueil du bandeau (`PageBanner hero` : étoile violette, écran au portrait) sert au cockpit seulement, en clair seulement. La connexion (`AuthShell`) a la même construction dans les deux thèmes : carte centrée sur le dégradé, nom et logo en haut à gauche, sans illustration (le nom et le logo sont en pixels en clair).
+- Le bandeau du cockpit (`PageBanner hero`) n'a plus de décor (étoile et écran au portrait retirés à la demande d'Alex) : `hero` garde l'écriture au clavier de l'explication et, en sombre, son placement à droite. La connexion (`AuthShell`) a la même construction dans les deux thèmes : carte centrée sur le dégradé, nom et logo en haut à gauche, sans illustration (le nom et le logo sont en pixels en clair).
 - Images dans `public/images/` (portrait, `scene-chemise-bleue` pour le premier écran et la connexion, `scene-tshirt` dans l'écran du cockpit, `scene-nuit` pour le futur du premier écran, `logo-pixel.svg`), décoratives (`alt=""`), `image-rendering: pixelated`. Le slogan de la connexion est aussi en pixel en clair. Au survol, une icône de la barre latérale garde sa couleur (pas de bleu).
 
 ## Premier écran (choix du thème)
