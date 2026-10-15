@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 
 import type { NoteFormState, NoteFormValues } from "@/app/(app)/notes/actions";
 import { Button } from "@/components/ui/button";
@@ -31,10 +31,17 @@ const selectClass =
 const EMPTY: NoteFormValues = { title: "", body: "", type: "note", client_id: "", new_name: "", new_origin: "" };
 
 export function NoteForm({ action, initial, clients, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState<NoteFormState, FormData>(action, {});
+  // `sent` compte les envois : il sert de clé au menu « Lié à » (voir plus bas).
+  const [state, formAction, pending] = useActionState<NoteFormState & { sent?: number }, FormData>(
+    async (prev, formData) => ({ ...(await action(prev, formData)), sent: (prev.sent ?? 0) + 1 }),
+    {},
+  );
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? EMPTY;
+  // Menu non contrôlé et remonté à chaque envoi (clé) : React remet les champs à zéro après l'action et ne met pas à jour
+  // l'option par défaut d'un menu déjà monté ; sans cela le menu reviendrait à « Aucune fiche » alors que le panneau reste ouvert.
   const [choice, setChoice] = useState(values.client_id);
+  const linkRef = useRef<HTMLSelectElement>(null);
   const [newName, setNewName] = useState(values.new_name);
   const sorted = [...clients].sort((a, b) => a.name.localeCompare(b.name, "fr"));
   const close = choice === NEW_CLIENT ? matchClients(clients, newName, 5) : [];
@@ -86,9 +93,11 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
       <div className="grid gap-2">
         <Label htmlFor="client_id">Lié à</Label>
         <select
+          key={state.sent ?? 0}
           id="client_id"
           name="client_id"
-          value={choice}
+          ref={linkRef}
+          defaultValue={values.client_id}
           onChange={(e) => setChoice(e.target.value)}
           aria-invalid={linkError ? true : undefined}
           aria-describedby={linkError ? "client_id-error" : undefined}
@@ -134,7 +143,10 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
                 <ul className="mt-1 flex flex-wrap gap-2">
                   {close.map((c) => (
                     <li key={c.id}>
-                      <Button type="button" variant="outline" size="sm" onClick={() => setChoice(c.id)}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => {
+                          if (linkRef.current) linkRef.current.value = c.id;
+                          setChoice(c.id);
+                        }}>
                         Utiliser {c.name}
                       </Button>
                     </li>
