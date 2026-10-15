@@ -66,7 +66,7 @@ export function ForgotPasswordForm({
               </p>
               <Link
                 href="/auth/login"
-                className="text-sm underline underline-offset-4"
+                className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
               >
                 Retour à la connexion
               </Link>

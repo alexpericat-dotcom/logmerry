@@ -156,7 +156,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
         onClick={open}
         title="Rechercher (⌘K)"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-9 w-full items-center gap-3 rounded-md border-l-[3px] border-transparent px-2 text-sm hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+        className="flex h-9 w-full items-center gap-3 rounded-md border-l-[3px] border-transparent px-2 text-sm max-md:h-11 hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
       >
         <Search size={16} aria-hidden="true" />
         <span className={labelClass}>Rechercher</span>
@@ -179,7 +179,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
             e.clientY > r.bottom;
           if (outside) e.currentTarget.close();
         }}
-        className="m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg backdrop:bg-black/50"
+        className="visible m-auto mt-[15vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border bg-popover p-3 text-popover-foreground shadow-lg backdrop:bg-black/50"
       >
         <Input
           role="combobox"
@@ -208,7 +208,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
               onClick={askAssistant}
               onMouseMove={() => setActive(0)}
               className={cn(
-                "cursor-pointer rounded-md px-2 py-2 font-medium",
+                "cursor-pointer rounded-md px-2 py-2 font-medium max-md:flex max-md:min-h-11 max-md:items-center",
                 current === 0 && "bg-accent",
               )}
             >
@@ -236,7 +236,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
                   onClick={() => choose(item)}
                   onMouseMove={() => setActive(index)}
                   className={cn(
-                    "cursor-pointer rounded-md px-2 py-2",
+                    "cursor-pointer rounded-md px-2 py-2 max-md:min-h-11",
                     index === current && "bg-accent",
                   )}
                 >

@@ -25,7 +25,7 @@ type Props = {
 };
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+  "flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 
 export function ClientForm({ action, initial, submitLabel, cancelHref = "/clients" }: Props) {
   const [state, formAction, pending] = useActionState<ClientFormState, FormData>(action, {});
@@ -87,7 +87,7 @@ export function ClientForm({ action, initial, submitLabel, cancelHref = "/client
         <Button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </Button>
-        <Link href={cancelHref} className="text-sm underline underline-offset-4">
+        <Link href={cancelHref} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
           Annuler
         </Link>
       </div>

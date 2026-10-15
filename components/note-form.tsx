@@ -27,7 +27,7 @@ type Props = {
 };
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+  "flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 const EMPTY: NoteFormValues = { title: "", body: "", type: "note", client_id: "", new_name: "", new_origin: "" };
 
 export function NoteForm({ action, initial, clients, submitLabel }: Props) {
@@ -76,7 +76,7 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
           defaultValue={values.type}
           aria-invalid={typeError ? true : undefined}
           aria-describedby={typeError ? "type-error" : undefined}
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
+          className="flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
         >
           {NOTE_TYPES.map((t) => (
             <option key={t} value={t}>
@@ -207,7 +207,7 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
         <Button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </Button>
-        <Link href="/notes" className="text-sm underline underline-offset-4">
+        <Link href="/notes" className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
           Annuler
         </Link>
       </div>

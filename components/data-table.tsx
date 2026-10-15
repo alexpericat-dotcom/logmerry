@@ -9,6 +9,8 @@ export type Column<T> = {
   /** Adresse du tri sur cette colonne ; absente = colonne non triable. */
   sortHref?: string;
   align?: "right";
+  /** Colonne masquée sous 768 px (téléphone) : les autres gardent la place. */
+  hideOnMobile?: boolean;
   render: (row: T) => ReactNode;
 };
 
@@ -40,10 +42,10 @@ export function DataTable<T>({
                 key={c.key}
                 scope="col"
                 aria-sort={sorted?.key === c.key ? (sorted.dir === "asc" ? "ascending" : "descending") : undefined}
-                className={cn("px-3 py-2 font-medium", c.align === "right" && "text-right")}
+                className={cn("px-3 py-2 font-medium", c.align === "right" && "text-right", c.hideOnMobile && "max-md:hidden")}
               >
                 {c.sortHref ? (
-                  <Link href={c.sortHref} className="underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                  <Link href={c.sortHref} className="max-md:inline-flex max-md:min-h-11 max-md:items-center underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                     {c.label}
                     {sorted?.key === c.key && <span aria-hidden="true">{sorted.dir === "asc" ? " ↑" : " ↓"}</span>}
                   </Link>
@@ -58,7 +60,7 @@ export function DataTable<T>({
           {rows.map((row) => (
             <tr key={rowKey(row)} className="relative border-b last:border-b-0 hover:bg-accent/40">
               {columns.map((c) => (
-                <td key={c.key} className={cn("px-3 py-2", c.align === "right" && "text-right font-mono tabular-nums")}>
+                <td key={c.key} className={cn("px-3 py-2", c.align === "right" && "text-right font-mono tabular-nums", c.hideOnMobile && "max-md:hidden")}>
                   {c.render(row)}
                 </td>
               ))}

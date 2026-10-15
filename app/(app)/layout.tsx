@@ -36,7 +36,7 @@ async function AppShell({ children }: { children: React.ReactNode }) {
           Aller au contenu
         </a>
         <AppSidebar email={email} defaultCollapsed={collapsed} />
-        <main id="main" tabIndex={-1} className="min-w-0 flex-1 p-6 md:p-8">
+        <main id="main" tabIndex={-1} className="min-w-0 flex-1 p-4 max-md:pt-[4.5rem] md:p-8">
           {children}
         </main>
         <AssistantPanel />

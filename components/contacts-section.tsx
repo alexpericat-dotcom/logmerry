@@ -151,12 +151,12 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
       {(contact.email || contact.phone || contact.address) && (
         <dl className="mt-2 grid gap-1 text-sm">
           {contact.email && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 max-md:items-center">
               <dt className="text-muted-foreground">E-mail</dt>
               <dd className="min-w-0 break-all">
                 <a
                   href={`mailto:${contact.email}`}
-                  className="text-primary underline underline-offset-4"
+                  className="text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
                 >
                   {contact.email}
                 </a>
@@ -164,7 +164,7 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
             </div>
           )}
           {contact.phone && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 max-md:items-center">
               <dt className="text-muted-foreground">Téléphone</dt>
               <dd className="font-mono tabular-nums">
                 {/* Lien d'appel seulement pour un numéro « pur » (chiffres, espaces, + ( ) . -) : une extension ou une mention en lettres ferait composer un mauvais numéro. */}
@@ -172,7 +172,7 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
                 /\d/.test(contact.phone) ? (
                   <a
                     href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
-                    className="text-primary underline underline-offset-4"
+                    className="text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center"
                   >
                     {contact.phone}
                   </a>

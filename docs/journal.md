@@ -392,3 +392,11 @@
 
 - Alex a validé la story 8.13 (résumé de note, preview) et la story 3.3 (lien note-fiche) : passées en done (2026-10-15).
 - Alex a validé aussi les stories 3.1 et 3.2 : passées en done.
+
+## 2026-10-15 — Story R8 : affichage sur téléphone (émulation Pixel 6a)
+
+- Point de départ : le retour d'Alex (« pas dingue »). Relevé dans Chrome en émulation Pixel 6a (412 × 915) : la barre latérale restait un rail d'icônes sans libellés (15 % de la largeur), cibles de 32 à 40 px (barre, filtres, « Créer »), carte de note écrasée par la date, tableau des clients avec la date sur 4 lignes, marges de 24 px.
+- Fait : barre du haut + tiroir avec libellés (focus rendu au bouton, Échap, fond cliquable, fermé à la navigation et à l'ouverture de l'assistant), cibles de 44 px (variantes `max-md:` des boutons, champs, menus, pastilles, liens de contact, « Annuler », lignes de la palette), marges et bandeaux réduits, colonne de date masquée sur mobile, fiche client recomposée (tuile plus petite, « Modifier » pleine largeur, dates sur 2 colonnes). La palette ⌘K reste visible même quand le tiroir est fermé (clavier externe).
+- Vérifié à l'écran : Notes, Clients, fiche avec contact, formulaires (note, fiche, contact), assistant plein écran, palette ⌘K, thème sombre. Aucun débordement horizontal ; plus aucune cible sous 44 px sauf le « i » de la recherche (zone tactile élargie par un pseudo-élément) et les liens dans une phrase.
+- Limites : le menu « Lié à » affiche un nom de fiche long sur deux lignes dans l'émulation (un vrai menu Android le tronque sur une ligne) ; j'ai essayé une ellipse CSS, elle faisait disparaître la flèche, j'ai donc gardé le rendu natif. Pages de connexion, de mot de passe oublié et d'erreur non rejouées en émulation (je n'ai pas vérifié leur mise en page ; leurs boutons et champs profitent des mêmes variantes). Pas d'essai sur le vrai téléphone : c'est à Alex de confirmer.
+- Données de test supprimées ; 147 tests unitaires, lint, types.

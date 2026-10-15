@@ -42,7 +42,7 @@ export function SenseSearch() {
             aria-expanded={helpOpen}
             aria-controls="sense-help"
             onClick={() => setHelpOpen((v) => !v)}
-            className="peer absolute left-1.5 top-1/2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+            className="peer absolute left-1.5 top-1/2 inline-flex size-6 max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-[''] -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Info className="size-4" aria-hidden="true" />
           </button>
