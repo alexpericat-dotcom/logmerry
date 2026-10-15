@@ -194,15 +194,11 @@ function sourceFiles(dir: string): string[] {
   return out;
 }
 
-const ILLUSTRATIONS = ["components/theme-devices.tsx"];
-
 test("aucune couleur écrite en dur hors jetons : ni hexadécimal, ni couleur nommée de Tailwind (le rideau noir translucide d'une fenêtre est permis)", () => {
   const forbidden = /#[0-9a-fA-F]{3,8}\b|\b(?:bg|text|border|ring|fill|stroke|from|to|via)-(?:red|green|blue|gray|grey|neutral|slate|zinc|stone|yellow|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|white|black)(?:-\d{2,3})?\b/g;
   const hits: string[] = [];
   for (const dir of ["app", "components", "lib"]) {
     for (const file of sourceFiles(dir)) {
-      // Illustrations (SVG dessinés) : leurs couleurs sont celles de l'objet représenté, pas des jetons d'interface.
-      if (ILLUSTRATIONS.includes(file)) continue;
       // Le rideau noir translucide d'une fenêtre est permis, sous cette seule forme exacte.
       const code = read(file).replaceAll("backdrop:bg-black/50", "");
       for (const m of code.matchAll(forbidden)) hits.push(`${file} : ${m[0]}`);
