@@ -108,8 +108,12 @@
     border-color: hsl(var(--border));
     box-shadow: 2px 2px 0 hsl(var(--border));
   }
-  .neon-icon {
-    color: hsl(var(--primary));
+  /* Logo : version pixel en clair, vectorielle d'origine en sombre. */
+  html:not(.dark) .logo-svg {
+    display: none;
+  }
+  .dark .logo-pixel {
+    display: none;
   }
   /* Pastille de sélection du clair seulement (barre latérale) : le sombre garde son icône allumée, sans cadre. */
   html:not(.dark) .neon-light {

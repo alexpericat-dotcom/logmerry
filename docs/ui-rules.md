@@ -14,7 +14,7 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 8. **Chaque jeton existe en clair et en sombre.** Un jeton sans pendant ne passe pas la revue.
 9. **Focus visible partout** : anneau `ring` orange de 2 px décalé de 2 px ; navigation complète au clavier.
 10. **Composants shadcn par défaut** (Dialog, Sheet, Command, Popover, Toast, Tabs, Skeleton, Separator, Table), recolorés par les jetons ; on ne redessine pas sans raison de marque.
-11. **Le nom « LogMerry » s'écrit en Bricolage Grotesque 700 (`font-brand`) avec le logo dans la barre latérale, et en Pixelify Sans bicolore (`font-pixel`) sur la page de connexion.** Les titres de bandeau sont en Pixelify Sans capitales (`font-pixel text-display`, ombre `tone-teal`) ; jamais pour le texte courant.
+11. **Le nom « LogMerry » s'écrit en Bricolage Grotesque 700 (`font-brand`) avec le logo vectoriel en sombre ; en clair, le logo est en pixels (`public/images/logo-pixel.svg`, `LogoMark` choisit selon le thème) et le nom en Pixelify Sans (`font-pixel`, bicolore sur la connexion), partout (barre latérale, barre du haut, connexion).** Les titres de bandeau sont en Pixelify Sans capitales (`font-pixel text-display`, ombre `tone-teal`) ; jamais pour le texte courant.
 12. **Les contrôles natifs suivent le thème** (`color-scheme`, options de `select`).
 13. **`prefers-reduced-motion` et `forced-colors` respectés.**
 
@@ -32,11 +32,11 @@ Contrat court, lisible par un développeur ou une IA avant d'écrire un écran. 
 
 - Accents décoratifs : `tone-teal`, `tone-violet`, `tone-orange`, `tone-pink`, `tone-yellow` (jamais du texte ; texte marine dessus ≥ 4,5:1, vérifié par `lib/theme.test.ts`). Une carte de note porte une barre de 6 px par type (violet, turquoise, orange, rose) ; le type reste écrit.
 - Le décor d'accueil du bandeau (`PageBanner hero` : étoile violette, écran au portrait) sert au cockpit seulement, en clair seulement. La connexion (`AuthShell`) affiche la scène du café en clair, la scène de nuit en sombre.
-- Images dans `public/images/`, décoratives (`alt=""`), `image-rendering: pixelated`.
+- Images dans `public/images/` (portrait, `scene-chemise-bleue` pour le premier écran et la connexion, `scene-tshirt` dans l'écran du cockpit, `scene-nuit` pour le futur du premier écran, `logo-pixel.svg`), décoratives (`alt=""`), `image-rendering: pixelated`. Le slogan de la connexion est aussi en pixel en clair. Au survol, une icône de la barre latérale garde sa couleur (pas de bleu).
 
 ## Premier écran (choix du thème)
 
-`/` est un choix explicite entre les deux thèmes, comme un lien entre le passé et le futur : à gauche **le passé** (clair, rétro pixel, scène du café), à droite **le futur** (sombre, néon, scène de nuit), le logo au centre sur un trait turquoise ; empilés sur téléphone. Chaque moitié montre son thème par les blocs `.light` et `.dark` (indépendants du thème du système) ; un clic enregistre le thème (`next-themes`) et ouvre l'application. Pas de texte de présentation ni de bouton « Se connecter ».
+`/` est un choix explicite entre les deux thèmes, comme un lien entre le passé et le futur : à gauche **Rétro** (clair, pixel, chemise bleue au café), à droite **Futur** (sombre, néon, scène de nuit), le logo au centre sur un trait turquoise ; empilés sur téléphone. Chaque moitié montre son thème par les blocs `.light` et `.dark` (indépendants du thème du système) ; un clic enregistre le thème (`next-themes`) et ouvre l'application. Pas de texte de présentation ni de bouton « Se connecter ».
 
 ## Téléphone (sous 768 px, story R8)
 

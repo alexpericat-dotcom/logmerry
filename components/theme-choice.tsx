@@ -30,11 +30,11 @@ export function ThemeChoice() {
     <main className="relative flex min-h-svh flex-col md:flex-row">
       <h1 className="sr-only">Choisis ton thème</h1>
 
-      <button type="button" onClick={() => choose("light")} aria-label="Choisir le thème clair : rétro pixel, le passé" className={cn("light max-md:pb-14", half)}>
-        <span className="font-pixel text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Le passé</span>
+      <button type="button" onClick={() => choose("light")} aria-label="Choisir le thème clair : rétro pixel" className={cn("light max-md:pb-14", half)}>
+        <span className="font-pixel text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Rétro</span>
         <span className="font-pixel text-5xl font-bold uppercase leading-none tracking-wide text-display [text-shadow:3px_3px_0_hsl(var(--tone-teal))] md:text-6xl">Clair</span>
         <span className={frame}>
-          <Image src="/images/scene-cafe.png" alt="" width={320} height={320} unoptimized className="size-32 object-cover [image-rendering:pixelated] md:size-72" />
+          <Image src="/images/scene-chemise-bleue.png" alt="" width={248} height={360} unoptimized className="h-44 w-32 object-cover [image-rendering:pixelated] md:h-80 md:w-56" />
         </span>
         <span className="max-w-xs text-sm max-md:hidden">Rétro pixel : ciel pâle, traits marine, accents turquoise et orange.</span>
         <span className={cta}>Choisir le clair</span>
@@ -43,16 +43,16 @@ export function ThemeChoice() {
       {/* Le lien entre les deux : un trait et le logo au centre. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center md:inset-y-0 md:left-1/2 md:right-auto md:top-0 md:translate-y-0 md:-translate-x-1/2">
         <span className="absolute h-1 w-full bg-tone-teal md:h-full md:w-1" />
-        <span className="light relative flex size-20 items-center justify-center rounded-full border-[3px] bg-card shadow-hard md:size-24">
-          <LogoMark className="size-12 md:size-14" />
+        <span className="light relative flex size-24 items-center justify-center rounded-full border-[3px] bg-card shadow-hard md:size-28">
+          <LogoMark pixel className="size-[72px]" />
         </span>
       </div>
 
-      <button type="button" onClick={() => choose("dark")} aria-label="Choisir le thème sombre : néon, le futur" className={cn("dark max-md:pt-14", half)}>
-        <span className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Le futur</span>
+      <button type="button" onClick={() => choose("dark")} aria-label="Choisir le thème sombre : néon, futur" className={cn("dark max-md:pt-14", half)}>
+        <span className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Futur</span>
         <span className="text-5xl font-bold uppercase leading-none tracking-tight md:text-6xl">Sombre</span>
         <span className={frame}>
-          <Image src="/images/scene-nuit.jpg" alt="" width={320} height={320} unoptimized className="size-32 object-cover [image-rendering:pixelated] md:size-72" />
+          <Image src="/images/scene-nuit.jpg" alt="" width={248} height={360} unoptimized className="h-44 w-32 object-cover [image-rendering:pixelated] [object-position:25%_50%] md:h-80 md:w-56" />
         </span>
         <span className="max-w-xs text-sm max-md:hidden">Néon : bleu nuit, dégradé couchant, contours lumineux.</span>
         <span className={cta}>Choisir le sombre</span>

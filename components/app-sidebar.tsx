@@ -102,8 +102,8 @@ export function AppSidebar({
         >
           <Menu size={20} aria-hidden="true" />
         </Button>
-        <LogoMark className="size-6" />
-        <span className="font-brand text-lg font-bold tracking-tight">LogMerry</span>
+        <LogoMark className="size-8 dark:size-6" />
+        <span className="font-pixel text-lg font-bold tracking-wide dark:font-brand dark:tracking-tight">LogMerry</span>
       </div>
       {menuOpen && <div className="fixed inset-0 z-30 bg-foreground/40 md:hidden" aria-hidden="true" onClick={() => setMenuOpen(false)} />}
     <aside
@@ -117,8 +117,8 @@ export function AppSidebar({
     >
       <div className="flex h-14 items-center justify-between px-2">
         <span className="flex items-center gap-2 px-2">
-          <LogoMark className={cn("size-6", collapsed && "md:hidden")} />
-          <span className={cn("font-brand text-lg font-bold tracking-tight", labelClass)}>LogMerry</span>
+          <LogoMark className={cn("size-8 dark:size-6", collapsed && "md:hidden")} />
+          <span className={cn("font-pixel text-lg font-bold tracking-wide dark:font-brand dark:tracking-tight", labelClass)}>LogMerry</span>
         </span>
         <Button
           ref={closeButton}

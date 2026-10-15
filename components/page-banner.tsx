@@ -13,12 +13,12 @@ function BannerArt() {
       <div className="relative flex flex-col items-center pt-2">
         <div className="border-[3px] bg-tone-teal p-1 shadow-hard">
           <Image
-            src="/images/alex-portrait.png"
+            src="/images/scene-tshirt.png"
             alt=""
-            width={96}
-            height={96}
+            width={80}
+            height={116}
             unoptimized
-            className="h-14 w-[4.5rem] border-2 object-cover [image-rendering:pixelated] md:h-[4.5rem] md:w-24"
+            className="aspect-[7/10] w-16 border-2 object-cover [image-rendering:pixelated] md:w-20"
           />
         </div>
         <span className="mt-1 h-2 w-9 bg-foreground" />
@@ -63,7 +63,7 @@ export function PageBanner({
       </div>
       {(description || children) && (
         <div className="relative flex flex-col gap-2">
-          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "mt-12 md:mr-36 md:mt-0 dark:mt-0 dark:md:mr-0")}>{description}</p>}
+          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "mt-20 md:mr-36 md:mt-0 dark:ml-auto dark:mt-0 dark:md:mr-0")}>{description}</p>}
           {children && <div className="flex flex-col gap-2">{children}</div>}
         </div>
       )}
