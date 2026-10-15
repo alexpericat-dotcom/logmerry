@@ -154,7 +154,7 @@ export function AppSidebar({
           }}
           aria-expanded={assistant.isOpen}
           title={assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}
-          className="flex h-9 w-full items-center gap-3 rounded-md border-l-[3px] border-transparent px-2 text-sm max-md:h-11 hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex h-9 w-full items-center gap-3 rounded-sm border border-transparent px-2 text-sm max-md:h-11 hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
         >
           <MessageSquare size={16} aria-hidden="true" />
           <span className={labelClass}>{assistant.isOpen ? "Fermer l'assistant" : "Ouvrir l'assistant"}</span>
@@ -166,7 +166,7 @@ export function AppSidebar({
           {NAV_ITEMS.map((item) => {
             const Icon = ICONS[item.icon];
             const base =
-              "flex h-9 items-center gap-3 rounded-md border-l-[3px] px-2 text-sm max-md:h-11";
+              "flex h-9 items-center gap-3 rounded-sm border px-2 text-sm max-md:h-11";
             if (!item.available) {
               return (
                 <li key={item.href}>
@@ -192,11 +192,11 @@ export function AppSidebar({
                   aria-current={current ? "page" : undefined}
                   className={cn(
                     base,
-                    "group border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
-                    current && "border-foreground bg-accent font-bold",
+                    "group border-transparent hover:border-border hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                    current && "neon font-bold hover:bg-tone-orange dark:bg-accent dark:hover:bg-accent",
                   )}
                 >
-                  <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
+                  <Icon size={16} aria-hidden="true" className={cn("transition-[filter,color]", current ? "dark:neon-icon" : "group-hover:neon-icon group-focus-visible:neon-icon")} />
                   <span className={labelClass}>{item.label}</span>
                 </Link>
               </li>
