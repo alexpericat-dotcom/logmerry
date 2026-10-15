@@ -391,3 +391,4 @@
 - **Défaut trouvé par ce parcours** (aucun test ne pouvait le voir) : après une erreur de validation, le menu « Lié à » revenait à « Aucune fiche » alors que le panneau « Nouvelle fiche » restait ouvert ; renvoyer le formulaire aurait enregistré la note sans lien et sans créer la fiche, sans message. Cause : React remet les champs à zéro après l'action et ne met pas à jour l'option par défaut d'un menu déjà monté. Corrigé : menu non contrôlé, remonté à chaque envoi (clé = compteur d'envois), valeur par défaut renvoyée par l'action ; vérifié dans Chrome. Leçon : un formulaire à champ conditionnel se vérifie après une erreur, pas seulement au premier envoi.
 
 - Alex a validé la story 8.13 (résumé de note, preview) et la story 3.3 (lien note-fiche) : passées en done (2026-10-15).
+- Alex a validé aussi les stories 3.1 et 3.2 : passées en done.
