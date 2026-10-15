@@ -11,19 +11,30 @@ import {
   type NoteErrors,
   type NoteValues,
 } from "@/lib/domain/notes";
+import { validateLink, type LinkErrors, type NoteLink } from "@/lib/domain/note-link";
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { createClient } from "@/lib/supabase/server";
 
+export type NoteFormValues = {
+  title: string;
+  body: string;
+  type: string;
+  client_id: string;
+  new_name: string;
+  new_origin: string;
+};
+
 export type NoteFormState = {
-  errors?: NoteErrors;
+  errors?: NoteErrors & LinkErrors;
   message?: string;
-  values?: { title: string; body: string; type: string };
+  values?: NoteFormValues;
 };
 
 export type DeleteState = { message?: string };
 
 const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
 const NOT_FOUND = "Cette note n'existe plus.";
+const CLIENT_GONE = "Cette fiche n'existe plus.";
 
 type Session<T> =
   | { status: "signed-out" }
@@ -47,25 +58,51 @@ function readValues(formData: FormData) {
     title: String(formData.get("title") ?? ""),
     body: String(formData.get("body") ?? ""),
     type: String(formData.get("type") ?? ""),
+    client_id: String(formData.get("client_id") ?? ""),
+    new_name: String(formData.get("new_name") ?? ""),
+    new_origin: String(formData.get("new_origin") ?? ""),
   };
 }
 
-type WriteOutcome = "saved" | "not-found" | "error";
+/** Fiche à lier : null (aucune), son identifiant (existante, ou créée à l'instant comme prospect), ou "gone" / "error". */
+async function resolveLink(supabase: SupabaseClient, link: NoteLink): Promise<string | null | "gone" | "error"> {
+  if (link.kind === "none") return null;
+  if (link.kind === "existing") {
+    const { data, error } = await supabase.from("clients").select("id").eq("id", link.id).maybeSingle();
+    if (error) return "error";
+    return data ? link.id : "gone";
+  }
+  // ponytail : fiche puis note en deux écritures ; si la note échoue, la fiche reste (un prospect de plus, supprimable).
+  const { data, error } = await supabase
+    .from("clients")
+    .insert({ name: link.name, status: "prospect", origin: link.origin })
+    .select("id")
+    .single();
+  return error ? "error" : data.id;
+}
+
+type WriteOutcome = "saved" | "not-found" | "client-gone" | "error";
 /** `id` : la note enregistrée, à indexer. */
 type WriteResult = { outcome: WriteOutcome; id?: string };
 
 /** Session, validation, écriture. `write` dit si la base a enregistré, si la note n'existe plus ou si elle a échoué. */
 async function save(
-  values: { title: string; body: string; type: string },
-  write: (supabase: SupabaseClient, value: NoteValues) => Promise<WriteResult>,
+  values: NoteFormValues,
+  write: (supabase: SupabaseClient, value: NoteValues, clientId: string | null) => Promise<WriteResult>,
 ): Promise<NoteFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateNoteInput(values);
-    if (!checked.ok) return { errors: checked.errors };
-    const written = await write(supabase, checked.value);
+    const link = validateLink(values);
+    if (!checked.ok || !link.ok) {
+      return { errors: { ...(checked.ok ? {} : checked.errors), ...(link.ok ? {} : link.errors) } };
+    }
+    const clientId = await resolveLink(supabase, link.link);
+    if (clientId === "gone") return { outcome: "client-gone" as WriteOutcome };
+    if (clientId === "error") return { outcome: "error" as WriteOutcome };
+    const written = await write(supabase, checked.value, clientId);
     // La note est enregistrée : l'indexation ne peut plus faire échouer la sauvegarde.
     if (written.outcome === "saved" && written.id) await indexNote(supabase, written.id, checked.value);
-    return { outcome: written.outcome };
+    return { outcome: written.outcome as WriteOutcome };
   });
 
   // redirect() lève une exception : à appeler hors du try.
@@ -73,6 +110,7 @@ async function save(
   if (result.status === "failed") return { message: SAVE_FAILED, values };
   if (result.value.errors) return { errors: result.value.errors, values };
   if (result.value.outcome === "not-found") return { message: NOT_FOUND, values };
+  if (result.value.outcome === "client-gone") return { message: CLIENT_GONE, values };
   if (result.value.outcome !== "saved") return { message: SAVE_FAILED, values };
 
   revalidatePath("/notes");
@@ -81,8 +119,8 @@ async function save(
 
 export async function createNote(_prev: NoteFormState, formData: FormData): Promise<NoteFormState> {
   // owner_id vient de la base (default auth.uid()) ; la RLS refuse tout autre propriétaire.
-  return save(readValues(formData), async (supabase, value) => {
-    const { data, error } = await supabase.from("notes").insert(value).select("id").single();
+  return save(readValues(formData), async (supabase, value, clientId) => {
+    const { data, error } = await supabase.from("notes").insert({ ...value, client_id: clientId }).select("id").single();
     return error ? { outcome: "error" } : { outcome: "saved", id: data.id };
   });
 }
@@ -92,11 +130,11 @@ export async function updateNote(
   _prev: NoteFormState,
   formData: FormData,
 ): Promise<NoteFormState> {
-  return save(readValues(formData), async (supabase, value) => {
+  return save(readValues(formData), async (supabase, value, clientId) => {
     if (!isUuid(id)) return { outcome: "not-found" };
     const { data, error } = await supabase
       .from("notes")
-      .update({ ...value, index_status: "pending" })
+      .update({ ...value, client_id: clientId, index_status: "pending" })
       .eq("id", id)
       .select("id");
     if (error) return { outcome: "error" };

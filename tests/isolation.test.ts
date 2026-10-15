@@ -673,3 +673,57 @@ describe("isolation des contacts entre deux comptes fictifs", () => {
     assert.equal((await a.client.from("contacts").select("id").eq("client_id", clientA.id)).data!.length, 1);
   });
 });
+
+describe("lien d'une note à une fiche entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let clientA: { id: string };
+  let clientB: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("notes").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const fa = await a.client.from("clients").insert({ name: `${PREFIX} fiche liée A`, origin: "demo" }).select("id").single();
+    assert.ifError(fa.error);
+    clientA = fa.data!;
+    const fb = await b.client.from("clients").insert({ name: `${PREFIX} fiche liée B`, origin: "demo" }).select("id").single();
+    assert.ifError(fb.error);
+    clientB = fb.data!;
+  });
+
+  after(cleanup);
+
+  test("lier à sa fiche marche ; B ne peut pas lier ni déplacer une note vers la fiche de A", async () => {
+    const own = await a.client.from("notes").insert({ title: `${PREFIX} note liée A`, client_id: clientA.id }).select("id, client_id").single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.client_id, clientA.id);
+    const onA = await b.client.from("notes").insert({ title: `${PREFIX} intrus`, client_id: clientA.id });
+    assert.equal(onA.error?.code, "42501", "insertion liée à la fiche d'un autre refusée");
+    const mine = await b.client.from("notes").insert({ title: `${PREFIX} note B`, client_id: clientB.id }).select("id").single();
+    assert.ifError(mine.error);
+    const move = await b.client.from("notes").update({ client_id: clientA.id }).eq("id", mine.data!.id).select("id");
+    assert.ok(move.error || move.data!.length === 0, "déplacement vers la fiche d'un autre refusé");
+    const seen = await b.client.from("notes").select("id").eq("client_id", clientA.id);
+    assert.equal(seen.data!.length, 0, "B ne voit aucune note de la fiche de A");
+  });
+
+  test("passer en client garde le lien ; supprimer la fiche garde la note, déliée", async () => {
+    const n = await a.client.from("notes").insert({ title: `${PREFIX} note promue`, client_id: clientA.id }).select("id").single();
+    assert.ifError(n.error);
+    assert.ifError((await a.client.from("clients").update({ status: "client" }).eq("id", clientA.id)).error);
+    assert.equal((await a.client.from("notes").select("client_id").eq("id", n.data!.id).single()).data!.client_id, clientA.id);
+    assert.ifError((await a.client.from("clients").delete().eq("id", clientA.id)).error);
+    const after = await a.client.from("notes").select("client_id").eq("id", n.data!.id).single();
+    assert.ifError(after.error);
+    assert.equal(after.data!.client_id, null, "note conservée, sans lien");
+  });
+});

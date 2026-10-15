@@ -148,6 +148,11 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
             {note.status === "draft" && (
               <Badge variant="outline">Brouillon</Badge>
             )}
+            {note.client && note.client_id && (
+              <Link href={`/clients/${note.client_id}`} className="rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+                <Badge variant="outline">{note.client.name}</Badge>
+              </Link>
+            )}
             <IndexStatus status={note.index_status} />
           </div>
           {note.body && (

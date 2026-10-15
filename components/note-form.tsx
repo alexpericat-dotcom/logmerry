@@ -1,25 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
-import type { NoteFormState } from "@/app/(app)/notes/actions";
+import type { NoteFormState, NoteFormValues } from "@/app/(app)/notes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  CLIENT_ORIGINS,
+  CLIENT_ORIGIN_LABELS,
+  CLIENT_STATUS_LABELS,
+  matchClients,
+  type ClientStatus,
+} from "@/lib/domain/clients";
+import { NEW_CLIENT } from "@/lib/domain/note-link";
 import { NOTE_TYPES, NOTE_TYPE_LABELS } from "@/lib/domain/notes";
 
 type Props = {
   action: (state: NoteFormState, formData: FormData) => Promise<NoteFormState>;
-  initial?: { title: string; body: string; type: string };
+  initial?: NoteFormValues;
+  /** Mes fiches, pour le champ « Lié à ». */
+  clients: { id: string; name: string; status: ClientStatus }[];
   submitLabel: string;
 };
 
-export function NoteForm({ action, initial, submitLabel }: Props) {
+const selectClass =
+  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+const EMPTY: NoteFormValues = { title: "", body: "", type: "note", client_id: "", new_name: "", new_origin: "" };
+
+export function NoteForm({ action, initial, clients, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState<NoteFormState, FormData>(action, {});
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
-  const values = state.values ?? initial ?? { title: "", body: "", type: "note" };
+  const values = state.values ?? initial ?? EMPTY;
+  const [choice, setChoice] = useState(values.client_id);
+  const [newName, setNewName] = useState(values.new_name);
+  const sorted = [...clients].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  const close = choice === NEW_CLIENT ? matchClients(clients, newName, 5) : [];
+  const { client_id: linkError, new_name: newNameError, new_origin: newOriginError } = state.errors ?? {};
   const titleError = state.errors?.title;
   const bodyError = state.errors?.body;
   const typeError = state.errors?.type;
@@ -64,6 +83,94 @@ export function NoteForm({ action, initial, submitLabel }: Props) {
           </p>
         )}
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="client_id">Lié à</Label>
+        <select
+          id="client_id"
+          name="client_id"
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
+          aria-invalid={linkError ? true : undefined}
+          aria-describedby={linkError ? "client_id-error" : undefined}
+          className={selectClass}
+        >
+          <option value="">Aucune fiche</option>
+          {sorted.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({CLIENT_STATUS_LABELS[c.status]})
+            </option>
+          ))}
+          <option value={NEW_CLIENT}>+ Nouvelle fiche…</option>
+        </select>
+        {linkError && (
+          <p id="client_id-error" role="alert" className="text-sm text-destructive">
+            {linkError}
+          </p>
+        )}
+      </div>
+      {choice === NEW_CLIENT && (
+        <fieldset className="grid gap-4 rounded-md border p-3">
+          <legend className="px-1 text-sm font-semibold">Nouvelle fiche (prospect)</legend>
+          <div className="grid gap-2">
+            <Label htmlFor="new_name">Nom de la fiche (obligatoire)</Label>
+            <Input
+              id="new_name"
+              name="new_name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoComplete="off"
+              aria-required="true"
+              aria-invalid={newNameError ? true : undefined}
+              aria-describedby={newNameError ? "new_name-error" : undefined}
+            />
+            {newNameError && (
+              <p id="new_name-error" role="alert" className="text-sm text-destructive">
+                {newNameError}
+              </p>
+            )}
+            {close.length > 0 && (
+              <div className="text-sm" aria-live="polite">
+                <p className="text-muted-foreground">Fiches proches : c&apos;est peut-être l&apos;une d&apos;elles ?</p>
+                <ul className="mt-1 flex flex-wrap gap-2">
+                  {close.map((c) => (
+                    <li key={c.id}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setChoice(c.id)}>
+                        Utiliser {c.name}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new_origin">Origine (obligatoire)</Label>
+            <select
+              id="new_origin"
+              name="new_origin"
+              defaultValue={values.new_origin}
+              aria-required="true"
+              aria-invalid={newOriginError ? true : undefined}
+              aria-describedby={newOriginError ? "new_origin-error" : undefined}
+              className={selectClass}
+            >
+              <option value="" disabled>
+                Choisis une origine
+              </option>
+              {CLIENT_ORIGINS.map((o) => (
+                <option key={o} value={o}>
+                  {CLIENT_ORIGIN_LABELS[o]}
+                </option>
+              ))}
+            </select>
+            {newOriginError && (
+              <p id="new_origin-error" role="alert" className="text-sm text-destructive">
+                {newOriginError}
+              </p>
+            )}
+          </div>
+        </fieldset>
+      )}
       <div className="grid gap-2">
         <Label htmlFor="body">Texte</Label>
         <Textarea

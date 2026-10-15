@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { deleteClientRecord, type DeleteClientState } from "@/app/(app)/clients/actions";
 import { Button } from "@/components/ui/button";
 
-export function DeleteClient({ id }: { id: string }) {
+export function DeleteClient({ id, noteCount = 0 }: { id: string; noteCount?: number }) {
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<DeleteClientState>(() => deleteClientRecord(id), {});
   const askRef = useRef<HTMLButtonElement>(null);
@@ -51,7 +51,7 @@ export function DeleteClient({ id }: { id: string }) {
       <p id="delete-question" className="font-semibold">
         Supprimer cette fiche ?
       </p>
-      <p className="text-sm text-muted-foreground">Cette action est définitive. Ses contacts seront supprimés aussi.</p>
+      <p className="text-sm text-muted-foreground">Cette action est définitive. Ses contacts seront supprimés aussi.{noteCount > 0 && ` ${noteCount > 1 ? `${noteCount} notes seront conservées, sans lien` : "1 note sera conservée, sans lien"}.`}</p>
       {message}
       <div className="flex gap-3">
         <Button type="submit" variant="destructive" disabled={pending}>
