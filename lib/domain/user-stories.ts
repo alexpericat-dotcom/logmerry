@@ -20,12 +20,21 @@ const stripNul = (s: string) => s.replaceAll("\u0000", "");
 // Même décompte que char_length côté base (points de code, pas unités UTF-16).
 const length = (s: string) => [...s].length;
 
+/** Retire « afin » puis « de » / « d' » seulement s'ils introduisent un infinitif (« de connaître », « d'agir », « de ne rien oublier ») : « de Gaulle » et « d'abord » restent intacts. « afin que… » est gardé tel quel. */
+function stripBenefitLead(text: string): string {
+  const t = text.replace(/^afin\s+(?=d(?:e\s|['’])|qu)/i, "");
+  const m = /^d(?:e\s+|['’]\s*)(\S+)/i.exec(t);
+  if (m && /(?:er|ir|re|oir)$|^ne$|^n['’]/i.test(m[1])) return t.replace(/^d(?:e\s+|['’]\s*)/i, "");
+  return t;
+}
+
 /** Valide une user story ; un champ facultatif vide devient `null` ; les points viennent de la suite de Fibonacci. */
 export function validateStoryInput(input: StoryInput): { ok: true; value: StoryValues } | { ok: false; errors: StoryErrors } {
-  const title = stripNul(input.title).trim();
   // Le formulaire et l'IA écrivent parfois les mots de liaison que la phrase ajoute elle-même : « en tant que… », « afin de… ».
+  // « je veux », « en tant que » et « afin de » sont ajoutés par la phrase.
+  const title = stripNul(input.title).trim().replace(/^je veux\s+/i, "");
   const role = stripNul(input.role).trim().replace(/^en tant qu(?:e\s+|['’]\s*)/i, "");
-  const benefit = stripNul(input.benefit).trim().replace(/^(?:afin\s+)?d(?:e\s+|['’]\s*)/i, "");
+  const benefit = stripBenefitLead(stripNul(input.benefit).trim());
   const criteria = stripNul(input.acceptance_criteria).trim();
   const status = parseStoryStatus(input.status);
   const pointsText = input.points.trim();
@@ -43,8 +52,8 @@ export function validateStoryInput(input: StoryInput): { ok: true; value: StoryV
   return { ok: true, value: { title, role: role || null, benefit: benefit || null, acceptance_criteria: criteria || null, points, status } };
 }
 
-/** Première lettre en minuscule dans la phrase (« je veux suivre »), sauf sigle ou nom en capitales (« PDF », « CRM »). */
-const lowerFirst = (t: string) => (/^[A-ZÀ-Ý][a-zà-ÿ]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t);
+/** Première lettre en minuscule dans la phrase quand le texte commence par un verbe à l'infinitif (« Suivre », « Se connecter ») : un nom propre, une marque ou un sigle (« Notion », « Excel », « PDF ») garde sa majuscule. */
+const lowerFirst = (t: string) => (/^(?:Se |S['’])/.test(t) || /^[A-ZÀ-Ý][a-zà-ÿ]*(?:er|ir|re|oir)(?![a-zà-ÿ])/.test(t) ? t[0].toLowerCase() + t.slice(1) : t);
 
 const VOWEL = /^[aeiouyàâäéèêëîïôöùûüœæ]/i;
 /** Élision française devant une voyelle : « que » devient « qu' », « de » devient « d' ».
@@ -53,7 +62,11 @@ const elide = (word: string, next: string) => (VOWEL.test(next) ? `${word.slice(
 
 /** « En tant que {rôle}, je veux {titre}, afin de {bénéfice} » (avec élision) ; les parties absentes sont omises, le titre seul en dernier recours. */
 export function storySentence(s: { title: string; role: string | null; benefit: string | null }): string {
-  const parts = [s.role ? `En tant ${elide("que", s.role)}` : null, `${s.role ? "je" : "Je"} veux ${lowerFirst(s.title)}`, s.benefit ? `afin ${elide("de", s.benefit)}` : null];
+  const parts = [
+    s.role ? `En tant ${elide("que", lowerFirst(s.role))}` : null,
+    `${s.role ? "je" : "Je"} veux ${lowerFirst(s.title)}`,
+    s.benefit ? `afin ${/^qu(?:e\s|['’])/i.test(s.benefit) ? s.benefit : elide("de", lowerFirst(s.benefit))}` : null,
+  ];
   return parts.filter(Boolean).join(", ");
 }
 

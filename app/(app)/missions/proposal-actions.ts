@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { proposeWithClaude } from "@/lib/ai/story-proposals";
+import { notesForProposal } from "@/lib/db/proposal-notes";
 import { isUuid } from "@/lib/domain/notes";
 import { BRIEF_MAX, buildProposalMessage, limitNotes, verifyProposals, type Proposal } from "@/lib/domain/story-proposals";
 import { withSession } from "@/lib/supabase/with-session";
@@ -18,27 +19,24 @@ const NOTHING = "L'IA n'a rien proposé d'exploitable. Précise ton brief.";
  * propositions n'existent qu'à l'écran tant que l'utilisateur ne garde pas l'une d'elles. Sans session : connexion.
  */
 export async function proposeStories(missionId: string, brief: string, noteIds: string[]): Promise<ProposalState> {
-  const text = String(brief ?? "");
-  if (text.length > BRIEF_MAX * 2) return { ok: false, error: `Le brief est trop long (${BRIEF_MAX.toLocaleString("fr-FR")} caractères au plus).` };
-  if ([...text].length > BRIEF_MAX) return { ok: false, error: `Le brief est trop long (${BRIEF_MAX.toLocaleString("fr-FR")} caractères au plus).` };
-  const wanted = [...new Set((Array.isArray(noteIds) ? noteIds : []).map(String).filter(isUuid))].slice(0, 50);
-  if (!text.trim() && wanted.length === 0) return { ok: false, error: "Colle un brief ou coche au moins une note." };
-
   const result = await withSession(async (supabase): Promise<ProposalState> => {
+    // Toutes les vérifications sont faites sous la session : sans connexion, c'est la redirection qui répond, jamais un message de validation.
+    const text = String(brief ?? "");
+    if (text.length > BRIEF_MAX * 2 || [...text].length > BRIEF_MAX) return { ok: false, error: `Le brief est trop long (${BRIEF_MAX.toLocaleString("fr-FR")} caractères au plus).` };
+    const wanted = [...new Set((Array.isArray(noteIds) ? noteIds.slice(0, 200) : []).map(String).filter(isUuid))].slice(0, 50);
+    if (!text.trim() && wanted.length === 0) return { ok: false, error: "Colle un brief ou coche au moins une note." };
     if (!isUuid(String(missionId))) return { ok: false, error: "Cette mission n'existe plus." };
+
     const mission = await supabase.from("missions").select("title, client_id, client:clients(name)").eq("id", missionId).maybeSingle();
     if (mission.error) throw new Error(`mission ${mission.error.code ?? ""}`.trim());
     if (!mission.data) return { ok: false, error: "Cette mission n'existe plus." };
 
-    // Les notes cochées doivent être à moi ET liées à la fiche de cette mission : un identifiant forgé est ignoré.
-    let notes: { id: string; title: string; body: string }[] = [];
-    if (wanted.length) {
-      const found = await supabase.from("notes").select("id, title, body, created_at").in("id", wanted).eq("client_id", mission.data.client_id).eq("status", "active").order("created_at", { ascending: false });
-      if (found.error) throw new Error(`notes ${found.error.code ?? ""}`.trim());
-      notes = found.data.filter((n) => n.body.trim());
-    }
-    if (!text.trim() && notes.length === 0) return { ok: false, error: "Les notes cochées n'ont pas de texte à lire. Colle un brief." };
+    const notes = await notesForProposal(supabase, mission.data.client_id, wanted);
     const { kept, cut } = limitNotes(notes);
+    // Rien d'exploitable à envoyer : on le dit sans appeler Claude (un appel sans source inventerait des stories).
+    if (!text.trim() && kept.length === 0) {
+      return { ok: false, error: wanted.length && !notes.length ? "Aucune des notes cochées n'est disponible ou n'a de texte. Colle un brief." : "Les notes cochées sont trop volumineuses (30 000 caractères au plus en tout). Décoches-en ou colle un brief." };
+    }
 
     const stories = await supabase.from("user_stories").select("title").eq("mission_id", missionId).order("position", { ascending: true });
     if (stories.error) throw new Error(`backlog ${stories.error.code ?? ""}`.trim());
@@ -55,7 +53,8 @@ export async function proposeStories(missionId: string, brief: string, noteIds: 
       throw e;
     }
     const { proposals, dropped } = verifyProposals(raw, {
-      texts: [text, mission.data.title, ...kept.flatMap((n) => [n.title, n.body])],
+      // Les titres du backlog sont aussi des sources : « Phase 12 » copié d'une story existante n'est pas un chiffre inventé.
+      texts: [text, mission.data.title, ...existingTitles, ...kept.flatMap((n) => [n.title, n.body])],
       sentNoteIds: kept.map((n) => n.id),
       existingTitles,
     });

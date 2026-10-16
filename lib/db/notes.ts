@@ -61,16 +61,3 @@ export async function countIndexStatuses(): Promise<IndexCounts> {
   for (const { index_status } of data) counts[index_status as "indexed" | "pending" | "failed"]++;
   return counts;
 }
-
-/** Mes notes liées à une fiche, avec leur texte, de la plus récente à la plus ancienne (la RLS limite aux miennes) : ce que l'IA peut lire pour proposer un backlog. */
-export async function listNotesWithBodyForClient(clientId: string): Promise<{ id: string; title: string; body: string; created_at: string }[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notes")
-    .select("id, title, body, created_at")
-    .eq("client_id", clientId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-  if (error) throw new Error("Impossible de charger les notes de la fiche.");
-  return data as { id: string; title: string; body: string; created_at: string }[];
-}

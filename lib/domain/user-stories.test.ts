@@ -109,3 +109,25 @@ test("mots de liaison : « en tant que » et « afin de » écrits par l'utilisa
   assert.equal(storySentence({ title: "Exporter en PDF", role: null, benefit: null }), "Je veux exporter en PDF");
   assert.equal(storySentence({ title: "PDF à exporter", role: null, benefit: null }), "Je veux PDF à exporter");
 });
+
+test("normalisation du bénéfice : seulement devant un infinitif ; « de Gaulle », « d'abord », « d'autres », « dépenser » intacts ; « afin que » gardé", () => {
+  const b = (benefit: string) => { const r = validateStoryInput({ ...ok, benefit }); return r.ok ? r.value.benefit : "ERREUR"; };
+  assert.equal(b("de connaître l'état"), "connaître l'état");
+  assert.equal(b("d'agir vite"), "agir vite");
+  assert.equal(b("de ne rien oublier"), "ne rien oublier");
+  assert.equal(b("afin de repérer les retards"), "repérer les retards");
+  for (const intact of ["de Gaulle est cité", "d'abord les urgences", "d'autres clients", "dépenser moins", "Quentin suit"]) assert.equal(b(intact), intact);
+  assert.equal(b("afin que les familles soient relancées"), "que les familles soient relancées");
+  assert.equal(storySentence({ title: "x", role: null, benefit: "que les familles soient relancées" }), "Je veux x, afin que les familles soient relancées");
+  const t = validateStoryInput({ ...ok, title: "Je veux suivre les inscriptions" });
+  assert.equal(t.ok && t.value.title, "suivre les inscriptions");
+});
+
+test("majuscule initiale : abaissée devant un infinitif seulement ; noms propres, marques et sigles gardés ; bénéfice abaissé, rôle gardé", () => {
+  const sentence = (title: string) => storySentence({ title, role: null, benefit: null });
+  assert.equal(sentence("Suivre les inscriptions"), "Je veux suivre les inscriptions");
+  assert.equal(sentence("Se connecter à Notion"), "Je veux se connecter à Notion");
+  for (const keep of ["Notion synchronisé avec Airtable", "Excel vers CRM", "Mailchimp pour les rappels", "API REST", "PDF à exporter"]) assert.equal(sentence(keep), `Je veux ${keep}`);
+  // Le bénéfice qui commence par un infinitif est abaissé ; le rôle est gardé tel qu'écrit (un nom commun ne se distingue pas d'un nom propre).
+  assert.equal(storySentence({ title: "suivre", role: "Responsable", benefit: "Relancer" }), "En tant que Responsable, je veux suivre, afin de relancer");
+});

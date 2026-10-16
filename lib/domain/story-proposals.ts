@@ -23,13 +23,14 @@ const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").rep
 
 export type NoteForProposal = { id: string; title: string; body: string };
 
-/** Notes retenues pour l'envoi : au plus 5 et 30 000 caractères en tout, dans l'ordre reçu ; `cut` dit combien ont été laissées de côté. */
+/** Notes retenues pour l'envoi : au plus 5 et 30 000 caractères en tout, dans l'ordre reçu ; une note trop volumineuse est laissée de côté sans bloquer les suivantes ; `cut` dit combien ont été laissées de côté. */
 export function limitNotes(notes: NoteForProposal[]): { kept: NoteForProposal[]; cut: number } {
   const kept: NoteForProposal[] = [];
   let chars = 0;
   for (const n of notes) {
     const size = [...n.title].length + [...n.body].length;
-    if (kept.length >= NOTES_MAX || chars + size > NOTES_CHARS_MAX) break;
+    if (kept.length >= NOTES_MAX) break;
+    if (chars + size > NOTES_CHARS_MAX) continue;
     kept.push(n);
     chars += size;
   }
@@ -48,16 +49,36 @@ export function buildProposalMessage(input: { missionTitle: string; clientName: 
 export type Proposal = StoryValues & { source_note_id: string | null };
 export type ParsedProposals = { proposals: Proposal[]; dropped: number };
 
-/** Appel d'outil « propose_stories » dans la réponse de l'API Messages ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
+/** Liste des stories d'un appel d'outil : un tableau, ou un tableau écrit en texte JSON (certains modèles le renvoient ainsi) ; sinon `null`. */
+function storiesOf(input: unknown): unknown[] | null {
+  const stories = (input as { stories?: unknown } | null)?.stories;
+  if (Array.isArray(stories)) return stories;
+  if (typeof stories === "string") {
+    try {
+      const parsed: unknown = JSON.parse(stories);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Appel d'outil « propose_stories » dans la réponse de l'API Messages (le premier dont la liste est exploitable) ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
 export function parseToolInput(json: unknown): unknown[] {
   const stop = (json as { stop_reason?: unknown } | null)?.stop_reason;
   if (stop === "max_tokens" || stop === "refusal") throw new Error(`Proposition de Claude inutilisable (${stop}).`);
   const content = (json as { content?: unknown } | null)?.content;
-  const tool = Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).find((b) => b?.type === "tool_use" && b.name === "propose_stories") : undefined;
-  const stories = (tool?.input as { stories?: unknown } | undefined)?.stories;
-  if (!Array.isArray(stories)) throw new Error("Proposition de Claude inattendue.");
-  return stories;
+  const calls = Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).filter((b) => b?.type === "tool_use" && b.name === "propose_stories") : [];
+  for (const call of calls) {
+    const stories = storiesOf(call.input);
+    if (stories) return stories;
+  }
+  throw new Error("Proposition de Claude inattendue.");
 }
+
+/** Clé de comparaison d'un titre : sans accents, sans casse, espaces compactés, sans ponctuation finale (« Générer  rapport. » = « generer rapport »). */
+export const titleKey = (title: string) => title.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").replace(/[\s.!?;:,]+$/u, "").trim();
 
 const text = (v: unknown) => (typeof v === "string" ? v : "");
 
@@ -67,13 +88,13 @@ const text = (v: unknown) => (typeof v === "string" ? v : "");
  * une note citée qui n'a pas été envoyée est retirée de la proposition (la proposition reste). Au plus 8.
  */
 export function verifyProposals(raw: unknown[], sources: { texts: string[]; sentNoteIds: string[]; existingTitles: string[] }): ParsedProposals {
-  const sent = new Set(sources.sentNoteIds);
-  const taken = new Set(sources.existingTitles.map((t) => t.trim().toLowerCase()));
+  const sent = new Set(sources.sentNoteIds.map((id) => id.toLowerCase()));
+  const taken = new Set(sources.existingTitles.map(titleKey));
   const proposals: Proposal[] = [];
   let dropped = 0;
   for (const item of raw.slice(0, PROPOSALS_MAX)) {
     const o = (item ?? {}) as Record<string, unknown>;
-    const pointsRaw = typeof o.points === "number" ? o.points : Number(text(o.points));
+    const pointsRaw = typeof o.points === "number" ? o.points : /^\d+$/.test(text(o.points).trim()) ? Number(text(o.points).trim()) : Number.NaN;
     const points = STORY_POINTS.some((p) => p === pointsRaw) ? String(pointsRaw) : "";
     const checked = validateStoryInput({
       title: text(o.title),
@@ -88,14 +109,14 @@ export function verifyProposals(raw: unknown[], sources: { texts: string[]; sent
       continue;
     }
     const v = checked.value;
-    const key = v.title.toLowerCase();
+    const key = titleKey(v.title);
     const all = [v.title, v.role ?? "", v.benefit ?? "", v.acceptance_criteria ?? ""].join("\n");
     if (taken.has(key) || inventedNumbers(all, sources.texts).length) {
       dropped++;
       continue;
     }
     taken.add(key);
-    const note = text(o.note);
+    const note = text(o.note).trim().toLowerCase();
     proposals.push({ ...v, source_note_id: sent.has(note) ? note : null });
   }
   return { proposals, dropped };

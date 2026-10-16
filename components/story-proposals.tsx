@@ -20,6 +20,7 @@ type Item = Proposal & { key: number };
 
 /** Une proposition gardée telle quelle : même ajout qu'à la main (mêmes règles, dernière place du backlog) ; la proposition disparaît quand c'est enregistré. */
 function KeepButton({ missionId, proposal, onKept }: { missionId: string; proposal: Proposal; onKept: () => void }) {
+  // Les erreurs de champ (titre trop long…) sont dites avec le message : « Modifier » permet de les corriger.
   const [state, action, pending] = useActionState<StoryFormState, FormData>(async (prev, formData) => {
     const result = await addStory(missionId, prev, formData);
     if (result.ok) onKept();
@@ -38,16 +39,16 @@ function KeepButton({ missionId, proposal, onKept }: { missionId: string; propos
         {pending ? "Ajout…" : "Garder"}
         <span className="sr-only"> la proposition {proposal.title}</span>
       </Button>
-      {state.message && (
+      {(state.message || state.errors) && (
         <p role="alert" className="basis-full text-sm text-destructive">
-          {state.message}
+          {state.message ?? `${Object.values(state.errors ?? {})[0]} Utilise « Modifier » pour corriger.`}
         </p>
       )}
     </form>
   );
 }
 
-function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: string; item: Item; noteTitle: string | null; onDone: () => void }) {
+function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: string; item: Item; noteTitle: string | null; onDone: (kind: "kept" | "rejected") => void }) {
   const [editing, setEditing] = useState(false);
   const close = useCallback(() => setEditing(false), []);
   if (editing) {
@@ -59,7 +60,7 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
             // La note d'origine suit la proposition modifiée.
             formData.set("source_note_id", item.source_note_id ?? "");
             const result = await addStory(missionId, prev, formData);
-            if (result.ok) onDone();
+            if (result.ok) onDone("kept");
             return result;
           }}
           initial={{
@@ -93,13 +94,13 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
         )}
       </p>
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
-        <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={onDone}>
+        <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={() => onDone("rejected")}>
           Rejeter<span className="sr-only"> la proposition {item.title}</span>
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
           Modifier<span className="sr-only"> la proposition {item.title}</span>
         </Button>
-        <KeepButton missionId={missionId} proposal={item} onKept={onDone} />
+        <KeepButton missionId={missionId} proposal={item} onKept={() => onDone("kept")} />
       </div>
     </li>
   );
@@ -117,41 +118,60 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [announce, setAnnounce] = useState("");
   const openButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const wasOpen = useRef(false);
   const counter = useRef(0);
+  // Numéro de la génération en cours : fermer ou annuler l'invalide, et son résultat, s'il arrive, est jeté (le serveur, lui, va au bout de l'appel).
+  const run = useRef(0);
   const noteTitles = new Map(notes.map((n) => [n.id, n.title]));
 
   const closePanel = useCallback(() => {
+    run.current++; // une génération en cours est abandonnée : son résultat ne remplira pas un panneau fermé
     setOpen(false);
     setItems([]);
     setInfo("");
     setError("");
-    openButton.current?.focus();
+    setAnnounce("");
   }, []);
+  // Le focus va au brief à l'ouverture et revient au bouton d'ouverture à la fermeture (le bouton n'existe qu'après le rendu : d'où l'effet).
   useEffect(() => {
     if (open) panel.current?.querySelector("textarea")?.focus();
+    else if (wasOpen.current) openButton.current?.focus();
+    wasOpen.current = open;
   }, [open]);
+  // Une proposition gardée ou rejetée emporte le bouton qui avait le focus : il va au titre du panneau, et l'issue est annoncée.
+  const done = useCallback((key: number, kind: "kept" | "rejected") => {
+    setItems((all) => all.filter((i) => i.key !== key));
+    setAnnounce(kind === "kept" ? "Proposition ajoutée au backlog." : "Proposition rejetée.");
+    heading.current?.focus();
+  }, []);
 
   const generate = () => {
     if (pending) return;
     setError("");
     setInfo("");
     setItems([]);
+    setAnnounce("");
+    const mine = ++run.current;
     startTransition(async () => {
       try {
         const result = await proposeStories(missionId, brief, [...checked]);
+        if (mine !== run.current) return; // annulé ou fermé entre-temps
         if (!result.ok) {
           setError(result.error);
           return;
         }
         setItems(result.proposals.map((p) => ({ ...p, key: counter.current++ })));
-        const notes = [
-          result.dropped ? `${result.dropped} proposition${result.dropped > 1 ? "s écartées" : " écartée"} : un chiffre ne venait pas de tes sources, ou un titre existait déjà.` : "",
+        const remarks = [
+          result.dropped ? `${result.dropped} proposition${result.dropped > 1 ? "s écartées" : " écartée"} (invalide, doublon d'un titre du backlog, ou chiffre absent de tes sources).` : "",
           result.cut ? `${result.cut} note${result.cut > 1 ? "s n'ont" : " n'a"} pas été envoyée${result.cut > 1 ? "s" : ""} : trop de texte.` : "",
         ].filter(Boolean);
-        setInfo(notes.join(" "));
+        setInfo(remarks.join(" "));
       } catch (e) {
+        if (mine !== run.current) return;
         if (typeof e === "object" && e !== null && String((e as { digest?: unknown }).digest ?? "").startsWith("NEXT_REDIRECT")) throw e;
         setError("Le serveur ne répond pas. Réessaie dans un instant.");
       }
@@ -173,18 +193,20 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
       role="group"
       aria-labelledby="proposals-title"
       onKeyDown={(e) => {
-        if (e.key !== "Escape" || pending) return;
+        if (e.key !== "Escape") return;
+        // Échap dans un champ (brief, formulaire d'une proposition) ne doit pas faire perdre la saisie et les propositions : seuls « Fermer » et la croix ferment alors.
+        if ((e.target as HTMLElement).closest("textarea, input, select, form")) return;
         e.preventDefault(); // le panneau prend la touche : l'assistant reste ouvert
         closePanel();
       }}
       className="flex max-w-3xl flex-col gap-4 rounded-md border border-primary/30 bg-primary/10 p-4"
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 id="proposals-title" className="flex items-center gap-2 font-semibold">
+        <h3 id="proposals-title" ref={heading} tabIndex={-1} className="flex items-center gap-2 font-semibold outline-none">
           <Sparkles size={16} aria-hidden="true" />
           Proposer des user stories avec l&apos;IA
         </h3>
-        <Button type="button" variant="ghost" size="icon" onClick={closePanel} aria-label="Fermer le panneau" disabled={pending}>
+        <Button type="button" variant="ghost" size="icon" onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
           <X size={16} aria-hidden="true" />
         </Button>
       </div>
@@ -229,18 +251,22 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
           {pending ? "L'IA réfléchit…" : items.length ? "Proposer à nouveau" : "Proposer des user stories"}
         </Button>
         <button type="button" onClick={closePanel} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
-          Fermer
+          {pending ? "Annuler" : "Fermer"}
         </button>
       </div>
       <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-        {pending ? "L'IA prépare des propositions, cela peut prendre une quinzaine de secondes." : items.length ? `${items.length} proposition${items.length > 1 ? "s" : ""} à relire.` : ""}
+        {pending ? "L'IA prépare des propositions, cela peut prendre une quinzaine de secondes. « Annuler » arrête l'attente (l'appel, lui, va au bout)." : announce || (items.length ? `${items.length} proposition${items.length > 1 ? "s" : ""} à relire.` : "")}
       </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
-      {info && <p className="text-sm text-muted-foreground">{info}</p>}
+      {info && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {info}
+        </p>
+      )}
       {items.length > 0 && (
         <ol className="flex flex-col gap-2" aria-label="Propositions de l'IA">
           {items.map((item) => (
@@ -249,7 +275,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
               missionId={missionId}
               item={item}
               noteTitle={item.source_note_id ? (noteTitles.get(item.source_note_id) ?? null) : null}
-              onDone={() => setItems((all) => all.filter((i) => i.key !== item.key))}
+              onDone={(kind) => done(item.key, kind)}
             />
           ))}
         </ol>

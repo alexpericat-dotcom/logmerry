@@ -7,7 +7,7 @@ const URL = "https://api.anthropic.com/v1/messages";
 const TIMEOUT_MS = 60_000;
 
 /** Propositions brutes de Claude (outil « propose_stories ») pour le message fourni ; à vérifier ensuite par `verifyProposals`. Lève une erreur sans contenu ni clé en cas d'échec. */
-export async function proposeWithClaude(message: string, signal?: AbortSignal): Promise<unknown[]> {
+export async function proposeWithClaude(message: string): Promise<unknown[]> {
   const { anthropicApiKey, chatModel } = getAiConfig();
   const res = await fetch(URL, {
     method: "POST",
@@ -47,7 +47,7 @@ export async function proposeWithClaude(message: string, signal?: AbortSignal): 
       ],
       messages: [{ role: "user", content: message }],
     }),
-    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Claude a répondu ${res.status}.`);
   const json = await res.json();

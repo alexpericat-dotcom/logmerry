@@ -294,7 +294,10 @@ export function Backlog({ missionId, stories, notes }: { missionId: string; stor
           ))}
         </ol>
       )}
-      {!adding && <StoryProposals missionId={missionId} notes={notes} />}
+      {/* Toujours monté, seulement masqué pendant l'ajout à la main : brief, notes cochées et propositions ne sont pas perdus. */}
+      <div className={adding ? "hidden" : "contents"}>
+        <StoryProposals missionId={missionId} notes={notes} />
+      </div>
       {adding ? (
         <StoryForm idPrefix="new-story" action={addStory.bind(null, missionId)} submitLabel="Ajouter la user story" onDone={done} onCancel={done} />
       ) : (

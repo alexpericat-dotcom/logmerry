@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 
 import { proposeWithClaude } from "@/lib/ai/story-proposals";
+import { notesForProposal } from "@/lib/db/proposal-notes";
 import { buildProposalMessage, limitNotes, verifyProposals } from "@/lib/domain/story-proposals";
 
 const PREFIX = "[essai-ia]";
@@ -101,9 +102,9 @@ async function main() {
 
     // 5. Isolation : la requête de l'action ne renvoie que mes notes liées à CETTE fiche
     const wanted = [n1.id, nOther.id, nB.id];
-    const found = await a.from("notes").select("id").in("id", wanted).eq("client_id", client.id).eq("status", "active");
-    const ids = (found.data ?? []).map((r) => r.id);
-    record("5. isolation des notes", ids.length === 1 && ids[0] === n1.id, `identifiants demandés : note liée, note d'une autre fiche, note de démo B ; renvoyés : ${ids.length} (seule la note liée attendue)`);
+    // La vraie fonction de l'action (et non une copie de sa requête) : une régression de son filtre fait échouer cet essai.
+    const ids = (await notesForProposal(a, client.id, wanted)).map((n) => n.id);
+    record("5. isolation des notes", ids.length === 1 && ids[0] === n1.id, `notesForProposal : identifiants demandés = note liée, note d'une autre fiche, note de démo B ; renvoyés : ${ids.length} (seule la note liée attendue)`);
   } finally {
     await cleanup();
   }
