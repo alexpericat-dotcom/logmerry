@@ -9,6 +9,7 @@ import { PageBanner } from "@/components/page-banner";
 import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { getMission } from "@/lib/db/missions";
+import { listNotesForClient } from "@/lib/db/notes";
 import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -22,7 +23,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
-  const stories = await listStories(id);
+  const [stories, notes] = await Promise.all([listStories(id), listNotesForClient(mission.client_id)]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -79,7 +80,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </dl>
       </section>
-      <Backlog missionId={id} stories={stories} />
+      <Backlog missionId={id} stories={stories} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
     </div>
   );
 }
