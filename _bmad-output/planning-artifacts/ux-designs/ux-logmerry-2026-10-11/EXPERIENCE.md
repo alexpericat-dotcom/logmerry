@@ -206,11 +206,11 @@ Cas limite : si le plafond manque, la jauge est en état « paramètre manquant 
 2. **Proposer des user stories avec l'IA** : il colle un brief et/ou coche des notes liées au client ; les propositions arrivent dans un panneau, à garder, modifier puis garder, ou rejeter ; la mention dit que le contenu part chez Anthropic.
 3. Dans une story dépliée, **Proposer des tâches avec l'IA** (précision facultative) : tâches ordonnées, à garder une par une ou **Tout garder**.
 4. Il réordonne stories et tâches par **glisser-déposer** (souris, doigt par la poignée, ou clavier : Espace, flèches, Espace, Échap annule) ; chaque déplacement est annoncé.
-5. **Générer un prompt avec l'IA** : contenu (mission seule jusqu'aux tâches), assistant visé (Claude, Claude Code, n8n, autre), objectif, case « sans le nom du client » ; le prompt est modifiable, avec un bouton « Copier le prompt ».
+5. **Générer un prompt avec l'IA** : contenu (la mission seule, ou tout le contexte), ce qu'il veut obtenir (en citant l'outil : n8n, Claude Code…), case « sans le nom du client » (le nom est remplacé par « le client » partout) ; le prompt est modifiable, avec un bouton « Copier le prompt ».
 6. **Climax :** il colle le prompt dans Claude Code ou Claude relié à n8n et l'assistant commence par poser ses questions.
 
 Cas limites : un chiffre inventé écarte la proposition (dit à l'écran) ; « Annuler » libère l'écran pendant la génération ; une mission d'un autre compte ne se charge jamais.
 
-### Interface : thèmes et écran d'arrivée (17 octobre)
-- Deux thèmes : **Rétro** (clair, pixel art « Arcade clair ») et **Futur** (sombre). Le premier écran est un choix explicite entre les deux (rideau animé au choix) ; le message du cockpit s'écrit au clavier une fois par session. Détail visuel : `DESIGN.md`.
+### Interface : thèmes et première page (17 octobre)
+- Deux thèmes : **Rétro** (clair, pixel art « Arcade clair ») et **Futur** (sombre, par défaut). **La première page est la connexion** (décision d'Alex : plus sobre, plus professionnelle) ; l'écran de choix du thème a été retiré. Le thème se change par le bouton de la barre latérale et le choix est mémorisé. Le message du cockpit s'écrit au clavier une fois par session. Détail visuel : `DESIGN.md`.
 - Mobile : cibles de 44 px, aucune barre de défilement horizontale ; une story dépliée se glisse mal au doigt (la replier avant).
