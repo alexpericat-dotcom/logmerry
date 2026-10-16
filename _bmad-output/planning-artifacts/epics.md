@@ -90,7 +90,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-5 | 8 | 8.10 |
 | FR-6 | 8 | 8.14, 8.15 |
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
-| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19, 8.20 |
+| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19, 8.20, 8.21 |
 | FR-9 | 4 | 4.2, 4.3 |
 | FR-10 | 4 | 4.1 |
 | FR-11 | 4 | 4.4, 4.5 |
@@ -719,6 +719,15 @@ En tant que propriétaire, je veux que l'IA propose un ordre logique pour mon ba
 **Étant donné** un backlog de plusieurs stories, **quand** je clique sur « Proposer un ordre logique », **alors** l'IA propose un nouvel ordre (dépendances d'abord, socle avant confort) avec une phrase de raison par story déplacée ; j'applique, je modifie ou j'ignore, et rien n'est réordonné sans mon accord.
 **Et** une story qui apparaît ou disparaît pendant la proposition fait refuser l'application (l'ordre se recalcule).
 
+### Story 8.21 : Générer un prompt depuis une mission
+
+En tant que propriétaire, je veux générer un prompt à partir de ma mission, de son backlog, de ses stories et de ses tâches, afin de confier le travail à Claude (ou à un autre assistant) avec la meilleure consigne possible.
+
+**Critères d'acceptation :**
+
+**Étant donné** une mission, **quand** je choisis le niveau de contexte (mission seule, backlog, stories détaillées, tâches), la cible (Claude, Claude Code, n8n par son MCP, autre) et un objectif facultatif, **alors** l'IA rédige la consigne et le code y ajoute le contexte tel quel ; je relis dans un champ modifiable et je copie ; rien n'est enregistré.
+**Et** le nom du client peut être retiré, les notes ne sont jamais envoyées, et une consigne qui contient un chiffre absent des sources est écartée.
+
 ---
 
 ## Plan des sprints
@@ -735,7 +744,7 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 6 | Clore le jalon du 30 octobre : refus « je ne trouve pas », jeu de test et test de fuite. | 8.11, 8.14, 8.15 | IA |
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
 | 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
-| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.18, 8.19, 8.20 | IA |
+| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.18, 8.19, 8.20, 8.21 | IA |
 | 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
 | 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
 | 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |
