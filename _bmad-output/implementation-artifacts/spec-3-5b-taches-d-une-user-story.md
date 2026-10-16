@@ -2,7 +2,7 @@
 title: 'Story 3.5b : Tâches d''une user story'
 type: 'feature'
 created: '2026-10-16'
-status: 'draft'
+status: 'review'
 baseline_commit: '4689420'
 route: 'dispatch'
 context:
@@ -58,13 +58,13 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Migration `tasks` (SQL montré avant application)
-- [ ] Règles pures + tests (`lib/domain/tasks.ts`)
-- [ ] Accès aux données et Server Actions
-- [ ] Ajout de dnd-kit et enveloppe commune de liste triable (clavier, toucher, annonces)
-- [ ] Stories compactes (repliées/dépliées) et glisser-déposer du backlog
-- [ ] Liste de tâches sous chaque story, avancement, confirmation de suppression de story mise à jour
-- [ ] Tests d'isolation, journal, relecture indépendante
+- [x] Migration `tasks` (SQL montré avant application)
+- [x] Règles pures + tests (`lib/domain/tasks.ts`)
+- [x] Accès aux données et Server Actions
+- [x] Ajout de dnd-kit et enveloppe commune de liste triable (clavier, toucher, annonces)
+- [x] Stories compactes (repliées/dépliées) et glisser-déposer du backlog
+- [x] Liste de tâches sous chaque story, avancement, confirmation de suppression de story mise à jour
+- [x] Tests d'isolation, journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une story, when j'ajoute une tâche avec un titre, then elle apparaît en dernier sous la story ; sans titre, then une erreur en ligne nomme le champ.
@@ -123,3 +123,10 @@ create policy tasks_delete on public.tasks for delete to authenticated
 3. **Stories compactes** : une ligne repliée, détail et tâches au dépli.
 4. **Glisser-déposer** pour les stories et les tâches avec **dnd-kit** (nouvelle dépendance, justifiée par le toucher et le clavier) ; « Monter / Descendre » disparaissent, remplacés par la poignée utilisable au clavier. *(Cela change la décision 4 de la 3.5a, qui avait écarté le glisser-déposer « pour plus tard ».)*
 5. **Ordre logique** : hors de cette story. L'ordre de base reste « dernier ajouté en dernier ». L'IA s'en occupe dans une story à part, **8.20 « Ordonner le backlog avec l'IA »** : un bouton « Proposer un ordre logique » (dépendances d'abord, socle avant confort, avec une phrase de raison par déplacement), proposition éphémère à appliquer ou ignorer, rien n'est écrit sans ton accord. En attendant, je fais déjà demander à l'IA de 8.16 de proposer ses stories **dans un ordre logique**, donc un backlog généré arrive ordonné.
+
+## Implementation Notes
+
+- Migration `tasks` appliquée par l'outil Supabase (fichier `20261016170000_tasks.sql`) ; `get_advisors` : rien de nouveau (seul l'avertissement connu sur la protection contre les mots de passe compromis).
+- Écarts au Code Map : `reorder` (monter/descendre) est remplacé par `isPermutation` (la liste envoyée doit contenir exactement les mêmes éléments, sinon « a changé entre-temps » et rechargement) ; `lib/db/renumber.ts` renumérote stories et tâches (même `ponytail:` : une mise à jour par ligne déplacée, non atomique) ; `reorderStories` remplace `moveStory`. Une liste triable commune (`components/sortable-list.tsx`) porte la poignée, les capteurs souris/toucher/clavier, l'ordre optimiste et les annonces en français.
+- Vérifié dans Chrome (compte fictif, données supprimées ensuite) : déplacement d'une story et d'une tâche au clavier (Espace, flèches, Espace ; Échap annule, annonces, focus conservé) et à la souris (événements pointeur), ordre conservé après rechargement ; ajout (focus et annonce), coche (statut de la story inchangé), titre vide refusé, modification, suppression avec confirmation (focus sur « Annuler », retour sur « Supprimer », focus sur le champ d'ajout après suppression) ; téléphone 412 px : aucun débordement, aucune cible sous 44 px ; thèmes clair et sombre.
+- Le glisser à la souris n'a pas pu être rejoué avec l'outil de glisser du navigateur (il envoie des événements HTML5, pas des événements pointeur) : à confirmer à la main sur la preview.

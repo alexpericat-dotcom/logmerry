@@ -109,3 +109,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-5a-backlog-et-user-stories.md`
   summary: `updateStory` écrase le statut avec celui du formulaire resté ouvert ; avancement de la liste des missions plafonné à 1 000 stories par l'API.
   evidence: ouvrir l'édition, changer le statut par le menu, puis enregistrer le formulaire ramène l'ancien statut ; l'avancement de toutes les missions est lu d'un coup.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-5b-taches-d-une-user-story.md`
+  summary: ordre des tâches et des stories : mêmes limites que la 3.5a (écritures non atomiques, positions simultanées) ; pas de limite du nombre de tâches par story ; tests des Server Actions de tâches ; glisser au toucher non testé sur un vrai téléphone.
+  evidence: deux déplacements simultanés dans deux onglets : le second est refusé si les éléments ont changé, sinon le dernier gagne ; seul l'émulateur de Chrome a servi pour le toucher.

@@ -143,7 +143,7 @@ function StoryItem({ story, tasks, handle, onDeleted }: { story: StoryRecord; ta
         </button>
         <div className="ml-auto flex shrink-0 items-center gap-2 max-md:pl-11">
           {progress.total > 0 && (
-            <span className="text-xs text-muted-foreground" title={taskProgressLabel(progress)}>
+            <span className="whitespace-nowrap text-xs text-muted-foreground" title={taskProgressLabel(progress)}>
               <span aria-hidden="true">{progress.done}/{progress.total} tâches</span>
               <span className="sr-only">{taskProgressLabel(progress)}</span>
             </span>

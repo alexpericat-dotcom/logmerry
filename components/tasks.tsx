@@ -211,7 +211,7 @@ export function Tasks({ storyId, storyTitle, tasks }: { storyId: string; storyTi
   return (
     <section aria-label={`Tâches de la user story ${storyTitle}`} className="flex flex-col gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-sm font-semibold">Tâches</h4>
+        <h3 className="text-sm font-semibold">Tâches</h3>
         <p role="status" className="text-xs text-muted-foreground">
           {progress}
         </p>
