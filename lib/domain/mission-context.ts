@@ -88,3 +88,36 @@ export function clientNameOf(raw: unknown): string | null {
   const name = (one as { name?: unknown } | null | undefined)?.name;
   return typeof name === "string" && name.trim() ? name : null;
 }
+
+const escapeRegExp = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const WORD = "[\\p{L}\\p{N}]";
+
+/**
+ * Remplace par « le client » le nom du client et son mot principal (le plus long, s'il fait 4 lettres ou plus : « Maillet » pour « Maillet & Co »)
+ * dans un texte saisi (titre, story, tâche, objectif), sans casse et seulement en mot entier. Le nom de la fiche n'est pas le seul endroit où il apparaît :
+ * l'utilisateur l'écrit aussi dans ses stories. Limite : les autres noms propres (contacts, entreprises citées) restent.
+ */
+export function redactClientName(text: string, clientName: string | null): string {
+  const name = clientName?.trim().replace(/[\s.]+$/u, "");
+  if (!name) return text;
+  const words = name.split(/[^\p{L}\p{N}]+/u).filter((w) => [...w].length >= 4);
+  const main = words.sort((a, b) => [...b].length - [...a].length)[0];
+  const patterns = [name, ...(main && main.toLowerCase() !== name.toLowerCase() ? [main] : [])].map(escapeRegExp);
+  const re = new RegExp(`(?<!${WORD})(?:${patterns.join("|")})\\.?(?!${WORD})`, "giu");
+  return text.replace(re, "le client");
+}
+
+/** Titre, stories, tâches et objectif avec le nom du client remplacé par « le client » (voir `redactClientName`) : une seule fonction pour l'action serveur et pour l'essai réel. */
+export function hideClientName<S extends Pick<StoryForContext, "title" | "role" | "benefit" | "acceptance_criteria">, T extends Pick<TaskForContext, "title">>(
+  data: { missionTitle: string; objective: string; stories: S[]; tasks: T[] },
+  clientName: string | null,
+): { missionTitle: string; objective: string; stories: S[]; tasks: T[] } {
+  const hide = (text: string) => redactClientName(text, clientName);
+  const hideOpt = (text: string | null) => (text === null ? null : hide(text));
+  return {
+    missionTitle: hide(data.missionTitle),
+    objective: hide(data.objective),
+    stories: data.stories.map((s) => ({ ...s, title: hide(s.title), role: hideOpt(s.role), benefit: hideOpt(s.benefit), acceptance_criteria: hideOpt(s.acceptance_criteria) })),
+    tasks: data.tasks.map((t) => ({ ...t, title: hide(t.title) })),
+  };
+}

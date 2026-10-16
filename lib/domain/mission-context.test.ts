@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CONTEXT_MAX, CONTEXT_NOTICE, FIELD_MAX, STORY_BLOCK_MAX, buildMissionContext, clientNameOf, parseContextLevel, type StoryForContext, type TaskForContext } from "./mission-context.ts";
+import { CONTEXT_MAX, CONTEXT_NOTICE, FIELD_MAX, STORY_BLOCK_MAX, buildMissionContext, clientNameOf, hideClientName, parseContextLevel, redactClientName, type StoryForContext, type TaskForContext } from "./mission-context.ts";
 
 const mission = { title: "Suivi des inscriptions", status: "in_progress" as const, start_date: "2026-10-01", end_date: null, clientName: "Les Petits Débrouillards" };
 const story = (id: string, over: Partial<StoryForContext> = {}): StoryForContext => ({ id, title: `Story ${id}`, role: null, benefit: null, acceptance_criteria: null, points: null, status: "todo", ...over });
@@ -122,4 +122,41 @@ test("niveau reçu d'un formulaire : seuls « mission » et « all » sont accep
   assert.equal(parseContextLevel("all"), "all");
   assert.equal(parseContextLevel("mission"), "mission");
   for (const bad of ["", "tasks", "backlog", "stories", null, undefined, 3]) assert.equal(parseContextLevel(bad), null);
+});
+
+test("retrait du nom du client : nom complet et mot principal remplacés par « le client », sans casse, en mot entier ; autres noms propres et mots voisins intacts", () => {
+  const name = "Maillet & Co";
+  assert.equal(redactClientName("Automatisation pour Maillet & Co.", name), "Automatisation pour le client");
+  assert.equal(redactClientName("MAILLET & CO envoie la quittance à maillet.", name), "le client envoie la quittance à le client");
+  assert.equal(redactClientName("Réunion chez Maillet", name), "Réunion chez le client");
+  assert.equal(redactClientName("La famille Maillette et Dupont & Co", name), "La famille Maillette et Dupont & Co", "mot voisin et autre société intacts");
+  assert.equal(redactClientName("Rien à retirer", name), "Rien à retirer");
+  assert.equal(redactClientName("Les Petits Débrouillards : bilan des Débrouillards", "Les Petits Débrouillards"), "le client : bilan des le client", "le mot principal est le plus long (« Débrouillards »)");
+  assert.equal(redactClientName("Dupont & fils", "Dupont & fils."), "le client", "point final du nom ignoré");
+});
+
+test("retrait du nom du client : nom vide, absent ou trop court pour un mot principal ; caractères spéciaux du nom sans effet de bord", () => {
+  assert.equal(redactClientName("texte", null), "texte");
+  assert.equal(redactClientName("texte", "  "), "texte");
+  assert.equal(redactClientName("Jo et Léa", "Jo"), "le client et Léa", "nom court : seul le nom complet est remplacé");
+  assert.equal(redactClientName("Un (test) [a+b] ici", "(test) [a+b]"), "Un le client ici", "pas de motif d'expression régulière");
+  assert.equal(redactClientName("ab", "a.b"), "ab", "le point du nom n'est pas un joker");
+});
+
+test("retrait du nom sur toute la mission : titre, objectif, stories (titre, rôle, bénéfice, critères) et tâches ; champs vides conservés", () => {
+  const data = {
+    missionTitle: "Quittances Maillet",
+    objective: "Pour Maillet & Co",
+    stories: [{ title: "Chez Maillet", role: "gérant de Maillet & Co", benefit: null, acceptance_criteria: "- Maillet valide" }],
+    tasks: [{ title: "Appeler Maillet" }],
+  };
+  const out = hideClientName(data, "Maillet & Co");
+  assert.deepEqual(out, {
+    missionTitle: "Quittances le client",
+    objective: "Pour le client",
+    stories: [{ title: "Chez le client", role: "gérant de le client", benefit: null, acceptance_criteria: "- le client valide" }],
+    tasks: [{ title: "Appeler le client" }],
+  });
+  assert.equal(data.missionTitle, "Quittances Maillet", "les données d'origine ne sont pas modifiées");
+  assert.deepEqual(hideClientName(data, null), data, "sans nom connu, rien ne change");
 });

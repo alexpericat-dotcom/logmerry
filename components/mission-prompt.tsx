@@ -163,7 +163,7 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
         )}
       </fieldset>
       <p className="text-xs text-muted-foreground">
-        La mission et le backlog choisis sont envoyés à Anthropic pour rédiger le prompt, puis iront où tu colleras ce prompt. N&apos;y mets pas de données réelles de clients. Le nom du client peut être retiré, pas celui qui figurerait dans un titre. Rien n&apos;est enregistré.
+        La mission et le backlog choisis sont envoyés à Anthropic pour rédiger le prompt, puis iront où tu colleras ce prompt. N&apos;y mets pas de données réelles de clients. Avec « Sans le nom du client », ce nom est remplacé par « le client » partout (mission, stories, tâches, objectif) ; les autres noms propres restent. Rien n&apos;est enregistré.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={generate} aria-disabled={pending}>
