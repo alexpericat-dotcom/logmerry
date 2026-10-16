@@ -6,14 +6,13 @@ import { redirect } from "next/navigation";
 
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
-import { validateTaskTitle } from "@/lib/domain/tasks";
+import { validateTaskBatch, validateTaskTitle } from "@/lib/domain/tasks";
 import { nextPosition, parseReorderIds } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
 /** `gone` : la tâche ou sa story n'existe plus (supprimée ailleurs) ; l'écran se recharge. `error` : erreur de champ (titre). */
 export type TaskActionState = { ok?: boolean; error?: string; message?: string; gone?: boolean };
 
-const MAX_ADD = 50;
 const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
 const TASK_GONE = "Cette tâche n'existe plus.";
 const STORY_GONE = "Cette user story n'existe plus.";
@@ -68,13 +67,9 @@ export async function addTask(storyId: string, title: string): Promise<TaskActio
 export async function addTasks(storyId: string, titles: string[]): Promise<TaskActionState & { added?: number }> {
   const state = await run(
     async (supabase) => {
-      if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_ADD) return { outcome: "invalid", error: "Aucune tâche à ajouter." };
-      const values: string[] = [];
-      for (const title of titles) {
-        const checked = validateTaskTitle(title);
-        if (!checked.ok) return { outcome: "invalid", error: checked.error };
-        values.push(checked.value);
-      }
+      const batch = validateTaskBatch(titles);
+      if (!batch.ok) return { outcome: "invalid", error: batch.error };
+      const values = batch.value;
       if (!isUuid(storyId)) return { outcome: "not-found" };
       const story = await supabase.from("user_stories").select("id").eq("id", storyId).maybeSingle();
       if (story.error) return { outcome: "error" };

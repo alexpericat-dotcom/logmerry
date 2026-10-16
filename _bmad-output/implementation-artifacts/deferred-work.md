@@ -121,3 +121,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md`
   summary: pas de plafond de générations par utilisateur (coût d'API), comme la 8.16 ; la vérification des chiffres ne contrôle pas les entiers de 1 à 9 ni les nombres en lettres ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.
   evidence: un utilisateur connecté peut relancer la génération en boucle ; « Prévoir huit relances » passerait.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md` (relecture)
+  summary: un ajout de tâches lancé puis panneau fermé réussit sans retour visible ; positions en double si deux onglets ajoutent ensemble (pas de contrainte unique sur `(story_id, position)`).
+  evidence: fermer le panneau pendant « Garder » vide l'annonce ; la page se rafraîchit mais rien ne dit que c'est enregistré.

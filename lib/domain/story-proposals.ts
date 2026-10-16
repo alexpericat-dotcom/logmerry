@@ -81,7 +81,7 @@ export function parseToolCall(json: unknown, tool: string, key: string): unknown
 export const parseToolInput = (json: unknown): unknown[] => parseToolCall(json, "propose_stories", "stories");
 
 /** Clé de comparaison d'un titre : sans accents, sans casse, espaces compactés, sans ponctuation finale (« Générer  rapport. » = « generer rapport »). */
-export const titleKey = (title: string) => title.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").replace(/[\s.!?;:,]+$/u, "").trim();
+export const titleKey = (title: string) => title.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[’‘`´]/g, "'").replace(/\s+/g, " ").replace(/[\s.!?;:,]+$/u, "").trim();
 
 const text = (v: unknown) => (typeof v === "string" ? v : "");
 

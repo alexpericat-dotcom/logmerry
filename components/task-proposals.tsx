@@ -11,20 +11,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
-import { HINT_MAX } from "@/lib/domain/task-proposals";
+import { HINT_MAX } from "@/lib/domain/tasks";
 
 type Item = { key: number; title: string };
 
 /** Garde des titres : renvoie le message d'erreur, ou `null` si c'est enregistré. */
 type Keep = (keys: number[], titles: string[]) => Promise<string | null>;
 
-function ProposalCard({ item, index, keep, onReject }: { item: Item; index: number; keep: Keep; onReject: () => void }) {
+function ProposalCard({ item, index, keep, locked, onReject }: { item: Item; index: number; keep: Keep; locked: boolean; onReject: () => void }) {
   const [editing, setEditing] = useState(false);
+  const modifyButton = useRef<HTMLButtonElement>(null);
+  const wasEditing = useRef(false);
+  // Quitter la modification sans enregistrer remplace le champ par la ligne : le focus revient sur « Modifier » au lieu de tomber sur la page.
+  useEffect(() => {
+    if (!editing && wasEditing.current) modifyButton.current?.focus();
+    wasEditing.current = editing;
+  }, [editing]);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const inputId = useId();
   const save = (title: string) => {
-    if (pending) return;
+    if (pending || locked) return;
     startTransition(async () => {
       setError("");
       const message = await keep([item.key], [title]);
@@ -54,7 +61,7 @@ function ProposalCard({ item, index, keep, onReject }: { item: Item; index: numb
               Titre de la tâche proposée {index + 1}
             </label>
             <Input id={inputId} name="title" defaultValue={item.title} maxLength={200} autoFocus className="min-w-0 flex-1" aria-invalid={error ? true : undefined} />
-            <Button type="submit" size="sm" aria-disabled={pending}>
+            <Button type="submit" size="sm" aria-disabled={pending || locked}>
               {pending ? "Ajout…" : "Ajouter"}
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setEditing(false)}>
@@ -82,10 +89,10 @@ function ProposalCard({ item, index, keep, onReject }: { item: Item; index: numb
           <Button type="button" variant="ghost" size="sm" className="text-destructive" onClick={onReject}>
             Rejeter<span className="sr-only"> la tâche {item.title}</span>
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
+          <Button ref={modifyButton} type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
             Modifier<span className="sr-only"> la tâche {item.title}</span>
           </Button>
-          <Button type="button" size="sm" aria-disabled={pending} onClick={() => save(item.title)}>
+          <Button type="button" size="sm" aria-disabled={pending || locked} onClick={() => save(item.title)}>
             {pending ? "Ajout…" : "Garder"}
             <span className="sr-only"> la tâche {item.title}</span>
           </Button>
@@ -111,9 +118,14 @@ export function TaskProposals({ storyId }: { storyId: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
-  const [announce, setAnnounce] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [keeping, startKeeping] = useTransition();
+  // L'annonce porte un numéro : la même phrase deux fois de suite remonte l'élément et est relue par les lecteurs d'écran.
+  const [announce, setAnnounceState] = useState({ text: "", n: 0 });
+  const setAnnounce = useCallback((text: string) => setAnnounceState((a) => ({ text, n: a.n + 1 })), []);
+  // `pending` : une génération est attendue ; fermer le panneau la libère aussitôt (son résultat tardif est jeté) pour qu'on puisse relancer.
+  const [pending, setPending] = useState(false);
+  // Un seul ajout à la fois : « Garder », « Ajouter » et « Tout garder » partagent ce verrou (sinon une tâche pourrait être ajoutée deux fois, ou deux tâches prendre la même place).
+  const [adding, setAdding] = useState(false);
+  const addingNow = useRef(false);
   const openButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -130,7 +142,8 @@ export function TaskProposals({ storyId }: { storyId: string }) {
     setInfo("");
     setError("");
     setAnnounce("");
-  }, []);
+    setPending(false);
+  }, [setAnnounce]);
   // Le focus va à la précision à l'ouverture et revient au bouton d'ouverture à la fermeture (le bouton n'existe qu'après le rendu : d'où l'effet).
   useEffect(() => {
     if (open) panel.current?.querySelector("textarea")?.focus();
@@ -139,6 +152,9 @@ export function TaskProposals({ storyId }: { storyId: string }) {
   }, [open]);
 
   const keep: Keep = async (keys, titles) => {
+    if (addingNow.current) return "Un ajout est déjà en cours. Patiente un instant.";
+    addingNow.current = true;
+    setAdding(true);
     try {
       const result = await addTasks(storyId, titles);
       if (result.error ?? result.message) {
@@ -152,6 +168,9 @@ export function TaskProposals({ storyId }: { storyId: string }) {
     } catch (e) {
       if (isRedirect(e)) throw e;
       return UNREACHABLE;
+    } finally {
+      addingNow.current = false;
+      setAdding(false);
     }
   };
   const reject = (key: number) => {
@@ -160,37 +179,38 @@ export function TaskProposals({ storyId }: { storyId: string }) {
     heading.current?.focus();
   };
 
-  const generate = () => {
+  const generate = async () => {
     if (pending) return;
     setError("");
     setInfo("");
     setItems([]);
     setAnnounce("");
+    setPending(true);
     const mine = ++run.current;
-    startTransition(async () => {
-      try {
-        const result = await proposeTasks(storyId, hint);
-        if (mine !== run.current) return; // annulé ou fermé entre-temps
-        if (!result.ok) {
-          setError(result.error);
-          return;
-        }
-        setItems(result.tasks.map((title) => ({ key: counter.current++, title })));
-        setInfo(
-          [
-            result.duplicates ? `${result.duplicates} proposition${result.duplicates > 1 ? "s écartées" : " écartée"} (déjà dans la liste).` : "",
-            result.dropped ? `${result.dropped} proposition${result.dropped > 1 ? "s écartées" : " écartée"} (invalide, ou chiffre absent de tes sources).` : "",
-            result.noteCut ? "La note d'origine n'a pas été envoyée : trop de texte." : "",
-          ]
-            .filter(Boolean)
-            .join(" "),
-        );
-      } catch (e) {
-        if (mine !== run.current) return;
-        if (isRedirect(e)) throw e;
-        setError(UNREACHABLE);
+    try {
+      const result = await proposeTasks(storyId, hint);
+      if (mine !== run.current) return; // annulé ou fermé entre-temps
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
-    });
+      setItems(result.tasks.map((title) => ({ key: counter.current++, title })));
+      setInfo(
+        [
+          result.duplicates ? `${result.duplicates} proposition${result.duplicates > 1 ? "s écartées" : " écartée"} (déjà dans la liste).` : "",
+          result.dropped ? `${result.dropped} proposition${result.dropped > 1 ? "s écartées" : " écartée"} (invalide, ou chiffre absent de tes sources).` : "",
+          result.noteCut ? "La note d'origine n'a pas été envoyée : trop de texte." : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
+    } catch (e) {
+      if (mine !== run.current) return;
+      if (isRedirect(e)) throw e;
+      setError(UNREACHABLE);
+    } finally {
+      if (mine === run.current) setPending(false);
+    }
   };
 
   if (!open) {
@@ -241,28 +261,26 @@ export function TaskProposals({ storyId }: { storyId: string }) {
             type="button"
             variant="outline"
             size="sm"
-            aria-disabled={keeping}
-            onClick={() => {
-              if (keeping) return;
-              startKeeping(async () => {
-                setError("");
-                const message = await keep(
-                  items.map((i) => i.key),
-                  items.map((i) => i.title),
-                );
-                if (message) setError(message);
-              });
+            aria-disabled={adding}
+            onClick={async () => {
+              if (adding) return;
+              setError("");
+              const message = await keep(
+                items.map((i) => i.key),
+                items.map((i) => i.title),
+              );
+              if (message) setError(message);
             }}
           >
-            {keeping ? "Ajout…" : `Tout garder (${items.length})`}
+            {adding ? "Ajout…" : `Tout garder (${items.length})`}
           </Button>
         )}
         <button type="button" onClick={closePanel} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
           {pending ? "Annuler" : "Fermer"}
         </button>
       </div>
-      <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-        {pending ? "L'IA prépare des tâches, cela peut prendre quelques secondes. « Annuler » arrête l'attente (l'appel, lui, va au bout)." : announce || (items.length ? `${items.length} tâche${items.length > 1 ? "s" : ""} à relire, dans l'ordre proposé.` : "")}
+      <p key={announce.n} role="status" aria-live="polite" className="text-sm text-muted-foreground">
+        {pending ? "L'IA prépare des tâches, cela peut prendre quelques secondes. « Annuler » arrête l'attente (l'appel, lui, va au bout)." : announce.text || (items.length ? `${items.length} tâche${items.length > 1 ? "s" : ""} à relire, dans l'ordre proposé.` : "")}
       </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -273,7 +291,7 @@ export function TaskProposals({ storyId }: { storyId: string }) {
       {items.length > 0 && (
         <ol className="flex flex-col gap-2" aria-label="Tâches proposées par l'IA">
           {items.map((item, i) => (
-            <ProposalCard key={item.key} item={item} index={i} keep={keep} onReject={() => reject(item.key)} />
+            <ProposalCard key={item.key} item={item} index={i} keep={keep} locked={adding} onReject={() => reject(item.key)} />
           ))}
         </ol>
       )}
