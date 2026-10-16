@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
 import { CONTEXT_LEVELS, CONTEXT_LEVEL_LABELS, type ContextLevel } from "@/lib/domain/mission-context";
-import { OBJECTIVE_MAX, PROMPT_TARGETS, PROMPT_TARGET_LABELS, type PromptTarget } from "@/lib/domain/prompt-generation";
+import { OBJECTIVE_MAX } from "@/lib/domain/prompt-generation";
 
 /**
  * Panneau « Générer un prompt avec l'IA » d'une mission : contenu, assistant visé et objectif en entrée, prompt modifiable en sortie.
@@ -18,8 +18,7 @@ import { OBJECTIVE_MAX, PROMPT_TARGETS, PROMPT_TARGET_LABELS, type PromptTarget 
  */
 export function MissionPrompt({ missionId, hasClient }: { missionId: string; hasClient: boolean }) {
   const [open, setOpen] = useState(false);
-  const [level, setLevel] = useState<ContextLevel>("backlog");
-  const [target, setTarget] = useState<PromptTarget>("claude");
+  const [level, setLevel] = useState<ContextLevel>("all");
   const [objective, setObjective] = useState("");
   const [withoutClient, setWithoutClient] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -75,7 +74,7 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
     setAnnounce("");
     const mine = ++run.current;
     try {
-      const result = await generateMissionPrompt(missionId, { level, target, objective, includeClient: !withoutClient });
+      const result = await generateMissionPrompt(missionId, { level, objective, includeClient: !withoutClient });
       if (mine !== run.current) return; // annulé ou fermé entre-temps
       if (!result.ok) {
         setError(result.error);
@@ -142,31 +141,19 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
       </div>
       {/* Les options sont figées pendant la génération : le résultat correspond toujours à ce qui était affiché au clic. */}
       <fieldset disabled={pending} className="contents">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor={`${id}-level`}>Ce que le prompt contient</Label>
-            <select id={`${id}-level`} value={level} onChange={(e) => setLevel(e.target.value as ContextLevel)} className={selectClass}>
-              {CONTEXT_LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {CONTEXT_LEVEL_LABELS[l]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor={`${id}-target`}>Pour quel assistant</Label>
-            <select id={`${id}-target`} value={target} onChange={(e) => setTarget(e.target.value as PromptTarget)} className={selectClass}>
-              {PROMPT_TARGETS.map((t) => (
-                <option key={t} value={t}>
-                  {PROMPT_TARGET_LABELS[t]}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid gap-2 sm:max-w-md">
+          <Label htmlFor={`${id}-level`}>Ce que le prompt contient</Label>
+          <select id={`${id}-level`} value={level} onChange={(e) => setLevel(e.target.value as ContextLevel)} className={selectClass}>
+            {CONTEXT_LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {CONTEXT_LEVEL_LABELS[l]}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor={`${id}-objective`}>Ce que tu veux obtenir (facultatif)</Label>
-          <Textarea id={`${id}-objective`} rows={3} value={objective} onChange={(e) => setObjective(e.target.value)} maxLength={OBJECTIVE_MAX} placeholder="Par exemple : un premier workflow pour relancer automatiquement les familles qui n'ont pas payé." />
+          <Label htmlFor={`${id}-objective`}>Ce que tu veux obtenir, et avec quel outil (facultatif)</Label>
+          <Textarea id={`${id}-objective`} rows={3} value={objective} onChange={(e) => setObjective(e.target.value)} maxLength={OBJECTIVE_MAX} placeholder="Par exemple : un premier workflow n8n pour relancer automatiquement les familles qui n'ont pas payé. Cite l'outil visé (n8n, Claude Code…) : la consigne s'y adapte." />
         </div>
         {hasClient && (
           <label className="flex min-h-9 items-center gap-2 text-sm max-md:min-h-11">

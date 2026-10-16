@@ -1,14 +1,12 @@
 import { MISSION_STATUS_LABELS, type MissionStatus } from "./missions.ts";
 import { STORY_STATUS_LABELS, storySentence, type StoryStatus } from "./user-stories.ts";
 
-/** Ce que le prompt contient de la mission : la mission seule, puis de plus en plus de son backlog. */
-export const CONTEXT_LEVELS = ["mission", "backlog", "stories", "tasks"] as const;
+/** Ce que le prompt contient de la mission : la mission seule, ou tout son contexte (backlog, stories détaillées, tâches et états). */
+export const CONTEXT_LEVELS = ["mission", "all"] as const;
 export type ContextLevel = (typeof CONTEXT_LEVELS)[number];
 export const CONTEXT_LEVEL_LABELS: Record<ContextLevel, string> = {
   mission: "La mission seule",
-  backlog: "Avec le backlog (titres, statuts, points)",
-  stories: "Avec les stories détaillées (rôle, bénéfice, critères)",
-  tasks: "Avec les tâches (et leur état)",
+  all: "Tout le contexte (backlog, stories, tâches, états)",
 };
 export const parseContextLevel = (value: unknown): ContextLevel | null => CONTEXT_LEVELS.find((l) => l === value) ?? null;
 
@@ -33,17 +31,15 @@ export const STORY_BLOCK_MAX = 6000;
 
 const indent = (text: string, pad: string) => text.split("\n").map((l) => (l.trim() ? pad + l : l)).join("\n");
 
-function storyBlock(n: number, s: StoryForContext, tasks: TaskForContext[], level: ContextLevel): string {
+function storyBlock(n: number, s: StoryForContext, tasks: TaskForContext[]): string {
   const points = s.points !== null ? ` — ${s.points} pts` : "";
   const lines = [`${n}. [${STORY_STATUS_LABELS[s.status]}] ${oneLine(s.title)}${points}`];
-  if (level === "stories" || level === "tasks") {
-    const role = s.role ? oneLine(s.role) : null;
-    const benefit = s.benefit ? oneLine(s.benefit) : null;
-    if (role || benefit) lines.push(`   - ${storySentence({ title: oneLine(s.title), role, benefit })}`);
-    const criteria = s.acceptance_criteria?.replace(/\r\n?/g, "\n").trim();
-    if (criteria) lines.push(`   - Critères d'acceptation :\n${indent(criteria, "     ")}`);
-  }
-  if (level === "tasks" && tasks.length) {
+  const role = s.role ? oneLine(s.role) : null;
+  const benefit = s.benefit ? oneLine(s.benefit) : null;
+  if (role || benefit) lines.push(`   - ${storySentence({ title: oneLine(s.title), role, benefit })}`);
+  const criteria = s.acceptance_criteria?.replace(/\r\n?/g, "\n").trim();
+  if (criteria) lines.push(`   - Critères d'acceptation :\n${indent(criteria, "     ")}`);
+  if (tasks.length) {
     const done = tasks.filter((t) => t.done).length;
     lines.push(`   - Tâches (${done} sur ${tasks.length} faites) :`);
     for (const t of tasks) lines.push(`     - [${t.done ? "x" : " "}] ${oneLine(t.title)}`);
@@ -75,7 +71,7 @@ export function buildMissionContext(input: { mission: MissionForContext; stories
   let text = [...head, "", heading].join("\n");
   let kept = 0;
   for (const [i, s] of input.stories.entries()) {
-    const block = storyBlock(i + 1, s, tasksOf.get(s.id) ?? [], level);
+    const block = storyBlock(i + 1, s, tasksOf.get(s.id) ?? []);
     // Marge pour la ligne d'omission qui suivra.
     if ([...text].length + [...block].length + 120 > CONTEXT_MAX) break;
     text += `\n${block}`;

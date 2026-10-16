@@ -20,11 +20,11 @@ const MISSION_GONE = "Cette mission n'existe plus.";
  * le code ajoute le bloc « Contexte » tel quel (mission, backlog selon le niveau). N'écrit rien : le prompt n'existe qu'à l'écran. Jamais de notes envoyées.
  * Sans session : connexion. Toutes les vérifications sont faites sous la session.
  */
-export async function generateMissionPrompt(missionId: string, options: { level: string; target: string; objective: string; includeClient: boolean }): Promise<PromptState> {
+export async function generateMissionPrompt(missionId: string, options: { level: string; objective: string; includeClient: boolean }): Promise<PromptState> {
   const result = await withSession(async (supabase): Promise<PromptState> => {
     const parsed = parsePromptOptions(options);
     if (!parsed.ok) return { ok: false, error: parsed.error };
-    const { level, target, objective, includeClient } = parsed;
+    const { level, objective, includeClient } = parsed;
     if (!isUuid(String(missionId))) return { ok: false, error: MISSION_GONE };
 
     const found = await supabase.from("missions").select("title, status, start_date, end_date, client:clients(name)").eq("id", missionId).maybeSingle();
@@ -37,7 +37,7 @@ export async function generateMissionPrompt(missionId: string, options: { level:
 
     let stories: StoryForContext[] = [];
     let tasks: TaskForContext[] = [];
-    if (level !== "mission") {
+    if (level === "all") {
       const rows = await supabase
         .from("user_stories")
         .select("id, title, role, benefit, acceptance_criteria, points, status")
@@ -51,20 +51,20 @@ export async function generateMissionPrompt(missionId: string, options: { level:
         if (!storyStatus) throw new Error("statut de story inconnu");
         return { ...r, status: storyStatus };
       }) as StoryForContext[];
-      if (level === "tasks" && stories.length) {
+      if (stories.length) {
         const t = await supabase.from("tasks").select("story_id, title, done").in("story_id", stories.map((s) => s.id)).order("position", { ascending: true }).order("created_at", { ascending: true });
         if (t.error) throw new Error(`tâches ${t.error.code ?? ""}`.trim());
         // L'API plafonne à 1 000 lignes sans le dire : un compte tronqué fausserait « N sur M faites ».
-        if (t.data.length >= 1000) return { ok: false, error: "Ce backlog a trop de tâches pour le niveau « tâches ». Choisis « stories détaillées »." };
+        if (t.data.length >= 1000) return { ok: false, error: "Ce backlog a trop de tâches pour être mis en entier dans le prompt. Choisis « La mission seule »." };
         tasks = t.data as TaskForContext[];
       }
     }
 
     const context = buildMissionContext({ mission: { title: found.data.title, status, start_date: found.data.start_date, end_date: found.data.end_date, clientName }, stories, tasks, level, includeClient });
-    const message = buildPromptMessage({ missionTitle: found.data.title, level, target, objective, contextText: context.text });
+    const message = buildPromptMessage({ missionTitle: found.data.title, level, objective, contextText: context.text });
     let raw: string;
     try {
-      raw = await writePromptWithClaude(message, target);
+      raw = await writePromptWithClaude(message);
     } catch (e) {
       // Journal sans contenu de mission, de backlog ni d'objectif, ni clé : seulement la nature de l'échec.
       console.error("Génération de prompt impossible :", e instanceof Error ? e.message : "erreur inconnue");
