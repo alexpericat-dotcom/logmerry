@@ -2,7 +2,7 @@
 title: 'Story 3.5c : Sprints'
 type: 'feature'
 created: '2026-10-17'
-status: 'draft'
+status: 'approved'
 baseline_commit: '8e4a030'
 route: 'dispatch'
 context:
