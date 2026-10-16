@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className={`${sans.variable} ${mono.variable} ${brand.variable} ${pixel.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
