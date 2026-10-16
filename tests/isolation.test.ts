@@ -1196,10 +1196,10 @@ describe("isolation des sprints entre deux comptes fictifs", () => {
     const other = await mk(missionA2, "autre mission");
     assert.ifError((await a.client.from("sprints").update({ status: "active" }).eq("id", s1.id)).error);
     assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s2.id)).error?.code, "23505", "deuxième sprint en cours refusé");
-    assert.ifError((await a.client.from("sprints").update({ status: "active" }).eq("id", other.id)).error, "une autre mission peut avoir son sprint en cours");
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", other.id)).error?.message ?? null, null, "une autre mission peut avoir son sprint en cours");
     assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s1.id).eq("status", "planned").select("id")).data?.length ?? 0, 0, "déjà en cours : la condition « planifié » ne trouve rien");
     assert.ifError((await a.client.from("sprints").update({ status: "closed" }).eq("id", s1.id)).error);
-    assert.ifError((await a.client.from("sprints").update({ status: "active" }).eq("id", s2.id)).error, "après la clôture, un autre sprint peut démarrer");
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s2.id)).error?.message ?? null, null, "après la clôture, un autre sprint peut démarrer");
   });
 
   test("placer une story : mon sprint de la même mission oui ; sprint d'une autre mission, d'un autre compte ou inexistant refusés (insertion et mise à jour)", async () => {
@@ -1212,7 +1212,7 @@ describe("isolation des sprints entre deux comptes fictifs", () => {
     assert.equal((await b.client.from("user_stories").insert({ mission_id: missionB.id, title: "forgée", position: 5, sprint_id: sprintA.id })).error?.code, "42501");
     assert.equal((await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "sprint inexistant", position: 6, sprint_id: "00000000-0000-4000-8000-000000000000" })).error?.code, "42501");
     assert.equal((await b.client.from("user_stories").select("sprint_id").eq("id", storyB.id).single()).data!.sprint_id, null, "la story de B n'a pas bougé");
-    assert.ifError((await a.client.from("user_stories").update({ sprint_id: null }).eq("id", storyA.id)).error, "retour au backlog");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: null }).eq("id", storyA.id)).error?.message ?? null, null, "retour au backlog");
   });
 
   test("supprimer un sprint renvoie ses stories au backlog ; supprimer une mission emporte ses sprints", async () => {
