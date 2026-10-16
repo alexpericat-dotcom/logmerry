@@ -2,7 +2,7 @@
 title: 'Story 3.5c : Sprints'
 type: 'feature'
 created: '2026-10-17'
-status: 'approved'
+status: 'review'
 baseline_commit: '8e4a030'
 route: 'dispatch'
 context:
@@ -65,11 +65,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Migration `sprints` + `user_stories.sprint_id` + policies (SQL montré avant application)
-- [ ] Règles pures + tests (`lib/domain/sprints.ts`)
-- [ ] Accès aux données et Server Actions (sprints, `setStorySprint`, réordonnancement par liste)
-- [ ] Page de la mission : trois blocs, menu « Sprint », création, démarrage, clôture, suppression
-- [ ] Tests d'isolation, journal, relecture indépendante
+- [x] Migration `sprints` + `user_stories.sprint_id` + policies (SQL montré avant application)
+- [x] Règles pures + tests (`lib/domain/sprints.ts`)
+- [x] Accès aux données et Server Actions (sprints, `setStorySprint`, réordonnancement par liste)
+- [x] Page de la mission : trois blocs, menu « Sprint », création, démarrage, clôture, suppression
+- [x] Tests d'isolation, journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une mission, when je crée un sprint (nom, objectif, début, fin), then il apparaît « planifié » ; si la fin précède le début, then une erreur en ligne nomme le champ.
@@ -163,3 +163,7 @@ Les policies d'insertion et de mise à jour de `user_stories` sont remplacées (
 ## Implementation Notes
 
 - **Régression trouvée par le test d'isolation, corrigée par une seconde migration** (`20261017130000_user_stories_policies_note_and_sprint.sql`) : la migration `20261017120000_sprints.sql` a remplacé les policies d'insertion et de mise à jour de `user_stories` en repartant de la version de la 3.5a et a effacé le contrôle de la note d'origine de la 8.16. La migration de rattrapage réunit le contrôle de la note ET celui du sprint de la même mission. À retenir : repartir de `pg_policies`, pas du fichier d'origine.
+- Écarts au Code Map : l'affichage des stories (`StoryItem`, `StoryList`) est extrait de `components/backlog.tsx` vers `components/story-list.tsx` pour être réutilisé dans les blocs de sprint (`components/sprint-block.tsx`) ; `renumber` prend un filtre de liste (`sprint_id`) ; `reorderStories` reçoit le sprint de la liste ; `setStorySprint` place une story ; la date du jour est calculée côté serveur (`parisToday`) et passée à l'écran. À la clôture, les stories reportées prennent toutes la même position (la suivante de la liste d'arrivée), départagées par leur date de création, en **une** écriture ; le prochain glisser-déposer les renumérote.
+- Vérifié dans Chrome (compte fictif, données supprimées ensuite) : création d'un sprint (dates inversées refusées avec le nom conservé, focus sur le nom), placement de stories par le menu « Sprint » (annonce, focus sur le titre du backlog, avancement « 0 sur 2 stories terminées · 0 sur 8 points »), démarrage, refus d'un deuxième sprint en cours (« Un sprint est déjà en cours. Clos-le d'abord. »), changement de statut d'une story, clôture (focus sur « Annuler », choix « backlog » ou « sprint suivant ») avec la story non terminée passée au sprint planifié et la terminée restée dans le sprint clos, sprint clos figé (sans poignée, menu « Sprint » désactivé), suppression avec confirmation (« 1 story retournera au backlog ») ; téléphone 412 px : aucun débordement, aucune cible sous 44 px.
+- Un ancien serveur de développement resté actif (`next-server`, que `pkill -f "next dev"` ne tue pas) servait une ancienne version : la section « Sprints » semblait absente. À arrêter avec `pkill -f next-server` aussi.
+- Reste : relecture indépendante ; la règle du cockpit (décision 5) est à construire dans les stories 5.x et à reporter dans le PRD (FR-14 à sept règles).
