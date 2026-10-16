@@ -81,7 +81,7 @@ export async function addStory(missionId: string, _prev: StoryFormState, formDat
       if (note.error) return { outcome: "error" };
       sourceId = note.data ? source : null;
     }
-    const last = await supabase.from("user_stories").select("position").eq("mission_id", missionId).order("position", { ascending: false }).limit(1);
+    const last = await supabase.from("user_stories").select("position").eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: false }).limit(1);
     if (last.error) return { outcome: "error" };
     const { error } = await supabase.from("user_stories").insert({ ...value, mission_id: missionId, position: nextPosition(last.data.map((r) => r.position)), source_note_id: sourceId });
     return error ? { outcome: "error" } : { outcome: "saved", missionId };
@@ -115,12 +115,13 @@ export async function setStoryStatus(id: string, status: string): Promise<StoryA
   return {};
 }
 
-/** Nouvel ordre du backlog après un glisser-déposer : `ids` est la liste complète des stories de la mission, dans l'ordre voulu. */
-export async function reorderStories(missionId: string, ids: string[]): Promise<StoryActionState> {
+/** Nouvel ordre d'une liste après un glisser-déposer : `ids` est la liste complète des stories du sprint (ou du backlog hors sprint si `sprintId` est nul), dans l'ordre voulu. */
+export async function reorderStories(missionId: string, ids: string[], sprintId: string | null = null): Promise<StoryActionState> {
   const result = await withSession(async (supabase): Promise<Outcome> => {
     const order = parseReorderIds(ids);
-    if (!isUuid(missionId) || !order) return "not-found";
-    const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, order);
+    if (!isUuid(missionId) || !order || (sprintId !== null && !isUuid(String(sprintId)))) return "not-found";
+    // La liste ordonnée est celle d'un sprint (`sprintId`) ou le backlog hors sprint (`null`) : les positions ne se comparent qu'à l'intérieur d'une liste.
+    const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, order, { column: "sprint_id", id: sprintId });
     await refresh(supabase, missionId); // même en cas d'échec ou de conflit : l'écran montre l'état réel
     return done === "saved" ? "saved" : done === "changed" ? "not-found" : "error";
   });
@@ -141,5 +142,40 @@ export async function deleteStory(id: string): Promise<StoryActionState> {
   });
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La user story est conservée. Réessaie." };
+  return {};
+}
+
+/**
+ * Place une story dans un sprint (planifié ou en cours), ou la remet au backlog (`sprintId` nul), à la dernière place de la liste d'arrivée.
+ * Un sprint clos n'accepte plus de story ; le sprint doit être de la même mission (la policy le garantit aussi).
+ */
+export async function setStorySprint(storyId: string, sprintId: string | null): Promise<StoryActionState> {
+  const result = await withSession(async (supabase): Promise<"saved" | "story-gone" | "sprint-gone" | "closed" | "error"> => {
+    if (!isUuid(storyId) || (sprintId !== null && !isUuid(String(sprintId)))) return "story-gone";
+    const story = await supabase.from("user_stories").select("mission_id").eq("id", storyId).maybeSingle();
+    if (story.error) return "error";
+    if (!story.data) return "story-gone";
+    const missionId = story.data.mission_id as string;
+    if (sprintId !== null) {
+      const sprint = await supabase.from("sprints").select("status, mission_id").eq("id", sprintId).maybeSingle();
+      if (sprint.error) return "error";
+      if (!sprint.data || sprint.data.mission_id !== missionId) return "sprint-gone";
+      if (sprint.data.status === "closed") return "closed";
+    }
+    let last = supabase.from("user_stories").select("position").eq("mission_id", missionId).order("position", { ascending: false }).limit(1);
+    last = sprintId === null ? last.is("sprint_id", null) : last.eq("sprint_id", sprintId);
+    const tail = await last;
+    if (tail.error) return "error";
+    const { data, error } = await supabase.from("user_stories").update({ sprint_id: sprintId, position: nextPosition(tail.data.map((r) => r.position)) }).eq("id", storyId).select("id");
+    if (error) return "error";
+    if (!data?.length) return "story-gone";
+    await refresh(supabase, missionId);
+    return "saved";
+  });
+  if (result.status === "signed-out") redirect("/auth/login");
+  if (result.status === "failed" || result.value === "error") return { message: "Déplacement impossible pour le moment. Réessaie." };
+  if (result.value === "story-gone") return { message: STORY_GONE, gone: true };
+  if (result.value === "sprint-gone") return { message: "Ce sprint n'existe plus.", gone: true };
+  if (result.value === "closed") return { message: "Ce sprint est clos : il n'accepte plus de story.", gone: true };
   return {};
 }

@@ -14,11 +14,13 @@ export type StoryRecord = {
   status: StoryStatus;
   position: number;
   source_note_id: string | null;
+  /** Sprint où la story est placée ; `null` = backlog (hors sprint). */
+  sprint_id: string | null;
   /** Note d'origine (titre), pour le lien « Source » d'une story proposée par l'IA. */
   source_note: { title: string } | null;
 };
 
-const COLUMNS = "id, mission_id, title, role, benefit, acceptance_criteria, points, status, position, source_note_id, source_note:notes(title)";
+const COLUMNS = "id, mission_id, title, role, benefit, acceptance_criteria, points, status, position, source_note_id, sprint_id, source_note:notes(title)";
 
 /** Le backlog d'une de mes missions, dans l'ordre de priorité (la RLS limite aux miens). */
 export async function listStories(missionId: string): Promise<StoryRecord[]> {

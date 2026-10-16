@@ -22,7 +22,7 @@ const stripNul = (s: string) => s.replaceAll("\u0000", "");
 const length = (s: string) => [...s].length;
 
 /** `YYYY-MM-DD` qui existe vraiment au calendrier (pas de 31 février), à partir de 1900 (l'année 0000 passe en JavaScript mais Postgres la refuse). */
-function isDay(value: string): boolean {
+export function isDay(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0, 4)) < 1900) return false;
   const d = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
