@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { deleteMission, type DeleteMissionState } from "@/app/(app)/missions/actions";
 import { Button } from "@/components/ui/button";
 
-export function DeleteMission({ id }: { id: string }) {
+export function DeleteMission({ id, storyCount = 0 }: { id: string; storyCount?: number }) {
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<DeleteMissionState>(() => deleteMission(id), {});
   const askRef = useRef<HTMLButtonElement>(null);
@@ -51,7 +51,10 @@ export function DeleteMission({ id }: { id: string }) {
       <p id="delete-question" className="font-semibold">
         Supprimer cette mission ?
       </p>
-      <p className="text-sm text-muted-foreground">Cette action est définitive. La fiche du client n&apos;est pas touchée.</p>
+      <p className="text-sm text-muted-foreground">
+        Cette action est définitive. La fiche du client n&apos;est pas touchée.
+        {storyCount > 0 && <strong className="block text-foreground">Son backlog sera supprimé aussi : {storyCount} user {storyCount > 1 ? "stories" : "story"}.</strong>}
+      </p>
       {message}
       <div className="flex gap-3">
         <Button type="submit" variant="destructive" disabled={pending}>

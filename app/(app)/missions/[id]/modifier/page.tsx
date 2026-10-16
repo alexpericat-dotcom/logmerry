@@ -6,6 +6,7 @@ import { DeleteMission } from "@/components/delete-mission";
 import { MissionForm } from "@/components/mission-form";
 import { PageBanner } from "@/components/page-banner";
 import { getMission } from "@/lib/db/missions";
+import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 
 export const metadata = { title: "Modifier la mission · LogMerry" };
@@ -15,6 +16,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
+  const storyCount = (await listStories(id)).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,7 +29,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
         submitLabel="Enregistrer les modifications"
         cancelHref={`/missions/${id}`}
       />
-      <DeleteMission id={id} />
+      <DeleteMission id={id} storyCount={storyCount} />
     </div>
   );
 }
