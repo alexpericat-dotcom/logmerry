@@ -14,7 +14,7 @@ context:
 
 **Problem:** une user story dit *quoi* livrer, pas *quoi faire concrètement* : je ne peux pas la découper ni suivre où j'en suis dans une story.
 
-**Approach:** une migration crée `tasks` (rattachée à une user story, même vérification d'appartenance du parent que `user_stories`) ; sous chaque story du backlog, une liste de tâches : ajout, coche, modification, suppression, déplacement ; la story affiche « 3 sur 4 tâches faites » **sans jamais changer son statut toute seule**.
+**Approach:** une migration crée `tasks` (rattachée à une user story, même vérification d'appartenance du parent que `user_stories`) ; sous chaque story du backlog, une liste de tâches : ajout, coche, modification, suppression, **glisser-déposer** ; les stories deviennent **compactes** (une ligne repliée, le détail se déplie) et se réordonnent aussi par glisser-déposer ; la story affiche « 3 sur 4 tâches faites » **sans jamais changer son statut toute seule**.
 
 ## Boundaries & Constraints
 
@@ -22,12 +22,13 @@ context:
 - SQL montré puis approuvé avant application ; fichier nommé avec la version enregistrée.
 - `owner_id uuid not null default auth.uid()` + RLS ; `story_id uuid not null references user_stories on delete cascade` (supprimer une story ou sa mission emporte ses tâches) ; insertion et mise à jour exigent une story à moi.
 - Une tâche = **titre** obligatoire (1 à 200 caractères, points de code) + case « faite » (booléen, `false` par défaut) ; rien d'autre.
-- **Ordre** : colonne `position`, une nouvelle tâche prend la dernière place ; « Monter » / « Descendre » (mêmes règles que le backlog : `aria-disabled`, renumérotation, annonce aux lecteurs d'écran), en réutilisant `reorder` et `nextPosition` de `lib/domain/user-stories.ts`.
+- **Ordre par glisser-déposer**, pour les tâches **et** les stories (remplace « Monter / Descendre » de la 3.5a) : une poignée par ligne ; souris, toucher (appui long) et **clavier** (poignée au focus, Espace pour saisir, flèches, Espace pour poser, Échap pour annuler) avec annonces aux lecteurs d'écran en français ; l'ordre est enregistré à la dépose (renumérotation 0, 1, 2… comme aujourd'hui) et se rétablit avec un message en cas d'échec. Bibliothèque : **dnd-kit** (`@dnd-kit/core`, `@dnd-kit/sortable`), seule dépendance ajoutée : le glisser-déposer natif du navigateur ne marche pas au toucher. Une nouvelle tâche ou story prend la dernière place (`nextPosition`).
+- **Story compacte** : repliée, une seule ligne = poignée, pastille de statut, titre, points, « 3/4 tâches » et bouton pour déplier (≥ 44 px de haut sur téléphone, titre sur deux lignes au plus) ; dépliée : phrase « En tant que… », critères, tâches, « Modifier » / « Supprimer ». Une seule story dépliée à la fois n'est pas imposé ; l'état déplié n'est pas mémorisé.
 - Avancement d'une story : « N sur M tâches faites » ; aucune tâche : rien d'affiché (jamais « 0 sur 0 »). Cocher la dernière tâche **ne passe pas** la story en « Terminée », et terminer une story ne coche pas ses tâches.
-- Tâches repliées par défaut (« 3 sur 4 tâches faites » sert de bouton) pour ne pas alourdir le backlog ; état déplié non mémorisé.
+- Les tâches vivent dans la story dépliée (compteur « 3/4 » visible dès la ligne repliée).
 - Test d'isolation étendu à `tasks` ; thèmes clair et sombre ; 44 px sur téléphone ; tutoiement ; erreurs en ligne ; cocher en un clic, mise à jour optimiste.
 
-**Never:** sous-tâches ; durée, échéance ou responsable d'une tâche ; tâches sans story ; sprints (3.5c) ; aide de l'IA (8.17 : découpage en tâches) ; glisser-déposer ; nouvelle dépendance.
+**Never:** sous-tâches ; durée, échéance ou responsable d'une tâche ; tâches sans story ; sprints (3.5c) ; aide de l'IA (8.17 : découpage en tâches ; 8.20 : ordre logique du backlog) ; dépendance autre que dnd-kit.
 
 ## I/O & Edge-Case Matrix
 
@@ -36,7 +37,8 @@ context:
 | Ajout | titre | tâche en dernière place ; avancement mis à jour | titre vide ou trop long : erreur en ligne |
 | Cocher / décocher | clic sur la case | état persisté, avancement suivi, statut de la story inchangé | échec : message, case rétablie |
 | Modification | nouveau titre | tâche mise à jour | tâche supprimée entre-temps : « Cette tâche n'existe plus. » |
-| Monter / descendre | clic | échange avec la voisine ; haut/bas désactivés (`aria-disabled`) | échec : message, ordre inchangé |
+| Glisser-déposer (tâche ou story) | déposer sur une autre place, ou clavier (Espace, flèches, Espace) | nouvel ordre affiché tout de suite, enregistré, annoncé | échec : ordre rétabli et message ; élément supprimé ailleurs : écran rechargé |
+| Déposer au même endroit / Échap | annulation | rien n'est écrit | N/A |
 | Suppression | « Supprimer » puis confirmation (focus sur « Annuler ») | tâche supprimée, annonce, focus sur le titre de la story | échec : message, tâche conservée |
 | Story sans tâche | aucune | bouton « Ajouter une tâche » seul, pas d'avancement | N/A |
 | Story ou mission supprimée | suppression confirmée | ses tâches disparaissent ; la confirmation de suppression de story mentionne le nombre de tâches | N/A |
@@ -49,7 +51,8 @@ context:
 - `lib/domain/tasks.ts` (+ test) -- validation du titre, `taskProgress`/libellé ; `reorder` et `nextPosition` réutilisés
 - `lib/db/tasks.ts` -- tâches des stories d'une mission en une requête (jointure par `story_id in (...)`)
 - `app/(app)/missions/task-actions.ts` -- ajouter, modifier, cocher, monter, descendre, supprimer (même squelette que `story-actions.ts`)
-- `components/tasks.tsx` -- liste repliable sous une story ; branchée dans `components/backlog.tsx` (`StoryItem`)
+- `components/sortable-list.tsx` -- enveloppe dnd-kit commune (poignée, capteurs souris/toucher/clavier, annonces françaises) pour les stories et les tâches
+- `components/tasks.tsx` -- liste sous une story dépliée ; `components/backlog.tsx` (`StoryItem` compact/déplié ; retrait de « Monter/Descendre » et de `moveStory` au profit d'une action `reorderStories(missionId, ids)`)
 - `app/(app)/missions/[id]/page.tsx` -- charge les tâches ; `components/delete-story` (confirmation) -- compte des tâches
 - `tests/isolation.test.ts` ; `docs/journal.md` ; `epics.md`, `sprint-status.yaml`
 
@@ -58,13 +61,16 @@ context:
 - [ ] Migration `tasks` (SQL montré avant application)
 - [ ] Règles pures + tests (`lib/domain/tasks.ts`)
 - [ ] Accès aux données et Server Actions
+- [ ] Ajout de dnd-kit et enveloppe commune de liste triable (clavier, toucher, annonces)
+- [ ] Stories compactes (repliées/dépliées) et glisser-déposer du backlog
 - [ ] Liste de tâches sous chaque story, avancement, confirmation de suppression de story mise à jour
 - [ ] Tests d'isolation, journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une story, when j'ajoute une tâche avec un titre, then elle apparaît en dernier sous la story ; sans titre, then une erreur en ligne nomme le champ.
 - Given 4 tâches dont 3 cochées, then la story affiche « 3 sur 4 tâches faites » et son statut n'a pas bougé.
-- Given plusieurs tâches, when je monte ou descends une tâche, then l'ordre persiste ; la première ne monte pas, la dernière ne descend pas.
+- Given plusieurs tâches ou stories, when je glisse l'une d'elles à une autre place (souris, toucher ou clavier), then l'ordre change, persiste après rechargement et est annoncé ; en cas d'échec, l'ordre d'origine revient avec un message.
+- Given un backlog de 10 stories, then repliées elles tiennent chacune sur une ligne (deux au plus pour un long titre) sur téléphone comme sur ordinateur.
 - Given une tâche, when je la modifie ou la supprime (après confirmation), then la liste le reflète ; given une story supprimée, then ses tâches disparaissent.
 - Given une story d'un autre compte, when j'ajoute une tâche, then c'est refusé (`npm run test:isolation`).
 - Given la migration appliquée, then `get_advisors` (sécurité) ne signale rien de nouveau.
@@ -114,5 +120,6 @@ create policy tasks_delete on public.tasks for delete to authenticated
 
 1. **Une tâche = un titre + une case « faite »** (pas de durée, échéance ni responsable : outil à une seule personne).
 2. **Aucun automatisme** entre tâches et statut de la story (cocher tout ne termine pas la story).
-3. **Tâches repliées par défaut** sous la story, l'avancement « 3 sur 4 tâches faites » servant de bouton pour les déplier.
-4. **Réordonnancement par boutons**, comme le backlog.
+3. **Stories compactes** : une ligne repliée, détail et tâches au dépli.
+4. **Glisser-déposer** pour les stories et les tâches avec **dnd-kit** (nouvelle dépendance, justifiée par le toucher et le clavier) ; « Monter / Descendre » disparaissent, remplacés par la poignée utilisable au clavier. *(Cela change la décision 4 de la 3.5a, qui avait écarté le glisser-déposer « pour plus tard ».)*
+5. **Ordre logique** : hors de cette story. L'ordre de base reste « dernier ajouté en dernier ». L'IA s'en occupe dans une story à part, **8.20 « Ordonner le backlog avec l'IA »** : un bouton « Proposer un ordre logique » (dépendances d'abord, socle avant confort, avec une phrase de raison par déplacement), proposition éphémère à appliquer ou ignorer, rien n'est écrit sans ton accord. En attendant, je fais déjà demander à l'IA de 8.16 de proposer ses stories **dans un ordre logique**, donc un backlog généré arrive ordonné.
