@@ -63,3 +63,36 @@ test("monter et descendre : échange avec la voisine, null aux extrémités ou p
   assert.equal(reorder(ids, "zz", "up"), null);
   assert.deepEqual(ids, ["a", "b", "c"], "la liste d'origine n'est pas modifiée");
 });
+
+test("caractère nul retiré ; rôle, bénéfice et critères nettoyés des espaces et tabulations ; rôle à 200 accepté ; erreurs sur la bonne clé", () => {
+  const nul = validateStoryInput({ ...ok, title: "a\u0000b" });
+  assert.equal(nul.ok && nul.value.title, "ab");
+  assert.equal(validateStoryInput({ ...ok, title: "\u0000" }).ok, false);
+  const blanks = validateStoryInput({ ...ok, role: " \t\n ", benefit: "  ", acceptance_criteria: "\n " });
+  assert.deepEqual(blanks.ok && [blanks.value.role, blanks.value.benefit, blanks.value.acceptance_criteria], [null, null, null]);
+  assert.equal(validateStoryInput({ ...ok, role: "r".repeat(200) }).ok, true);
+  const role = validateStoryInput({ ...ok, role: "r".repeat(201) });
+  const benefit = validateStoryInput({ ...ok, benefit: "b".repeat(301) });
+  const criteria = validateStoryInput({ ...ok, acceptance_criteria: "c".repeat(4001) });
+  assert.deepEqual(!role.ok && Object.keys(role.errors), ["role"]);
+  assert.deepEqual(!benefit.ok && Object.keys(benefit.errors), ["benefit"]);
+  assert.deepEqual(!criteria.ok && Object.keys(criteria.errors), ["acceptance_criteria"]);
+});
+
+test("points : seulement des chiffres ; « 5.0 », « 0x5 », « 5e0 », « 1e1 », « +5 » refusés ; « 05 » et espaces autour acceptés", () => {
+  for (const p of ["5.0", "0x5", "5e0", "1e1", "+5", "0b101"]) assert.equal(validateStoryInput({ ...ok, points: p }).ok, false, p);
+  for (const p of ["05", " 5 "]) assert.equal(validateStoryInput({ ...ok, points: p }).ok, true, p);
+});
+
+test("reorder : identifiant inconnu renvoie null dans les deux sens (sans corrompre la liste)", () => {
+  assert.equal(reorder(["a", "b"], "zz", "down"), null);
+  assert.equal(reorder(["a", "b"], "zz", "up"), null);
+  assert.equal(reorder([], "a", "down"), null);
+  assert.deepEqual(reorder(["a"], "a", "up"), null);
+});
+
+test("phrase : élision française devant voyelle (qu', d'), pas devant consonne", () => {
+  assert.equal(storySentence({ title: "agir", role: "administrateur", benefit: "agir vite" }), "En tant qu'administrateur, je veux agir, afin d'agir vite");
+  assert.equal(storySentence({ title: "x", role: "élève", benefit: "économiser" }), "En tant qu'élève, je veux x, afin d'économiser");
+  assert.equal(storySentence({ title: "x", role: "parent", benefit: "gagner" }), "En tant que parent, je veux x, afin de gagner");
+});

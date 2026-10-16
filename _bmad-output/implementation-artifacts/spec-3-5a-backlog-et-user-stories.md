@@ -136,3 +136,18 @@ Supprimer une mission emporte son backlog (`on delete cascade`) : la mission est
 - Écarts au Code Map : le déplacement renumérote tout le backlog (0, 1, 2…) à chaque monter ou descendre, ce qui répare aussi d'éventuels doublons de position ; une mise à jour par story déplacée, non atomique (`ponytail:` dans le code : suffisant pour quelques dizaines de stories). `deleteStory` ne signale pas une story déjà supprimée (l'état voulu est atteint). Le statut se change par un menu sur chaque story (un clic, mise à jour optimiste), pas dans le formulaire seulement.
 - Hors spec, par cohérence : le nom du client sur la page d'une mission passe à 44 px sur téléphone (défaut hérité de la 3.4, repéré pendant le parcours).
 - Reste : relecture indépendante, puis présentation ; la 3.5b (tâches) ajoutera `tasks`, la 3.5c (sprints) `sprints` et `user_stories.sprint_id`.
+
+## Triage de la relecture indépendante (3 relecteurs, 2026-10-16)
+
+Corrigés :
+- Les menus « points » et « statut » du formulaire revenaient à leur valeur initiale après une erreur (React ne met pas à jour l'option par défaut d'un menu déjà monté) : menus remontés à chaque envoi ; vérifié dans Chrome (8 points et « En cours » conservés).
+- Focus clavier perdu : « Monter », « Descendre » et le menu de statut ne sont plus `disabled` pendant la requête (clics ignorés à la place) ni définitivement en haut ou en bas (`aria-disabled`) ; après une suppression, le focus va au titre du backlog et « User story supprimée. » est annoncé ; en annulant une suppression, le focus revient sur « Supprimer » (et non « Modifier »). Un défaut trouvé en vérifiant : l'effet de suppression ne se déclenchait pas (la ligne disparaît avant), le parent est maintenant appelé dès la réponse de l'action.
+- Annonces : numérotées pour être relues deux fois de suite.
+- Story supprimée ailleurs : « n'existe plus » recharge l'écran ; `moveStory` ne prétend plus avoir réussi si la story a disparu ou si une écriture échoue à mi-parcours (écran rafraîchi avec l'état réel) ; une action qui lève (réseau) affiche un message au lieu de faire sauter la page (les redirections voulues passent) ; une lecture qui échoue dans la revalidation ne fait plus croire à un échec d'enregistrement.
+- Points : chiffres seulement (« 5.0 », « 0x5 », « 5e0 » refusés) ; élision française (« En tant qu'administrateur », « afin d'agir »).
+- Fiche client : l'avancement ne lit plus les stories de tous les autres clients.
+- Tests : caractère nul, espaces et tabulations, bornes et clés d'erreur du rôle, formes numériques, identifiant inconnu avec « descendre » (le tableau aurait été corrompu sans la garde) ; réexport mort et type dupliqué retirés.
+
+Reportés (`deferred-work.md`) : positions en double lors de deux ajouts ou déplacements simultanés (pas de contrainte d'unicité `(mission_id, position)`, ordre réparé au prochain déplacement), plafond de 1 000 lignes de l'avancement de la liste, tests des Server Actions de stories, `updateStory` qui renvoie le statut du formulaire resté ouvert (écrase un statut changé entre-temps par le menu), limite du nombre de stories par mission.
+
+Rejetés avec preuve : le composant `story-status.tsx` (le statut est un menu à libellé textuel, jamais la couleur seule ; écart assumé, pas de pastille en plus d'un menu qui dit déjà le mot) ; la colonne « Avancement » masquée sur téléphone (le tableau y est étroit ; la mission et la fiche du client l'affichent) ; message d'erreur du statut visible après annulation de l'édition (cosmétique) ; défense en profondeur par `owner_id` (même schéma que les autres tables).

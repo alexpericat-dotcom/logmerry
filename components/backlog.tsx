@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useCallback, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 
 import {
@@ -11,6 +12,7 @@ import {
   updateStory,
   type StoryActionState,
   type StoryFormState,
+  type StoryFormValues,
 } from "@/app/(app)/missions/story-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,10 +30,16 @@ import {
   type StoryStatus,
 } from "@/lib/domain/user-stories";
 
+/** Une action qui lève (réseau coupé, erreur serveur) ne doit pas faire sauter la page ; une redirection voulue (déconnexion) doit, elle, remonter. */
+function isRedirect(error: unknown): boolean {
+  return typeof error === "object" && error !== null && String((error as { digest?: unknown }).digest ?? "").startsWith("NEXT_REDIRECT");
+}
+const UNREACHABLE = "Le serveur ne répond pas. Réessaie dans un instant.";
+
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
-type Values = { title: string; role: string; benefit: string; acceptance_criteria: string; points: string; status: string };
+type Values = StoryFormValues;
 const EMPTY: Values = { title: "", role: "", benefit: "", acceptance_criteria: "", points: "", status: "todo" };
 
 function StoryForm({
@@ -49,7 +57,13 @@ function StoryForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const [state, formAction, pending] = useActionState<StoryFormState, FormData>(action, {});
+  const router = useRouter();
+  // `sent` compte les envois : il sert de clé aux menus (React remet les champs à zéro après l'action et ne met pas à jour l'option
+  // par défaut d'un menu déjà monté ; sans cela « points » et « statut » reviendraient à leur valeur d'origine après une erreur).
+  const [state, formAction, pending] = useActionState<StoryFormState, FormData>(
+    async (prev, formData) => ({ ...(await action(prev, formData)), sent: (prev.sent ?? 0) + 1 }),
+    {},
+  );
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? EMPTY;
   const errors = state.errors ?? {};
@@ -58,6 +72,10 @@ function StoryForm({
   useEffect(() => {
     if (state.ok) onDone();
   }, [state.ok, onDone]);
+  // La story ou la mission a disparu (supprimée dans un autre onglet) : on recharge pour que la liste le reflète.
+  useEffect(() => {
+    if (state.gone) router.refresh();
+  }, [state.gone, router]);
   useEffect(() => title.current?.focus(), []);
 
   const field = (key: keyof Values) => {
@@ -98,7 +116,7 @@ function StoryForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={`${idPrefix}-points`}>Points</Label>
-          <select {...field("points")} className={selectClass}>
+          <select key={`p${state.sent ?? 0}`} {...field("points")} className={selectClass}>
             <option value="">Sans points</option>
             {STORY_POINTS.map((p) => (
               <option key={p} value={String(p)}>
@@ -110,7 +128,7 @@ function StoryForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`${idPrefix}-status`}>Statut</Label>
-          <select {...field("status")} className={selectClass}>
+          <select key={`s${state.sent ?? 0}`} {...field("status")} className={selectClass}>
             {STORY_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {STORY_STATUS_LABELS[s]}
@@ -137,8 +155,18 @@ function StoryForm({
   );
 }
 
-function DeleteStory({ story, onCancel }: { story: StoryRecord; onCancel: () => void }) {
-  const [state, action, pending] = useActionState<StoryActionState>(() => deleteStory(story.id), {});
+function DeleteStory({ story, onCancel, onDeleted }: { story: StoryRecord; onCancel: () => void; onDeleted: () => void }) {
+  // `onDeleted` est appelé dès la réponse de l'action, pas dans un effet : l'action revalide la page et cette confirmation disparaît avec sa ligne avant qu'un effet ne s'exécute.
+  const [state, action, pending] = useActionState<StoryActionState>(async () => {
+    try {
+      const result = await deleteStory(story.id);
+      if (!result.message) onDeleted();
+      return result;
+    } catch (error) {
+      if (isRedirect(error)) throw error;
+      return { message: UNREACHABLE };
+    }
+  }, {});
   const cancel = useRef<HTMLButtonElement>(null);
   useEffect(() => cancel.current?.focus(), []); // « Annuler » d'abord : le choix sûr
   return (
@@ -176,33 +204,47 @@ function StoryItem({
   rank,
   count,
   onAnnounce,
+  onDeleted,
 }: {
   story: StoryRecord;
   rank: number;
   count: number;
   onAnnounce: (message: string) => void;
+  onDeleted: () => void;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const close = useCallback(() => setMode("view"), []);
   const editButton = useRef<HTMLButtonElement>(null);
-  const wasOpen = useRef(false);
+  const deleteButton = useRef<HTMLButtonElement>(null);
+  const openedFrom = useRef<"edit" | "delete" | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [status, setOptimisticStatus] = useOptimistic<StoryStatus, StoryStatus>(story.status, (_, next) => next);
 
-  // Le focus revient sur « Modifier » quand le formulaire ou la confirmation se ferme sans supprimer.
+  // Le focus revient sur le bouton qui avait ouvert le formulaire ou la confirmation (« Modifier » ou « Supprimer ») quand on la ferme sans supprimer.
   useEffect(() => {
-    if (mode === "view" && wasOpen.current) editButton.current?.focus();
-    wasOpen.current = mode !== "view";
+    if (mode === "view" && openedFrom.current) (openedFrom.current === "edit" ? editButton : deleteButton).current?.focus();
+    openedFrom.current = mode === "view" ? null : mode;
   }, [mode]);
 
-  const run = (task: () => Promise<StoryActionState>, onOk?: () => void) =>
+  // Les boutons restent actifs pendant la requête (un bouton désactivé perd le focus clavier) : on ignore simplement les clics en cours.
+  const run = (task: () => Promise<StoryActionState>, onOk?: () => void) => {
+    if (pending) return;
     startTransition(async () => {
       setError("");
-      const result = await task();
-      if (result.message) setError(result.message);
-      else onOk?.();
+      try {
+        const result = await task();
+        if (result.message) {
+          setError(result.message);
+          if (result.gone) router.refresh();
+        } else onOk?.();
+      } catch (e) {
+        if (isRedirect(e)) throw e;
+        setError(UNREACHABLE);
+      }
     });
+  };
 
   if (mode === "edit") {
     return (
@@ -235,14 +277,23 @@ function StoryItem({
           <select
             aria-label={`Statut de la user story ${story.title}`}
             value={status}
-            disabled={pending}
+            aria-busy={pending}
             onChange={(e) => {
+              if (pending) return;
               const next = e.target.value as StoryStatus;
               startTransition(async () => {
                 setError("");
                 setOptimisticStatus(next);
-                const result = await setStoryStatus(story.id, next);
-                if (result.message) setError(result.message);
+                try {
+                  const result = await setStoryStatus(story.id, next);
+                  if (result.message) {
+                    setError(result.message);
+                    if (result.gone) router.refresh();
+                  }
+                } catch (e) {
+                  if (isRedirect(e)) throw e;
+                  setError(UNREACHABLE);
+                }
               });
             }}
             className={`${selectClass} w-auto`}
@@ -272,8 +323,12 @@ function StoryItem({
             type="button"
             variant="outline"
             size="icon"
-            disabled={pending || rank === 0}
-            onClick={() => run(() => moveStory(story.id, "up"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank} sur ${count}.`))}
+            aria-disabled={rank === 0}
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            onClick={() => {
+              if (rank === 0) return;
+              run(() => moveStory(story.id, "up"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank} sur ${count}.`));
+            }}
             aria-label={`Monter la user story ${story.title}`}
             title="Monter"
           >
@@ -283,8 +338,12 @@ function StoryItem({
             type="button"
             variant="outline"
             size="icon"
-            disabled={pending || rank === count - 1}
-            onClick={() => run(() => moveStory(story.id, "down"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank + 2} sur ${count}.`))}
+            aria-disabled={rank === count - 1}
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+            onClick={() => {
+              if (rank === count - 1) return;
+              run(() => moveStory(story.id, "down"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank + 2} sur ${count}.`));
+            }}
             aria-label={`Descendre la user story ${story.title}`}
             title="Descendre"
           >
@@ -293,12 +352,12 @@ function StoryItem({
           <Button ref={editButton} type="button" variant="outline" size="sm" onClick={() => setMode("edit")}>
             Modifier<span className="sr-only"> la user story {story.title}</span>
           </Button>
-          <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={() => setMode("delete")}>
+          <Button ref={deleteButton} type="button" variant="outline" size="sm" className="text-destructive" onClick={() => setMode("delete")}>
             Supprimer<span className="sr-only"> la user story {story.title}</span>
           </Button>
         </div>
       )}
-      {mode === "delete" && <DeleteStory story={story} onCancel={close} />}
+      {mode === "delete" && <DeleteStory story={story} onCancel={close} onDeleted={onDeleted} />}
     </li>
   );
 }
@@ -306,7 +365,15 @@ function StoryItem({
 /** Backlog d'une mission : les user stories dans l'ordre de priorité, avec ajout, modification, statut, déplacement et suppression sur place. */
 export function Backlog({ missionId, stories }: { missionId: string; stories: StoryRecord[] }) {
   const [adding, setAdding] = useState(false);
-  const [announce, setAnnounce] = useState("");
+  // L'annonce porte un numéro : la même phrase deux fois de suite remonte l'élément et est relue par les lecteurs d'écran.
+  const [announce, setAnnounceState] = useState({ text: "", n: 0 });
+  const setAnnounce = useCallback((text: string) => setAnnounceState((a) => ({ text, n: a.n + 1 })), []);
+  const heading = useRef<HTMLHeadingElement>(null);
+  // Une story supprimée emporte le bouton qui avait le focus : on le rend au titre du backlog et on annonce la suppression.
+  const deleted = useCallback(() => {
+    setAnnounce("User story supprimée.");
+    heading.current?.focus();
+  }, [setAnnounce]);
   const addButton = useRef<HTMLButtonElement>(null);
   const wasAdding = useRef(false);
   const done = useCallback(() => setAdding(false), []);
@@ -318,15 +385,15 @@ export function Backlog({ missionId, stories }: { missionId: string; stories: St
   return (
     <section aria-labelledby="backlog-title" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="backlog-title" className="text-lg font-semibold">
+        <h2 id="backlog-title" ref={heading} tabIndex={-1} className="text-lg font-semibold outline-none">
           Backlog
         </h2>
         <p role="status" className="text-sm text-muted-foreground">
           {progressLabel(storyProgress(stories))}
         </p>
       </div>
-      <p className="sr-only" role="status" aria-live="polite">
-        {announce}
+      <p key={announce.n} className="sr-only" role="status" aria-live="polite">
+        {announce.text}
       </p>
       {stories.length === 0 && !adding && (
         <p className="text-sm text-muted-foreground">
@@ -336,7 +403,7 @@ export function Backlog({ missionId, stories }: { missionId: string; stories: St
       {stories.length > 0 && (
         <ol className="flex flex-col gap-2">
           {stories.map((story, i) => (
-            <StoryItem key={story.id} story={story} rank={i} count={stories.length} onAnnounce={setAnnounce} />
+            <StoryItem key={story.id} story={story} rank={i} count={stories.length} onAnnounce={setAnnounce} onDeleted={deleted} />
           ))}
         </ol>
       )}

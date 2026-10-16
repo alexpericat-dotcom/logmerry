@@ -25,10 +25,13 @@ export async function listStories(missionId: string): Promise<StoryRecord[]> {
   return data as StoryRecord[];
 }
 
-/** Stories terminées et totales de toutes mes missions, en une requête : { identifiant de mission : { done, total } }. */
-export async function storyProgressByMission(): Promise<Record<string, { done: number; total: number }>> {
+/** Stories terminées et totales de mes missions (toutes, ou celles de `missionIds`), en une requête : { identifiant de mission : { done, total } }. */
+export async function storyProgressByMission(missionIds?: string[]): Promise<Record<string, { done: number; total: number }>> {
+  if (missionIds && missionIds.length === 0) return {};
   const supabase = await createClient();
-  const { data, error } = await supabase.from("user_stories").select("mission_id, status");
+  let query = supabase.from("user_stories").select("mission_id, status");
+  if (missionIds) query = query.in("mission_id", missionIds);
+  const { data, error } = await query;
   if (error) throw new Error("Impossible de charger l'avancement des missions.");
   const out: Record<string, { done: number; total: number }> = {};
   for (const row of data) {

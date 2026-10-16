@@ -27,7 +27,8 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [contacts, notes, missions, progress] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id), storyProgressByMission()]);
+  const [contacts, notes, missions] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id)]);
+  const progress = await storyProgressByMission(missions.map((m) => m.id)); // seulement les missions de cette fiche
 
   return (
     <div className="flex flex-col gap-6">

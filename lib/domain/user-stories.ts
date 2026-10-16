@@ -1,5 +1,3 @@
-import { isUuid } from "./notes.ts";
-
 export const STORY_TITLE_MAX = 200;
 export const STORY_ROLE_MAX = 200;
 export const STORY_BENEFIT_MAX = 300;
@@ -30,7 +28,8 @@ export function validateStoryInput(input: StoryInput): { ok: true; value: StoryV
   const criteria = stripNul(input.acceptance_criteria).trim();
   const status = parseStoryStatus(input.status);
   const pointsText = input.points.trim();
-  const points = pointsText === "" ? null : Number(pointsText);
+  // Entier écrit en chiffres seulement : « 5.0 », « 0x5 » ou « 5e0 » ne sont pas des points.
+  const points = pointsText === "" ? null : /^\d+$/.test(pointsText) ? Number(pointsText) : Number.NaN;
   const errors: StoryErrors = {};
   if (!title) errors.title = "Saisis le titre de la user story (ce que tu veux faire).";
   else if (length(title) > STORY_TITLE_MAX) errors.title = `Le titre doit faire ${STORY_TITLE_MAX} caractères au plus.`;
@@ -43,9 +42,14 @@ export function validateStoryInput(input: StoryInput): { ok: true; value: StoryV
   return { ok: true, value: { title, role: role || null, benefit: benefit || null, acceptance_criteria: criteria || null, points, status } };
 }
 
-/** « En tant que {rôle}, je veux {titre}, afin de {bénéfice} » ; les parties absentes sont omises, le titre seul en dernier recours. */
+const VOWEL = /^[aeiouyàâäéèêëîïôöùûüœæ]/i;
+/** Élision française devant une voyelle : « que » devient « qu' », « de » devient « d' ».
+ * ponytail : voyelles seulement ; le « h » (muet ou aspiré) n'est pas traité, il demande un dictionnaire. */
+const elide = (word: string, next: string) => (VOWEL.test(next) ? `${word.slice(0, -1)}'${next}` : `${word} ${next}`);
+
+/** « En tant que {rôle}, je veux {titre}, afin de {bénéfice} » (avec élision) ; les parties absentes sont omises, le titre seul en dernier recours. */
 export function storySentence(s: { title: string; role: string | null; benefit: string | null }): string {
-  const parts = [s.role ? `En tant que ${s.role}` : null, `${s.role ? "je" : "Je"} veux ${s.title}`, s.benefit ? `afin de ${s.benefit}` : null];
+  const parts = [s.role ? `En tant ${elide("que", s.role)}` : null, `${s.role ? "je" : "Je"} veux ${s.title}`, s.benefit ? `afin ${elide("de", s.benefit)}` : null];
   return parts.filter(Boolean).join(", ");
 }
 
@@ -78,4 +82,3 @@ export function reorder(ids: string[], id: string, direction: "up" | "down"): st
   return next;
 }
 
-export { isUuid };
