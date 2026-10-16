@@ -64,14 +64,18 @@ function listOf(input: unknown, key: string): unknown[] | null {
   return null;
 }
 
-/** Liste renvoyée par l'appel d'outil `tool` dans la réponse de l'API Messages (le premier appel dont la liste `key` est exploitable) ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
-export function parseToolCall(json: unknown, tool: string, key: string): unknown[] {
+/** Entrées des appels de l'outil `tool` dans la réponse de l'API Messages ; une réponse coupée ou refusée lève une erreur (même si elle contient un appel partiel). */
+export function toolInputs(json: unknown, tool: string): unknown[] {
   const stop = (json as { stop_reason?: unknown } | null)?.stop_reason;
   if (stop === "max_tokens" || stop === "refusal") throw new Error(`Proposition de Claude inutilisable (${stop}).`);
   const content = (json as { content?: unknown } | null)?.content;
-  const calls = Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).filter((b) => b?.type === "tool_use" && b.name === tool) : [];
-  for (const call of calls) {
-    const list = listOf(call.input, key);
+  return Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).filter((b) => b?.type === "tool_use" && b.name === tool).map((b) => b.input) : [];
+}
+
+/** Liste renvoyée par l'appel d'outil `tool` (le premier appel dont la liste `key` est exploitable) ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
+export function parseToolCall(json: unknown, tool: string, key: string): unknown[] {
+  for (const input of toolInputs(json, tool)) {
+    const list = listOf(input, key);
     if (list) return list;
   }
   throw new Error("Proposition de Claude inattendue.");

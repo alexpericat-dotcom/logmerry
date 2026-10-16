@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Backlog } from "@/components/backlog";
+import { MissionPrompt } from "@/components/mission-prompt";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { PageBanner } from "@/components/page-banner";
 import { Unset } from "@/components/unset";
@@ -82,6 +83,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </dl>
       </section>
+      <MissionPrompt missionId={id} hasClient={!!mission.client} />
       <Backlog missionId={id} stories={stories} tasks={tasks} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
     </div>
   );
