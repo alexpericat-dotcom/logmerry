@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { withSession } from "@/lib/supabase/with-session";
 import { validateClientInput, type ClientErrors, type ClientValues } from "@/lib/domain/clients";
+import { missionsRefusal } from "@/lib/domain/missions";
 import { isUuid } from "@/lib/domain/notes";
 
 export type ClientFormState = {
@@ -17,6 +18,7 @@ export type DeleteClientState = { message?: string };
 
 const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
 const NOT_FOUND = "Cette fiche n'existe plus.";
+
 
 const readValues = (formData: FormData) => ({
   name: String(formData.get("name") ?? ""),
@@ -69,15 +71,24 @@ export async function updateClientRecord(id: string, _prev: ClientFormState, for
 }
 
 export async function deleteClientRecord(id: string): Promise<DeleteClientState> {
-  const result = await withSession(async (supabase): Promise<WriteOutcome> => {
+  let missions = 0;
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "has-missions"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id");
+    // 23503 : la base refuse (clé étrangère `on delete restrict`) tant que la fiche a des missions.
+    if (error?.code === "23503") {
+      const { count } = await supabase.from("missions").select("id", { count: "exact", head: true }).eq("client_id", id);
+      missions = count ?? 0;
+      // Un autre motif de clé étrangère, ou un compte illisible : pas de faux « a des missions ».
+      return missions > 0 ? "has-missions" : "error";
+    }
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
   });
 
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La fiche est conservée. Réessaie." };
+  if (result.value === "has-missions") return { message: missionsRefusal(missions) };
   if (result.value === "not-found") return { message: NOT_FOUND };
 
   revalidatePath("/clients");

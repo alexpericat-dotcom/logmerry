@@ -6,6 +6,7 @@ import { ClientForm } from "@/components/client-form";
 import { DeleteClient } from "@/components/delete-client";
 import { PageBanner } from "@/components/page-banner";
 import { getClientRecord } from "@/lib/db/clients";
+import { countMissionsForClient } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
 import { isUuid } from "@/lib/domain/notes";
 
@@ -16,7 +17,8 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const noteCount = (await listNotesForClient(id)).length;
+  const [notes, missionCount] = await Promise.all([listNotesForClient(id), countMissionsForClient(id)]);
+  const noteCount = notes.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,7 +30,7 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
         submitLabel="Enregistrer les modifications"
         cancelHref={`/clients/${id}`}
       />
-      <DeleteClient id={id} noteCount={noteCount} />
+      <DeleteClient id={id} noteCount={noteCount} missionCount={missionCount} />
     </div>
   );
 }

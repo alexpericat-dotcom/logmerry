@@ -92,3 +92,13 @@
 - source_spec: idée d'Alex du 2026-10-15 (hors spec, à garder pour plus tard)
   summary: pièces jointes aux notes : photos, documents (PDF, etc.) et enregistrements audio.
   evidence: pas décidé ni cadré. Points à trancher le moment venu : stockage dans Supabase Storage (déjà dans la stack) avec une règle d'accès par propriétaire comme pour les tables ; limites de taille et de type ; effet sur le RAG (extraction du texte des documents, transcription des enregistrements, indexation et citation de la source) ; vie privée (les extraits partent chez Mistral AI et Anthropic : mention RGPD, aucune donnée réelle de client pendant le Workshop 8) ; suppression et purge au passage à l'outil pro (fichiers inclus) ; accès mobile (prise de photo, dictée). Probablement un epic à part après le MVP, à relier aux notes (epic 2) et à la base de connaissances.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
+  summary: tester la suppression d'un compte `auth.users` qui a des fiches et des missions, avant le passage à l'outil pro (la purge de la base).
+  evidence: `missions.client_id` est en `on delete restrict` (suppression d'une fiche refusée tant qu'elle a des missions) et `missions.owner_id` en `on delete cascade` ; le `restrict` immédiat peut faire échouer la cascade d'un compte selon l'ordre des suppressions (relecteur, confiance moyenne, non testé). À vérifier avec un compte jetable ; sinon purger les missions avant les fiches, ou passer la clé étrangère en `no action`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
+  summary: tester les Server Actions des missions (création, modification, suppression) et le refus de suppression d'une fiche, avec la même solution que pour les notes, fiches et contacts.
+  evidence: les tests couvrent la base (isolation) et les règles pures, pas les actions : inverser la vérification d'existence du client ou le code 23503 laisserait tout vert.
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
+  summary: liste des missions sans plafond ni pagination ; double envoi du formulaire sans clé d'idempotence.
+  evidence: l'API plafonne à 1 000 lignes par défaut, le total et les filtres ne porteraient que sur les plus récentes ; négligeable pour une activité à un seul utilisateur.

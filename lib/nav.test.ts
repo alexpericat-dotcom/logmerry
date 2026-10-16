@@ -12,8 +12,8 @@ test("la barre a les 9 entrées prévues, dans l'ordre", () => {
   );
 });
 
-test("le cockpit, les notes et les paramètres sont disponibles pour l'instant", () => {
-  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/parametres"]);
+test("le cockpit, les notes, les clients, les missions et les paramètres sont disponibles pour l'instant", () => {
+  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/parametres"]);
 });
 
 test("isCurrent : page exacte ou sous-page, pas un préfixe de mot", () => {

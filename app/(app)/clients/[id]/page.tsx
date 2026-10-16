@@ -8,9 +8,12 @@ import { PromoteClient } from "@/components/promote-client";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { MissionStatusBadge } from "@/components/mission-status";
+import { Button } from "@/components/ui/button";
+import { listMissionsForClient } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { getClientRecord } from "@/lib/db/clients";
 import { listContacts } from "@/lib/db/contacts";
 import { isUuid } from "@/lib/domain/notes";
@@ -22,13 +25,42 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [contacts, notes] = await Promise.all([listContacts(id), listNotesForClient(id)]);
+  const [contacts, notes, missions] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id)]);
 
   return (
     <div className="flex flex-col gap-6">
       <PageBanner title={client.status === "client" ? "Fiche client" : "Fiche prospect"} actions={client.status === "prospect" ? <PromoteClient id={id} /> : undefined} />
       <ClientCard client={client} />
       <ContactsSection clientId={id} clientName={client.name} contacts={contacts} />
+      <section aria-labelledby="missions-title" className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="missions-title" className="text-lg font-semibold">
+            Missions
+          </h2>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/missions/nouvelle?client=${id}`}>Créer une mission</Link>
+          </Button>
+        </div>
+        {missions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune mission pour cette fiche. Une mission, c&apos;est un travail que tu fais pour elle.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {missions.map((m) => (
+              <li key={m.id} className="flex flex-wrap items-center gap-2 rounded-md border bg-card p-3">
+                <Link href={`/missions/${m.id}`} className="min-w-0 break-words font-semibold underline-offset-4 hover:underline max-md:inline-block max-md:min-h-11 max-md:py-2.5">
+                  {m.title}
+                </Link>
+                <MissionStatusBadge status={m.status} />
+                {(m.start_date || m.end_date) && (
+                  <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+                    {m.start_date ? formatDate(m.start_date) : "…"} → {m.end_date ? formatDate(m.end_date) : "…"}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       <section aria-labelledby="notes-title" className="flex flex-col gap-3">
         <h2 id="notes-title" className="text-lg font-semibold">
           Notes

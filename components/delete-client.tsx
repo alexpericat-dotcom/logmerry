@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { deleteClientRecord, type DeleteClientState } from "@/app/(app)/clients/actions";
 import { Button } from "@/components/ui/button";
+import { missionsRefusal } from "@/lib/domain/missions";
 
-export function DeleteClient({ id, noteCount = 0 }: { id: string; noteCount?: number }) {
+export function DeleteClient({ id, noteCount = 0, missionCount = 0 }: { id: string; noteCount?: number; missionCount?: number }) {
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<DeleteClientState>(() => deleteClientRecord(id), {});
   const askRef = useRef<HTMLButtonElement>(null);
@@ -24,6 +26,19 @@ export function DeleteClient({ id, noteCount = 0 }: { id: string; noteCount?: nu
       {state.message}
     </p>
   );
+
+  // Une fiche qui a des missions ne se supprime pas : on l'explique avant même de proposer le bouton (la base refuse aussi).
+  if (missionCount > 0) {
+    return (
+      <p role="note" className="max-w-2xl rounded-md border p-3 text-sm text-muted-foreground">
+        {missionsRefusal(missionCount)}{" "}
+        <Link href={`/clients/${id}`} className="text-primary underline underline-offset-4">
+          Voir ses missions
+        </Link>
+        .
+      </p>
+    );
+  }
 
   if (!confirming) {
     return (
