@@ -3,7 +3,6 @@ import { titleKey, type NoteForProposal } from "./story-proposals.ts";
 import { validateTaskTitle } from "./tasks.ts";
 
 export const TASK_PROPOSALS_MAX = 8;
-export const HINT_MAX = 1000;
 
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -56,6 +55,11 @@ export function verifyTaskProposals(raw: unknown[], sources: { texts: string[]; 
       dropped++;
       continue;
     }
+    // Un titre fait seulement de ponctuation n'est pas une tâche ; il ne doit pas non plus entrer en collision avec un autre.
+    if (!titleKey(checked.value)) {
+      dropped++;
+      continue;
+    }
     if (taken.has(titleKey(checked.value))) {
       duplicates++;
       continue;
@@ -68,4 +72,10 @@ export function verifyTaskProposals(raw: unknown[], sources: { texts: string[]; 
     tasks.push(checked.value);
   }
   return { tasks, dropped, duplicates };
+}
+
+/** Sources de la vérification des nombres : tout ce qui a été donné au modèle (précision, mission, story, tâches existantes, note retenue) ; un nombre qui n'y figure pas est inventé. */
+export function taskSources(input: { hint: string; missionTitle: string; story: StoryForTasks; existingTitles: string[]; note: NoteForProposal | null }): string[] {
+  const s = input.story;
+  return [input.hint, input.missionTitle, s.title, s.role ?? "", s.benefit ?? "", s.acceptance_criteria ?? "", ...input.existingTitles, ...(input.note ? [input.note.title, input.note.body] : [])];
 }
