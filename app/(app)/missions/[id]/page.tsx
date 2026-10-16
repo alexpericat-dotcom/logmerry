@@ -10,6 +10,7 @@ import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { getMission } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
+import { listTasks } from "@/lib/db/tasks";
 import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -24,6 +25,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   const mission = await getMission(id);
   if (!mission) notFound();
   const [stories, notes] = await Promise.all([listStories(id), listNotesForClient(mission.client_id)]);
+  const tasks = await listTasks(stories.map((s) => s.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,7 +82,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </dl>
       </section>
-      <Backlog missionId={id} stories={stories} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
+      <Backlog missionId={id} stories={stories} tasks={tasks} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
     </div>
   );
 }

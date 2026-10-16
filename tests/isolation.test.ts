@@ -949,3 +949,105 @@ describe("isolation des user stories entre deux comptes fictifs", () => {
     assert.equal((await a.client.from("user_stories").select("id").eq("mission_id", m.data!.id)).data!.length, 0, "le backlog a disparu avec sa mission");
   });
 });
+
+describe("isolation des tâches entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let missionA: { id: string };
+  let missionB: { id: string };
+  let storyA: { id: string };
+  let storyB: { id: string };
+  let taskA: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      // Les tâches partent avec leur story, les stories avec leur mission (cascade) ; les missions partent avant leur fiche (restrict).
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const mk = async (account: Account, who: string) => {
+      const f = await account.client.from("clients").insert({ name: `${PREFIX} fiche tâches ${who}`, origin: "demo" }).select("id").single();
+      assert.ifError(f.error);
+      const m = await account.client.from("missions").insert({ client_id: f.data!.id, title: `${PREFIX} mission tâches ${who}` }).select("id").single();
+      assert.ifError(m.error);
+      const s = await account.client.from("user_stories").insert({ mission_id: m.data!.id, title: `story ${who}`, position: 0 }).select("id").single();
+      assert.ifError(s.error);
+      return { mission: m.data!, story: s.data! };
+    };
+    const ra = await mk(a, "A");
+    const rb = await mk(b, "B");
+    missionA = ra.mission;
+    storyA = ra.story;
+    missionB = rb.mission;
+    storyB = rb.story;
+    const t = await a.client.from("tasks").insert({ story_id: storyA.id, title: "écrire le plan", position: 0 }).select("id").single();
+    assert.ifError(t.error);
+    taskA = t.data!;
+  });
+
+  after(cleanup);
+
+  test("chaque compte ne voit que ses tâches ; le propriétaire et l'état par défaut sont posés par la base", async () => {
+    const own = await a.client.from("tasks").select("owner_id, done").eq("id", taskA.id).single();
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.done, false);
+    assert.ok(!(await b.client.from("tasks").select("id")).data!.some((t) => t.id === taskA.id), "B ne voit pas la tâche de A");
+  });
+
+  test("B ne peut ni modifier, ni cocher, ni supprimer la tâche de A", async () => {
+    const upd = await b.client.from("tasks").update({ title: "piraté", done: true }).eq("id", taskA.id).select("id");
+    assert.equal(upd.data?.length ?? 0, 0);
+    const del = await b.client.from("tasks").delete().eq("id", taskA.id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+    const after = await a.client.from("tasks").select("title, done").eq("id", taskA.id).single();
+    assert.deepEqual(after.data, { title: "écrire le plan", done: false });
+  });
+
+  test("B ne peut pas ajouter une tâche à la story de A, ni y déplacer la sienne, ni forger un autre propriétaire", async () => {
+    assert.equal((await b.client.from("tasks").insert({ story_id: storyA.id, title: "intrus", position: 1 })).error?.code, "42501");
+    const mine = await b.client.from("tasks").insert({ story_id: storyB.id, title: "ma tâche", position: 0 }).select("id").single();
+    assert.ifError(mine.error);
+    const move = await b.client.from("tasks").update({ story_id: storyA.id }).eq("id", mine.data!.id).select("id");
+    assert.ok(move.error || (move.data?.length ?? 0) === 0, "le déplacement vers la story de A est refusé");
+    assert.equal((await b.client.from("tasks").insert({ story_id: storyB.id, title: "forgée", position: 1, owner_id: a.userId })).error?.code, "42501");
+    assert.equal((await a.client.from("tasks").select("id").eq("story_id", storyA.id)).data!.length, 1, "la story de A n'a reçu aucune tâche étrangère");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("tasks").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    assert.ok((await anon.from("tasks").insert({ story_id: storyA.id, title: "anonyme", position: 0 })).error);
+    assert.equal((await anon.from("tasks").delete().eq("id", taskA.id).select("id")).data?.length ?? 0, 0);
+  });
+
+  test("titre vide ou trop long, position négative : refusés pour le bon motif ; 200 caractères acceptés", async () => {
+    const base = { story_id: storyA.id, position: 5 };
+    for (const [label, row] of [
+      ["titre vide", { ...base, title: "   " }],
+      ["titre de 201 caractères", { ...base, title: "x".repeat(201) }],
+      ["position négative", { ...base, title: "ok", position: -1 }],
+    ] as const) {
+      assert.equal((await a.client.from("tasks").insert(row)).error?.code, "23514", `${label} refusé`);
+    }
+    assert.ifError((await a.client.from("tasks").insert({ ...base, title: "x".repeat(200) })).error);
+  });
+
+  test("supprimer une story, puis une mission, emporte les tâches", async () => {
+    const s = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "éphémère", position: 9 }).select("id").single();
+    assert.ifError(s.error);
+    assert.ifError((await a.client.from("tasks").insert({ story_id: s.data!.id, title: "partira avec elle", position: 0 })).error);
+    assert.ifError((await a.client.from("user_stories").delete().eq("id", s.data!.id)).error);
+    assert.equal((await a.client.from("tasks").select("id").eq("story_id", s.data!.id)).data!.length, 0, "la tâche a disparu avec sa story");
+    assert.ifError((await a.client.from("missions").delete().eq("id", missionA.id)).error);
+    assert.equal((await a.client.from("tasks").select("id").eq("story_id", storyA.id)).data!.length, 0, "les tâches ont disparu avec la mission");
+    assert.ok(missionB.id, "la mission de B reste");
+  });
+});

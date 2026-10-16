@@ -86,16 +86,7 @@ export function progressLabel({ done, total }: { done: number; total: number }):
 /** Position de la prochaine story : la dernière place du backlog. */
 export const nextPosition = (positions: number[]): number => (positions.length ? Math.max(...positions) + 1 : 0);
 
-/**
- * Nouvel ordre après avoir monté (`up`) ou descendu (`down`) la story `id` d'une place ; `null` si elle est déjà en haut ou en bas, ou inconnue.
- * Les identifiants sont renvoyés dans l'ordre de priorité : la position de chacun est son rang (0, 1, 2…), ce qui répare aussi d'éventuels doublons.
- */
-export function reorder(ids: string[], id: string, direction: "up" | "down"): string[] | null {
-  const i = ids.indexOf(id);
-  const j = direction === "up" ? i - 1 : i + 1;
-  if (i < 0 || j < 0 || j >= ids.length) return null;
-  const next = [...ids];
-  [next[i], next[j]] = [next[j], next[i]];
-  return next;
+/** Vrai si `submitted` contient exactement les mêmes identifiants que `current`, une fois chacun (un réordonnancement ne perd, n'ajoute ni ne duplique rien : sinon la liste a changé entre-temps). */
+export function isPermutation(current: string[], submitted: string[]): boolean {
+  return current.length === submitted.length && new Set(submitted).size === submitted.length && submitted.every((id) => current.includes(id));
 }
-
