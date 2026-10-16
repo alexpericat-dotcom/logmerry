@@ -58,11 +58,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Migration `missions` (SQL montré avant application)
-- [ ] Règles pures + tests (`lib/domain/missions.ts`)
-- [ ] Accès aux données et Server Actions (créer, modifier, supprimer) ; refus de suppression de la fiche
-- [ ] Pages : liste, création, vue, modification ; section sur la fiche ; navigation activée
-- [ ] Tests d'isolation, journal
+- [x] Migration `missions` (SQL montré avant application)
+- [x] Règles pures + tests (`lib/domain/missions.ts`)
+- [x] Accès aux données et Server Actions (créer, modifier, supprimer) ; refus de suppression de la fiche
+- [x] Pages : liste, création, vue, modification ; section sur la fiche ; navigation activée
+- [x] Tests d'isolation, journal
 
 **Acceptance Criteria:**
 - Given une fiche client, when je crée une mission avec un titre, then elle apparaît sur la fiche et dans la page Missions ; sans titre, then une erreur en ligne nomme le champ.
@@ -119,3 +119,24 @@ create policy missions_delete on public.missions for delete to authenticated
 ```
 
 `on delete restrict` : la base elle-même empêche de supprimer une fiche qui a des missions ; l'interface explique pourquoi.
+
+## Implementation Notes
+
+- Migration appliquée par l'outil Supabase (version 20261015162137, fichier renommé). `get_advisors` : rien de nouveau.
+- Écarts au Code Map : `components/unset.tsx` (valeur absente accessible), `formatDate` dans `lib/format.ts` (date sans heure), `whitespace-nowrap` sur la pastille partagée `components/ui/badge.tsx` (effet sur toutes les pastilles, voulu : la pastille « En cours » se coupait en deux lignes sur téléphone), `missionsRefusal` dans `lib/domain/missions.ts` (un fichier d'actions serveur ne peut exporter que des fonctions asynchrones).
+- Accord du refus de suppression : « 1 mission : supprime-la », « N missions : supprime-les » (la spec disait « N missions » seulement).
+
+## Triage de la relecture indépendante (3 relecteurs, 2026-10-16)
+
+Corrigés :
+- Modification : le client vient de la mission, pas du champ caché (qui pouvait faire échouer l'enregistrement sans message, répondre « fiche inexistante » à tort ou revalider la mauvaise fiche) ; vérifié dans Chrome avec un champ falsifié.
+- Refus de suppression de la fiche : message générique si le compte de missions est nul ou illisible (plus de faux « a des missions ») ; lien « Voir ses missions » dans la note.
+- Dates : année avant 1900 refusée (0000 passait en JavaScript, Postgres la refuse).
+- Mission déjà supprimée : retour à la liste au lieu d'une page morte ; pages de la mission revalidées après suppression.
+- Tiret « non renseignée » : texte pour lecteurs d'écran à la place d'un `aria-label` sur un `span` ; doublon d'`isUuid` retiré ; deux requêtes de la page de modification de fiche en parallèle ; cast qui masquait le typage de `save` remplacé par un type union.
+- Tests : longueur en émoji, tris par fin, client et statut, départage et accents, `nextDir`, adresse (tri décroissant, tableau), identifiant mal formé, dates avec espaces, année 0000 ; isolation avec codes d'erreur précis (23514, 22P02, 42501) et mission de A vérifiée entière.
+- Cases des tâches de la spec cochées.
+
+Reportés (`deferred-work.md`) : suppression d'un compte `auth.users` qui a des fiches et des missions (le `restrict` immédiat peut échouer selon l'ordre des cascades) ; plafond de 1 000 lignes de l'API sur la liste ; tests des Server Actions de missions ; double envoi du formulaire sans clé d'idempotence.
+
+Rejetés avec preuve : « le client choisi saute après une erreur » (menu non contrôlé : vérifié dans Chrome, le client est conservé) ; défense en profondeur par `owner_id` (même schéma que clients et notes, la RLS est la barrière, `server-only` en place) ; message d'erreur obsolète après annulation de la confirmation (schéma existant des suppressions, cosmétique) ; liste filtrée vide sans bouton (les pastilles de filtre restent le moyen d'agir).

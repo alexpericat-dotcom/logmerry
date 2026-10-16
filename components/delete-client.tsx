@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { deleteClientRecord, type DeleteClientState } from "@/app/(app)/clients/actions";
@@ -30,7 +31,11 @@ export function DeleteClient({ id, noteCount = 0, missionCount = 0 }: { id: stri
   if (missionCount > 0) {
     return (
       <p role="note" className="max-w-2xl rounded-md border p-3 text-sm text-muted-foreground">
-        {missionsRefusal(missionCount)}
+        {missionsRefusal(missionCount)}{" "}
+        <Link href={`/clients/${id}`} className="text-primary underline underline-offset-4">
+          Voir ses missions
+        </Link>
+        .
       </p>
     );
   }

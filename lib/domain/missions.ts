@@ -1,3 +1,5 @@
+import { isUuid } from "./notes.ts";
+
 export const MISSION_TITLE_MAX = 200;
 
 export const MISSION_STATUSES = ["in_progress", "done", "cancelled"] as const;
@@ -18,11 +20,10 @@ export type MissionErrors = { client_id?: string; title?: string; status?: strin
 
 const stripNul = (s: string) => s.replaceAll("\u0000", "");
 const length = (s: string) => [...s].length;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** `YYYY-MM-DD` qui existe vraiment au calendrier (pas de 31 février). */
+/** `YYYY-MM-DD` qui existe vraiment au calendrier (pas de 31 février), à partir de 1900 (l'année 0000 passe en JavaScript mais Postgres la refuse). */
 function isDay(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0, 4)) < 1900) return false;
   const d = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
@@ -34,7 +35,7 @@ export function validateMissionInput(input: MissionInput): { ok: true; value: Mi
   const start = input.start_date.trim();
   const end = input.end_date.trim();
   const errors: MissionErrors = {};
-  if (!UUID.test(input.client_id)) errors.client_id = "Choisis le client de la mission.";
+  if (!isUuid(input.client_id)) errors.client_id = "Choisis le client de la mission.";
   if (!title) errors.title = "Saisis le titre de la mission.";
   else if (length(title) > MISSION_TITLE_MAX) errors.title = `Le titre doit faire ${MISSION_TITLE_MAX} caractères au plus.`;
   if (!status) errors.status = "Choisis un statut.";

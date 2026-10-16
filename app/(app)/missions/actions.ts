@@ -25,34 +25,47 @@ const readValues = (formData: FormData): MissionFormValues => ({
 });
 
 type WriteOutcome = "saved" | "not-found" | "client-gone" | "error";
+type Written = { outcome: WriteOutcome; id?: string; clientId?: string };
+type SaveResult = { errors: MissionErrors } | Written;
 
-/** Session, validation, écriture ; `write` renvoie l'identifiant enregistré, ou pourquoi ça n'a pas marché. */
+/**
+ * Session, validation, écriture. `clientOf` (modification) donne le client réel de la mission : le champ du formulaire est alors ignoré,
+ * il ne peut ni faire échouer l'enregistrement ni désigner la mauvaise fiche. `write` dit ce qui a été enregistré, ou pourquoi pas.
+ */
 async function save(
   values: MissionFormValues,
-  write: (supabase: SupabaseClient, value: MissionValues) => Promise<{ outcome: WriteOutcome; id?: string }>,
+  write: (supabase: SupabaseClient, value: MissionValues) => Promise<Written>,
+  clientOf?: (supabase: SupabaseClient) => Promise<string | null>,
 ): Promise<MissionFormState> {
-  const result = await withSession(async (supabase) => {
-    const checked = validateMissionInput(values);
+  const result = await withSession(async (supabase): Promise<SaveResult> => {
+    let form = values;
+    if (clientOf) {
+      const clientId = await clientOf(supabase);
+      if (!clientId) return { outcome: "not-found" };
+      form = { ...values, client_id: clientId };
+    }
+    const checked = validateMissionInput(form);
     if (!checked.ok) return { errors: checked.errors };
     // La clé étrangère contourne la RLS, mais la policy refuse une fiche étrangère ; on distingue « fiche disparue » d'une erreur de base.
     const { data, error } = await supabase.from("clients").select("id").eq("id", checked.value.client_id).maybeSingle();
-    if (error) return { outcome: "error" as WriteOutcome };
-    if (!data) return { outcome: "client-gone" as WriteOutcome };
-    return write(supabase, checked.value);
+    if (error) return { outcome: "error" };
+    if (!data) return { outcome: "client-gone" };
+    return { ...(await write(supabase, checked.value)), clientId: checked.value.client_id };
   });
 
   // redirect() lève une exception : à appeler hors du try.
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed") return { message: SAVE_FAILED, values };
-  const r = result.value as { errors?: MissionErrors; outcome?: WriteOutcome; id?: string };
-  if (r.errors) return { errors: r.errors, values };
+  const r = result.value;
+  if ("errors" in r) return { errors: r.errors, values };
   if (r.outcome === "client-gone") return { message: CLIENT_GONE, values };
   if (r.outcome === "not-found") return { message: NOT_FOUND, values };
   if (r.outcome !== "saved" || !r.id) return { message: SAVE_FAILED, values };
 
   revalidatePath("/missions");
   revalidatePath(`/missions/${r.id}`);
-  revalidatePath(`/clients/${values.client_id}`);
+  revalidatePath(`/missions/${r.id}/modifier`);
+  if (r.clientId) revalidatePath(`/clients/${r.clientId}`);
   redirect(`/missions/${r.id}`);
 }
 
@@ -64,16 +77,23 @@ export async function createMission(_prev: MissionFormState, formData: FormData)
   });
 }
 
-/** Le client d'une mission ne change pas : `client_id` du formulaire (champ caché) est ignoré au profit de celui de la mission. */
+/** Le client d'une mission ne change pas : on lit celui de la mission, le champ caché du formulaire est ignoré. */
 export async function updateMission(id: string, _prev: MissionFormState, formData: FormData): Promise<MissionFormState> {
-  return save(readValues(formData), async (supabase, value) => {
-    if (!isUuid(id)) return { outcome: "not-found" };
-    const { client_id: _unchanged, ...changes } = value;
-    void _unchanged;
-    const { data, error } = await supabase.from("missions").update(changes).eq("id", id).select("id");
-    if (error) return { outcome: "error" };
-    return data?.length ? { outcome: "saved", id } : { outcome: "not-found" };
-  });
+  return save(
+    readValues(formData),
+    async (supabase, value) => {
+      const { client_id: _unchanged, ...changes } = value;
+      void _unchanged;
+      const { data, error } = await supabase.from("missions").update(changes).eq("id", id).select("id");
+      if (error) return { outcome: "error" };
+      return data?.length ? { outcome: "saved", id } : { outcome: "not-found" };
+    },
+    async (supabase) => {
+      if (!isUuid(id)) return null;
+      const { data } = await supabase.from("missions").select("client_id").eq("id", id).maybeSingle();
+      return (data?.client_id as string | undefined) ?? null;
+    },
+  );
 }
 
 export async function deleteMission(id: string): Promise<DeleteMissionState> {
@@ -88,9 +108,11 @@ export async function deleteMission(id: string): Promise<DeleteMissionState> {
 
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La mission est conservée. Réessaie." };
-  if (result.value === "not-found") return { message: NOT_FOUND };
 
+  // Déjà supprimée (autre onglet, double clic) : l'état voulu est atteint, on revient à la liste plutôt que de rester sur une page morte.
   revalidatePath("/missions");
+  revalidatePath(`/missions/${id}`);
+  revalidatePath(`/missions/${id}/modifier`);
   if (clientId) revalidatePath(`/clients/${clientId}`);
   redirect("/missions");
 }

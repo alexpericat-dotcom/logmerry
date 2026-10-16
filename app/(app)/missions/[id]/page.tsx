@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { MissionStatusBadge } from "@/components/mission-status";
 import { PageBanner } from "@/components/page-banner";
+import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { getMission } from "@/lib/db/missions";
 import { isUuid } from "@/lib/domain/notes";
@@ -12,7 +13,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Mission · LogMerry" };
 
-const dash = <span aria-label="non renseignée">–</span>;
+const dash = <Unset />;
 
 async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

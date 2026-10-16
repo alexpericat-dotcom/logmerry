@@ -79,7 +79,8 @@ export async function deleteClientRecord(id: string): Promise<DeleteClientState>
     if (error?.code === "23503") {
       const { count } = await supabase.from("missions").select("id", { count: "exact", head: true }).eq("client_id", id);
       missions = count ?? 0;
-      return "has-missions";
+      // Un autre motif de clé étrangère, ou un compte illisible : pas de faux « a des missions ».
+      return missions > 0 ? "has-missions" : "error";
     }
     if (error) return "error";
     return data?.length ? "saved" : "not-found";

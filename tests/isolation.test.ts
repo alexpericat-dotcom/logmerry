@@ -774,7 +774,8 @@ describe("isolation des missions entre deux comptes fictifs", () => {
     assert.ok(upd.error || upd.data!.length === 0, "modification refusée");
     const del = await b.client.from("missions").delete().eq("id", mA.id).select("id");
     assert.ok(del.error || del.data!.length === 0, "suppression refusée");
-    assert.equal((await a.client.from("missions").select("title").eq("id", mA.id).single()).data!.title, `${PREFIX} mission A`);
+    const after = await a.client.from("missions").select("title, status, client_id").eq("id", mA.id).single();
+    assert.deepEqual(after.data, { title: `${PREFIX} mission A`, status: "in_progress", client_id: clientA.id }, "la mission de A est intacte");
   });
 
   test("B ne peut pas créer une mission sur la fiche de A, ni déplacer la sienne, ni forger un owner_id", async () => {
@@ -783,7 +784,7 @@ describe("isolation des missions entre deux comptes fictifs", () => {
     const mine = await b.client.from("missions").insert({ client_id: clientB.id, title: `${PREFIX} mission B` }).select("id").single();
     assert.ifError(mine.error);
     const move = await b.client.from("missions").update({ client_id: clientA.id }).eq("id", mine.data!.id).select("id");
-    assert.ok(move.error || move.data!.length === 0, "déplacement vers la fiche d'un autre refusé");
+    assert.equal(move.error?.code, "42501", "déplacement vers la fiche d'un autre refusé par la RLS (et non par un autre motif)");
     const forged = await b.client.from("missions").insert({ client_id: clientB.id, title: `${PREFIX} forgé`, owner_id: a.userId });
     assert.equal(forged.error?.code, "42501", "owner_id d'un autre refusé");
     assert.equal((await a.client.from("missions").select("id").eq("client_id", clientA.id)).data!.length, 1, "la fiche de A n'a reçu aucune mission étrangère");
@@ -799,14 +800,15 @@ describe("isolation des missions entre deux comptes fictifs", () => {
 
   test("la base refuse : titre vide ou trop long, statut inconnu, fin avant début, fiche absente", async () => {
     const ok = { client_id: clientA.id };
-    for (const [label, row] of [
-      ["titre vide", { ...ok, title: "  " }],
-      ["titre trop long", { ...ok, title: "x".repeat(201) }],
-      ["statut inconnu", { ...ok, title: "t", status: "bientôt" }],
-      ["fin avant début", { ...ok, title: "t", start_date: "2026-10-20", end_date: "2026-10-10" }],
-      ["fiche absente", { client_id: "00000000-0000-0000-0000-000000000000", title: "t" }],
+    // Le code d'erreur prouve le motif : 23514 = contrainte « check », 22P02 = valeur d'enum invalide, 42501 = RLS (fiche absente ou étrangère).
+    for (const [label, row, code] of [
+      ["titre vide", { ...ok, title: "  " }, "23514"],
+      ["titre trop long", { ...ok, title: "x".repeat(201) }, "23514"],
+      ["statut inconnu", { ...ok, title: "t", status: "bientôt" }, "22P02"],
+      ["fin avant début", { ...ok, title: "t", start_date: "2026-10-20", end_date: "2026-10-10" }, "23514"],
+      ["fiche absente", { client_id: "00000000-0000-0000-0000-000000000000", title: "t" }, "42501"],
     ] as const) {
-      assert.ok((await a.client.from("missions").insert(row)).error, `${label} refusé`);
+      assert.equal((await a.client.from("missions").insert(row)).error?.code, code, `${label} refusé pour le bon motif`);
     }
     assert.ifError((await a.client.from("missions").insert({ ...ok, title: `${PREFIX} dates égales`, start_date: "2026-10-10", end_date: "2026-10-10" })).error);
   });

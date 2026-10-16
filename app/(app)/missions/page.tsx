@@ -5,6 +5,7 @@ import { DataTable, type Column } from "@/components/data-table";
 import { FilterChips } from "@/components/filter-chips";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { PageBanner } from "@/components/page-banner";
+import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { listAllMissions, type MissionRecord } from "@/lib/db/missions";
 import {
@@ -23,7 +24,7 @@ export const metadata = { title: "Missions · LogMerry" };
 
 type SearchParams = Promise<{ statut?: string | string[]; tri?: string | string[]; ordre?: string | string[] }>;
 
-const dash = <span aria-label="non renseignée">–</span>;
+const dash = <Unset />;
 
 async function MissionsList({ searchParams }: { searchParams: SearchParams }) {
   const view = parseMissionView(await searchParams);

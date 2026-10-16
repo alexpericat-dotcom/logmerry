@@ -17,7 +17,8 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [noteCount, missionCount] = [(await listNotesForClient(id)).length, await countMissionsForClient(id)];
+  const [notes, missionCount] = await Promise.all([listNotesForClient(id), countMissionsForClient(id)]);
+  const noteCount = notes.length;
 
   return (
     <div className="flex flex-col gap-6">
