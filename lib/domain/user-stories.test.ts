@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { nextPosition, progressLabel, reorder, storyProgress, storySentence, validateStoryInput } from "./user-stories.ts";
+import { nextPosition, isPermutation, progressLabel, storyProgress, storySentence, validateStoryInput } from "./user-stories.ts";
 
 const ok = { title: "ajouter une story", role: "", benefit: "", acceptance_criteria: "", points: "", status: "todo" };
 
@@ -54,14 +54,16 @@ test("position suivante : la dernière place", () => {
   assert.equal(nextPosition([0, 1, 4]), 5);
 });
 
-test("monter et descendre : échange avec la voisine, null aux extrémités ou pour un inconnu ; renvoie l'ordre complet", () => {
+test("réordonnancement : mêmes identifiants, chacun une fois, dans n'importe quel ordre ; un ajout, un retrait, un doublon ou un inconnu sont refusés", () => {
   const ids = ["a", "b", "c"];
-  assert.deepEqual(reorder(ids, "b", "up"), ["b", "a", "c"]);
-  assert.deepEqual(reorder(ids, "b", "down"), ["a", "c", "b"]);
-  assert.equal(reorder(ids, "a", "up"), null);
-  assert.equal(reorder(ids, "c", "down"), null);
-  assert.equal(reorder(ids, "zz", "up"), null);
-  assert.deepEqual(ids, ["a", "b", "c"], "la liste d'origine n'est pas modifiée");
+  assert.equal(isPermutation(ids, ["c", "a", "b"]), true);
+  assert.equal(isPermutation(ids, ids), true);
+  assert.equal(isPermutation([], []), true);
+  assert.equal(isPermutation(ids, ["a", "b"]), false, "un retrait");
+  assert.equal(isPermutation(ids, ["a", "b", "c", "d"]), false, "un ajout");
+  assert.equal(isPermutation(ids, ["a", "a", "b"]), false, "un doublon");
+  assert.equal(isPermutation(ids, ["a", "b", "z"]), false, "un inconnu");
+  assert.equal(isPermutation(["a", "a"], ["a", "a"]), false, "l'état courant doit lui-même être sans doublon");
 });
 
 test("caractère nul retiré ; rôle, bénéfice et critères nettoyés des espaces et tabulations ; rôle à 200 accepté ; erreurs sur la bonne clé", () => {
@@ -82,13 +84,6 @@ test("caractère nul retiré ; rôle, bénéfice et critères nettoyés des espa
 test("points : seulement des chiffres ; « 5.0 », « 0x5 », « 5e0 », « 1e1 », « +5 » refusés ; « 05 » et espaces autour acceptés", () => {
   for (const p of ["5.0", "0x5", "5e0", "1e1", "+5", "0b101"]) assert.equal(validateStoryInput({ ...ok, points: p }).ok, false, p);
   for (const p of ["05", " 5 "]) assert.equal(validateStoryInput({ ...ok, points: p }).ok, true, p);
-});
-
-test("reorder : identifiant inconnu renvoie null dans les deux sens (sans corrompre la liste)", () => {
-  assert.equal(reorder(["a", "b"], "zz", "down"), null);
-  assert.equal(reorder(["a", "b"], "zz", "up"), null);
-  assert.equal(reorder([], "a", "down"), null);
-  assert.deepEqual(reorder(["a"], "a", "up"), null);
 });
 
 test("phrase : élision française devant voyelle (qu', d'), pas devant consonne", () => {

@@ -1,23 +1,27 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useCallback, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useId, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
 
 import {
   addStory,
   deleteStory,
-  moveStory,
+  reorderStories,
   setStoryStatus,
   updateStory,
   type StoryActionState,
 } from "@/app/(app)/missions/story-actions";
 import Link from "next/link";
 
+import { SortableList } from "@/components/sortable-list";
 import { StoryForm, selectClass } from "@/components/story-form";
 import { StoryProposals, type LinkedNote } from "@/components/story-proposals";
 import { Badge } from "@/components/ui/badge";
+import { Tasks } from "@/components/tasks";
 import { Button } from "@/components/ui/button";
+import type { TaskRecord } from "@/lib/db/tasks";
+import { taskProgress, taskProgressLabel } from "@/lib/domain/tasks";
 import type { StoryRecord } from "@/lib/db/user-stories";
 import {
   STORY_STATUSES,
@@ -34,7 +38,7 @@ function isRedirect(error: unknown): boolean {
 }
 const UNREACHABLE = "Le serveur ne répond pas. Réessaie dans un instant.";
 
-function DeleteStory({ story, onCancel, onDeleted }: { story: StoryRecord; onCancel: () => void; onDeleted: () => void }) {
+function DeleteStory({ story, taskCount, onCancel, onDeleted }: { story: StoryRecord; taskCount: number; onCancel: () => void; onDeleted: () => void }) {
   // `onDeleted` est appelé dès la réponse de l'action, pas dans un effet : l'action revalide la page et cette confirmation disparaît avec sa ligne avant qu'un effet ne s'exécute.
   const [state, action, pending] = useActionState<StoryActionState>(async () => {
     try {
@@ -60,7 +64,10 @@ function DeleteStory({ story, onCancel, onDeleted }: { story: StoryRecord; onCan
       }}
       className="mt-3 flex flex-col gap-2 rounded-md border border-destructive p-3"
     >
-      <p className="text-sm font-semibold">Supprimer cette user story ? C&apos;est définitif.</p>
+      <p className="text-sm font-semibold">
+        Supprimer cette user story ? C&apos;est définitif.
+        {taskCount > 0 && ` Ses ${taskCount > 1 ? `${taskCount} tâches seront supprimées` : "1 tâche sera supprimée"} aussi.`}
+      </p>
       {state.message && (
         <p role="alert" className="text-sm text-destructive">
           {state.message}
@@ -78,21 +85,10 @@ function DeleteStory({ story, onCancel, onDeleted }: { story: StoryRecord; onCan
   );
 }
 
-function StoryItem({
-  story,
-  rank,
-  count,
-  onAnnounce,
-  onDeleted,
-}: {
-  story: StoryRecord;
-  rank: number;
-  count: number;
-  onAnnounce: (message: string) => void;
-  onDeleted: () => void;
-}) {
+function StoryItem({ story, tasks, handle, onDeleted }: { story: StoryRecord; tasks: TaskRecord[]; handle: ReactNode; onDeleted: () => void }) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
+  const [open, setOpen] = useState(false);
   const close = useCallback(() => setMode("view"), []);
   const editButton = useRef<HTMLButtonElement>(null);
   const deleteButton = useRef<HTMLButtonElement>(null);
@@ -100,6 +96,8 @@ function StoryItem({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [status, setOptimisticStatus] = useOptimistic<StoryStatus, StoryStatus>(story.status, (_, next) => next);
+  const progress = taskProgress(tasks);
+  const detailsId = useId();
 
   // Le focus revient sur le bouton qui avait ouvert le formulaire ou la confirmation (« Modifier » ou « Supprimer ») quand on la ferme sans supprimer.
   useEffect(() => {
@@ -107,51 +105,49 @@ function StoryItem({
     openedFrom.current = mode === "view" ? null : mode;
   }, [mode]);
 
-  // Les boutons restent actifs pendant la requête (un bouton désactivé perd le focus clavier) : on ignore simplement les clics en cours.
-  const run = (task: () => Promise<StoryActionState>, onOk?: () => void) => {
-    if (pending) return;
-    startTransition(async () => {
-      setError("");
-      try {
-        const result = await task();
-        if (result.message) {
-          setError(result.message);
-          if (result.gone) router.refresh();
-        } else onOk?.();
-      } catch (e) {
-        if (isRedirect(e)) throw e;
-        setError(UNREACHABLE);
-      }
-    });
-  };
-
   if (mode === "edit") {
     return (
-      <li>
-        <StoryForm
-          idPrefix={`edit-${story.id}`}
-          action={updateStory.bind(null, story.id)}
-          initial={{
-            title: story.title,
-            role: story.role ?? "",
-            benefit: story.benefit ?? "",
-            acceptance_criteria: story.acceptance_criteria ?? "",
-            points: story.points === null ? "" : String(story.points),
-            status: story.status,
-          }}
-          submitLabel="Enregistrer les modifications"
-          onDone={close}
-          onCancel={close}
-        />
-      </li>
+      <StoryForm
+        idPrefix={`edit-${story.id}`}
+        action={updateStory.bind(null, story.id)}
+        initial={{
+          title: story.title,
+          role: story.role ?? "",
+          benefit: story.benefit ?? "",
+          acceptance_criteria: story.acceptance_criteria ?? "",
+          points: story.points === null ? "" : String(story.points),
+          status: story.status,
+        }}
+        submitLabel="Enregistrer les modifications"
+        onDone={close}
+        onCancel={close}
+      />
     );
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-md border bg-card p-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="min-w-0 break-words font-semibold">{storySentence(story)}</p>
-        <div className="flex shrink-0 items-center gap-2">
+    <div className="flex flex-col gap-3 rounded-md border bg-card p-2">
+      {/* Ligne repliée : poignée, titre (bouton qui déplie), statut, points, avancement des tâches. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {handle}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={detailsId}
+          onClick={() => setOpen((o) => !o)}
+          className="flex min-h-9 min-w-[10rem] flex-1 items-center gap-2 rounded-md text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-md:min-h-11"
+        >
+          <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+          <span className="line-clamp-2 min-w-0 break-words font-semibold">{story.title}</span>
+          <span className="sr-only">{open ? " (replier)" : " (déplier)"}</span>
+        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-2 max-md:pl-11">
+          {progress.total > 0 && (
+            <span className="whitespace-nowrap text-xs text-muted-foreground" title={taskProgressLabel(progress)}>
+              <span aria-hidden="true">{progress.done}/{progress.total} tâches</span>
+              <span className="sr-only">{taskProgressLabel(progress)}</span>
+            </span>
+          )}
           {story.points !== null && <Badge variant="secondary">{story.points} pts</Badge>}
           <select
             aria-label={`Statut de la user story ${story.title}`}
@@ -185,72 +181,51 @@ function StoryItem({
           </select>
         </div>
       </div>
-      {story.source_note_id && story.source_note && (
-        <p className="text-xs text-muted-foreground">
-          Source :{" "}
-          <Link href={`/notes/${story.source_note_id}`} className="text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
-            {story.source_note.title}
-          </Link>
-        </p>
-      )}
-      {story.acceptance_criteria && (
-        <details className="text-sm">
-          <summary className="cursor-pointer underline-offset-4 hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center">Critères d&apos;acceptation</summary>
-          <p className="mt-1 whitespace-pre-line break-words text-muted-foreground">{story.acceptance_criteria}</p>
-        </details>
-      )}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
-      {mode === "view" && (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-disabled={rank === 0}
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-            onClick={() => {
-              if (rank === 0) return;
-              run(() => moveStory(story.id, "up"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank} sur ${count}.`));
-            }}
-            aria-label={`Monter la user story ${story.title}`}
-            title="Monter"
-          >
-            <ArrowUp size={16} aria-hidden="true" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-disabled={rank === count - 1}
-            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-            onClick={() => {
-              if (rank === count - 1) return;
-              run(() => moveStory(story.id, "down"), () => onAnnounce(`« ${story.title} » est maintenant en position ${rank + 2} sur ${count}.`));
-            }}
-            aria-label={`Descendre la user story ${story.title}`}
-            title="Descendre"
-          >
-            <ArrowDown size={16} aria-hidden="true" />
-          </Button>
-          <Button ref={editButton} type="button" variant="outline" size="sm" onClick={() => setMode("edit")}>
-            Modifier<span className="sr-only"> la user story {story.title}</span>
-          </Button>
-          <Button ref={deleteButton} type="button" variant="outline" size="sm" className="text-destructive" onClick={() => setMode("delete")}>
-            Supprimer<span className="sr-only"> la user story {story.title}</span>
-          </Button>
+      {/* Détail monté seulement ouvert ; les tâches arrivent déjà avec la page. */}
+      {open && (
+        <div id={detailsId} className="flex flex-col gap-3 border-t border-filet px-1 pt-3">
+          <p className="min-w-0 break-words">{storySentence(story)}</p>
+          {story.source_note_id && story.source_note && (
+            <p className="text-xs text-muted-foreground">
+              Source :{" "}
+              <Link href={`/notes/${story.source_note_id}`} className="text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
+                {story.source_note.title}
+              </Link>
+            </p>
+          )}
+          {story.acceptance_criteria && (
+            <div className="text-sm">
+              <p className="font-semibold">Critères d&apos;acceptation</p>
+              <p className="mt-1 whitespace-pre-line break-words text-muted-foreground">{story.acceptance_criteria}</p>
+            </div>
+          )}
+          <Tasks storyId={story.id} storyTitle={story.title} tasks={tasks} />
+          {mode === "view" && (
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
+              <Button ref={editButton} type="button" variant="outline" size="sm" onClick={() => setMode("edit")}>
+                Modifier<span className="sr-only"> la user story {story.title}</span>
+              </Button>
+              <Button ref={deleteButton} type="button" variant="outline" size="sm" className="text-destructive" onClick={() => setMode("delete")}>
+                Supprimer<span className="sr-only"> la user story {story.title}</span>
+              </Button>
+            </div>
+          )}
+          {mode === "delete" && <DeleteStory story={story} taskCount={tasks.length} onCancel={close} onDeleted={onDeleted} />}
         </div>
       )}
-      {mode === "delete" && <DeleteStory story={story} onCancel={close} onDeleted={onDeleted} />}
-    </li>
+    </div>
   );
 }
 
-/** Backlog d'une mission : les user stories dans l'ordre de priorité, avec ajout, modification, statut, déplacement et suppression sur place. */
-export function Backlog({ missionId, stories, notes }: { missionId: string; stories: StoryRecord[]; notes: LinkedNote[] }) {
+/** Backlog d'une mission : les user stories dans l'ordre de priorité, compactes (le détail et les tâches se déplient), réordonnables par glisser-déposer, avec ajout, modification, statut et suppression sur place. */
+export function Backlog({ missionId, stories, tasks, notes }: { missionId: string; stories: StoryRecord[]; tasks: TaskRecord[]; notes: LinkedNote[] }) {
+  const tasksByStory = new Map<string, TaskRecord[]>();
+  for (const t of tasks) tasksByStory.set(t.story_id, [...(tasksByStory.get(t.story_id) ?? []), t]);
   const [adding, setAdding] = useState(false);
   // L'annonce porte un numéro : la même phrase deux fois de suite remonte l'élément et est relue par les lecteurs d'écran.
   const [announce, setAnnounceState] = useState({ text: "", n: 0 });
@@ -288,11 +263,15 @@ export function Backlog({ missionId, stories, notes }: { missionId: string; stor
         </p>
       )}
       {stories.length > 0 && (
-        <ol className="flex flex-col gap-2">
-          {stories.map((story, i) => (
-            <StoryItem key={story.id} story={story} rank={i} count={stories.length} onAnnounce={setAnnounce} onDeleted={deleted} />
-          ))}
-        </ol>
+        <SortableList
+          items={stories}
+          noun="la user story"
+          name={(story) => story.title}
+          onReorder={(ids) => reorderStories(missionId, ids)}
+          className="flex flex-col gap-2"
+        >
+          {(story, handle) => <StoryItem story={story} tasks={tasksByStory.get(story.id) ?? []} handle={handle} onDeleted={deleted} />}
+        </SortableList>
       )}
       {/* Toujours monté, seulement masqué pendant l'ajout à la main : brief, notes cochées et propositions ne sont pas perdus. */}
       <div className={adding ? "hidden" : "contents"}>

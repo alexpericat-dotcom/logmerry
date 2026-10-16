@@ -4,8 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
-import { nextPosition, parseStoryStatus, reorder, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
+import { nextPosition, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type StoryFormValues = { title: string; role: string; benefit: string; acceptance_criteria: string; points: string; status: string };
@@ -114,38 +115,17 @@ export async function setStoryStatus(id: string, status: string): Promise<StoryA
   return {};
 }
 
-/**
- * Monte ou descend une story d'une place. Le backlog est relu, réordonné puis renuméroté (0, 1, 2…) : c'est lisible et ça répare d'éventuels doublons.
- * ponytail : une mise à jour par story déplacée, non atomique ; un backlog compte quelques dizaines de stories, une procédure stockée au-delà.
- */
-export async function moveStory(id: string, direction: "up" | "down"): Promise<StoryActionState> {
+/** Nouvel ordre du backlog après un glisser-déposer : `ids` est la liste complète des stories de la mission, dans l'ordre voulu. */
+export async function reorderStories(missionId: string, ids: string[]): Promise<StoryActionState> {
   const result = await withSession(async (supabase): Promise<Outcome> => {
-    if (!isUuid(id) || (direction !== "up" && direction !== "down")) return "not-found";
-    const story = await supabase.from("user_stories").select("mission_id").eq("id", id).maybeSingle();
-    if (story.error) return "error";
-    if (!story.data) return "not-found";
-    const missionId = story.data.mission_id as string;
-    const all = await supabase.from("user_stories").select("id, position").eq("mission_id", missionId).order("position", { ascending: true }).order("created_at", { ascending: true });
-    if (all.error) return "error";
-    // Supprimée entre les deux lectures : on ne prétend pas l'avoir déplacée.
-    if (!all.data.some((r) => r.id === id)) return "not-found";
-    const next = reorder(all.data.map((r) => r.id as string), id, direction);
-    if (!next) return "saved"; // déjà en haut ou en bas : rien à faire
-    const current = new Map(all.data.map((r) => [r.id as string, r.position as number]));
-    for (const [rank, storyId] of next.entries()) {
-      if (current.get(storyId) === rank) continue;
-      const { data, error } = await supabase.from("user_stories").update({ position: rank }).eq("id", storyId).select("id");
-      if (error || !data?.length) {
-        await refresh(supabase, missionId); // l'ordre a peut-être changé en route : l'écran montre l'état réel
-        return error ? "error" : "not-found";
-      }
-    }
-    await refresh(supabase, missionId);
-    return "saved";
+    if (!isUuid(missionId) || !Array.isArray(ids) || !ids.every(isUuid)) return "not-found";
+    const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, ids);
+    await refresh(supabase, missionId); // même en cas d'échec ou de conflit : l'écran montre l'état réel
+    return done === "saved" ? "saved" : done === "changed" ? "not-found" : "error";
   });
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Déplacement impossible pour le moment. Réessaie." };
-  if (result.value === "not-found") return { message: STORY_GONE, gone: true };
+  if (result.value === "not-found") return { message: "Le backlog a changé entre-temps. Il est rechargé : recommence le déplacement.", gone: true };
   return {};
 }
 

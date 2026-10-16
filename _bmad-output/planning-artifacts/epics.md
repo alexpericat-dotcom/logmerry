@@ -90,7 +90,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-5 | 8 | 8.10 |
 | FR-6 | 8 | 8.14, 8.15 |
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
-| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19 |
+| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19, 8.20 |
 | FR-9 | 4 | 4.2, 4.3 |
 | FR-10 | 4 | 4.1 |
 | FR-11 | 4 | 4.4, 4.5 |
@@ -691,6 +691,8 @@ En tant que propriétaire, je veux que l'IA propose des tâches pour une user st
 **Critères d'acceptation :**
 
 **Étant donné** une user story, **quand** je demande de la découper, **alors** l'IA propose des tâches que je valide une à une ; rien n'est ajouté sans mon accord, et les tâches existantes ne sont pas dupliquées.
+**Et** les tâches sont proposées **dans un ordre logique de réalisation**, déduites de la story (rôle, bénéfice, critères d'acceptation) et de la note d'origine si elle existe ; une fois gardées, elles se réordonnent comme les autres.
+**Et** une proposition de la 8.16 peut venir avec ses tâches : « Garder » ajoute alors la story et ses tâches ensemble (modifiables avant d'être gardées).
 
 ### Story 8.18 : Relire et améliorer une story avec l'IA
 
@@ -708,6 +710,15 @@ En tant que propriétaire, je veux que l'IA propose le contenu d'un sprint, afin
 
 **Étant donné** un backlog avec des points et un sprint à planifier, **quand** je demande une proposition, **alors** l'IA suggère des stories à y placer (selon la priorité, les points et la durée du sprint) et un objectif en une phrase ; je valide, modifie ou ignore, et rien n'est placé sans mon accord.
 
+### Story 8.20 : Ordonner le backlog avec l'IA
+
+En tant que propriétaire, je veux que l'IA propose un ordre logique pour mon backlog, afin de commencer par ce qui doit venir en premier.
+
+**Critères d'acceptation :**
+
+**Étant donné** un backlog de plusieurs stories, **quand** je clique sur « Proposer un ordre logique », **alors** l'IA propose un nouvel ordre (dépendances d'abord, socle avant confort) avec une phrase de raison par story déplacée ; j'applique, je modifie ou j'ignore, et rien n'est réordonné sans mon accord.
+**Et** une story qui apparaît ou disparaît pendant la proposition fait refuser l'application (l'ordre se recalcule).
+
 ---
 
 ## Plan des sprints
@@ -724,7 +735,7 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 6 | Clore le jalon du 30 octobre : refus « je ne trouve pas », jeu de test et test de fuite. | 8.11, 8.14, 8.15 | IA |
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
 | 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
-| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint. | 8.16, 8.17, 8.18, 8.19 | IA |
+| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.18, 8.19, 8.20 | IA |
 | 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
 | 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
 | 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |

@@ -55,7 +55,7 @@ development_status:
   3-3-lier-une-note-à-un-client-ou-un-prospect: done
   3-4-créer-des-missions: review
   3-5a-backlog-et-user-stories-d-une-mission: review  # remplace l'ancienne 3.5 « étapes » (décision d'Alex, 2026-10-16)
-  3-5b-tâches-d-une-user-story: backlog
+  3-5b-tâches-d-une-user-story: review
   3-5c-sprints: backlog
   3-6-suivre-mes-devis: backlog
   3-7-rechercher-aussi-clients-et-missions: backlog
@@ -111,4 +111,5 @@ development_status:
   8-17-découper-une-story-en-tâches-avec-l-ia: backlog
   8-18-relire-et-améliorer-une-story-avec-l-ia: backlog
   8-19-composer-un-sprint-avec-l-ia: backlog
+  8-20-ordonner-le-backlog-avec-l-ia: backlog
   epic-8-retrospective: optional
