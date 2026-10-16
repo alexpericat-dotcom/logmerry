@@ -121,12 +121,13 @@ flowchart TD
 
 ### AD-6 — Appels IA uniquement côté serveur, fournisseurs et embeddings [ADOPTED]
 
-- **Binds:** FR-3, FR-4, FR-12, FR-20, NFR-3
+- **Binds:** FR-3, FR-4, FR-12, FR-20, FR-23, FR-24, NFR-3
 - **Prevents:** une clé d'API exposée au navigateur ; un changement de modèle qui casse les vecteurs sans le dire.
 - **Rule:**
   - LLM : **Claude (Anthropic)**, choix de l'auteur. Identifiant du modèle dans `AI_CHAT_MODEL` (suggestion : `claude-sonnet-5-5`, à valider sur le jeu de test du RAG ; `claude-haiku-5-5` si le coût ou la vitesse l'exige). Réponse structurée obtenue par appel d'outil (tool use) imposant `{ answer, citations }`.
   - Embeddings : Anthropic ne propose pas de modèle d'embeddings. **`mistral-embed`** (Mistral AI, société européenne, **1024 dimensions** vérifié dans la doc Mistral). Colonne `vector(1024)`, index HNSW en distance cosinus. Chaque extrait stocke `embedding_model`. Changer de modèle = nouvelle migration + réindexation complète.
   - Les extraits de notes sont envoyés à deux fournisseurs (Anthropic pour répondre, Mistral pour vectoriser) : à documenter dans la mention RGPD ; pas de notes réelles de clients avant cette vérification (PRD §5.2).
+  - **Aide à la conception (17 octobre, FR-23, FR-24) :** mêmes fournisseur et clé ; un appel commun `lib/ai/claude-tool.ts` (`fetch`, 60 s, outil à sortie structurée), des fonctions par usage (`story-proposals`, `task-proposals`, `prompt-generation`) ; propositions éphémères, vérifiées côté serveur (titres, doublons, nombres absents des sources), brief, notes, stories et tâches envoyés à Anthropic, texte traité comme donnée (voir l'addendum).
   - Tout le code d'appel est dans `lib/ai/`, qui commence par `import 'server-only'` (le build échoue s'il est importé côté client). Clés : `ANTHROPIC_API_KEY` et `MISTRAL_API_KEY`, sans préfixe `NEXT_PUBLIC_`, définies dans Vercel et `.env.local`.
 - **En clair :** Claude rédige les réponses, Mistral transforme les textes en vecteurs ; l'IA n'est appelée que depuis le serveur, et changer de modèle d'embeddings oblige à tout réindexer.
 
@@ -144,7 +145,7 @@ flowchart TD
 
 ### AD-8 — Modèle de données : un propriétaire pour chaque entité
 
-- **Binds:** FR-3, FR-5, FR-7..FR-16, FR-21, FR-22
+- **Binds:** FR-3, FR-5, FR-7..FR-16, FR-21, FR-22, FR-23
 - **Prevents:** deux tables pour la même chose ; une donnée sans `owner_id` ; des montants mal arrondis.
 - **Rule:**
   - Entités du MVP : voir le schéma ci-dessous. Prospect et client sont **une seule table** `clients` avec un `status` (un prospect devenu client change de statut, sans ressaisie).
@@ -160,7 +161,9 @@ erDiagram
   CLIENTS ||--o{ CONTACTS : a
   CLIENTS ||--o{ MISSIONS : a
   CLIENTS ||--o{ NOTES : "lié à (optionnel)"
-  MISSIONS ||--o{ MISSION_STEPS : "découpée en"
+  MISSIONS ||--o{ USER_STORIES : "a pour backlog"
+  USER_STORIES ||--o{ TASKS : "découpée en"
+  NOTES ||--o{ USER_STORIES : "source (optionnelle)"
   MISSIONS ||--o{ QUOTES : a
   CLIENTS ||--o{ QUOTES : "ou prospect"
   MISSIONS ||--o{ INVOICES : a
@@ -204,11 +207,11 @@ erDiagram
 
 | Concern | Convention |
 | --- | --- |
-| Noms de code | Code et commits en anglais ; interface et messages d'erreur en français. Tables et colonnes en `snake_case` pluriel (`mission_steps`) ; fichiers en `kebab-case` ; Server Actions nommées par verbe (`createNote`). |
+| Noms de code | Code et commits en anglais ; interface et messages d'erreur en français. Tables et colonnes en `snake_case` pluriel (`user_stories`) ; fichiers en `kebab-case` ; Server Actions nommées par verbe (`createNote`). |
 | Données | `uuid`, `timestamptz` UTC, centimes entiers (AD-8) ; réponses d'actions `{ ok, data } \| { ok: false, error: { code, message } }`. |
 | Sécurité | `owner_id` + RLS sur chaque table ; jamais de `service_role` ; `server-only` sur `lib/ai/` et `lib/db/`. |
 | Erreurs et journaux | Erreur attendue → `{ ok: false }` ; erreur inattendue → log serveur (journaux Vercel) + message générique français. Aucun contenu de note dans les logs. |
-| Tests | Fonctions de `lib/domain/` : tests unitaires (Vitest). Isolation : script de test à deux comptes fictifs (FR-1, SM-2) à rejouer après chaque migration touchant une table. |
+| Tests | Fonctions de `lib/domain/` : tests unitaires avec le lanceur intégré de Node (`node --test`, choisi à la place de Vitest : aucune dépendance de plus). Essais réels de l'IA : `npm run test:proposals` (données fictives, nettoyage en fin d'essai). Isolation : script de test à deux comptes fictifs (FR-1, SM-2) à rejouer après chaque migration touchant une table. |
 | Journal | Chaque décision ou bug notable est consigné dans `docs/journal.md` (NFR-5). |
 
 ## Stack
@@ -223,7 +226,8 @@ erDiagram
 | Anthropic API (Claude) | modèle de chat suggéré `claude-sonnet-5-5`, à valider |
 | Mistral AI API | `mistral-embed` (1024 dim), embeddings seulement |
 | Vercel | plan Hobby puis Pro |
-| Vitest | dernière stable, à épingler |
+| Lanceur de tests Node (`node --test`) | intégré, remplace Vitest (décision de construction) |
+| dnd-kit (`@dnd-kit/core`, `sortable`, `utilities`) | glisser-déposer des stories et des tâches (17 octobre) ; touche, clavier, annonces |
 
 ## Structural Seed
 
@@ -262,7 +266,8 @@ flowchart LR
 | FR-3, FR-19, FR-21 (notes, recherche, à documenter) | `app/(app)/notes`, `lib/domain/chunking`, `lib/ai` | AD-4, AD-7, AD-9 |
 | FR-4, FR-5, FR-6, FR-12 (assistant, historique, tests) | `app/api/chat`, `conversations`, `messages` | AD-6, AD-7 |
 | FR-20 (résumé) | Server Action + `lib/ai` | AD-6 (après le jalon du 30 octobre) |
-| FR-7, FR-8, FR-22 (CRM, missions, devis) | `app/(app)/clients`, `missions` | AD-4, AD-8 |
+| FR-7, FR-8, FR-22 (CRM, missions, backlog, tâches, devis) | `app/(app)/clients`, `missions` ; tables `missions`, `user_stories`, `tasks` (sprints à venir) | AD-4, AD-8 |
+| FR-23, FR-24 (aide de l'IA à la conception, prompt de mission) | Server Actions de `missions` + `lib/ai/claude-tool`, `lib/domain/*proposals`, `mission-context`, `prompt-generation` | AD-6 |
 | FR-9, FR-10, FR-11, FR-15 (finances) | `lib/domain/finance`, `parameters` | AD-5, AD-8 |
 | FR-13, FR-14 (échéances, cockpit) | `lib/domain/cockpit`, `deadlines`, `task_checks` | AD-5 |
 | FR-16 (portfolio) | `app/portfolio`, vue `public_realisations` | AD-3, AD-10 |
@@ -274,7 +279,9 @@ flowchart LR
 | Modèle d'embeddings définitif (alternative : Voyage AI, recommandé par Anthropic, hébergement hors UE) | `bmad-deep-recon` technique, avant la première migration de `note_chunks` (PRD §9.3) |
 | n8n (rappels, résumé hebdo, calendrier, veille des taux) | Hors MVP ; à introduire si une tâche doit tourner sans que le propriétaire soit connecté |
 | Sauvegardes et restauration (NFR-4) | Vérifier l'offre du plan Supabase et une sauvegarde manuelle (`pg_dump`) avant la première vraie donnée |
-| Limitation de débit des appels IA | Un seul utilisateur au MVP ; à ajouter avec le portail client ou le formulaire public (V2) |
+| Limitation de débit des appels IA | Un seul utilisateur au MVP ; à ajouter avec le portail client ou le formulaire public (V2). Les propositions de l'IA (stories, tâches, prompt) n'ont pas de plafond de générations : coût d'API à surveiller |
+| Pièces jointes aux notes (photos, documents, enregistrements) | Idée du 15 octobre ; demande du stockage (Supabase Storage) et ses policies, à étudier après le MVP |
+| Ordre du backlog écrit de façon atomique | Aujourd'hui une mise à jour par ligne (non atomique) ; procédure stockée si les listes grossissent ou si deux onglets entrent en conflit |
 | Formulaire de contact public, import de fichiers, portail client, SQL libre | PRD §7.4, V2 |
 | Surveillance et alertes techniques | Journaux Vercel/Supabase suffisent au MVP |
 | Détail des policies de stockage (images du portfolio) | À la livraison de FR-16 |
