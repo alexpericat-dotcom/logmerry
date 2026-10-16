@@ -125,3 +125,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md` (relecture)
   summary: un ajout de tâches lancé puis panneau fermé réussit sans retour visible ; positions en double si deux onglets ajoutent ensemble (pas de contrainte unique sur `(story_id, position)`).
   evidence: fermer le panneau pendant « Garder » vide l'annonce ; la page se rafraîchit mais rien ne dit que c'est enregistré.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md`
+  summary: pas de plafond de générations ; pas d'anonymisation des noms de client dans les titres ; notes jamais envoyées (à proposer en choix explicite plus tard) ; vérification des nombres limitée (entiers de 1 à 9 et nombres en lettres non contrôlés).
+  evidence: un nom de client écrit dans un titre de story part tel quel ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.

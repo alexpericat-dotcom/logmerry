@@ -2,7 +2,7 @@
 title: 'Story 8.21 : Générer un prompt depuis une mission'
 type: 'feature'
 created: '2026-10-17'
-status: 'draft'
+status: 'review'
 baseline_commit: 'e601d8d'
 route: 'dispatch'
 context:
@@ -66,11 +66,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Contexte pur + tests (niveaux, plafond, client masqué, valeurs absentes)
-- [ ] Consigne, message, vérification, assemblage + tests
-- [ ] Appel Claude et action `generateMissionPrompt` (aucune écriture)
-- [ ] Panneau « Générer un prompt avec l'IA » (options, génération, relecture, copie)
-- [ ] 5 essais réels avec relecture humaine, journal, relecture indépendante
+- [x] Contexte pur + tests (niveaux, plafond, client masqué, valeurs absentes)
+- [x] Consigne, message, vérification, assemblage + tests
+- [x] Appel Claude et action `generateMissionPrompt` (aucune écriture)
+- [x] Panneau « Générer un prompt avec l'IA » (options, génération, relecture, copie)
+- [x] 5 essais réels avec relecture humaine, journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une mission, when je choisis un niveau et une cible puis je génère, then j'obtiens un prompt (consigne + contexte) que je peux modifier et copier ; rien n'est enregistré.
@@ -90,3 +90,11 @@ context:
 5. **Case « sans le nom du client »**, avec la limite dite : pas d'anonymisation automatique des titres.
 6. **Résultat éphémère**, champ modifiable, copie en un clic, pas d'historique.
 7. **Pas de plafond de générations** (même choix que 8.16 et 8.17, déjà reporté).
+
+## Implementation Notes
+
+- Aucune migration. La consigne système dépend de la cible (une indication par assistant : discussion, Claude Code, n8n, autre) ; le message ne contient que le titre de la mission, le niveau, la cible, le contexte déjà construit (et échappé) et l'objectif.
+- Écarts au Code Map : `toolInputs(json, outil)` extrait de `parseToolCall` (`lib/domain/story-proposals.ts`) sert aussi à `parsePromptCall` ; l'appel `lib/ai/claude-tool.ts` est commun aux trois usages (stories, tâches, prompt). Le plafond de 30 000 caractères réserve une marge pour la ligne « N stories omises ».
+- Essais réels (`npm run test:proposals`, scénarios 11 à 15) : 15 sur 15 en tout. Un essai a échoué au premier passage à cause de mon test, pas du code : le prompt cite la TVA pour l'interdire (« Ne donne aucun conseil fiscal ou juridique (TVA…) ») et mon test rejetait toute mention ; il vérifie maintenant que chaque ligne qui la cite est une interdiction, et que « piraté » est absent.
+- Vérifié dans Chrome (compte fictif, appel réel, données supprimées ensuite) : génération, tâches lues en base et recopiées dans le contexte (« Tâches (1 sur 2 faites) », cases cochées), nom du client absent, champ modifiable avec « Régénérer remplace tes modifications », copie annoncée « Prompt copié. » ; téléphone 412 px : aucun débordement, aucune cible sous 44 px. Un faux défaut de mon script d'amorçage (tâches insérées avec des colonnes différentes : la base les a refusées sans bruit) m'a d'abord fait croire que les tâches n'étaient pas lues.
+- Reste : relecture indépendante.
