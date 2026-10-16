@@ -96,3 +96,16 @@ test("phrase : élision française devant voyelle (qu', d'), pas devant consonne
   assert.equal(storySentence({ title: "x", role: "élève", benefit: "économiser" }), "En tant qu'élève, je veux x, afin d'économiser");
   assert.equal(storySentence({ title: "x", role: "parent", benefit: "gagner" }), "En tant que parent, je veux x, afin de gagner");
 });
+
+test("mots de liaison : « en tant que » et « afin de » écrits par l'utilisateur ou l'IA ne sont pas doublés dans la phrase ; majuscule initiale du titre abaissée sauf sigle", () => {
+  const r = validateStoryInput({ ...ok, title: "Suivre les inscriptions", role: "En tant que parent", benefit: "afin de ne rien oublier" });
+  assert.deepEqual(r.ok && [r.value.role, r.value.benefit], ["parent", "ne rien oublier"]);
+  assert.equal(validateStoryInput({ ...ok, role: "En tant qu'élève", benefit: "d'agir" }).ok && true, true);
+  const e = validateStoryInput({ ...ok, role: "En tant qu'élève", benefit: "d'agir vite" });
+  assert.deepEqual(e.ok && [e.value.role, e.value.benefit], ["élève", "agir vite"]);
+  const de = validateStoryInput({ ...ok, benefit: "de connaître l'état" });
+  assert.equal(de.ok && de.value.benefit, "connaître l'état");
+  assert.equal(storySentence({ title: "Suivre les inscriptions", role: "parent", benefit: "ne rien oublier" }), "En tant que parent, je veux suivre les inscriptions, afin de ne rien oublier");
+  assert.equal(storySentence({ title: "Exporter en PDF", role: null, benefit: null }), "Je veux exporter en PDF");
+  assert.equal(storySentence({ title: "PDF à exporter", role: null, benefit: null }), "Je veux PDF à exporter");
+});

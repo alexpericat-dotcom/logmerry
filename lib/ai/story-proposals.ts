@@ -30,9 +30,9 @@ export async function proposeWithClaude(message: string, signal?: AbortSignal): 
                 items: {
                   type: "object",
                   properties: {
-                    title: { type: "string", description: "Ce que l'utilisateur veut faire, sans « je veux »." },
-                    role: { type: "string", description: "En tant que…" },
-                    benefit: { type: "string", description: "Afin de…" },
+                    title: { type: "string", description: "À l'infinitif, sans « je veux » : « Suivre les inscriptions »." },
+                    role: { type: "string", description: "Sans « en tant que » : « responsable des ateliers »." },
+                    benefit: { type: "string", description: "À l'infinitif, sans « afin de » : « relancer à temps les familles »." },
                     acceptance_criteria: { type: "string", description: "2 à 4 puces commençant par « - »." },
                     points: { type: "number", description: "Points d'effort : 1, 2, 3, 5, 8 ou 13." },
                     note: { type: "string", description: "Identifiant de la note d'où vient la story, sinon vide." },

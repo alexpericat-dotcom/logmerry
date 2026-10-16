@@ -23,8 +23,9 @@ const length = (s: string) => [...s].length;
 /** Valide une user story ; un champ facultatif vide devient `null` ; les points viennent de la suite de Fibonacci. */
 export function validateStoryInput(input: StoryInput): { ok: true; value: StoryValues } | { ok: false; errors: StoryErrors } {
   const title = stripNul(input.title).trim();
-  const role = stripNul(input.role).trim();
-  const benefit = stripNul(input.benefit).trim();
+  // Le formulaire et l'IA écrivent parfois les mots de liaison que la phrase ajoute elle-même : « en tant que… », « afin de… ».
+  const role = stripNul(input.role).trim().replace(/^en tant qu(?:e\s+|['’]\s*)/i, "");
+  const benefit = stripNul(input.benefit).trim().replace(/^(?:afin\s+)?d(?:e\s+|['’]\s*)/i, "");
   const criteria = stripNul(input.acceptance_criteria).trim();
   const status = parseStoryStatus(input.status);
   const pointsText = input.points.trim();
@@ -42,6 +43,9 @@ export function validateStoryInput(input: StoryInput): { ok: true; value: StoryV
   return { ok: true, value: { title, role: role || null, benefit: benefit || null, acceptance_criteria: criteria || null, points, status } };
 }
 
+/** Première lettre en minuscule dans la phrase (« je veux suivre »), sauf sigle ou nom en capitales (« PDF », « CRM »). */
+const lowerFirst = (t: string) => (/^[A-ZÀ-Ý][a-zà-ÿ]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t);
+
 const VOWEL = /^[aeiouyàâäéèêëîïôöùûüœæ]/i;
 /** Élision française devant une voyelle : « que » devient « qu' », « de » devient « d' ».
  * ponytail : voyelles seulement ; le « h » (muet ou aspiré) n'est pas traité, il demande un dictionnaire. */
@@ -49,7 +53,7 @@ const elide = (word: string, next: string) => (VOWEL.test(next) ? `${word.slice(
 
 /** « En tant que {rôle}, je veux {titre}, afin de {bénéfice} » (avec élision) ; les parties absentes sont omises, le titre seul en dernier recours. */
 export function storySentence(s: { title: string; role: string | null; benefit: string | null }): string {
-  const parts = [s.role ? `En tant ${elide("que", s.role)}` : null, `${s.role ? "je" : "Je"} veux ${s.title}`, s.benefit ? `afin ${elide("de", s.benefit)}` : null];
+  const parts = [s.role ? `En tant ${elide("que", s.role)}` : null, `${s.role ? "je" : "Je"} veux ${lowerFirst(s.title)}`, s.benefit ? `afin ${elide("de", s.benefit)}` : null];
   return parts.filter(Boolean).join(", ");
 }
 

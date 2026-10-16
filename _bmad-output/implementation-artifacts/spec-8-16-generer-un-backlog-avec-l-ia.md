@@ -2,7 +2,7 @@
 title: 'Story 8.16 : Générer un backlog avec l''IA'
 type: 'feature'
 created: '2026-10-16'
-status: 'ready-for-dev'
+status: 'review'
 baseline_commit: '15830ee'
 route: 'dispatch'
 context:
@@ -67,11 +67,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Migration `source_note_id` (SQL montré avant application)
-- [ ] Règles pures + tests (consigne, message, lecture, vérification, plafonds)
-- [ ] Appel à Claude et Server Action (aucune écriture)
-- [ ] Panneau de relecture, garder / modifier / rejeter, lien vers la note source
-- [ ] Tests d'isolation, jeu de 5 essais réels (`docs/ia-backlog-tests.md`), journal
+- [x] Migration `source_note_id` (SQL montré avant application)
+- [x] Règles pures + tests (consigne, message, lecture, vérification, plafonds)
+- [x] Appel à Claude et Server Action (aucune écriture)
+- [x] Panneau de relecture, garder / modifier / rejeter, lien vers la note source
+- [x] Tests d'isolation, jeu de 5 essais réels (`docs/ia-backlog-tests.md`), journal
 
 **Acceptance Criteria:**
 - Given une mission et un brief, when je demande des propositions, then je vois 1 à 8 user stories à relire et **rien** n'est ajouté au backlog tant que je ne garde pas une proposition.
@@ -122,3 +122,11 @@ Supprimer la note d'origine ne supprime pas la story : le lien est simplement re
 4. **Volume** : jusqu'à 8 propositions par génération, points suggérés en Fibonacci (modifiables), ordre proposé = ordre de priorité.
 5. **Ordre du travail** : cette story passe **avant** les tâches (3.5b) et les sprints (3.5c) ; les stories 8.17 à 8.19 suivront chacune la même logique « l'IA propose, tu valides ».
 6. **Coût** : un appel par génération (quelques dizaines de milliers de caractères au plus), sans plafond quotidien pour l'instant ; je note le nombre d'appels dans le journal pendant les essais.
+
+## Implementation Notes
+
+- Migration `20261016140000_user_stories_source_note.sql` : refusée par l'outil Supabase, appliquée par Alex dans l'éditeur SQL (pas d'entrée dans l'historique des migrations) ; vérifiée : colonne présente, les règles d'insertion et de mise à jour vérifient la note, alertes de sécurité inchangées.
+- Écarts au Code Map : `components/story-form.tsx` (le formulaire des stories sorti de `backlog.tsx` pour éviter un import circulaire avec le panneau) ; `tests/proposals-run.ts` et le script `npm run test:proposals` ; la lecture des notes liées se fait dans l'action (même requête que dans `lib/db/notes.ts`, qui offre aussi `listNotesWithBodyForClient`, non utilisée pour l'instant : à retirer si elle le reste).
+- Une proposition « Modifier » garde sa note d'origine (champ `source_note_id` ajouté au formulaire à l'envoi).
+- Normalisations ajoutées après l'essai réel : voir `docs/ia-backlog-tests.md`.
+- Reste : relecture indépendante, puis présentation.
