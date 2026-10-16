@@ -691,6 +691,8 @@ En tant que propriétaire, je veux que l'IA propose des tâches pour une user st
 **Critères d'acceptation :**
 
 **Étant donné** une user story, **quand** je demande de la découper, **alors** l'IA propose des tâches que je valide une à une ; rien n'est ajouté sans mon accord, et les tâches existantes ne sont pas dupliquées.
+**Et** les tâches sont proposées **dans un ordre logique de réalisation**, déduites de la story (rôle, bénéfice, critères d'acceptation) et de la note d'origine si elle existe ; une fois gardées, elles se réordonnent comme les autres.
+**Et** une proposition de la 8.16 peut venir avec ses tâches : « Garder » ajoute alors la story et ses tâches ensemble (modifiables avant d'être gardées).
 
 ### Story 8.18 : Relire et améliorer une story avec l'IA
 
