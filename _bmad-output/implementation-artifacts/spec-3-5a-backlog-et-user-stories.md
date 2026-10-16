@@ -2,7 +2,7 @@
 title: 'Story 3.5a : Backlog et user stories d''une mission'
 type: 'feature'
 created: '2026-10-16'
-status: 'draft'
+status: 'review'
 baseline_commit: '4cf0217'
 route: 'dispatch'
 context:
@@ -59,11 +59,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Migration `user_stories` (SQL montré avant application)
-- [ ] Règles pures + tests (`lib/domain/user-stories.ts`)
-- [ ] Accès aux données et Server Actions (ajouter, modifier, statut, monter, descendre, supprimer)
-- [ ] Section « Backlog » sur la mission ; progression sur la mission, la liste et la fiche client
-- [ ] Tests d'isolation, journal
+- [x] Migration `user_stories` (SQL montré avant application)
+- [x] Règles pures + tests (`lib/domain/user-stories.ts`)
+- [x] Accès aux données et Server Actions (ajouter, modifier, statut, monter, descendre, supprimer)
+- [x] Section « Backlog » sur la mission ; progression sur la mission, la liste et la fiche client
+- [x] Tests d'isolation, journal
 
 **Acceptance Criteria:**
 - Given une mission, when j'ajoute une user story avec un titre, then elle apparaît à la dernière place du backlog ; sans titre, then une erreur en ligne nomme le champ.
@@ -129,3 +129,10 @@ Supprimer une mission emporte son backlog (`on delete cascade`) : la mission est
 3. **Statuts** : à faire, en cours, terminée.
 4. **Priorité par boutons « Monter » et « Descendre »** plutôt que par glisser-déposer : simple, accessible au clavier et au toucher. Le glisser-déposer pourra venir plus tard.
 5. **Pas d'automatisme** : terminer toutes les stories ne passe pas la mission en « Terminée ».
+
+## Implementation Notes
+
+- Migration appliquée par l'outil Supabase (version 20261016102336, fichier ajouté sous ce nom) ; `get_advisors` : rien de nouveau, 4 règles d'accès présentes.
+- Écarts au Code Map : le déplacement renumérote tout le backlog (0, 1, 2…) à chaque monter ou descendre, ce qui répare aussi d'éventuels doublons de position ; une mise à jour par story déplacée, non atomique (`ponytail:` dans le code : suffisant pour quelques dizaines de stories). `deleteStory` ne signale pas une story déjà supprimée (l'état voulu est atteint). Le statut se change par un menu sur chaque story (un clic, mise à jour optimiste), pas dans le formulaire seulement.
+- Hors spec, par cohérence : le nom du client sur la page d'une mission passe à 44 px sur téléphone (défaut hérité de la 3.4, repéré pendant le parcours).
+- Reste : relecture indépendante, puis présentation ; la 3.5b (tâches) ajoutera `tasks`, la 3.5c (sprints) `sprints` et `user_stories.sprint_id`.

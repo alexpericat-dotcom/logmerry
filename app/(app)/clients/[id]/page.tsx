@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { Button } from "@/components/ui/button";
 import { listMissionsForClient } from "@/lib/db/missions";
+import { storyProgressByMission } from "@/lib/db/user-stories";
+import { progressLabel } from "@/lib/domain/user-stories";
 import { listNotesForClient } from "@/lib/db/notes";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -25,7 +27,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [contacts, notes, missions] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id)]);
+  const [contacts, notes, missions, progress] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id), storyProgressByMission()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,6 +53,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
                   {m.title}
                 </Link>
                 <MissionStatusBadge status={m.status} />
+                <span className="text-xs text-muted-foreground">{progressLabel(progress[m.id] ?? { done: 0, total: 0 })}</span>
                 {(m.start_date || m.end_date) && (
                   <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
                     {m.start_date ? formatDate(m.start_date) : "…"} → {m.end_date ? formatDate(m.end_date) : "…"}

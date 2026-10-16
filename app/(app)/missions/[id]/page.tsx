@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { Backlog } from "@/components/backlog";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { PageBanner } from "@/components/page-banner";
 import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { getMission } from "@/lib/db/missions";
+import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 import { formatDate, formatDateTime } from "@/lib/format";
 
@@ -20,6 +22,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
+  const stories = await listStories(id);
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,7 +51,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
             <dt className="text-xs text-muted-foreground">Client</dt>
             <dd className="font-medium">
               {mission.client ? (
-                <Link href={`/clients/${mission.client_id}`} className="text-primary underline underline-offset-4">
+                <Link href={`/clients/${mission.client_id}`} className="text-primary underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
                   {mission.client.name}
                 </Link>
               ) : (
@@ -76,6 +79,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
           </div>
         </dl>
       </section>
+      <Backlog missionId={id} stories={stories} />
     </div>
   );
 }

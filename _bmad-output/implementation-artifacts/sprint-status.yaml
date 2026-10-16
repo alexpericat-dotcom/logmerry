@@ -54,7 +54,7 @@ development_status:
   3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: done
   3-3-lier-une-note-à-un-client-ou-un-prospect: done
   3-4-créer-des-missions: review
-  3-5a-backlog-et-user-stories-d-une-mission: backlog  # remplace l'ancienne 3.5 « étapes » (décision d'Alex, 2026-10-16)
+  3-5a-backlog-et-user-stories-d-une-mission: review  # remplace l'ancienne 3.5 « étapes » (décision d'Alex, 2026-10-16)
   3-5b-tâches-d-une-user-story: backlog
   3-5c-sprints: backlog
   3-6-suivre-mes-devis: backlog
