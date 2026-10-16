@@ -954,7 +954,6 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
   let a: Account;
   let b: Account;
   let missionA: { id: string };
-  let missionB: { id: string };
   let storyA: { id: string };
   let storyB: { id: string };
   let taskA: { id: string };
@@ -985,7 +984,6 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
     const rb = await mk(b, "B");
     missionA = ra.mission;
     storyA = ra.story;
-    missionB = rb.mission;
     storyB = rb.story;
     const t = await a.client.from("tasks").insert({ story_id: storyA.id, title: "écrire le plan", position: 0 }).select("id").single();
     assert.ifError(t.error);
@@ -1016,6 +1014,8 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
     assert.ifError(mine.error);
     const move = await b.client.from("tasks").update({ story_id: storyA.id }).eq("id", mine.data!.id).select("id");
     assert.ok(move.error || (move.data?.length ?? 0) === 0, "le déplacement vers la story de A est refusé");
+    assert.equal((await b.client.from("tasks").select("story_id").eq("id", mine.data!.id).single()).data!.story_id, storyB.id, "la tâche de B est restée dans la story de B");
+    assert.equal((await a.client.from("tasks").insert({ story_id: storyB.id, title: "intrus de A", position: 9 })).error?.code, "42501", "A ne peut pas non plus écrire dans la story de B");
     assert.equal((await b.client.from("tasks").insert({ story_id: storyB.id, title: "forgée", position: 1, owner_id: a.userId })).error?.code, "42501");
     assert.equal((await a.client.from("tasks").select("id").eq("story_id", storyA.id)).data!.length, 1, "la story de A n'a reçu aucune tâche étrangère");
   });
@@ -1040,14 +1040,35 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
     assert.ifError((await a.client.from("tasks").insert({ ...base, title: "x".repeat(200) })).error);
   });
 
+  test("B ne peut pas renuméroter la tâche de A ; le propriétaire ne se change pas ; les contraintes valent aussi à la mise à jour ; cocher met à jour la date", async () => {
+    const renum = await b.client.from("tasks").update({ position: 7 }).eq("id", taskA.id).select("id");
+    assert.equal(renum.data?.length ?? 0, 0);
+    assert.equal((await a.client.from("tasks").update({ owner_id: b.userId }).eq("id", taskA.id)).error?.code, "42501", "donner sa tâche à un autre compte est refusé");
+    for (const [label, values] of [
+      ["titre vide", { title: "   " }],
+      ["titre de 201 caractères", { title: "x".repeat(201) }],
+      ["position négative", { position: -1 }],
+    ] as const) {
+      assert.equal((await a.client.from("tasks").update(values).eq("id", taskA.id)).error?.code, "23514", `${label} refusé à la mise à jour`);
+    }
+    const before = (await a.client.from("tasks").select("updated_at").eq("id", taskA.id).single()).data!.updated_at;
+    await new Promise((r) => setTimeout(r, 20));
+    assert.ifError((await a.client.from("tasks").update({ done: true }).eq("id", taskA.id)).error);
+    const after = await a.client.from("tasks").select("updated_at, done").eq("id", taskA.id).single();
+    assert.equal(after.data!.done, true);
+    assert.ok(after.data!.updated_at > before, "updated_at avance quand on coche");
+    assert.ifError((await a.client.from("tasks").update({ done: false }).eq("id", taskA.id)).error);
+  });
+
   test("supprimer une story, puis une mission, emporte les tâches", async () => {
     const s = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "éphémère", position: 9 }).select("id").single();
     assert.ifError(s.error);
     assert.ifError((await a.client.from("tasks").insert({ story_id: s.data!.id, title: "partira avec elle", position: 0 })).error);
     assert.ifError((await a.client.from("user_stories").delete().eq("id", s.data!.id)).error);
     assert.equal((await a.client.from("tasks").select("id").eq("story_id", s.data!.id)).data!.length, 0, "la tâche a disparu avec sa story");
+    assert.ok((await a.client.from("tasks").select("id").eq("story_id", storyA.id)).data!.length >= 1, "la story de A avait bien des tâches avant la suppression");
     assert.ifError((await a.client.from("missions").delete().eq("id", missionA.id)).error);
     assert.equal((await a.client.from("tasks").select("id").eq("story_id", storyA.id)).data!.length, 0, "les tâches ont disparu avec la mission");
-    assert.ok(missionB.id, "la mission de B reste");
+    assert.equal((await b.client.from("tasks").select("id").eq("story_id", storyB.id)).data!.length, 1, "la tâche de B reste");
   });
 });

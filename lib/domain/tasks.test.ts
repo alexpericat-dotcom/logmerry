@@ -18,3 +18,14 @@ test("avancement : « N sur M tâches faites », singulier à une tâche, rien s
   assert.equal(taskProgressLabel(taskProgress([{ done: true }])), "1 sur 1 tâche faite");
   assert.equal(taskProgressLabel(taskProgress([{ done: true }, { done: false }, { done: true }, { done: true }])), "3 sur 4 tâches faites");
 });
+
+test("titre : pas du texte = vide ; le caractère nul est retiré avant les espaces (« a \u0000 » donne « a », « \u0000 » seul est refusé)", () => {
+  for (const bad of [undefined, null, 5, {}, ["a"]]) assert.equal(validateTaskTitle(bad).ok, false, String(bad));
+  assert.deepEqual(validateTaskTitle("a \u0000"), { ok: true, value: "a" });
+  assert.equal(validateTaskTitle(" \u0000 ").ok, false);
+});
+
+test("avancement : exactement deux tâches, aucune faite, et une valeur seulement « vraie » ne compte pas comme faite", () => {
+  assert.equal(taskProgressLabel(taskProgress([{ done: false }, { done: false }])), "0 sur 2 tâches faites");
+  assert.equal(taskProgressLabel(taskProgress([{ done: true }, { done: true }])), "2 sur 2 tâches faites");
+});

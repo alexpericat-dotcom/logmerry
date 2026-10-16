@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { isPermutation } from "@/lib/domain/user-stories";
+import { isPermutation } from "../domain/user-stories.ts";
 
 /**
  * Applique un nouvel ordre à une liste (stories d'une mission, tâches d'une story) : relit la liste, refuse si `ids` n'a pas exactement les mêmes éléments
@@ -15,6 +15,8 @@ export async function renumber(
 ): Promise<"saved" | "changed" | "error"> {
   const all = await supabase.from(table).select("id, position").eq(parent.column, parent.id);
   if (all.error) return "error";
+  // Aucune ligne : le parent n'existe pas (ou n'est pas à moi) ; il n'y a rien à ordonner.
+  if (all.data.length === 0) return "changed";
   if (!isPermutation(all.data.map((r) => r.id as string), ids)) return "changed";
   const current = new Map(all.data.map((r) => [r.id as string, r.position as number]));
   for (const [rank, id] of ids.entries()) {

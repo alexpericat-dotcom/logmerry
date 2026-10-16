@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
-import { nextPosition, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
+import { nextPosition, parseReorderIds, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type StoryFormValues = { title: string; role: string; benefit: string; acceptance_criteria: string; points: string; status: string };
@@ -118,8 +118,9 @@ export async function setStoryStatus(id: string, status: string): Promise<StoryA
 /** Nouvel ordre du backlog après un glisser-déposer : `ids` est la liste complète des stories de la mission, dans l'ordre voulu. */
 export async function reorderStories(missionId: string, ids: string[]): Promise<StoryActionState> {
   const result = await withSession(async (supabase): Promise<Outcome> => {
-    if (!isUuid(missionId) || !Array.isArray(ids) || !ids.every(isUuid)) return "not-found";
-    const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, ids);
+    const order = parseReorderIds(ids);
+    if (!isUuid(missionId) || !order) return "not-found";
+    const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, order);
     await refresh(supabase, missionId); // même en cas d'échec ou de conflit : l'écran montre l'état réel
     return done === "saved" ? "saved" : done === "changed" ? "not-found" : "error";
   });

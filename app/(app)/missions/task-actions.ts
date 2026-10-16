@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
 import { validateTaskTitle } from "@/lib/domain/tasks";
-import { nextPosition } from "@/lib/domain/user-stories";
+import { nextPosition, parseReorderIds } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
 /** `gone` : la tâche ou sa story n'existe plus (supprimée ailleurs) ; l'écran se recharge. `error` : erreur de champ (titre). */
@@ -17,7 +17,7 @@ const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
 const TASK_GONE = "Cette tâche n'existe plus.";
 const STORY_GONE = "Cette user story n'existe plus.";
 
-type Outcome = "saved" | "not-found" | "error";
+type Outcome = "saved" | "not-found" | "error" | "invalid";
 
 /** Seule la page de la mission affiche les tâches. */
 async function refresh(supabase: SupabaseClient, storyId: string) {
@@ -30,24 +30,25 @@ async function refresh(supabase: SupabaseClient, storyId: string) {
 }
 
 /** Exécute `write` sous session et traduit son issue en état d'action. */
-async function run(write: (supabase: SupabaseClient) => Promise<{ outcome: Outcome; storyId?: string }>, gone: string, failed: string): Promise<TaskActionState> {
+async function run(write: (supabase: SupabaseClient) => Promise<{ outcome: Outcome; storyId?: string; error?: string }>, gone: string, failed: string): Promise<TaskActionState> {
   const result = await withSession(async (supabase) => {
     const written = await write(supabase);
     if (written.outcome === "saved" && written.storyId) await refresh(supabase, written.storyId);
-    return written.outcome;
+    return written;
   });
   if (result.status === "signed-out") redirect("/auth/login");
-  if (result.status === "failed" || result.value === "error") return { message: failed };
-  if (result.value === "not-found") return { message: gone, gone: true };
+  if (result.status === "failed" || result.value.outcome === "error") return { message: failed };
+  if (result.value.outcome === "invalid") return { error: result.value.error };
+  if (result.value.outcome === "not-found") return { message: gone, gone: true };
   return { ok: true };
 }
 
 /** Ajoute une tâche à la dernière place d'une de mes stories (la RLS refuse une story qui n'est pas à moi). */
 export async function addTask(storyId: string, title: string): Promise<TaskActionState> {
-  const checked = validateTaskTitle(title);
-  if (!checked.ok) return { error: checked.error };
   return run(
     async (supabase) => {
+      const checked = validateTaskTitle(title);
+      if (!checked.ok) return { outcome: "invalid", error: checked.error };
       if (!isUuid(storyId)) return { outcome: "not-found" };
       const story = await supabase.from("user_stories").select("id").eq("id", storyId).maybeSingle();
       if (story.error) return { outcome: "error" };
@@ -63,10 +64,10 @@ export async function addTask(storyId: string, title: string): Promise<TaskActio
 }
 
 export async function updateTask(id: string, title: string): Promise<TaskActionState> {
-  const checked = validateTaskTitle(title);
-  if (!checked.ok) return { error: checked.error };
   return run(
     async (supabase) => {
+      const checked = validateTaskTitle(title);
+      if (!checked.ok) return { outcome: "invalid", error: checked.error };
       if (!isUuid(id)) return { outcome: "not-found" };
       const { data, error } = await supabase.from("tasks").update({ title: checked.value }).eq("id", id).select("id, story_id");
       if (error) return { outcome: "error" };
@@ -95,8 +96,9 @@ export async function setTaskDone(id: string, done: boolean): Promise<TaskAction
 export async function reorderTasks(storyId: string, ids: string[]): Promise<TaskActionState> {
   return run(
     async (supabase) => {
-      if (!isUuid(storyId) || !Array.isArray(ids) || !ids.every(isUuid)) return { outcome: "not-found" };
-      const done = await renumber(supabase, "tasks", { column: "story_id", id: storyId }, ids);
+      const order = parseReorderIds(ids);
+      if (!isUuid(storyId) || !order) return { outcome: "not-found" };
+      const done = await renumber(supabase, "tasks", { column: "story_id", id: storyId }, order);
       await refresh(supabase, storyId); // même en cas d'échec ou de conflit : l'écran montre l'état réel
       return { outcome: done === "saved" ? "saved" : done === "changed" ? "not-found" : "error" };
     },

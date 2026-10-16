@@ -8,13 +8,10 @@ import { addTask, deleteTask, reorderTasks, setTaskDone, updateTask, type TaskAc
 import { SortableList } from "@/components/sortable-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
 import type { TaskRecord } from "@/lib/db/tasks";
 import { taskProgress, taskProgressLabel } from "@/lib/domain/tasks";
 
-function isRedirect(error: unknown): boolean {
-  return typeof error === "object" && error !== null && String((error as { digest?: unknown }).digest ?? "").startsWith("NEXT_REDIRECT");
-}
-const UNREACHABLE = "Le serveur ne répond pas. Réessaie dans un instant.";
 
 /** Lance une action de tâche sans faire sauter la page si elle lève ; renvoie son état. */
 async function safely(task: () => Promise<TaskActionState>): Promise<TaskActionState> {
@@ -90,7 +87,7 @@ function TaskRow({ task, handle, onDeleted }: { task: TaskRecord; handle: ReactN
             ref={titleInput}
             name="title"
             defaultValue={task.title}
-            maxLength={400}
+            maxLength={200}
             aria-invalid={fieldError ? true : undefined}
             aria-describedby={fieldError ? `${inputId}-error` : undefined}
             className="min-w-0 flex-1"
@@ -270,7 +267,7 @@ export function Tasks({ storyId, storyTitle, tasks }: { storyId: string; storyTi
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Nouvelle tâche"
-            maxLength={400}
+            maxLength={200}
             aria-invalid={fieldError ? true : undefined}
             aria-describedby={fieldError ? `${inputId}-error` : undefined}
             className="min-w-0 flex-1"

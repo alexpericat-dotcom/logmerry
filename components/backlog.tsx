@@ -20,6 +20,7 @@ import { StoryProposals, type LinkedNote } from "@/components/story-proposals";
 import { Badge } from "@/components/ui/badge";
 import { Tasks } from "@/components/tasks";
 import { Button } from "@/components/ui/button";
+import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
 import type { TaskRecord } from "@/lib/db/tasks";
 import { taskProgress, taskProgressLabel } from "@/lib/domain/tasks";
 import type { StoryRecord } from "@/lib/db/user-stories";
@@ -32,11 +33,6 @@ import {
   type StoryStatus,
 } from "@/lib/domain/user-stories";
 
-/** Une action qui lève (réseau coupé, erreur serveur) ne doit pas faire sauter la page ; une redirection voulue (déconnexion) doit, elle, remonter. */
-function isRedirect(error: unknown): boolean {
-  return typeof error === "object" && error !== null && String((error as { digest?: unknown }).digest ?? "").startsWith("NEXT_REDIRECT");
-}
-const UNREACHABLE = "Le serveur ne répond pas. Réessaie dans un instant.";
 
 function DeleteStory({ story, taskCount, onCancel, onDeleted }: { story: StoryRecord; taskCount: number; onCancel: () => void; onDeleted: () => void }) {
   // `onDeleted` est appelé dès la réponse de l'action, pas dans un effet : l'action revalide la page et cette confirmation disparaît avec sa ligne avant qu'un effet ne s'exécute.
@@ -133,13 +129,12 @@ function StoryItem({ story, tasks, handle, onDeleted }: { story: StoryRecord; ta
         <button
           type="button"
           aria-expanded={open}
-          aria-controls={detailsId}
+          aria-controls={open ? detailsId : undefined}
           onClick={() => setOpen((o) => !o)}
           className="flex min-h-9 min-w-[10rem] flex-1 items-center gap-2 rounded-md text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-md:min-h-11"
         >
           <ChevronRight size={16} aria-hidden="true" className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
           <span className="line-clamp-2 min-w-0 break-words font-semibold">{story.title}</span>
-          <span className="sr-only">{open ? " (replier)" : " (déplier)"}</span>
         </button>
         <div className="ml-auto flex shrink-0 items-center gap-2 max-md:pl-11">
           {progress.total > 0 && (

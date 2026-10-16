@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { nextPosition, isPermutation, progressLabel, storyProgress, storySentence, validateStoryInput } from "./user-stories.ts";
+import { nextPosition, isPermutation, parseReorderIds, progressLabel, storyProgress, storySentence, validateStoryInput } from "./user-stories.ts";
 
 const ok = { title: "ajouter une story", role: "", benefit: "", acceptance_criteria: "", points: "", status: "todo" };
 
@@ -125,4 +125,19 @@ test("majuscule initiale : abaissée devant un infinitif seulement ; noms propre
   for (const keep of ["Notion synchronisé avec Airtable", "Excel vers CRM", "Mailchimp pour les rappels", "API REST", "PDF à exporter"]) assert.equal(sentence(keep), `Je veux ${keep}`);
   // Le bénéfice qui commence par un infinitif est abaissé ; le rôle est gardé tel qu'écrit (un nom commun ne se distingue pas d'un nom propre).
   assert.equal(storySentence({ title: "suivre", role: "Responsable", benefit: "Relancer" }), "En tant que Responsable, je veux suivre, afin de relancer");
+});
+
+test("réordonnancement : doublons croisés refusés (même longueur, ensembles différents)", () => {
+  assert.equal(isPermutation(["a", "b", "c"], ["a", "a", "b"]), false);
+  assert.equal(isPermutation(["a", "a", "b"], ["a", "b", "b"]), false);
+});
+
+test("liste reçue d'un glisser-déposer : tableau d'UUID (rendus en minuscules), 500 au plus ; tout le reste est refusé", () => {
+  const u = "0B83A826-9D2D-4150-8203-BB29089FEF2B";
+  assert.deepEqual(parseReorderIds([u]), [u.toLowerCase()]);
+  assert.deepEqual(parseReorderIds([]), []);
+  for (const bad of ["abc", null, undefined, 5, {}, [null], [1], ["pas-un-uuid"], [""], [u, "x"]]) assert.equal(parseReorderIds(bad), null, JSON.stringify(bad));
+  const many = Array.from({ length: 500 }, (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`);
+  assert.equal(parseReorderIds(many)?.length, 500);
+  assert.equal(parseReorderIds([...many, u]), null, "501 refusés");
 });
