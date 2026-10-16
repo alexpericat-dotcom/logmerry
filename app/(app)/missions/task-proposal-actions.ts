@@ -6,7 +6,8 @@ import { proposeTasksWithClaude } from "@/lib/ai/task-proposals";
 import { notesForProposal } from "@/lib/db/proposal-notes";
 import { isUuid } from "@/lib/domain/notes";
 import { limitNotes } from "@/lib/domain/story-proposals";
-import { HINT_MAX, buildTaskMessage, verifyTaskProposals } from "@/lib/domain/task-proposals";
+import { buildTaskMessage, taskSources, verifyTaskProposals } from "@/lib/domain/task-proposals";
+import { validateHint } from "@/lib/domain/tasks";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type TaskProposalState = { ok: true; tasks: string[]; dropped: number; duplicates: number; noteCut: boolean } | { ok: false; error: string };
@@ -22,8 +23,9 @@ const STORY_GONE = "Cette user story n'existe plus.";
  */
 export async function proposeTasks(storyId: string, hint: string): Promise<TaskProposalState> {
   const result = await withSession(async (supabase): Promise<TaskProposalState> => {
-    const text = typeof hint === "string" ? hint : "";
-    if (text.length > HINT_MAX * 2 || [...text].length > HINT_MAX) return { ok: false, error: `La précision est trop longue (${HINT_MAX.toLocaleString("fr-FR")} caractères au plus).` };
+    const checkedHint = validateHint(hint);
+    if (!checkedHint.ok) return { ok: false, error: checkedHint.error };
+    const text = checkedHint.value;
     if (!isUuid(String(storyId))) return { ok: false, error: STORY_GONE };
 
     const found = await supabase
@@ -64,10 +66,14 @@ export async function proposeTasks(storyId: string, hint: string): Promise<TaskP
     }
     const verified = verifyTaskProposals(raw, {
       // Les titres des tâches existantes sont aussi des sources : « Relancer 12 familles » copié d'une tâche n'est pas un chiffre inventé.
-      texts: [text, mission.title, story.title, story.role ?? "", story.benefit ?? "", story.acceptance_criteria ?? "", ...existingTitles, ...(note ? [note.title, note.body] : [])],
+      texts: taskSources({ hint: text, missionTitle: mission.title, story, existingTitles, note }),
       existingTitles,
     });
-    if (!verified.tasks.length) return { ok: false, error: NOTHING };
+    if (!verified.tasks.length) {
+      // Les compteurs sont dits même quand tout est écarté : on sait pourquoi il n'y a rien à relire.
+      const why = [verified.duplicates ? `${verified.duplicates} déjà dans la liste` : "", verified.dropped ? `${verified.dropped} invalide${verified.dropped > 1 ? "s" : ""} ou avec un chiffre absent de tes sources` : ""].filter(Boolean).join(", ");
+      return { ok: false, error: `${NOTHING}${why ? ` (écartées : ${why}.)` : ""}` };
+    }
     return { ok: true, ...verified, noteCut: cut > 0 };
   });
 

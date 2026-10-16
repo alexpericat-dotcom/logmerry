@@ -41,7 +41,7 @@ context:
 | Scénario | Entrée / État | Comportement attendu | Erreur |
 |----------|--------------|---------------------|--------|
 | Génération nominale | story avec critères, précision vide | 3 à 8 tâches ordonnées, affichées sans rien enregistrer | N/A |
-| Story presque vide | titre seul, ni rôle ni critères ni précision | génération permise, résultat souvent court ; un message dit « Ajoute une précision pour de meilleures tâches » | N/A |
+| Story presque vide | titre seul, ni rôle ni critères ni précision | génération permise, résultat souvent court (pas de message particulier) | N/A |
 | Tâches déjà présentes | 4 tâches existantes | aucune proposition ne les redouble ; « 2 proposition(s) écartée(s) (déjà dans la liste) » | N/A |
 | Précision trop longue | plus de 1 000 caractères | refusée avant tout appel | erreur en ligne |
 | Note d'origine volumineuse | plus de 30 000 caractères | laissée de côté, dit à l'écran ; la génération continue sur le reste | N/A |
@@ -97,3 +97,18 @@ context:
 - Essais réels (`npm run test:proposals`, scénarios 6 à 10) : 10 sur 10. Un essai trop faible (le scénario 10) a révélé que la note d'origine n'était pas reprise : consigne ajoutée, voir `docs/ia-backlog-tests.md`.
 - Vérifié dans Chrome : génération réelle, garder, rejeter, modifier, tout garder, focus et annonces ; téléphone 412 px : un défaut (le titre d'une tâche écrasé par les trois boutons sur une même ligne) corrigé, aucun débordement, aucune cible sous 44 px.
 - Reste : relecture indépendante ; 8.17b (tâches proposées avec les stories du backlog).
+
+## Triage de la relecture indépendante (3 relecteurs, 2026-10-17)
+
+Aucune faille de sécurité (échappement des cinq champs, note lue seulement si elle est à moi, active et de la fiche, rien de sensible dans les journaux, clé jamais côté client). Pas de régression de la 8.16 par l'extraction de `lib/ai/claude-tool.ts`. Corrigés :
+- **Ajouts non sérialisés** : « Garder » pendant « Tout garder » ajoutait la même tâche deux fois, deux « Garder » rapprochés pouvaient prendre la même place. Un seul verrou partage maintenant « Garder », « Ajouter » et « Tout garder » (les boutons sont `aria-disabled` pendant un ajout).
+- **« Annuler » laissait le bouton bloqué** (« L'IA réfléchit… » jusqu'à 60 s) : `useTransition` remplacé par un état propre que la fermeture libère aussitôt (le résultat tardif reste jeté).
+- **Compteurs perdus quand tout est écarté** : le message dit « écartées : N déjà dans la liste, N invalides ».
+- **Focus** perdu en quittant la modification d'une proposition : il revient sur « Modifier ». **Annonces** identiques de suite non relues : numérotées comme ailleurs.
+- **Écart de spec** : le message « Ajoute une précision… » n'a jamais existé ; retiré de la matrice.
+- **Test d'essai réel : une régression que j'avais introduite** : mon remplacement de motif dans `tests/proposals-run.ts` avait changé la note 2 en note 1 dans l'essai 2 (il testait deux fois la même note, sans que rien n'échoue) ; restaurée. **Essais trop faibles** : le 7 était une tautologie (le filtre du code retirait les doublons avant la mesure : on compte maintenant ce que le modèle renvoie avant filtre), le 8 reconnaissait « rappel » sans la précision (maintenant `sms` seul), le 10 utilisait des mots génériques (maintenant `sheets`, absent de la story), le 6 ne vérifiait pas l'ordre (test ou livraison dans le dernier tiers, pas de SMS sans précision). L'essai réel et l'action partagent la liste des sources (`taskSources`).
+- **Tests** : réponses coupées ou refusées avec un appel d'outil partiel valide (la raison d'arrêt doit primer : mutation qui survivait), `validateTaskBatch` (0, 1, 50, 51, nul, non-texte), `validateHint` (1 000 caractères, émojis, non-texte), `taskSources`, cas limites de `verifyTaskProposals` et de `parseToolCall`, message (points à 0, client vide, émojis). `titleKey` normalise l'apostrophe typographique (« l’outil » = « l'outil ») et un titre fait de ponctuation est écarté. `HINT_MAX` vit dans `lib/domain/tasks.ts` : le composant client n'importe plus le module qui porte la consigne.
+
+Reportés (`deferred-work.md`) : positions en double si deux onglets ajoutent en même temps (déjà reporté avec la 3.5a) ; pas de plafond de générations (décision 5) ; un ajout lancé puis panneau fermé réussit sans retour visible (la page se rafraîchit) ; `added` est le nombre envoyé, pas relu en base (exact grâce au tout ou rien).
+
+Rejetés : un essai avec une consigne hostile cachée dans la note (le filtre des chiffres est testé en pur ; l'essai réel n'ajouterait rien) ; changement de libellé lu par les lecteurs d'écran sur `aria-disabled` (cohérent avec les autres composants).
