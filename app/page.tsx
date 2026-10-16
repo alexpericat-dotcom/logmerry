@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
-
-/** La première page est la connexion ; une personne déjà connectée arrive directement sur le cockpit. */
-export default async function Home() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  redirect(data?.claims ? "/aujourd-hui" : "/auth/login");
+/** La première page est la connexion. Le proxy (`lib/supabase/proxy.ts`) redirige déjà `/` (vers le cockpit si on est connecté) ; ceci n'est que le filet de sécurité statique. */
+export default function Home() {
+  redirect("/auth/login");
 }
