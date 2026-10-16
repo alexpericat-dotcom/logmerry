@@ -822,3 +822,109 @@ describe("isolation des missions entre deux comptes fictifs", () => {
     assert.ifError((await a.client.from("clients").delete().eq("id", clientA.id)).error);
   });
 });
+
+describe("isolation des user stories entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let clientA: { id: string };
+  let clientB: { id: string };
+  let missionA: { id: string };
+  let missionB: { id: string };
+  let sA: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      // Les stories partent avec leur mission (cascade) ; les missions doivent partir avant leur fiche (restrict).
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const fa = await a.client.from("clients").insert({ name: `${PREFIX} fiche stories A`, origin: "demo" }).select("id").single();
+    assert.ifError(fa.error);
+    clientA = fa.data!;
+    const fb = await b.client.from("clients").insert({ name: `${PREFIX} fiche stories B`, origin: "demo" }).select("id").single();
+    assert.ifError(fb.error);
+    clientB = fb.data!;
+    const ma = await a.client.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} mission stories A` }).select("id").single();
+    assert.ifError(ma.error);
+    missionA = ma.data!;
+    const mb = await b.client.from("missions").insert({ client_id: clientB.id, title: `${PREFIX} mission stories B` }).select("id").single();
+    assert.ifError(mb.error);
+    missionB = mb.data!;
+    const sa = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "voir mes inscriptions", position: 0 }).select("id").single();
+    assert.ifError(sa.error);
+    sA = sa.data!;
+  });
+
+  after(cleanup);
+
+  test("owner_id et statut par défaut remplis par la base ; B ne voit rien de A", async () => {
+    const own = await a.client.from("user_stories").select("owner_id, status, points").eq("id", sA.id).single();
+    assert.ifError(own.error);
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.status, "todo");
+    assert.equal(own.data!.points, null);
+    assert.ok(!(await b.client.from("user_stories").select("id")).data!.some((s) => s.id === sA.id));
+  });
+
+  test("B ne peut ni modifier ni supprimer la story de A", async () => {
+    const upd = await b.client.from("user_stories").update({ title: "piraté" }).eq("id", sA.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0, "modification refusée");
+    const del = await b.client.from("user_stories").delete().eq("id", sA.id).select("id");
+    assert.ok(del.error || del.data!.length === 0, "suppression refusée");
+    const after = await a.client.from("user_stories").select("title, status, mission_id").eq("id", sA.id).single();
+    assert.deepEqual(after.data, { title: "voir mes inscriptions", status: "todo", mission_id: missionA.id }, "la story de A est intacte");
+  });
+
+  test("B ne peut pas créer une story sur la mission de A, ni déplacer la sienne vers elle, ni forger un owner_id", async () => {
+    const onA = await b.client.from("user_stories").insert({ mission_id: missionA.id, title: "intrus", position: 0 });
+    assert.equal(onA.error?.code, "42501", "création sur la mission d'un autre refusée");
+    const mine = await b.client.from("user_stories").insert({ mission_id: missionB.id, title: "ma story", position: 0 }).select("id").single();
+    assert.ifError(mine.error);
+    const move = await b.client.from("user_stories").update({ mission_id: missionA.id }).eq("id", mine.data!.id).select("id");
+    assert.equal(move.error?.code, "42501", "déplacement vers la mission d'un autre refusé par la RLS");
+    const forged = await b.client.from("user_stories").insert({ mission_id: missionB.id, title: "forgé", position: 1, owner_id: a.userId });
+    assert.equal(forged.error?.code, "42501", "owner_id d'un autre refusé");
+    assert.equal((await a.client.from("user_stories").select("id").eq("mission_id", missionA.id)).data!.length, 1, "la mission de A n'a reçu aucune story étrangère");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("user_stories").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    assert.ok((await anon.from("user_stories").insert({ mission_id: missionA.id, title: "anonyme", position: 0 })).error);
+    assert.equal((await anon.from("user_stories").delete().eq("id", sA.id).select("id")).data?.length ?? 0, 0);
+  });
+
+  test("la base refuse, pour le bon motif : titre vide ou trop long, critères trop longs, points hors suite, statut inconnu, position négative, mission absente", async () => {
+    const ok = { mission_id: missionA.id, position: 5 };
+    for (const [label, row, code] of [
+      ["titre vide", { ...ok, title: "  " }, "23514"],
+      ["titre trop long", { ...ok, title: "x".repeat(201) }, "23514"],
+      ["rôle trop long", { ...ok, title: "t", role: "r".repeat(201) }, "23514"],
+      ["bénéfice trop long", { ...ok, title: "t", benefit: "b".repeat(301) }, "23514"],
+      ["critères trop longs", { ...ok, title: "t", acceptance_criteria: "c".repeat(4001) }, "23514"],
+      ["points hors suite", { ...ok, title: "t", points: 4 }, "23514"],
+      ["statut inconnu", { ...ok, title: "t", status: "bientôt" }, "22P02"],
+      ["position négative", { mission_id: missionA.id, title: "t", position: -1 }, "23514"],
+      ["mission absente", { mission_id: "00000000-0000-0000-0000-000000000000", title: "t", position: 0 }, "42501"],
+    ] as const) {
+      assert.equal((await a.client.from("user_stories").insert(row)).error?.code, code, `${label} refusé pour le bon motif`);
+    }
+    assert.ifError((await a.client.from("user_stories").insert({ ...ok, title: "avec points", points: 13 })).error);
+  });
+
+  test("supprimer une mission emporte son backlog", async () => {
+    const m = await a.client.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} mission éphémère` }).select("id").single();
+    assert.ifError(m.error);
+    assert.ifError((await a.client.from("user_stories").insert({ mission_id: m.data!.id, title: "partira avec elle", position: 0 })).error);
+    assert.ifError((await a.client.from("missions").delete().eq("id", m.data!.id)).error);
+    assert.equal((await a.client.from("user_stories").select("id").eq("mission_id", m.data!.id)).data!.length, 0, "le backlog a disparu avec sa mission");
+  });
+});

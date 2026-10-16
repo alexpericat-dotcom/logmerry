@@ -102,3 +102,10 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
   summary: liste des missions sans plafond ni pagination ; double envoi du formulaire sans clé d'idempotence.
   evidence: l'API plafonne à 1 000 lignes par défaut, le total et les filtres ne porteraient que sur les plus récentes ; négligeable pour une activité à un seul utilisateur.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-5a-backlog-et-user-stories.md`
+  summary: unicité `(mission_id, position)` ou renumérotation atomique du backlog ; limite du nombre de stories par mission ; tests des Server Actions de stories.
+  evidence: deux ajouts ou deux déplacements simultanés (deux onglets) peuvent produire des positions en double, départagées par `created_at` et réparées au prochain déplacement ; aucun test ne couvre les actions ; un compte peut créer des milliers de stories (dégradation de sa propre page).
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-5a-backlog-et-user-stories.md`
+  summary: `updateStory` écrase le statut avec celui du formulaire resté ouvert ; avancement de la liste des missions plafonné à 1 000 stories par l'API.
+  evidence: ouvrir l'édition, changer le statut par le menu, puis enregistrer le formulaire ramène l'ancien statut ; l'avancement de toutes les missions est lu d'un coup.

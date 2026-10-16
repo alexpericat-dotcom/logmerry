@@ -30,7 +30,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-5 : historique des échanges conservé, avec citations cliquables.
 - FR-6 : jeu de test du RAG (15 à 20 questions), score mesuré, aucune fuite entre comptes.
 - FR-7 : prospects, clients, contacts, statut, étiquette d'origine, lien avec les notes.
-- FR-8 : missions découpées en étapes datées, avec progression.
+- FR-8 : missions pilotées en agile (changement du 2026-10-16, décision d'Alex) : backlog de user stories, tâches, sprints, avec progression ; l'IA aide à les concevoir (stories 8.16 à 8.19). Remplace les « étapes datées ».
 - FR-9 : factures (payée ou non, échéance) et encaissements.
 - FR-10 : table de paramètres (taux, plafonds) avec source et date de vérification.
 - FR-11 : estimations (cotisations, plafond) calculées par le code, étiquetées « estimation ».
@@ -90,7 +90,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-5 | 8 | 8.10 |
 | FR-6 | 8 | 8.14, 8.15 |
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
-| FR-8 | 3 | 3.4, 3.5 |
+| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19 |
 | FR-9 | 4 | 4.2, 4.3 |
 | FR-10 | 4 | 4.1 |
 | FR-11 | 4 | 4.4, 4.5 |
@@ -258,15 +258,36 @@ En tant que propriétaire, je veux créer une mission pour un client, afin de su
 **Et** client et titre sont les seuls champs obligatoires.
 **Et** je peux modifier ou supprimer la mission après confirmation.
 
-### Story 3.5 : Découper une mission en étapes
+### Story 3.5a : Backlog et user stories d'une mission
 
-En tant que propriétaire, je veux ajouter des étapes datées à une mission, afin de voir son avancement.
+*(Remplace l'ancienne story 3.5 « étapes datées » : décision d'Alex du 2026-10-16, il veut le vocabulaire et la méthode agile.)*
+
+En tant que propriétaire, je veux tenir le backlog d'une mission sous forme de user stories priorisées, afin de savoir ce qu'il reste à faire pour mon client.
 
 **Critères d'acceptation :**
 
-**Étant donné** une mission, **quand** j'ajoute une étape (titre + date), **alors** elle s'affiche dans l'ordre des dates.
-**Et** je peux marquer une étape faite ; la mission affiche sa progression (ex. 2 sur 5).
-**Et** une étape sans date est refusée.
+**Étant donné** la table `user_stories` créée par une migration (RLS), **quand** j'ajoute une user story à une mission (titre obligatoire ; rôle, bénéfice, critères d'acceptation et points facultatifs), **alors** elle apparaît dans le backlog de la mission, à la dernière place.
+**Et** je peux la monter ou la descendre dans le backlog (la priorité), la modifier et la supprimer après confirmation.
+**Et** chaque story a un statut (à faire, en cours, terminée) et la mission affiche sa progression (ex. 2 sur 5 stories terminées).
+
+### Story 3.5b : Tâches d'une user story
+
+En tant que propriétaire, je veux découper une user story en tâches, afin de savoir quoi faire concrètement.
+
+**Critères d'acceptation :**
+
+**Étant donné** la table `tasks` créée par une migration (RLS), **quand** j'ajoute une tâche à une story (titre obligatoire), **alors** elle s'affiche sous la story ; je peux la cocher, la modifier, la supprimer et la réordonner.
+**Et** la story affiche l'avancement de ses tâches (ex. 3 sur 4) sans changer son statut tout seule.
+
+### Story 3.5c : Sprints
+
+En tant que propriétaire, je veux planifier des sprints et y placer des stories du backlog, afin de livrer par périodes courtes avec un objectif.
+
+**Critères d'acceptation :**
+
+**Étant donné** la table `sprints` créée par une migration (RLS), **quand** je crée un sprint (nom, objectif en une phrase, date de début, date de fin), **alors** je peux y placer des stories du backlog ou les en retirer ; une story n'est que dans un sprint à la fois.
+**Et** un seul sprint est « en cours » par mission ; je peux le démarrer et le clore ; à la clôture, les stories non terminées retournent au backlog ou passent au sprint suivant (mon choix).
+**Et** la page d'une mission montre le sprint en cours, son avancement et le reste du backlog ; la fin ne peut pas précéder le début.
 
 ### Story 3.6 : Suivre mes devis
 
@@ -653,6 +674,40 @@ En tant que propriétaire, je veux vérifier que l'assistant ne fuit rien entre 
 **Et** l'historique et les citations de A ne sont ni lisibles ni appelables par B.
 **Et** le résultat est noté dans `docs/rag-tests.md` et `docs/journal.md` ; une seule fuite bloque la livraison.
 
+### Story 8.16 : Générer un backlog avec l'IA
+
+En tant que propriétaire, je veux coller un brief ou choisir des notes de rendez-vous et obtenir des user stories proposées, afin de gagner du temps de conception.
+
+**Critères d'acceptation :**
+
+**Étant donné** une mission, **quand** je donne un texte (ou je choisis des notes liées à son client), **alors** l'IA propose des user stories (« En tant que… je veux… afin de… », critères d'acceptation, points suggérés) que je relis ; rien n'est enregistré avant que je valide chaque proposition (garder, modifier, rejeter).
+**Et** l'IA ne reçoit que mon texte, la mission, le backlog existant et les extraits de mes notes liées au client (jamais ceux d'un autre compte) ; les extraits partent chez Anthropic : la mention RGPD s'applique.
+**Et** les stories proposées citent la note d'où elles viennent quand il y en a une ; aucun conseil fiscal ou juridique.
+
+### Story 8.17 : Découper une story en tâches avec l'IA
+
+En tant que propriétaire, je veux que l'IA propose des tâches pour une user story, afin de ne rien oublier.
+
+**Critères d'acceptation :**
+
+**Étant donné** une user story, **quand** je demande de la découper, **alors** l'IA propose des tâches que je valide une à une ; rien n'est ajouté sans mon accord, et les tâches existantes ne sont pas dupliquées.
+
+### Story 8.18 : Relire et améliorer une story avec l'IA
+
+En tant que propriétaire, je veux que l'IA critique une user story, afin de la rendre plus claire.
+
+**Critères d'acceptation :**
+
+**Étant donné** une user story, **quand** je demande une relecture, **alors** l'IA signale ce qui ne va pas (trop grosse, floue, critères manquants, bénéfice absent) et propose une reformulation que je peux appliquer ou ignorer.
+
+### Story 8.19 : Composer un sprint avec l'IA
+
+En tant que propriétaire, je veux que l'IA propose le contenu d'un sprint, afin de planifier sans partir d'une page blanche.
+
+**Critères d'acceptation :**
+
+**Étant donné** un backlog avec des points et un sprint à planifier, **quand** je demande une proposition, **alors** l'IA suggère des stories à y placer (selon la priorité, les points et la durée du sprint) et un objectif en une phrase ; je valide, modifie ou ignore, et rien n'est placé sans mon accord.
+
 ---
 
 ## Plan des sprints
@@ -668,7 +723,8 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 5 | Poser une question à l'assistant et obtenir une réponse avec sources vérifiées, conservée dans l'historique. | 8.8, 8.9, 8.10 | IA |
 | 6 | Clore le jalon du 30 octobre : refus « je ne trouve pas », jeu de test et test de fuite. | 8.11, 8.14, 8.15 | IA |
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
-| 8 | Suivre mes missions, étapes et devis, et tout chercher avec ⌘K. | 3.4, 3.5, 3.6, 3.7 | Standard |
+| 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
+| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint. | 8.16, 8.17, 8.18, 8.19 | IA |
 | 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
 | 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
 | 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |

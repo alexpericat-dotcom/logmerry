@@ -8,6 +8,8 @@ import { PageBanner } from "@/components/page-banner";
 import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { listAllMissions, type MissionRecord } from "@/lib/db/missions";
+import { storyProgressByMission } from "@/lib/db/user-stories";
+import { progressLabel } from "@/lib/domain/user-stories";
 import {
   MISSION_STATUSES,
   MISSION_STATUS_FILTER_LABELS,
@@ -28,7 +30,8 @@ const dash = <Unset />;
 
 async function MissionsList({ searchParams }: { searchParams: SearchParams }) {
   const view = parseMissionView(await searchParams);
-  const { rows, total } = viewMissions(await listAllMissions(), view);
+  const [all, progress] = await Promise.all([listAllMissions(), storyProgressByMission()]);
+  const { rows, total } = viewMissions(all, view);
 
   const createButton = (
     <Button asChild size="lg" className="shrink-0">
@@ -61,6 +64,7 @@ async function MissionsList({ searchParams }: { searchParams: SearchParams }) {
     },
     { key: "client", label: "Client", sortHref: sortHref("client"), render: (m) => m.client?.name ?? dash },
     { key: "statut", label: "Statut", sortHref: sortHref("statut"), render: (m) => <MissionStatusBadge status={m.status} /> },
+    { key: "avancement", label: "Avancement", hideOnMobile: true, render: (m) => progressLabel(progress[m.id] ?? { done: 0, total: 0 }) },
     { key: "debut", label: "Début", sortHref: sortHref("debut"), align: "right", hideOnMobile: true, render: (m) => (m.start_date ? formatDate(m.start_date) : dash) },
     { key: "fin", label: "Fin", sortHref: sortHref("fin"), align: "right", hideOnMobile: true, render: (m) => (m.end_date ? formatDate(m.end_date) : dash) },
   ];

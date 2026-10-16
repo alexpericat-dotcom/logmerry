@@ -4,7 +4,7 @@
 
 ## Goal
 
-Le propriétaire suit ses prospects et clients, leurs contacts, ses missions découpées en étapes datées, et ses devis, pour savoir à qui il a affaire, où en est son travail et quels devis attendent une réponse. C'est le mini CRM sur lequel s'appuieront les factures (epic 4), le cockpit (epic 5) et le portfolio (epic 6).
+Le propriétaire suit ses prospects et clients, leurs contacts, ses missions pilotées en agile (backlog de user stories, tâches, sprints), et ses devis, pour savoir à qui il a affaire, où en est son travail et quels devis attendent une réponse. C'est le mini CRM sur lequel s'appuieront les factures (epic 4), le cockpit (epic 5) et le portfolio (epic 6).
 
 ## Stories
 
@@ -12,7 +12,9 @@ Le propriétaire suit ses prospects et clients, leurs contacts, ses missions dé
 - Story 3.2: Ajouter des contacts et passer un prospect en client
 - Story 3.3: Lier une note à un client ou un prospect
 - Story 3.4: Créer des missions
-- Story 3.5: Découper une mission en étapes
+- Story 3.5a: Backlog et user stories d'une mission (remplace l'ancienne 3.5 « étapes », décision d'Alex du 2026-10-16)
+- Story 3.5b: Tâches d'une user story
+- Story 3.5c: Sprints
 - Story 3.6: Suivre mes devis
 - Story 3.7: Rechercher aussi clients et missions
 
