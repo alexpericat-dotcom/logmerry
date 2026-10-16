@@ -2,7 +2,7 @@
 title: 'Story 8.16 : Générer un backlog avec l''IA'
 type: 'feature'
 created: '2026-10-16'
-status: 'draft'
+status: 'ready-for-dev'
 baseline_commit: '15830ee'
 route: 'dispatch'
 context:
