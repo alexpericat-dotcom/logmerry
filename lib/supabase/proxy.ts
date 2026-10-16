@@ -40,6 +40,15 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
+  // La première page est la connexion : `/` redirige ici (avant tout rendu) vers le cockpit si on est connecté, vers la connexion sinon.
+  if (request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = user ? "/aujourd-hui" : "/auth/login";
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+    return redirectResponse;
+  }
+
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
