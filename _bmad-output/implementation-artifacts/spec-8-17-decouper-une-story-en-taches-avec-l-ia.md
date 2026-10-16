@@ -2,7 +2,7 @@
 title: 'Story 8.17 : Découper une story en tâches avec l''IA'
 type: 'feature'
 created: '2026-10-16'
-status: 'draft'
+status: 'review'
 baseline_commit: 'e6f7f2b'
 route: 'dispatch'
 context:
@@ -66,11 +66,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Règles pures + tests (consigne, message, lecture, vérification)
-- [ ] Appel Claude et action `proposeTasks` (aucune écriture)
-- [ ] Action `addTasks` (positions consécutives, partiel) + tests d'isolation
-- [ ] Panneau « Proposer des tâches avec l'IA » dans la story dépliée
-- [ ] 5 essais réels, journal, relecture indépendante
+- [x] Règles pures + tests (consigne, message, lecture, vérification)
+- [x] Appel Claude et action `proposeTasks` (aucune écriture)
+- [x] Action `addTasks` (positions consécutives, partiel) + tests d'isolation
+- [x] Panneau « Proposer des tâches avec l'IA » dans la story dépliée
+- [x] 5 essais réels, journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une story avec critères d'acceptation, when je demande des tâches, then j'obtiens 1 à 8 tâches ordonnées, aucune n'est enregistrée tant que je n'ai pas gardé.
@@ -89,3 +89,11 @@ context:
 4. **Garder une par une, ou « Tout garder »** d'un coup (les tâches sont petites : relire chacune serait fastidieux).
 5. **Pas de plafond quotidien** de générations (même choix que la 8.16, reporté dans `deferred-work.md`).
 6. **Tâches avec le backlog (8.16)** : étape suivante, 8.17b.
+
+## Implementation Notes
+
+- Aucune migration. `addTasks` écrit toutes les tâches gardées en **une seule insertion** : tout ou rien, donc pas d'écriture partielle possible (la ligne « échec partiel » de la matrice ne peut pas arriver ; vérifié par un test d'isolation : un lot dont une ligne est invalide, ou qui vise la story d'un autre compte, n'écrit rien).
+- Écarts au Code Map : `lib/ai/claude-tool.ts` porte l'appel et le délai communs aux deux fonctions IA (extraits de `lib/ai/story-proposals.ts`, qui s'en sert maintenant) ; `parseToolCall(json, outil, clé)` généralise `parseToolInput`. La précision de 1 000 caractères et la limite de 50 tâches par ajout sont validées sous la session.
+- Essais réels (`npm run test:proposals`, scénarios 6 à 10) : 10 sur 10. Un essai trop faible (le scénario 10) a révélé que la note d'origine n'était pas reprise : consigne ajoutée, voir `docs/ia-backlog-tests.md`.
+- Vérifié dans Chrome : génération réelle, garder, rejeter, modifier, tout garder, focus et annonces ; téléphone 412 px : un défaut (le titre d'une tâche écrasé par les trois boutons sur une même ligne) corrigé, aucun débordement, aucune cible sous 44 px.
+- Reste : relecture indépendante ; 8.17b (tâches proposées avec les stories du backlog).

@@ -1060,6 +1060,21 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
     assert.ifError((await a.client.from("tasks").update({ done: false }).eq("id", taskA.id)).error);
   });
 
+  test("ajout groupé (propositions de l'IA) : positions consécutives en une écriture ; une ligne invalide fait tout refuser, rien n'est écrit", async () => {
+    const s = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "groupée", position: 20 }).select("id").single();
+    assert.ifError(s.error);
+    const rows = ["un", "deux", "trois"].map((title, i) => ({ story_id: s.data!.id, title, position: i }));
+    assert.ifError((await a.client.from("tasks").insert(rows)).error);
+    const read = await a.client.from("tasks").select("title, position").eq("story_id", s.data!.id).order("position");
+    assert.deepEqual(read.data, [{ title: "un", position: 0 }, { title: "deux", position: 1 }, { title: "trois", position: 2 }]);
+    const bad = await a.client.from("tasks").insert([{ story_id: s.data!.id, title: "bonne", position: 3 }, { story_id: s.data!.id, title: "   ", position: 4 }]);
+    assert.equal(bad.error?.code, "23514");
+    assert.equal((await a.client.from("tasks").select("id").eq("story_id", s.data!.id)).data!.length, 3, "aucune ligne du lot refusé n'a été écrite");
+    const foreign = await b.client.from("tasks").insert([{ story_id: storyB.id, title: "à moi", position: 5 }, { story_id: s.data!.id, title: "à elle", position: 6 }]);
+    assert.equal(foreign.error?.code, "42501", "un lot qui vise la story d'un autre compte est refusé en entier");
+    assert.equal((await b.client.from("tasks").select("id").eq("story_id", storyB.id).eq("title", "à moi")).data!.length, 0, "et sa ligne valide n'est pas écrite non plus");
+  });
+
   test("supprimer une story, puis une mission, emporte les tâches", async () => {
     const s = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "éphémère", position: 9 }).select("id").single();
     assert.ifError(s.error);

@@ -13,6 +13,7 @@ import { withSession } from "@/lib/supabase/with-session";
 /** `gone` : la tâche ou sa story n'existe plus (supprimée ailleurs) ; l'écran se recharge. `error` : erreur de champ (titre). */
 export type TaskActionState = { ok?: boolean; error?: string; message?: string; gone?: boolean };
 
+const MAX_ADD = 50;
 const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
 const TASK_GONE = "Cette tâche n'existe plus.";
 const STORY_GONE = "Cette user story n'existe plus.";
@@ -61,6 +62,33 @@ export async function addTask(storyId: string, title: string): Promise<TaskActio
     STORY_GONE,
     SAVE_FAILED,
   );
+}
+
+/** Ajoute des tâches à la suite de celles d'une de mes stories, dans l'ordre donné, en une seule écriture (tout ou rien). Sert « Garder » et « Tout garder » des propositions de l'IA. */
+export async function addTasks(storyId: string, titles: string[]): Promise<TaskActionState & { added?: number }> {
+  const state = await run(
+    async (supabase) => {
+      if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_ADD) return { outcome: "invalid", error: "Aucune tâche à ajouter." };
+      const values: string[] = [];
+      for (const title of titles) {
+        const checked = validateTaskTitle(title);
+        if (!checked.ok) return { outcome: "invalid", error: checked.error };
+        values.push(checked.value);
+      }
+      if (!isUuid(storyId)) return { outcome: "not-found" };
+      const story = await supabase.from("user_stories").select("id").eq("id", storyId).maybeSingle();
+      if (story.error) return { outcome: "error" };
+      if (!story.data) return { outcome: "not-found" };
+      const last = await supabase.from("tasks").select("position").eq("story_id", storyId).order("position", { ascending: false }).limit(1);
+      if (last.error) return { outcome: "error" };
+      const start = nextPosition(last.data.map((r) => r.position));
+      const { error } = await supabase.from("tasks").insert(values.map((title, i) => ({ story_id: storyId, title, position: start + i })));
+      return error ? { outcome: "error" } : { outcome: "saved", storyId };
+    },
+    STORY_GONE,
+    SAVE_FAILED,
+  );
+  return state.ok ? { ...state, added: titles.length } : state;
 }
 
 export async function updateTask(id: string, title: string): Promise<TaskActionState> {

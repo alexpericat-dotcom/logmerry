@@ -6,6 +6,7 @@ import { useEffect, useId, useOptimistic, useRef, useState, useTransition, type 
 
 import { addTask, deleteTask, reorderTasks, setTaskDone, updateTask, type TaskActionState } from "@/app/(app)/missions/task-actions";
 import { SortableList } from "@/components/sortable-list";
+import { TaskProposals } from "@/components/task-proposals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
@@ -288,6 +289,7 @@ export function Tasks({ storyId, storyTitle, tasks }: { storyId: string; storyTi
           </p>
         )}
       </form>
+      <TaskProposals storyId={storyId} />
     </section>
   );
 }
