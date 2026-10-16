@@ -159,3 +159,7 @@ Les policies d'insertion et de mise à jour de `user_stories` sont remplacées (
 4. **Avancement d'un sprint** en stories et en points ; terminer toutes les stories ne clôt pas le sprint toute seule.
 5. **Lien avec le cockpit (à décider maintenant, à construire dans les stories 5.x) :** (a) le cockpit affichera les tâches non faites des stories « en cours » du sprint en cours, avec le motif « dans ton sprint, qui se termine dans N jours » ; (b) une **septième règle** prévient quand un sprint se termine à J-2 avec des stories non terminées ; (c) ces tâches passent **après** les six règles existantes (échéances, factures, plafond…) ; (d) le cockpit lit les données, l'IA ne décide rien. Si tu valides, je corrigerai le PRD (FR-14 passe à sept règles) et les stories 5.x au moment de les spécifier.
 6. **Pas de contrôle de chevauchement**, de vélocité ni de graphique au MVP.
+
+## Implementation Notes
+
+- **Régression trouvée par le test d'isolation, corrigée par une seconde migration** (`20261017130000_user_stories_policies_note_and_sprint.sql`) : la migration `20261017120000_sprints.sql` a remplacé les policies d'insertion et de mise à jour de `user_stories` en repartant de la version de la 3.5a et a effacé le contrôle de la note d'origine de la 8.16. La migration de rattrapage réunit le contrôle de la note ET celui du sprint de la même mission. À retenir : repartir de `pg_policies`, pas du fichier d'origine.
