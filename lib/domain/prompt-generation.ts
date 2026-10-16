@@ -1,5 +1,5 @@
 import { inventedNumbers } from "./citations.ts";
-import type { ContextLevel } from "./mission-context.ts";
+import { parseContextLevel, type ContextLevel } from "./mission-context.ts";
 import { toolInputs } from "./story-proposals.ts";
 
 export const OBJECTIVE_MAX = 1000;
@@ -56,7 +56,20 @@ export function validateObjective(raw: unknown): { ok: true; value: string } | {
   if (raw === undefined || raw === null) return { ok: true, value: "" };
   if (typeof raw !== "string") return { ok: false, error: "L'objectif doit être du texte." };
   if (raw.length > OBJECTIVE_MAX * 2 || [...raw].length > OBJECTIVE_MAX) return { ok: false, error: `L'objectif est trop long (${OBJECTIVE_MAX.toLocaleString("fr-FR")} caractères au plus).` };
-  return { ok: true, value: raw };
+  return { ok: true, value: raw.replaceAll("\u0000", "") };
+}
+
+export type PromptOptions = { level: string; target: string; objective: string; includeClient: boolean };
+
+/** Options reçues d'un formulaire : niveau et cible dans leur liste, objectif valide, `includeClient` seulement si exactement `true` (sinon le nom du client reste retiré : le choix sûr) ; sinon un message. */
+export function parsePromptOptions(options: unknown): { ok: true; level: ContextLevel; target: PromptTarget; objective: string; includeClient: boolean } | { ok: false; error: string } {
+  const o = (options && typeof options === "object" ? options : {}) as Record<string, unknown>;
+  const level = parseContextLevel(o.level);
+  const target = parsePromptTarget(o.target);
+  if (!level || !target) return { ok: false, error: "Choisis le contenu du prompt et l'assistant visé." };
+  const objective = validateObjective(o.objective);
+  if (!objective.ok) return { ok: false, error: objective.error };
+  return { ok: true, level, target, objective: objective.value, includeClient: o.includeClient === true };
 }
 
 /** Texte du premier appel de l'outil « write_prompt » dont le champ « prompt » est du texte ; une réponse coupée, refusée ou sans l'outil lève une erreur. */

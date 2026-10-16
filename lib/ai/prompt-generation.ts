@@ -7,7 +7,7 @@ import { PROMPT_MAX, parsePromptCall, promptSystemPrompt, type PromptTarget } fr
 export async function writePromptWithClaude(message: string, target: PromptTarget): Promise<string> {
   const json = await callClaudeTool({
     system: promptSystemPrompt(target),
-    maxTokens: 2500,
+    maxTokens: 3500,
     message,
     tool: {
       name: "write_prompt",

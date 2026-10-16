@@ -18,7 +18,7 @@ import { OBJECTIVE_MAX, PROMPT_TARGETS, PROMPT_TARGET_LABELS, type PromptTarget 
  */
 export function MissionPrompt({ missionId, hasClient }: { missionId: string; hasClient: boolean }) {
   const [open, setOpen] = useState(false);
-  const [level, setLevel] = useState<ContextLevel>("tasks");
+  const [level, setLevel] = useState<ContextLevel>("backlog");
   const [target, setTarget] = useState<PromptTarget>("claude");
   const [objective, setObjective] = useState("");
   const [withoutClient, setWithoutClient] = useState(false);
@@ -34,12 +34,17 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
   const panel = useRef<HTMLDivElement>(null);
   const output = useRef<HTMLTextAreaElement>(null);
   const wasOpen = useRef(false);
+  // Verrou synchrone : deux clics dans la même image ne lancent qu'un appel payant (l'état `pending` n'est à jour qu'au rendu suivant).
+  const busy = useRef(false);
+  // Le focus va au prompt seulement quand il vient d'être généré, et seulement s'il n'a pas été déplacé ailleurs dans le panneau.
+  const justGenerated = useRef(false);
   // Numéro de la génération en cours : fermer ou annuler l'invalide, et son résultat, s'il arrive, est jeté (le serveur, lui, va au bout de l'appel).
   const run = useRef(0);
   const id = useId();
 
   const closePanel = useCallback(() => {
     run.current++;
+    busy.current = false;
     setOpen(false);
     setPrompt("");
     setEdited(false);
@@ -55,8 +60,16 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
     wasOpen.current = open;
   }, [open]);
 
+  useEffect(() => {
+    if (!prompt || !justGenerated.current) return;
+    justGenerated.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || panel.current?.contains(active)) output.current?.focus();
+  }, [prompt]);
+
   const generate = async () => {
-    if (pending) return;
+    if (busy.current) return;
+    busy.current = true;
     setError("");
     setPending(true);
     setAnnounce("");
@@ -72,12 +85,13 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
       setOmitted(result.omitted);
       setEdited(false);
       setAnnounce("Prompt prêt : relis-le, modifie-le si besoin, puis copie-le.");
-      requestAnimationFrame(() => output.current?.focus());
+      justGenerated.current = true;
     } catch (e) {
       if (mine !== run.current) return;
       if (isRedirect(e)) throw e;
       setError(UNREACHABLE);
     } finally {
+      busy.current = false;
       if (mine === run.current) setPending(false);
     }
   };
@@ -126,51 +140,54 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
           <X size={16} aria-hidden="true" />
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-level`}>Ce que le prompt contient</Label>
-          <select id={`${id}-level`} value={level} onChange={(e) => setLevel(e.target.value as ContextLevel)} className={selectClass}>
-            {CONTEXT_LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {CONTEXT_LEVEL_LABELS[l]}
-              </option>
-            ))}
-          </select>
+      {/* Les options sont figées pendant la génération : le résultat correspond toujours à ce qui était affiché au clic. */}
+      <fieldset disabled={pending} className="contents">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor={`${id}-level`}>Ce que le prompt contient</Label>
+            <select id={`${id}-level`} value={level} onChange={(e) => setLevel(e.target.value as ContextLevel)} className={selectClass}>
+              {CONTEXT_LEVELS.map((l) => (
+                <option key={l} value={l}>
+                  {CONTEXT_LEVEL_LABELS[l]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor={`${id}-target`}>Pour quel assistant</Label>
+            <select id={`${id}-target`} value={target} onChange={(e) => setTarget(e.target.value as PromptTarget)} className={selectClass}>
+              {PROMPT_TARGETS.map((t) => (
+                <option key={t} value={t}>
+                  {PROMPT_TARGET_LABELS[t]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor={`${id}-target`}>Pour quel assistant</Label>
-          <select id={`${id}-target`} value={target} onChange={(e) => setTarget(e.target.value as PromptTarget)} className={selectClass}>
-            {PROMPT_TARGETS.map((t) => (
-              <option key={t} value={t}>
-                {PROMPT_TARGET_LABELS[t]}
-              </option>
-            ))}
-          </select>
+          <Label htmlFor={`${id}-objective`}>Ce que tu veux obtenir (facultatif)</Label>
+          <Textarea id={`${id}-objective`} rows={3} value={objective} onChange={(e) => setObjective(e.target.value)} maxLength={OBJECTIVE_MAX} placeholder="Par exemple : un premier workflow pour relancer automatiquement les familles qui n'ont pas payé." />
         </div>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-objective`}>Ce que tu veux obtenir (facultatif)</Label>
-        <Textarea id={`${id}-objective`} rows={3} value={objective} onChange={(e) => setObjective(e.target.value)} maxLength={OBJECTIVE_MAX} placeholder="Par exemple : un premier workflow pour relancer automatiquement les familles qui n'ont pas payé." />
-      </div>
-      {hasClient && (
-        <label className="flex min-h-9 items-center gap-2 text-sm max-md:min-h-11">
-          <input type="checkbox" className="size-4" checked={withoutClient} onChange={(e) => setWithoutClient(e.target.checked)} />
-          Sans le nom du client
-        </label>
-      )}
+        {hasClient && (
+          <label className="flex min-h-9 items-center gap-2 text-sm max-md:min-h-11">
+            <input type="checkbox" className="size-4" checked={withoutClient} onChange={(e) => setWithoutClient(e.target.checked)} />
+            Sans le nom du client
+          </label>
+        )}
+      </fieldset>
       <p className="text-xs text-muted-foreground">
         La mission et le backlog choisis sont envoyés à Anthropic pour rédiger le prompt, puis iront où tu colleras ce prompt. N&apos;y mets pas de données réelles de clients. Le nom du client peut être retiré, pas celui qui figurerait dans un titre. Rien n&apos;est enregistré.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={generate} disabled={pending}>
+        <Button type="button" onClick={generate} aria-disabled={pending}>
           {pending ? "L'IA rédige…" : prompt ? "Régénérer" : "Générer le prompt"}
         </Button>
-        <button type="button" onClick={closePanel} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
+        <button type="button" onClick={closePanel} className="inline-flex min-h-6 items-center text-sm underline underline-offset-4 max-md:min-h-11">
           {pending ? "Annuler" : "Fermer"}
         </button>
       </div>
       <p key={announce.n} role="status" aria-live="polite" className="text-sm text-muted-foreground">
-        {pending ? "L'IA rédige la consigne, cela peut prendre quelques secondes. « Annuler » arrête l'attente (l'appel, lui, va au bout)." : announce.text}
+        {pending ? "L'IA rédige la consigne, cela peut prendre quelques secondes. « Annuler » arrête l'attente, mais l'appel va au bout : si tu relances tout de suite, la nouvelle demande peut attendre la fin de la précédente." : announce.text}
       </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">

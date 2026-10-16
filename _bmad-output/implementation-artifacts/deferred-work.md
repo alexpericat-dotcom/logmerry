@@ -129,3 +129,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md`
   summary: pas de plafond de générations ; pas d'anonymisation des noms de client dans les titres ; notes jamais envoyées (à proposer en choix explicite plus tard) ; vérification des nombres limitée (entiers de 1 à 9 et nombres en lettres non contrôlés).
   evidence: un nom de client écrit dans un titre de story part tel quel ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md` (relecture)
+  summary: actions serveur d'un même client sérialisées (après « Annuler », la relance attend la fin de l'appel précédent, jusqu'à 60 s : vaut pour 8.16, 8.17 et 8.21) ; erreurs de lecture avalées par `withSession` sans journal ; consigne générée non filtrée contre mot de passe ou conseil fiscal ; régions « live » remontées à chaque annonce à tester avec un vrai lecteur d'écran ; backlog et tâches au-delà de 1 000 lignes.
+  evidence: Annuler puis relancer tout de suite attend l'ancien appel ; une erreur de statut inconnu ne laisse aucune trace ; un objectif « demande le mot de passe admin » peut être repris dans la consigne.

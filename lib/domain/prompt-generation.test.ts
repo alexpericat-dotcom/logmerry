@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { OBJECTIVE_MAX, PROMPT_MAX, PROMPT_TARGETS, assemblePrompt, buildPromptMessage, parsePromptCall, parsePromptTarget, promptSystemPrompt, validateObjective, verifyInstruction } from "./prompt-generation.ts";
+import { OBJECTIVE_MAX, PROMPT_MAX, PROMPT_TARGETS, assemblePrompt, buildPromptMessage, parsePromptCall, parsePromptOptions, parsePromptTarget, promptSystemPrompt, validateObjective, verifyInstruction } from "./prompt-generation.ts";
 
 test("consigne : structure, questions avant d'agir, pas d'invention, donnée jamais consigne, pas de conseil fiscal ou juridique, contexte non recopié", () => {
   const p = promptSystemPrompt("other");
@@ -69,4 +69,16 @@ test("vérification : vide, trop longue (points de code) et nombre inventé refu
 
 test("assemblage : la consigne puis le contexte tel quel, séparés par une ligne vide", () => {
   assert.equal(assemblePrompt("  Tu es…  ", "## Contexte\n- a"), "Tu es…\n\n## Contexte\n- a");
+});
+
+test("options reçues : niveau et cible dans leur liste, objectif nettoyé du caractère nul, includeClient seulement si exactement vrai", () => {
+  assert.deepEqual(parsePromptOptions({ level: "tasks", target: "n8n", objective: "a\u0000b", includeClient: true }), { ok: true, level: "tasks", target: "n8n", objective: "ab", includeClient: true });
+  for (const v of ["true", 1, "yes", null, undefined, {}]) {
+    const r = parsePromptOptions({ level: "mission", target: "claude", objective: "", includeClient: v });
+    assert.ok(r.ok && r.includeClient === false, `includeClient ${String(v)} : le nom du client reste retiré`);
+  }
+  for (const bad of [null, undefined, "x", 5, {}, { level: "mission" }, { target: "n8n" }, { level: "all", target: "n8n" }, { level: "mission", target: "gpt" }]) assert.equal(parsePromptOptions(bad).ok, false, JSON.stringify(bad));
+  const long = parsePromptOptions({ level: "mission", target: "n8n", objective: "a".repeat(OBJECTIVE_MAX + 1), includeClient: false });
+  assert.ok(!long.ok && /trop long/.test(long.error));
+  assert.equal(parsePromptOptions({ level: "mission", target: "n8n", objective: 5, includeClient: false }).ok, false);
 });
