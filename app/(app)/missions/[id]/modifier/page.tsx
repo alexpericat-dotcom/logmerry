@@ -6,7 +6,7 @@ import { DeleteMission } from "@/components/delete-mission";
 import { MissionForm } from "@/components/mission-form";
 import { PageBanner } from "@/components/page-banner";
 import { getMission } from "@/lib/db/missions";
-import { listStories } from "@/lib/db/user-stories";
+import { storyProgressByMission } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 
 export const metadata = { title: "Modifier la mission · LogMerry" };
@@ -16,7 +16,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
-  const storyCount = (await listStories(id)).length;
+  const storyCount = (await storyProgressByMission([id]))[id]?.total ?? 0;
 
   return (
     <div className="flex flex-col gap-6">

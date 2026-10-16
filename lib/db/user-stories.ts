@@ -13,16 +13,19 @@ export type StoryRecord = {
   points: number | null;
   status: StoryStatus;
   position: number;
+  source_note_id: string | null;
+  /** Note d'origine (titre), pour le lien « Source » d'une story proposée par l'IA. */
+  source_note: { title: string } | null;
 };
 
-const COLUMNS = "id, mission_id, title, role, benefit, acceptance_criteria, points, status, position";
+const COLUMNS = "id, mission_id, title, role, benefit, acceptance_criteria, points, status, position, source_note_id, source_note:notes(title)";
 
 /** Le backlog d'une de mes missions, dans l'ordre de priorité (la RLS limite aux miens). */
 export async function listStories(missionId: string): Promise<StoryRecord[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).order("position", { ascending: true }).order("created_at", { ascending: true });
   if (error) throw new Error("Impossible de charger le backlog.");
-  return data as StoryRecord[];
+  return data as unknown as StoryRecord[];
 }
 
 /** Stories terminées et totales de mes missions (toutes, ou celles de `missionIds`), en une requête : { identifiant de mission : { done, total } }. */

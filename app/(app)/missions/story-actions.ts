@@ -64,14 +64,25 @@ async function save(
 
 /** Ajoute une user story à la dernière place du backlog d'une de mes missions (la RLS refuse une mission qui n'est pas à moi). */
 export async function addStory(missionId: string, _prev: StoryFormState, formData: FormData): Promise<StoryFormState> {
+  // Note d'origine d'une proposition de l'IA gardée (facultative) : la base refuse une note qui n'est pas à moi.
+  const rawSource = String(formData.get("source_note_id") ?? "");
+  const source = isUuid(rawSource) ? rawSource : null;
   return save(readValues(formData), async (supabase, value) => {
     if (!isUuid(missionId)) return { outcome: "not-found", gone: MISSION_GONE };
-    const mission = await supabase.from("missions").select("id").eq("id", missionId).maybeSingle();
+    const mission = await supabase.from("missions").select("id, client_id").eq("id", missionId).maybeSingle();
     if (mission.error) return { outcome: "error" };
     if (!mission.data) return { outcome: "not-found", gone: MISSION_GONE };
+    // La note d'origine doit être une note de la fiche de cette mission ; si elle a disparu (supprimée pendant la relecture) ou n'en est pas une,
+    // la story est gardée sans source plutôt que de buter sur une clé étrangère.
+    let sourceId: string | null = null;
+    if (source) {
+      const note = await supabase.from("notes").select("id").eq("id", source).eq("client_id", mission.data.client_id).maybeSingle();
+      if (note.error) return { outcome: "error" };
+      sourceId = note.data ? source : null;
+    }
     const last = await supabase.from("user_stories").select("position").eq("mission_id", missionId).order("position", { ascending: false }).limit(1);
     if (last.error) return { outcome: "error" };
-    const { error } = await supabase.from("user_stories").insert({ ...value, mission_id: missionId, position: nextPosition(last.data.map((r) => r.position)) });
+    const { error } = await supabase.from("user_stories").insert({ ...value, mission_id: missionId, position: nextPosition(last.data.map((r) => r.position)), source_note_id: sourceId });
     return error ? { outcome: "error" } : { outcome: "saved", missionId };
   });
 }

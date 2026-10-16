@@ -837,6 +837,7 @@ describe("isolation des user stories entre deux comptes fictifs", () => {
       if (!account) continue;
       // Les stories partent avec leur mission (cascade) ; les missions doivent partir avant leur fiche (restrict).
       await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("notes").delete().like("title", `${PREFIX}%`);
       await account.client.from("clients").delete().like("name", `${PREFIX}%`);
     }
   };
@@ -918,6 +919,26 @@ describe("isolation des user stories entre deux comptes fictifs", () => {
       assert.equal((await a.client.from("user_stories").insert(row)).error?.code, code, `${label} refusé pour le bon motif`);
     }
     assert.ifError((await a.client.from("user_stories").insert({ ...ok, title: "avec points", points: 13 })).error);
+  });
+
+  test("note source : une story peut citer ma note ; la note d'un autre compte est refusée (insertion et mise à jour) ; supprimer la note retire le lien sans supprimer la story", async () => {
+    const mine = await a.client.from("notes").insert({ title: `${PREFIX} note source A` }).select("id").single();
+    assert.ifError(mine.error);
+    const theirs = await b.client.from("notes").insert({ title: `${PREFIX} note source B` }).select("id").single();
+    assert.ifError(theirs.error);
+    const ok = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "avec source", position: 7, source_note_id: mine.data!.id }).select("id, source_note_id").single();
+    assert.ifError(ok.error);
+    assert.equal(ok.data!.source_note_id, mine.data!.id);
+    const forged = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "source étrangère", position: 8, source_note_id: theirs.data!.id });
+    assert.equal(forged.error?.code, "42501", "citer la note d'un autre compte refusé à l'insertion");
+    const rewrite = await a.client.from("user_stories").update({ source_note_id: theirs.data!.id }).eq("id", ok.data!.id).select("id");
+    assert.equal(rewrite.error?.code, "42501", "citer la note d'un autre compte refusé à la mise à jour");
+    assert.equal((await a.client.from("user_stories").select("source_note_id").eq("id", ok.data!.id).single()).data!.source_note_id, mine.data!.id, "la source d'origine est conservée");
+    assert.ifError((await a.client.from("notes").delete().eq("id", mine.data!.id)).error);
+    const after = await a.client.from("user_stories").select("id, source_note_id").eq("id", ok.data!.id).single();
+    assert.equal(after.data!.source_note_id, null, "le lien est retiré avec la note");
+    assert.ok(after.data!.id, "la story reste");
+    assert.ifError((await b.client.from("notes").delete().eq("id", theirs.data!.id)).error);
   });
 
   test("supprimer une mission emporte son backlog", async () => {
