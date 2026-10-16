@@ -1,8 +1,9 @@
 export const TASK_TITLE_MAX = 200;
 
 /** Une tâche n'a qu'un titre (1 à 200 caractères, points de code, caractère nul retiré) et une case « faite ». */
-export function validateTaskTitle(raw: string): { ok: true; value: string } | { ok: false; error: string } {
-  const title = raw.replaceAll("\u0000", "").trim();
+export function validateTaskTitle(raw: unknown): { ok: true; value: string } | { ok: false; error: string } {
+  // Une Server Action peut être appelée à la main avec n'importe quoi : un titre qui n'est pas du texte est un titre vide.
+  const title = typeof raw === "string" ? raw.replaceAll("\u0000", "").trim() : "";
   if (!title) return { ok: false, error: "Saisis le titre de la tâche." };
   if ([...title].length > TASK_TITLE_MAX) return { ok: false, error: `Le titre doit faire ${TASK_TITLE_MAX} caractères au plus.` };
   return { ok: true, value: title };

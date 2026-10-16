@@ -90,3 +90,12 @@ export const nextPosition = (positions: number[]): number => (positions.length ?
 export function isPermutation(current: string[], submitted: string[]): boolean {
   return current.length === submitted.length && new Set(submitted).size === submitted.length && submitted.every((id) => current.includes(id));
 }
+
+export const REORDER_MAX = 500;
+
+/** Liste d'identifiants reçue d'un glisser-déposer : un tableau d'UUID (rendus en minuscules, comme la base) de 500 éléments au plus ; sinon `null`. */
+export function parseReorderIds(value: unknown): string[] | null {
+  if (!Array.isArray(value) || value.length > REORDER_MAX) return null;
+  if (!value.every((v) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v))) return null;
+  return value.map((v: string) => v.toLowerCase());
+}

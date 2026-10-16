@@ -16,12 +16,10 @@ import { GripVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useOptimistic, useState, useTransition, type ReactNode } from "react";
 
+import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
+
 export type ReorderResult = { message?: string; gone?: boolean };
 
-/** Une action qui lève (réseau coupé, erreur serveur) ne doit pas faire sauter la page ; une redirection voulue (déconnexion) doit, elle, remonter. */
-function isRedirect(error: unknown): boolean {
-  return typeof error === "object" && error !== null && String((error as { digest?: unknown }).digest ?? "").startsWith("NEXT_REDIRECT");
-}
 
 function Row<T extends { id: string }>({ item, itemName, noun, children }: { item: T; itemName: string; noun: string; children: (item: T, handle: ReactNode) => ReactNode }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -103,7 +101,7 @@ export function SortableList<T extends { id: string }>({
         }
       } catch (e) {
         if (isRedirect(e)) throw e;
-        setError("Le serveur ne répond pas. Réessaie dans un instant.");
+        setError(UNREACHABLE);
       }
     });
   }
