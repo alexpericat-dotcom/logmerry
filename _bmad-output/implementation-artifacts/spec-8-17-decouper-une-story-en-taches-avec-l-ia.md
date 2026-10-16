@@ -3,7 +3,7 @@ title: 'Story 8.17 : Découper une story en tâches avec l''IA'
 type: 'feature'
 created: '2026-10-16'
 status: 'draft'
-baseline_commit: '2d0b3a1'
+baseline_commit: 'e6f7f2b'
 route: 'dispatch'
 context:
   - '{project-root}/_bmad-output/implementation-artifacts/spec-8-16-generer-un-backlog-avec-l-ia.md'
