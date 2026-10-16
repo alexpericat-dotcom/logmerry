@@ -49,13 +49,13 @@ export function buildProposalMessage(input: { missionTitle: string; clientName: 
 export type Proposal = StoryValues & { source_note_id: string | null };
 export type ParsedProposals = { proposals: Proposal[]; dropped: number };
 
-/** Liste des stories d'un appel d'outil : un tableau, ou un tableau écrit en texte JSON (certains modèles le renvoient ainsi) ; sinon `null`. */
-function storiesOf(input: unknown): unknown[] | null {
-  const stories = (input as { stories?: unknown } | null)?.stories;
-  if (Array.isArray(stories)) return stories;
-  if (typeof stories === "string") {
+/** Liste d'un appel d'outil : un tableau, ou un tableau écrit en texte JSON (certains modèles le renvoient ainsi) ; sinon `null`. */
+function listOf(input: unknown, key: string): unknown[] | null {
+  const list = (input as Record<string, unknown> | null)?.[key];
+  if (Array.isArray(list)) return list;
+  if (typeof list === "string") {
     try {
-      const parsed: unknown = JSON.parse(stories);
+      const parsed: unknown = JSON.parse(list);
       return Array.isArray(parsed) ? parsed : null;
     } catch {
       return null;
@@ -64,18 +64,21 @@ function storiesOf(input: unknown): unknown[] | null {
   return null;
 }
 
-/** Appel d'outil « propose_stories » dans la réponse de l'API Messages (le premier dont la liste est exploitable) ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
-export function parseToolInput(json: unknown): unknown[] {
+/** Liste renvoyée par l'appel d'outil `tool` dans la réponse de l'API Messages (le premier appel dont la liste `key` est exploitable) ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
+export function parseToolCall(json: unknown, tool: string, key: string): unknown[] {
   const stop = (json as { stop_reason?: unknown } | null)?.stop_reason;
   if (stop === "max_tokens" || stop === "refusal") throw new Error(`Proposition de Claude inutilisable (${stop}).`);
   const content = (json as { content?: unknown } | null)?.content;
-  const calls = Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).filter((b) => b?.type === "tool_use" && b.name === "propose_stories") : [];
+  const calls = Array.isArray(content) ? (content as { type?: unknown; name?: unknown; input?: unknown }[]).filter((b) => b?.type === "tool_use" && b.name === tool) : [];
   for (const call of calls) {
-    const stories = storiesOf(call.input);
-    if (stories) return stories;
+    const list = listOf(call.input, key);
+    if (list) return list;
   }
   throw new Error("Proposition de Claude inattendue.");
 }
+
+/** Appel d'outil « propose_stories » (voir `parseToolCall`). */
+export const parseToolInput = (json: unknown): unknown[] => parseToolCall(json, "propose_stories", "stories");
 
 /** Clé de comparaison d'un titre : sans accents, sans casse, espaces compactés, sans ponctuation finale (« Générer  rapport. » = « generer rapport »). */
 export const titleKey = (title: string) => title.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").replace(/[\s.!?;:,]+$/u, "").trim();

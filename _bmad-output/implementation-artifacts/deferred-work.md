@@ -117,3 +117,7 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-5b-taches-d-une-user-story.md` (relecture)
   summary: « Modifier » une story démonte ses tâches ; message d'erreur de réordonnancement jamais effacé avant le déplacement suivant ; pas de plafond de tâches par story (500 au plus acceptées au réordonnancement) ; ligne de story repliée sur plusieurs lignes à 412 px ; glisser d'une story dépliée difficile sur téléphone.
   evidence: taper une tâche puis cliquer « Modifier » la story et annuler vide le champ ; au-delà de 500 tâches un déplacement répond « a changé entre-temps » ; à 412 px la ligne repliée prend deux lignes (titre sur deux au plus, puis statut).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md`
+  summary: pas de plafond de générations par utilisateur (coût d'API), comme la 8.16 ; la vérification des chiffres ne contrôle pas les entiers de 1 à 9 ni les nombres en lettres ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.
+  evidence: un utilisateur connecté peut relancer la génération en boucle ; « Prévoir huit relances » passerait.
