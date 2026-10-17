@@ -466,14 +466,18 @@ En tant que propriétaire, je veux un calendrier unique de mes obligations avec 
 
 ### Story 5.2 : Voir mes tâches du jour (échéances et factures échues)
 
+*Adaptée le 18 octobre 2026 (tâches calculées à partir du calendrier, tri unique : PRD FR-14, architecture AD-5 et AD-13).*
+
 En tant que propriétaire, je veux voir sur le cockpit les tâches du jour avec leur motif, afin de savoir quoi faire en premier.
 
 **Critères d'acceptation :**
 
-**Étant donné** une échéance à J-3 et une facture échue à J+1, **quand** j'ouvre le cockpit, **alors** deux tâches s'affichent avec leur motif (« échéance dans 3 jours », « facture échue depuis 1 jour »), dans l'ordre de priorité des règles 1 puis 2.
-**Et** cocher une tâche la barre, la réordonne et l'annonce aux lecteurs d'écran ; décocher est possible.
+**Étant donné** une échéance à J-3 (dans le calendrier) et une facture échue depuis 1 jour, **quand** j'ouvre le cockpit, **alors** deux tâches s'affichent avec leur motif (« échéance dans 3 jours », « facture échue depuis 1 jour »), dans l'ordre des règles 1 puis 2.
+**Et** la règle 1 retient les échéances dans 0 à 3 jours (une échéance déjà en retard relève de la vue « En retard » du calendrier, pas du cockpit) ; la règle 2 retient les factures non payées en retard d'au moins 1 jour.
+**Et** les tâches sont **calculées à la lecture** à partir du calendrier et des factures, sans liste propre au cockpit ; une même échéance ou facture ne donne qu'une seule tâche ; le tri est unique : numéro de règle, puis date la plus proche, puis identifiant.
+**Et** cocher une tâche d'échéance marque l'échéance « faite » dans le calendrier ; cocher une tâche de facture la barre pour la journée sans changer la facture (elle revient le lendemain si la facture est toujours échue) ; décocher est possible ; la liste se réordonne et l'annonce est faite aux lecteurs d'écran.
 **Et** quand tout est fait, « Bravo, tu as fait toutes tes tâches du jour. » s'affiche.
-**Et** les règles sont des fonctions pures testées ; aucune règle ne passe par l'IA.
+**Et** les règles sont des fonctions pures testées qui reçoivent la date du jour (`asOf`, jour de Paris) ; aucune règle ne passe par l'IA.
 
 ### Story 5.3 : Tâches liées au plafond et à l'ACRE
 
