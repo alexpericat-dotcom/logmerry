@@ -412,14 +412,21 @@ En tant que propriétaire, je veux voir plusieurs jauges de plafond, chacune cal
 
 ### Story 4.5 : Voir une estimation de cotisations
 
+*Adaptée le 18 octobre 2026 (règles versionnées, profil, cas de référence : PRD FR-10 et FR-11, architecture AD-12).*
+
+**Prérequis (bloquant) :** l'auteur écrit les règles de **prorata de la première année**, de **fin de l'ACRE** et de **bascule de TVA**, chacune avec sa source officielle et sa date de vérification, et leurs cas de référence calculés à la main. Sans elles, la story ne démarre pas.
+
 En tant que propriétaire, je veux une estimation de mes cotisations à partir de mes encaissements, afin d'anticiper.
 
 **Critères d'acceptation :**
 
-**Étant donné** un taux de cotisation en paramètre et des encaissements, **quand** j'ouvre Finances, **alors** je vois un montant étiqueté « estimation » avec les paramètres utilisés et leurs dates.
-**Et** si un paramètre manque ou est périmé, aucun calcul n'est affiché et « paramètre manquant » apparaît.
-**Et** la fonction de calcul passe au moins 6 cas de référence calculés à la main, dont prorata de première année, fin de l'ACRE et bascule de TVA.
-**Et** une modification d'un paramètre est prise en compte au calcul suivant.
+**Étant donné** des règles de cotisation vérifiées (story 4.1b), un profil (story 4.1a) et des encaissements, **quand** j'ouvre la page Finances, **alors** je vois un montant étiqueté « estimation », avec les règles utilisées, leurs versions, leurs sources et leurs dates, et le détail du calcul.
+**Et** si une règle est absente, non vérifiée ou périmée, ou si un champ de profil dont elle dépend est vide, aucun calcul n'est affiché et la liste de ce qui manque apparaît (« paramètre manquant »).
+**Et** avec un champ de profil « Déclaré » non confirmé, le calcul se fait avec le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** le prorata de la première année, la fin de l'ACRE et la bascule de TVA sont des règles écrites par l'auteur avec leur source ; le code ne contient que les formules, jamais un chiffre.
+**Et** la fonction de calcul reçoit `asOf` et passe au moins 6 cas de référence calculés à la main par l'auteur, indépendamment du code, dont ces trois cas limites ; la story est testée avec des cas « FICTIF » et les cas « RÉEL + source + date » s'ajoutent avant d'afficher un chiffre réel.
+**Et** une nouvelle version d'une règle est prise en compte au calcul suivant, et un calcul sur une période passée utilise la version en vigueur à cette période.
+**Et** l'estimation n'est jamais un montant officiel ni un conseil ; aucun chiffre ne vient du modèle de langage.
 
 ---
 
