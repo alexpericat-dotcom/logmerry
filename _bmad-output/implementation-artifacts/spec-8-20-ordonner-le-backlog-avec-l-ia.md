@@ -2,7 +2,7 @@
 title: 'Story 8.20 : Ordonner le backlog avec l''IA'
 type: 'feature'
 created: '2026-10-18'
-status: 'draft'
+status: 'review'
 baseline_commit: 'daae1c5'
 route: 'dispatch'
 context:
@@ -69,11 +69,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Règles pures + tests (`lib/domain/backlog-order.ts`)
-- [ ] Appel à Claude (outil `order_backlog`) et `proposeBacklogOrder` (aucune écriture)
-- [ ] `applyBacklogOrder` (relecture, refus si changé, ordre par places, renumérotation)
-- [ ] Panneau : précision, liste avant → après avec raisons, appliquer, ignorer, annonces
-- [ ] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (sombre, téléphone), journal, relecture indépendante
+- [x] Règles pures + tests (`lib/domain/backlog-order.ts`)
+- [x] Appel à Claude (outil `order_backlog`) et `proposeBacklogOrder` (aucune écriture)
+- [x] `applyBacklogOrder` (relecture, refus si changé, ordre par places, renumérotation)
+- [x] Panneau : précision, liste avant → après avec raisons, appliquer, ignorer, annonces
+- [x] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (sombre, téléphone), journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given un backlog de plusieurs stories dans un ordre illogique, when je clique sur « Proposer un ordre logique », then je vois un nouvel ordre avec, pour chaque story déplacée, sa place actuelle → nouvelle et une raison, et **rien** n'est réordonné avant « Appliquer ».
@@ -93,3 +93,13 @@ context:
 5. **Garde contre un changement entre-temps :** « Appliquer » compare le backlog à ce que tu as relu (ajout, suppression, story terminée ou placée dans un sprint, ordre modifié ailleurs) et refuse, sans migration.
 6. **Story omise par l'IA :** remise à la suite dans son ordre actuel, et dit à l'écran (l'IA ne peut pas faire disparaître une story).
 7. **Pas de migration, pas de nouvelle dépendance.** Coût : un appel par proposition (sortie au plus 2 500 jetons) ; essais réels groupe par groupe, mise au point avec Haiku et un seul passage final avec Sonnet.
+
+## Implementation Notes
+
+- Décisions validées par Alex le 18 octobre (« go »). Aucune migration, aucune dépendance. Pas de test d'isolation ajouté : l'application n'écrit que des positions de stories par la RLS existante.
+- Écarts au Code Map : `applyBacklogOrder(missionId, baseIds, sentIds, newOrder)` reçoit aussi la liste des stories ordonnées (`sentIds`, sous-ensemble du backlog) en plus du backlog de base ; le bouton n'apparaît que s'il y a au moins 2 stories ouvertes et pas pendant l'ajout à la main ; `moves` donne les places avant et après ; la consigne exige une raison pour toute story dont la place change, même par effet de bord (voir plus bas).
+- **Défaut trouvé à la lecture des essais :** au premier passage avec Sonnet, 4 stories sur 6 étaient déplacées mais seules 2 avaient une raison (les stories qui ne bougeaient que parce qu'une autre passait devant n'en recevaient pas), contre le critère « une phrase de raison par story déplacée ». L'essai 29 mesure maintenant, sur la sortie brute et place par place, les stories déplacées sans raison ; la consigne précise que toute place changée, même par effet de bord, reçoit sa raison. Passage suivant : 6 stories déplacées, 0 sans raison.
+- **Essais réels** (`npm run test:proposals -- 8.20`, scénarios 29 à 32) : mise au point avec Haiku 4 sur 4, puis passage final avec le modèle de production 4 sur 4 : backlog en vrac (saisie avant suivi avant relances, saisie avant export, 0 identifiant inconnu en brut, toutes les stories déplacées avec raison) ; backlog déjà logique : 0 place changée ; consigne cachée dans un titre et la précision : ni « piraté », ni l'identifiant forgé en sortie brute, « tva » et « 4500 » jamais plus qu'en entrée ; le minimum de 2 stories.
+- Vérifié dans Chrome (compte fictif, téléphone 412 px sombre, données supprimées ensuite), modèle de production : backlog de 5 stories dont une terminée en 3ᵉ place ; panneau (focus à la précision, bouton en `aria-disabled` pendant l'attente), proposition de 4 stories ordonnées avec « 4 → 1 » et raisons (la terminée n'est pas listée) ; « Appliquer » : ordre final saisie, suivi, **terminée à sa place (3ᵉ)**, relances, export ; annonce « Backlog réordonné : 4 stories déplacées. », focus rendu au bouton ; **refus** quand l'ordre a été modifié en base entre la proposition et l'application (« Le backlog a changé entre-temps. Relance la proposition. », rien d'écrit, proposition effacée) ; aucun débordement ni cible sous 44 px.
+- Non vérifié dans le navigateur : thème clair ; plus de 60 stories ; story omise par l'IA ; story placée dans un sprint ou terminée pendant la proposition (couvert par la comparaison du backlog, vérifiée par la lecture du code).
+- Reste : relecture indépendante.
