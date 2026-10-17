@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-15-2026 11:30
+last_updated: 10-17-2026 14:22
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -39,7 +39,7 @@ development_status:
   1-1-voir-logmerry-en-ligne: done
   1-2-me-connecter-et-me-déconnecter: done
   1-3-voir-mon-cockpit-vide-dans-la-barre-latérale: done
-  1-4-appliquer-le-thème-logmerry: review  # thème olive remplacé par Cobalt (refonte R1)
+  1-4-appliquer-le-thème-logmerry: review
   epic-1-retrospective: optional
 
   epic-2: in-progress
@@ -53,10 +53,10 @@ development_status:
   3-1-gérer-mes-prospects-et-clients: done
   3-2-ajouter-des-contacts-et-passer-un-prospect-en-client: done
   3-3-lier-une-note-à-un-client-ou-un-prospect: done
-  3-4-créer-des-missions: review
-  3-5a-backlog-et-user-stories-d-une-mission: review  # remplace l'ancienne 3.5 « étapes » (décision d'Alex, 2026-10-16)
-  3-5b-tâches-d-une-user-story: review
-  3-5c-sprints: review
+  3-4-créer-des-missions: done
+  3-5a-backlog-et-user-stories-d-une-mission: done  # remplace l'ancienne 3.5 « étapes » (décision d'Alex, 2026-10-16)
+  3-5b-tâches-d-une-user-story: done
+  3-5c-sprints: done
   3-6-suivre-mes-devis: backlog
   3-7-rechercher-aussi-clients-et-missions: backlog
   epic-3-retrospective: optional
@@ -107,10 +107,11 @@ development_status:
   8-13-résumé-automatique-d-une-note: done
   8-14-jeu-de-test-du-rag-et-score: done
   8-15-test-de-fuite-sur-l-assistant-et-l-historique: done
-  8-16-générer-un-backlog-avec-l-ia: review
-  8-17-découper-une-story-en-tâches-avec-l-ia: review
+  8-16-générer-un-backlog-avec-l-ia: done
+  8-17-découper-une-story-en-tâches-avec-l-ia: done
+  8-17b-tâches-proposées-avec-les-stories-du-backlog: backlog
   8-18-relire-et-améliorer-une-story-avec-l-ia: backlog
   8-19-composer-un-sprint-avec-l-ia: backlog
   8-20-ordonner-le-backlog-avec-l-ia: backlog
-  8-21-générer-un-prompt-depuis-une-mission: review
+  8-21-générer-un-prompt-depuis-une-mission: done
   epic-8-retrospective: optional
