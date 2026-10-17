@@ -2,7 +2,7 @@
 title: 'Story 8.19 : Composer un sprint avec l''IA'
 type: 'feature'
 created: '2026-10-17'
-status: 'draft'
+status: 'review'
 baseline_commit: 'e5f3550'
 route: 'dispatch'
 context:
@@ -67,11 +67,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Règles pures + tests (`lib/domain/sprint-composition.ts`)
-- [ ] Appel à Claude (outil `compose_sprint`) et `composeSprint` (aucune écriture)
-- [ ] `placeStoriesInSprint` (contrôles, placement en fin de sprint dans l'ordre, objectif seul)
-- [ ] Panneau : capacité, précision, liste cochable, total et verdict, objectif modifiable, annonces
-- [ ] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (sombre, téléphone), journal, relecture indépendante
+- [x] Règles pures + tests (`lib/domain/sprint-composition.ts`)
+- [x] Appel à Claude (outil `compose_sprint`) et `composeSprint` (aucune écriture)
+- [x] `placeStoriesInSprint` (contrôles, placement en fin de sprint dans l'ordre, objectif seul)
+- [x] Panneau : capacité, précision, liste cochable, total et verdict, objectif modifiable, annonces
+- [x] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (sombre, téléphone), journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given un backlog avec des points et un sprint planifié de 10 jours, when je demande une proposition avec une capacité de 13 points, then je vois des stories dans l'ordre de priorité avec une raison chacune, le total des points calculé par le code, et un objectif en une phrase ; **rien** n'est placé avant que j'accepte.
@@ -91,3 +91,12 @@ context:
 5. **Placer :** cases cochées par défaut, objectif modifiable avant de placer ; les stories vont à la **fin du sprint dans l'ordre proposé** ; seul l'objectif du sprint peut changer (ni nom, ni dates).
 6. **Garde contre un changement entre-temps :** si une story a quitté le backlog ou si le sprint est clos ou supprimé, rien n'est écrit.
 7. **Pas de vélocité, pas de migration, pas de nouvelle dépendance.** Coût : un appel par proposition (sortie au plus 1 500 jetons) ; essais réels groupe par groupe avec un modèle moins cher pour la mise au point.
+
+## Implementation Notes
+
+- Décisions validées par Alex le 17 octobre (« go »). Aucune migration, aucune dépendance. Pas de test d'isolation ajouté : le placement passe par la RLS existante des stories et le déclencheur du sprint clos.
+- Écarts au Code Map : les stories **terminées** du backlog (statut « Terminée », hors sprint) ne sont pas proposées ; `placeStoriesInSprint` lit d'abord la liste du sprint, place toutes les stories en queue (une écriture conditionnée à « hors sprint »), puis renumérote la liste dans l'ordre proposé ; l'objectif n'est écrit que si le sprint n'en a pas à l'instant de l'écriture (`.is("goal", null)`), sinon l'écran dit « objectif inchangé » ; la région vocale est montée en permanence hors du panneau et la fermeture est bloquée pendant le placement (leçons de la 8.17b et de la 8.18, appliquées dès le départ).
+- **Essais réels** (`npm run test:proposals -- 8.19`, scénarios 25 à 28) : mise au point avec Haiku (`AI_CHAT_MODEL=claude-haiku-5-5`) 4 sur 4, puis un passage final avec le modèle de production (Sonnet) **4 sur 4** : avec 13 points visés, 4 stories pour 13 points, objectif proposé, aucun identifiant inconnu en sortie brute ; backlog sans points : 4 stories ; consigne cachée dans un titre et la précision non suivie (aucun mot du piège plus fréquent en brut qu'en entrée, aucun identifiant forgé) ; 8 points déjà placés sur 13 : une story de 5 points, objectif existant ignoré par le code.
+- Vérifié dans Chrome (compte fictif, téléphone 412 px sombre, données supprimées ensuite), modèle de production : capacité de 5 points sur un backlog sans points (3 stories proposées, total « 0 point proposé = 0 sur 5 visés », objectif modifiable, focus à la capacité) ; **refus** quand une story proposée a quitté le backlog en base entre-temps (« Une story a changé de liste entre-temps. Relance la proposition. », rien d'écrit) ; nouvelle proposition, une story décochée, objectif modifié, « Placer » : seule la story cochée est placée (position 0), l'objectif devient mon texte, nom, dates, statut et points inchangés, annonce « 1 story placée dans le sprint « Sprint vide », objectif mis à jour. », focus rendu au bouton ; aucun débordement ni cible sous 44 px.
+- Non vérifié dans le navigateur : thème clair ; sprint clos entre la proposition et le placement ; placement partiel (story partie entre la lecture et l'écriture).
+- Reste : relecture indépendante.

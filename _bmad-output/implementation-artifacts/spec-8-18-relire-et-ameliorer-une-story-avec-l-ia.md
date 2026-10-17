@@ -2,7 +2,7 @@
 title: 'Story 8.18 : Relire et améliorer une story avec l''IA'
 type: 'feature'
 created: '2026-10-17'
-status: 'review'
+status: 'done'
 baseline_commit: 'e5f3550'
 route: 'dispatch'
 context:
