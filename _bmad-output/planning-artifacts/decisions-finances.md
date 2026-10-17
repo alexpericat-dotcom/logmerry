@@ -16,6 +16,10 @@ Journal de travail du contrôle de préparation du 18 octobre 2026. Chaque déci
 10. **Règle 5 du cockpit :** devis « envoyés » seulement. **Règle 6 :** moins de deux missions en cours ou devis envoyés. **Devis accepté sur un prospect :** le prospect devient client et la mission est créée automatiquement, titre « Devis du JJ/MM/AAAA — Nom du client », modifiable.
 11. **Ordre de construction :** socle de règles et profil, factures, plafonds, cotisations, échéances simples puis calendrier complet ; on coupe d'abord les catégories et la récurrence du calendrier.
 12. **Profil et assistant :** le profil peut être envoyé à l'assistant (seul utilisateur connecté), mention affichée, à revoir avant les données réelles.
+13. **Suivi ARE :** confirmé après le MVP ; le MVP ne garde que le champ « situation France Travail » du profil.
+14. **Montants :** factures et encaissements enregistrent le hors taxe et la taxe (le toutes taxes comprises s'en déduit) ; chaque règle de plafond choisit sa base.
+15. **Cockpit et sprints :** trois tâches de sprint au plus, puis une ligne « N autres tâches dans ton sprint » qui renvoie à la mission.
+16. **Architecture :** une seule table de règles versionnées, créée directement (la table `parameters` n'existe pas encore) ; une seule page « Règles ».
 
 ## Ce qui n'est plus une question maintenant
 - Un ou deux plafonds : plusieurs, selon les règles (décision 4).
@@ -24,8 +28,6 @@ Journal de travail du contrôle de préparation du 18 octobre 2026. Chaque déci
 
 ## À trancher (dans l'ordre)
 
-- Le suivi ARE (module 8) reste-t-il bien après le MVP : à confirmer explicitement.
-- Base de calcul de chaque plafond (hors taxe ou toutes taxes comprises, période, catégories) : avec la règle et sa source.
+- Période et catégories de recettes de la base de calcul de chaque plafond : avec la règle et sa source.
 - Les 6 cas de référence calculés à la main, les règles de prorata, de bascule de TVA et de fin d'ACRE avec leurs sources, et les règles d'essai « DEMO » du compte de démonstration : à écrire par l'auteur.
-- Nombre maximum de tâches de sprint affichées sur le cockpit.
-- Architecture : où vivent les règles versionnées (table `parameters` étendue ou table à part) : à trancher avec `bmad-architecture`.
+- Sources et documents France Travail pour le suivi ARE (phase suivante).
