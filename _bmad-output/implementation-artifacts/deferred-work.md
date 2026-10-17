@@ -144,3 +144,9 @@
 - Tests d'actions serveur (`closeSprint`, `place`, `moveStory`, `deleteSprint`, `renumber` avec filtre de liste) et d'isolation d'un sprint clos (à écrire avec le déclencheur).
 - `parisToday` autour du changement d'heure du 25 octobre 2026 ; sprint planifié dont la fin est passée.
 - `moveStory` et `closeSprint` : deux écritures non atomiques (procédure stockée si une panne entre les deux devient gênante).
+
+## De la relecture de la 8.17b (17 octobre)
+- Test automatique de `addStoryWithTasks` : compensation, tâches forgées, note disparue (faux client Supabase).
+- Vérifier dans le navigateur : compensation (échec d'ajout des tâches) et thème clair du panneau.
+- Mode « Modifier » d'une proposition : les tâches restent modifiables pendant l'envoi (le formulaire des stories n'expose pas son état d'envoi).
+- Garder une story et ses tâches dans une seule fonction SQL transactionnelle (aujourd'hui compensation en deux écritures).

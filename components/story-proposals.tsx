@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BRIEF_MAX, type Proposal } from "@/lib/domain/story-proposals";
+import { TASK_TITLE_MAX } from "@/lib/domain/tasks";
 import { storySentence } from "@/lib/domain/user-stories";
 import { formatDate } from "@/lib/format";
 
@@ -22,8 +23,33 @@ type Item = Proposal & { key: number };
 type TaskRow = { id: number; text: string };
 
 /** Les tâches proposées avec une story : chacune se modifie ou se retire avant de garder (l'ajout d'une tâche à la main se fait ensuite, dans la story). */
-function TaskEditor({ storyTitle, tasks, onChange }: { storyTitle: string; tasks: TaskRow[]; onChange: (next: TaskRow[]) => void }) {
+function TaskEditor({
+  idPrefix,
+  storyTitle,
+  tasks,
+  disabled,
+  onChange,
+  onRemoved,
+}: {
+  idPrefix: string;
+  storyTitle: string;
+  tasks: TaskRow[];
+  /** Un « Garder » est en vol : les tâches ne bougent plus (la liste envoyée est celle du clic). */
+  disabled: boolean;
+  onChange: (next: TaskRow[]) => void;
+  onRemoved: () => void;
+}) {
   if (tasks.length === 0) return null;
+  // Retirer une tâche emporte le bouton qui avait le focus : il va à la tâche voisine, ou à la carte s'il n'en reste aucune.
+  const remove = (index: number) => {
+    const next = tasks.filter((_, i) => i !== index);
+    onChange(next);
+    onRemoved();
+    requestAnimationFrame(() => {
+      const target = next[index] ?? next[index - 1];
+      document.getElementById(target ? `${idPrefix}-task-${target.id}` : `${idPrefix}-card`)?.focus();
+    });
+  };
   return (
     <div className="flex flex-col gap-1">
       <p className="text-sm font-semibold">{tasks.length > 1 ? `${tasks.length} tâches proposées` : "1 tâche proposée"}</p>
@@ -31,12 +57,14 @@ function TaskEditor({ storyTitle, tasks, onChange }: { storyTitle: string; tasks
         {tasks.map((t, i) => (
           <li key={t.id} className="flex items-center gap-2">
             <Input
+              id={`${idPrefix}-task-${t.id}`}
               aria-label={`Tâche ${i + 1} de la proposition ${storyTitle}`}
               value={t.text}
-              maxLength={400}
+              disabled={disabled}
+              maxLength={TASK_TITLE_MAX}
               onChange={(e) => onChange(tasks.map((x) => (x.id === t.id ? { ...x, text: e.target.value } : x)))}
             />
-            <Button type="button" variant="ghost" size="icon" aria-label={`Retirer la tâche ${i + 1} de la proposition ${storyTitle}`} onClick={() => onChange(tasks.filter((x) => x.id !== t.id))}>
+            <Button type="button" variant="ghost" size="icon" disabled={disabled} aria-label={`Retirer la tâche ${i + 1} de la proposition ${storyTitle}`} onClick={() => remove(i)}>
               <X size={16} aria-hidden="true" />
             </Button>
           </li>
@@ -47,13 +75,23 @@ function TaskEditor({ storyTitle, tasks, onChange }: { storyTitle: string; tasks
 }
 
 /** Une proposition gardée telle quelle avec ses tâches : même ajout qu'à la main (mêmes règles, dernière place du backlog), tout ou rien ; la proposition disparaît quand c'est enregistré. */
-function KeepButton({ missionId, proposal, tasks, onKept }: { missionId: string; proposal: Proposal; tasks: string[]; onKept: () => void }) {
-  // Les erreurs de champ (titre trop long…) sont dites avec le message : « Modifier » permet de les corriger.
+function KeepButton({ missionId, proposal, tasks, onBusy, onKept }: { missionId: string; proposal: Proposal; tasks: string[]; onBusy: (busy: boolean) => void; onKept: (notice?: string) => void }) {
+  // Les erreurs de champ (titre trop long…) sont dites avec le message : « Modifier » permet de les corriger. Le message s'efface dès qu'une tâche change.
+  const stamp = tasks.join("\u0000");
+  const [errorFor, setErrorFor] = useState<string | null>(null);
   const [state, action, pending] = useActionState<StoryFormState, FormData>(async (prev, formData) => {
+    setErrorFor(stamp);
     const result = await addStoryWithTasks(missionId, tasks, prev, formData);
-    if (result.ok) onKept();
+    if (result.ok) onKept(result.notice);
     return result;
   }, {});
+  // `pending` est immédiat ; un changement d'état fait dans l'action n'apparaît qu'à sa fin. Le nettoyage rend aussi l'état quand la carte disparaît pendant l'envoi.
+  useEffect(() => {
+    if (!pending) return;
+    onBusy(true);
+    return () => onBusy(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seul `pending` déclenche ; onBusy change d'identité à chaque rendu
+  }, [pending]);
   return (
     <form action={action} className="contents">
       <input type="hidden" name="title" value={proposal.title} />
@@ -67,7 +105,7 @@ function KeepButton({ missionId, proposal, tasks, onKept }: { missionId: string;
         {pending ? "Ajout…" : "Garder"}
         <span className="sr-only"> la proposition {proposal.title}</span>
       </Button>
-      {(state.message || state.errors) && (
+      {errorFor === stamp && (state.message || state.errors) && (
         <p role="alert" className="basis-full text-sm text-destructive">
           {state.message ?? `${Object.values(state.errors ?? {})[0]} Utilise « Modifier » pour corriger.`}
         </p>
@@ -76,21 +114,43 @@ function KeepButton({ missionId, proposal, tasks, onKept }: { missionId: string;
   );
 }
 
-function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: string; item: Item; noteTitle: string | null; onDone: (kind: "kept" | "rejected", taskCount: number) => void }) {
+function ProposalCard({
+  missionId,
+  item,
+  noteTitle,
+  onDone,
+  onBusy,
+  onNotice,
+}: {
+  missionId: string;
+  item: Item;
+  noteTitle: string | null;
+  onDone: (kind: "kept" | "rejected", taskCount: number, notice?: string) => void;
+  /** Un « Garder » est en vol (la carte, et la génération, ne doivent plus bouger). */
+  onBusy: (busy: boolean) => void;
+  onNotice: (message: string) => void;
+}) {
   const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const idPrefix = `proposal-${item.key}`;
+  const busyNow = (b: boolean) => {
+    setBusy(b);
+    onBusy(b);
+  };
   const [rows, setRows] = useState<TaskRow[]>(() => item.tasks.map((text, id) => ({ id, text })));
   const tasks = rows.map((r) => r.text);
   const close = useCallback(() => setEditing(false), []);
   if (editing) {
     return (
-      <li>
+      <li id={`${idPrefix}-card`} tabIndex={-1} className="flex flex-col gap-3 outline-none">
+        <TaskEditor idPrefix={idPrefix} storyTitle={item.title} tasks={rows} disabled={busy} onChange={setRows} onRemoved={() => onNotice("Tâche retirée.")} />
         <StoryForm
-          idPrefix={`proposal-${item.key}`}
+          idPrefix={idPrefix}
           action={async (prev, formData) => {
             // La note d'origine suit la proposition modifiée.
             formData.set("source_note_id", item.source_note_id ?? "");
             const result = await addStoryWithTasks(missionId, tasks, prev, formData);
-            if (result.ok) onDone("kept", tasks.length);
+            if (result.ok) onDone("kept", tasks.length, result.notice);
             return result;
           }}
           initial={{
@@ -105,12 +165,11 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
           onDone={close}
           onCancel={close}
         />
-        <TaskEditor storyTitle={item.title} tasks={rows} onChange={setRows} />
       </li>
     );
   }
   return (
-    <li className="flex flex-col gap-2 rounded-md border bg-card p-3">
+    <li id={`${idPrefix}-card`} tabIndex={-1} className="flex flex-col gap-2 rounded-md border bg-card p-3 outline-none">
       <p className="break-words font-semibold">{storySentence(item)}</p>
       {item.acceptance_criteria && <p className="whitespace-pre-line break-words text-sm text-muted-foreground">{item.acceptance_criteria}</p>}
       <p className="flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
@@ -124,15 +183,15 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
           </span>
         )}
       </p>
-      <TaskEditor storyTitle={item.title} tasks={rows} onChange={setRows} />
+      <TaskEditor idPrefix={idPrefix} storyTitle={item.title} tasks={rows} disabled={busy} onChange={setRows} onRemoved={() => onNotice("Tâche retirée.")} />
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
-        <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={() => onDone("rejected", 0)}>
+        <Button type="button" variant="outline" size="sm" className="text-destructive" disabled={busy} onClick={() => onDone("rejected", 0)}>
           Rejeter<span className="sr-only"> la proposition {item.title}</span>
         </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
+        <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setEditing(true)}>
           Modifier<span className="sr-only"> la proposition {item.title}</span>
         </Button>
-        <KeepButton missionId={missionId} proposal={item} tasks={tasks} onKept={() => onDone("kept", tasks.length)} />
+        <KeepButton missionId={missionId} proposal={item} tasks={tasks} onBusy={busyNow} onKept={(notice) => onDone("kept", tasks.length, notice)} />
       </div>
     </li>
   );
@@ -148,6 +207,8 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<Item[]>([]);
   const [withTasks, setWithTasks] = useState(true);
+  // Nombre de « Garder » en vol : relancer une génération viderait les cartes pendant qu'une story s'enregistre.
+  const [keeping, setKeeping] = useState(0);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -176,14 +237,16 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
     wasOpen.current = open;
   }, [open]);
   // Une proposition gardée ou rejetée emporte le bouton qui avait le focus : il va au titre du panneau, et l'issue est annoncée.
-  const done = useCallback((key: number, kind: "kept" | "rejected", taskCount: number) => {
+  const done = useCallback((key: number, kind: "kept" | "rejected", taskCount: number, notice?: string) => {
     setItems((all) => all.filter((i) => i.key !== key));
-    setAnnounce(kind === "kept" ? (taskCount > 0 ? `Proposition ajoutée au backlog avec ${taskCount} tâche${taskCount > 1 ? "s" : ""}.` : "Proposition ajoutée au backlog.") : "Proposition rejetée.");
+    setAnnounce(
+      notice ?? (kind === "kept" ? (taskCount > 0 ? `Proposition ajoutée au backlog avec ${taskCount} tâche${taskCount > 1 ? "s" : ""}.` : "Proposition ajoutée au backlog.") : "Proposition rejetée."),
+    );
     heading.current?.focus();
   }, []);
 
   const generate = () => {
-    if (pending) return;
+    if (pending || keeping > 0) return;
     setError("");
     setInfo("");
     setItems([]);
@@ -285,7 +348,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
       </label>
       <p className="text-xs text-muted-foreground">Ton brief et les notes cochées sont envoyés à Anthropic pour générer les propositions. N&apos;y mets pas de données réelles de clients. Rien n&apos;est enregistré tant que tu ne gardes pas une proposition.</p>
       <div className="flex items-center gap-3">
-        <Button type="button" onClick={generate} disabled={pending}>
+        <Button type="button" onClick={generate} disabled={pending || keeping > 0}>
           {pending ? "L'IA réfléchit…" : items.length ? "Proposer à nouveau" : "Proposer des user stories"}
         </Button>
         <button type="button" onClick={closePanel} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
@@ -313,7 +376,9 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
               missionId={missionId}
               item={item}
               noteTitle={item.source_note_id ? (noteTitles.get(item.source_note_id) ?? null) : null}
-              onDone={(kind, count) => done(item.key, kind, count)}
+              onDone={(kind, count, notice) => done(item.key, kind, count, notice)}
+              onBusy={(b) => setKeeping((n) => Math.max(0, n + (b ? 1 : -1)))}
+              onNotice={setAnnounce}
             />
           ))}
         </ol>

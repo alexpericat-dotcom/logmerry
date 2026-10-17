@@ -105,14 +105,15 @@ const text = (v: unknown) => (typeof v === "string" ? v : "");
  * ni ponctuation finale), nombre de 10 ou plus (ou décimal) absent des sources, tâche au-delà de la sixième. Un élément peut être un texte ou un objet `{ title }`.
  */
 export function verifyStoryTasks(raw: unknown, texts: string[]): { tasks: string[]; dropped: number } {
-  const list = Array.isArray(raw) ? raw : [];
+  // On filtre d'abord, puis on garde les 6 premières valides : des tâches invalides en tête ne doivent pas coûter des tâches utilisables. Au plus 30 examinées.
+  const list = Array.isArray(raw) ? raw.slice(0, 30) : [];
   const seen = new Set<string>();
   const tasks: string[] = [];
-  let dropped = Math.max(0, list.length - PROPOSAL_TASKS_MAX);
-  for (const item of list.slice(0, PROPOSAL_TASKS_MAX)) {
+  let dropped = Array.isArray(raw) ? Math.max(0, raw.length - 30) : 0;
+  for (const item of list) {
     const checked = validateTaskTitle(typeof item === "string" ? item : (item as { title?: unknown } | null)?.title);
     const key = checked.ok ? titleKey(checked.value) : "";
-    if (!checked.ok || !key || seen.has(key) || inventedNumbers(checked.value, texts).length) {
+    if (!checked.ok || !key || seen.has(key) || inventedNumbers(checked.value, texts).length || tasks.length >= PROPOSAL_TASKS_MAX) {
       dropped++;
       continue;
     }
@@ -159,7 +160,9 @@ export function verifyProposals(raw: unknown[], sources: { texts: string[]; sent
     taken.add(key);
     const note = text(o.note).trim().toLowerCase();
     // Tâches seulement si elles ont été demandées (case cochée) ; une story écartée plus haut emporte les siennes.
-    const t = sources.withTasks ? verifyStoryTasks(listOf(o, "tasks") ?? o.tasks, sources.texts) : { tasks: [], dropped: 0 };
+    // Un champ « tasks » présent mais inexploitable (ni liste, ni texte JSON de liste) compte pour une tâche écartée.
+    const rawTasks = listOf(o, "tasks");
+    const t = !sources.withTasks ? { tasks: [], dropped: 0 } : rawTasks ? verifyStoryTasks(rawTasks, sources.texts) : { tasks: [], dropped: o.tasks === undefined || o.tasks === null ? 0 : 1 };
     droppedTasks += t.dropped;
     proposals.push({ ...v, source_note_id: sent.has(note) ? note : null, tasks: t.tasks });
   }

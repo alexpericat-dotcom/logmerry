@@ -124,6 +124,10 @@ test("tâches d'une story (8.17b) : ordre gardé, 6 au plus, doublons, titres in
   assert.equal(many.dropped, 2);
   assert.deepEqual(verifyStoryTasks(undefined, texts), { tasks: [], dropped: 0 });
   assert.deepEqual(verifyStoryTasks("pas une liste", texts), { tasks: [], dropped: 0 });
+  // Les invalides en tête ne coûtent pas de tâches utilisables : filtrer d'abord, couper à 6 ensuite.
+  const lead = verifyStoryTasks(["", "Créer le tableau", "47 familles à relancer", "b", "c", "d", "e", "f", "g"], texts);
+  assert.deepEqual(lead.tasks, ["Créer le tableau", "b", "c", "d", "e", "f"]);
+  assert.equal(lead.dropped, 3); // vide, chiffre inventé, septième valide
 });
 
 test("propositions avec tâches : vérifiées si demandées, ignorées sinon, emportées avec une story écartée ; tâches en texte JSON acceptées", () => {
@@ -132,6 +136,11 @@ test("propositions avec tâches : vérifiées si demandées, ignorées sinon, em
   assert.deepEqual(r.proposals.map((p) => p.tasks), [["Créer la liste"], ["Une seule"]]);
   assert.equal(r.dropped, 1);
   assert.equal(r.droppedTasks, 1);
+  // Champ « tasks » inexploitable : une tâche écartée comptée ; objets {title} en texte JSON acceptés ; une story écartée ne compte pas ses tâches.
+  const odd = verifyProposals([story({ tasks: "pas du JSON" }), story({ title: "autre", tasks: JSON.stringify([{ title: "Via objet" }]) }), story({ title: "EXPORTER LA LISTE", tasks: ["Relancer 47 familles"] })], withTasks);
+  assert.deepEqual(odd.proposals.map((p) => p.tasks), [[], ["Via objet"]]);
+  assert.equal(odd.droppedTasks, 1);
+  assert.equal(odd.dropped, 1);
   const off = verifyProposals([story({ tasks: ["Créer la liste"] })], sources);
   assert.deepEqual(off.proposals[0].tasks, []);
   assert.equal(off.droppedTasks, 0);
@@ -140,4 +149,5 @@ test("propositions avec tâches : vérifiées si demandées, ignorées sinon, em
 test("consigne : les tâches ne sont demandées que si la case est cochée", () => {
   assert.ok(!proposalSystemPrompt(false).includes("« tasks »"));
   assert.ok(proposalSystemPrompt(true).includes("« tasks »") && proposalSystemPrompt(true).startsWith(proposalSystemPrompt(false)));
+  assert.ok(proposalSystemPrompt(true).includes(`de 0 à ${PROPOSAL_TASKS_MAX} tâches`) && proposalSystemPrompt(true).includes("données de test"));
 });

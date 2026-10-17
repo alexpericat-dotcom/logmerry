@@ -14,7 +14,8 @@ import { withSession } from "@/lib/supabase/with-session";
 
 export type StoryFormValues = { title: string; role: string; benefit: string; acceptance_criteria: string; points: string; status: string };
 /** `gone` : la story ou la mission n'existe plus (supprimée ailleurs) ; l'écran se recharge pour la retirer de la liste. */
-export type StoryFormState = { ok?: boolean; errors?: StoryErrors; message?: string; values?: StoryFormValues; gone?: boolean; sent?: number };
+/** `notice` : la story est bien enregistrée mais une partie n'a pas pu l'être (ses tâches) ; l'écran retire la proposition et dit le message. */
+export type StoryFormState = { ok?: boolean; errors?: StoryErrors; message?: string; values?: StoryFormValues; gone?: boolean; sent?: number; notice?: string };
 export type StoryActionState = { message?: string; gone?: boolean };
 
 const SAVE_FAILED = "Enregistrement impossible. Réessaie.";
@@ -47,7 +48,7 @@ async function refresh(supabase: SupabaseClient, missionId: string) {
 /** Session, validation, écriture d'une user story ; `write` dit si la base a enregistré ou si la mission ou la story a disparu. */
 async function save(
   values: StoryFormValues,
-  write: (supabase: SupabaseClient, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string; failMessage?: string }>,
+  write: (supabase: SupabaseClient, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string; failMessage?: string; notice?: string }>,
 ): Promise<StoryFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateStoryInput(values);
@@ -63,7 +64,7 @@ async function save(
   const { written } = result.value;
   if (written.outcome === "not-found") return { message: written.gone ?? STORY_GONE, values, gone: true };
   if (written.outcome !== "saved") return { message: written.failMessage ?? SAVE_FAILED, values };
-  return { ok: true };
+  return written.notice ? { ok: true, notice: written.notice } : { ok: true };
 }
 
 /** Insère une user story à la dernière place du backlog d'une de mes missions (la RLS refuse une mission qui n'est pas à moi) ; renvoie son identifiant. */
@@ -112,23 +113,35 @@ export async function addStoryWithTasks(missionId: string, taskTitles: string[],
   const rawSource = String(formData.get("source_note_id") ?? "");
   const source = isUuid(rawSource) ? rawSource : null;
   const values = readValues(formData);
-  // Titres contrôlés avant toute écriture, en nommant la tâche en cause.
-  const titles: string[] = [];
-  if (!Array.isArray(taskTitles) || taskTitles.length > PROPOSAL_TASKS_MAX) return { message: `Une proposition a ${PROPOSAL_TASKS_MAX} tâches au plus.`, values };
-  for (const [i, raw] of taskTitles.entries()) {
-    const checked = validateTaskTitle(raw);
-    if (!checked.ok) return { message: `Tâche ${i + 1} : ${checked.error}`, values };
-    titles.push(checked.value);
-  }
   return save(values, async (supabase, value) => {
+    // Titres contrôlés avant toute écriture (et après la session : sans connexion, c'est la redirection qui répond), en nommant la tâche en cause.
+    const titles: string[] = [];
+    if (!Array.isArray(taskTitles) || taskTitles.length > PROPOSAL_TASKS_MAX) return { outcome: "error", failMessage: `Une proposition a ${PROPOSAL_TASKS_MAX} tâches au plus.` };
+    for (const [i, raw] of taskTitles.entries()) {
+      const checked = validateTaskTitle(raw);
+      if (!checked.ok) return { outcome: "error", failMessage: `Tâche ${i + 1} : ${checked.error}` };
+      titles.push(checked.value);
+    }
     const story = await insertStory(supabase, missionId, value, source);
     if (story.outcome !== "saved" || !story.id || titles.length === 0) return story;
-    const { error } = await supabase.from("tasks").insert(titles.map((title, position) => ({ story_id: story.id, title, position })));
-    if (!error) return story;
-    const undone = await supabase.from("user_stories").delete().eq("id", story.id).select("id");
-    if (!undone.error && undone.data?.length) return { outcome: "error", failMessage: "Les tâches n'ont pas pu être ajoutées : rien n'a été ajouté. Réessaie." };
-    await refresh(supabase, missionId); // la story existe : la page doit la montrer
-    return { outcome: "error", failMessage: "La user story a été ajoutée sans ses tâches (elles n'ont pas pu l'être). Ajoute-les depuis la story." };
+    // Une exception (et non seulement une erreur renvoyée) pendant les tâches suit le même chemin : la story vient d'être créée, il faut la retirer ou le dire.
+    let tasksSaved = false;
+    try {
+      tasksSaved = !(await supabase.from("tasks").insert(titles.map((title, position) => ({ story_id: story.id, title, position })))).error;
+    } catch {
+      tasksSaved = false;
+    }
+    if (tasksSaved) return story;
+    let undone = false;
+    try {
+      const removed = await supabase.from("user_stories").delete().eq("id", story.id).select("id");
+      undone = !removed.error && !!removed.data?.length;
+    } catch {
+      undone = false;
+    }
+    if (undone) return { outcome: "error", failMessage: "Les tâches n'ont pas pu être ajoutées : rien n'a été ajouté. Réessaie." };
+    // La story existe sans ses tâches : c'est un succès partiel (la proposition est retirée de l'écran, sinon un second « Garder » ferait un doublon).
+    return { outcome: "saved", missionId: story.missionId, notice: "La user story a été ajoutée sans ses tâches (elles n'ont pas pu l'être). Ajoute-les depuis la story." };
   });
 }
 
