@@ -380,13 +380,19 @@ En tant que propriétaire, je veux enregistrer mes factures (hors taxe, taxe, da
 
 ### Story 4.3 : Enregistrer un encaissement
 
-En tant que propriétaire, je veux marquer une facture payée en saisissant l'encaissement, afin que mes calculs reposent sur de l'argent réellement reçu.
+*Modifiée le 18 octobre 2026 (hors taxe et taxe, statut de la facture calculé sur le toutes taxes comprises : PRD FR-9, architecture AD-8).*
+
+En tant que propriétaire, je veux enregistrer un encaissement sur une facture (hors taxe, taxe, date), afin que mes calculs reposent sur de l'argent réellement reçu.
 
 **Critères d'acceptation :**
 
-**Étant donné** une facture non payée, **quand** je saisis un encaissement (montant, date), **alors** la facture passe en « payée » (ou « partiellement payée ») et l'encaissement est listé.
-**Et** un encaissement sans montant ou sans date est refusé.
-**Et** le montant s'affiche en euros avec deux décimales (stocké en centimes).
+**Étant donné** la table `payments` créée par une migration (RLS, montants en centimes), **quand** je saisis un encaissement sur une facture (montant hors taxe, montant de taxe, date), **alors** il est listé sur la facture et le statut de la facture se met à jour : « payée » quand le total encaissé (hors taxe plus taxe) atteint le toutes taxes comprises de la facture, « partiellement payée » avant, « non payée » sans encaissement.
+**Et** quand la taxe de la facture est inconnue (vide), le statut se calcule sur le hors taxe et la facture affiche « taxe à confirmer » ; dès que la taxe est saisie, il se calcule sur le toutes taxes comprises.
+**Et** la taxe d'un encaissement partiel est **saisie**, jamais répartie automatiquement au prorata ; une taxe inconnue reste vide, jamais 0.
+**Et** un encaissement sans montant hors taxe ou sans date est refusé ; un encaissement qui ferait dépasser le montant de la facture est signalé par un message en ligne (non bloquant : un trop-perçu existe).
+**Et** je peux modifier ou supprimer un encaissement, et le statut de la facture suit.
+**Et** les montants s'affichent en euros avec deux décimales (stockés en centimes).
+**Et** le test d'isolation couvre `payments` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma facture).
 
 ### Story 4.4 : Voir ma position par rapport au plafond
 
