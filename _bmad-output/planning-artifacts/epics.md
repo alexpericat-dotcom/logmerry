@@ -344,16 +344,22 @@ En tant que propriétaire, je veux renseigner mon profil professionnel avec l'é
 **Et** un champ à choix n'accepte que ses valeurs prévues (listes courtes sans règle fiscale, plus « Autre » avec un champ libre) ; les objectifs financiers et les taux de réserve sont des champs libres sans calcul au MVP ; une date inexistante est refusée avec une erreur en ligne.
 **Et** le test d'isolation couvre le profil (un autre compte ne le voit ni ne le modifie).
 
-### Story 4.1 : Renseigner mes paramètres
+### Story 4.1b : Règles réglementaires versionnées
 
-En tant que propriétaire, je veux saisir mes paramètres (plafond, taux, dates) avec leur source et leur date de vérification, afin qu'aucun chiffre ne soit écrit en dur.
+*Ancienne story 4.1 « Renseigner mes paramètres », élargie le 18 octobre 2026 (PRD FR-10, architecture AD-12).*
+
+En tant que propriétaire, je veux saisir mes règles (plafonds, taux, dates d'effet) avec leur source officielle et leur date de vérification, et créer une nouvelle version quand une valeur change, afin qu'aucun chiffre réglementaire ne soit écrit en dur ni utilisé sans être vérifié.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `parameters` créée par une migration (RLS), **quand** je saisis un paramètre avec valeur, unité, source et date de vérification, **alors** il apparaît dans la page Paramètres.
-**Et** un paramètre sans source ou sans date est refusé.
-**Et** un paramètre dont la date de revérification est dépassée est signalé (icône + texte).
-**Et** aucune valeur fiscale n'est préremplie.
+**Étant donné** la table `regulatory_rules` créée par une migration (RLS), **quand** je saisis une règle (clé de règle parmi une liste fermée, valeur et unité, catégorie d'activité, date d'effet, source officielle avec lien, date de vérification, date de revérification), **alors** elle apparaît dans la page Règles avec son statut de validation (« À vérifier », « Vérifiée », « Essai »).
+**Et** une règle sans source, sans date de vérification ou sans date d'effet est refusée ; aucune valeur réglementaire n'est préremplie.
+**Et** une règle ne passe en « Vérifiée » qu'avec un vrai lien officiel et sa date de vérification ; une règle « Essai » accepte une source « DEMO » sans lien officiel (seule exception, réservée au compte de démonstration).
+**Et** un changement de valeur est une **nouvelle version** avec sa date d'effet : l'ancienne version reçoit sa date de fin ; deux versions d'une même règle ne se chevauchent jamais (la base le refuse).
+**Et** une règle en vigueur dont la date de revérification est dépassée est signalée « périmée » (icône + texte) ; une version close n'est jamais signalée périmée.
+**Et** la saisie vérifie le format des paramètres de chaque règle (par exemple la durée de l'ACRE, la base de calcul d'un plafond : période, catégorie de recettes, hors taxe ou taxe) : ce sont des champs de la règle, jamais des constantes du code.
+**Et** le compte de démonstration reçoit des règles d'essai fictives (statut « Essai »), étiquetées « DEMO, non officielle » partout où elles s'affichent, par un script de démonstration (`npm run seed:demo`) ; un autre compte n'en voit jamais.
+**Et** le test d'isolation couvre `regulatory_rules` (lecture, écriture, chevauchement de versions, règle d'un autre compte).
 
 ### Story 4.2 : Enregistrer mes factures
 
