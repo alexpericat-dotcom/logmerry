@@ -1,12 +1,14 @@
 "use client";
 
+import { useDndContext, useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useCallback, useEffect, useId, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
 
-import { deleteStory, reorderStories, setStoryStatus, setStorySprint, updateStory, type StoryActionState } from "@/app/(app)/missions/story-actions";
-import { SortableList } from "@/components/sortable-list";
+import { deleteStory, setStoryStatus, setStorySprint, updateStory, type StoryActionState } from "@/app/(app)/missions/story-actions";
+import { Row } from "@/components/sortable-list";
 import { StoryForm, selectClass } from "@/components/story-form";
 import { Badge } from "@/components/ui/badge";
 import { Tasks } from "@/components/tasks";
@@ -264,30 +266,35 @@ export function StoryItem({
 
 
 /**
- * Une liste de stories : celles d'un sprint ou le backlog hors sprint. Réordonnable par glisser-déposer à l'intérieur de la liste (`sprintId` nul = backlog) ;
- * figée (sans poignée) pour un sprint clos. Changer une story de liste passe par le menu « Sprint » de la story.
+ * Une liste de stories : celles d'un sprint ou le backlog hors sprint. Triable et zone de dépôt du contexte de glisser-déposer de la page (voir `Backlog`) :
+ * les stories se réordonnent ici et passent d'une liste à l'autre ; figée (sans poignée ni zone de dépôt) pour un sprint clos.
+ * Le menu « Sprint » de la story reste l'équivalent clavier et lecteur d'écran.
  */
 export function StoryList({
-  missionId,
-  sprintId,
+  listId,
   stories,
   tasksByStory,
   sprints,
   frozen = false,
+  emptyHint = false,
   onDeleted,
   onMoved,
 }: {
-  missionId: string;
-  sprintId: string | null;
+  /** Identifiant de la liste dans le contexte de glisser-déposer : `BACKLOG` ou l'identifiant du sprint. */
+  listId: string;
   stories: StoryRecord[];
   tasksByStory: Map<string, TaskRecord[]>;
   sprints: SprintRecord[];
   frozen?: boolean;
+  /** Liste vide : montrer une zone où déposer une story. */
+  emptyHint?: boolean;
   onDeleted: () => void;
   onMoved: (message: string) => void;
 }) {
-  if (stories.length === 0) return null;
+  const { setNodeRef, isOver } = useDroppable({ id: listId, disabled: frozen });
+  const { active } = useDndContext();
   if (frozen) {
+    if (stories.length === 0) return null;
     return (
       <ol className="flex flex-col gap-2">
         {stories.map((story) => (
@@ -298,9 +305,24 @@ export function StoryList({
       </ol>
     );
   }
+  if (stories.length === 0 && !emptyHint) return null;
   return (
-    <SortableList items={stories} noun="la user story" name={(story) => story.title} onReorder={(ids) => reorderStories(missionId, ids, sprintId)} className="flex flex-col gap-2">
-      {(story, handle) => <StoryItem story={story} tasks={tasksByStory.get(story.id) ?? []} handle={handle} sprints={sprints} onDeleted={onDeleted} onMoved={onMoved} />}
-    </SortableList>
+    <SortableContext id={listId} items={stories.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+      <div ref={setNodeRef} className="flex flex-col gap-2">
+        {stories.length === 0 ? (
+          <p className={`rounded-md border border-dashed p-3 text-center text-sm text-muted-foreground ${active && isOver ? "border-primary bg-primary/10 text-foreground" : ""}`}>
+            Glisse une story ici.
+          </p>
+        ) : (
+          <ol className="flex flex-col gap-2">
+            {stories.map((story) => (
+              <Row key={story.id} item={story} itemName={story.title} noun="la user story" ghost>
+                {(item, handle) => <StoryItem story={item} tasks={tasksByStory.get(item.id) ?? []} handle={handle} sprints={sprints} onDeleted={onDeleted} onMoved={onMoved} />}
+              </Row>
+            ))}
+          </ol>
+        )}
+      </div>
+    </SortableContext>
   );
 }

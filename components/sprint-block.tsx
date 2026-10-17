@@ -22,7 +22,6 @@ import { formatDate } from "@/lib/format";
  * À la clôture, les stories non terminées retournent au backlog ou passent à un sprint planifié (au choix) ; les terminées restent dans le sprint clos.
  */
 export function SprintBlock({
-  missionId,
   sprint,
   stories,
   tasksByStory,
@@ -32,7 +31,6 @@ export function SprintBlock({
   onDeleted,
   onMoved,
 }: {
-  missionId: string;
   sprint: SprintRecord;
   stories: StoryRecord[];
   tasksByStory: Map<string, TaskRecord[]>;
@@ -214,12 +212,12 @@ export function SprintBlock({
         </form>
       )}
       <StoryList
-        missionId={missionId}
-        sprintId={sprint.id}
+        listId={sprint.id}
         stories={stories}
         tasksByStory={tasksByStory}
         sprints={sprints}
         frozen={sprint.status === "closed"}
+        emptyHint
         onDeleted={onMoved.bind(null, "User story supprimée.")}
         onMoved={onMoved}
       />

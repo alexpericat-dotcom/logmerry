@@ -21,16 +21,18 @@ import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
 export type ReorderResult = { message?: string; gone?: boolean };
 
 
-function Row<T extends { id: string }>({ item, itemName, noun, children }: { item: T; itemName: string; noun: string; children: (item: T, handle: ReactNode) => ReactNode }) {
+/** Une ligne triable avec sa poignée. `ghost` : l'élément saisi reste en place, estompé, pendant qu'un aperçu (`DragOverlay`) suit le pointeur. */
+export function Row<T extends { id: string }>({ item, itemName, noun, ghost = false, children }: { item: T; itemName: string; noun: string; ghost?: boolean; children: (item: T, handle: ReactNode) => ReactNode }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const handle = (
     <button
       type="button"
       ref={setActivatorNodeRef}
+      id={`drag-${item.id}`}
       {...attributes}
       {...listeners}
       aria-label={`Déplacer ${noun} ${itemName}`}
-      title="Glisser pour réordonner (ou Espace puis flèches au clavier)"
+      title="Glisser pour déplacer (ou Espace puis flèches au clavier)"
       className="inline-flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:cursor-grabbing max-md:size-11"
     >
       <GripVertical size={16} aria-hidden="true" />
@@ -41,7 +43,7 @@ function Row<T extends { id: string }>({ item, itemName, noun, children }: { ite
       ref={setNodeRef}
       // Déplacement vertical seulement : le glisser ne suit pas la souris en largeur.
       style={{ transform: CSS.Transform.toString(transform && { ...transform, x: 0, scaleX: 1, scaleY: 1 }), transition }}
-      className={isDragging ? "relative z-10 opacity-90 shadow-lg" : undefined}
+      className={isDragging ? (ghost ? "opacity-40" : "relative z-10 opacity-90 shadow-lg") : undefined}
     >
       {children(item, handle)}
     </li>

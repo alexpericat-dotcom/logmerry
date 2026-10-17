@@ -25,7 +25,8 @@ context:
 - SQL montré puis approuvé avant application ; fichier nommé avec la version enregistrée.
 - Table `sprints` : `owner_id uuid not null default auth.uid()` + RLS ; `mission_id uuid not null references missions on delete cascade` ; nom obligatoire (1 à 120 caractères) ; objectif facultatif (300 au plus) ; `start_date` et `end_date` obligatoires, **fin ≥ début** (contrainte de base) ; `status` enum `planned` (par défaut), `active`, `closed`. **Un seul sprint `active` par mission**, garanti par un index unique partiel (`where status = 'active'`).
 - `user_stories.sprint_id uuid null references sprints on delete set null` : supprimer un sprint renvoie ses stories au backlog. **Les policies d'insertion et de mise à jour de `user_stories` vérifient** (les clés étrangères contournent la RLS) que le sprint est à moi **et de la même mission** que la story.
-- Ordre : la colonne `position` ordonne les stories **à l'intérieur de leur liste** (backlog hors sprint, ou un sprint donné) ; une story qui change de liste prend la dernière place de la liste d'arrivée. Le glisser-déposer de la 3.5b s'applique dans chaque liste (`renumber` prend un filtre de liste en plus de la mission).
+- Ordre : la colonne `position` ordonne les stories **à l'intérieur de leur liste** (backlog hors sprint, ou un sprint donné) ; une story qui change de liste prend la dernière place de la liste d'arrivée (menu « Sprint ») ou la place visée (glisser-déposer). Le glisser-déposer de la 3.5b s'applique dans chaque liste (`renumber` prend un filtre de liste en plus de la mission).
+- **Glisser-déposer entre listes (ajout du 17 octobre, demande d'Alex) :** une story se glisse du backlog vers un sprint planifié ou en cours, d'un sprint vers le backlog ou vers un autre sprint non clos. Un seul `DndContext` couvre la page de la mission, une liste triable par sprint non clos et une pour le backlog. Les sprints **clos** ne sont ni source ni cible (liste figée, sans zone de dépôt) ; le serveur refuse aussi un dépôt dans un sprint clos (« Ce sprint est clos »). Une liste vide reste une cible de dépôt visible. **Le menu « Sprint » reste** : c'est l'équivalent clavier et lecteur d'écran, et il ne change pas. Le dépôt envoie une seule action (`moveStory` : story, sprint d'arrivée, ordre complet de la liste d'arrivée) ; l'écran montre l'issue tout de suite et revient à l'état d'origine avec un message si l'enregistrement échoue. Annonces en français nommant la liste (« déposé dans le sprint « X », position 2 sur 3 »).
 - **Démarrer** un sprint : seulement s'il est planifié et qu'aucun autre n'est en cours (sinon « Un sprint est déjà en cours. Clos-le d'abord. »). **Clore** : le sprint passe à « clos » ; les stories **non terminées** reviennent au backlog (par défaut) ou passent à un sprint **planifié** que je choisis ; les stories terminées restent dans le sprint clos (historique). Les stories sont déplacées en **une seule écriture** avant le changement d'état, de sorte qu'un échec laisse le sprint « en cours » et rejouable.
 - Avancement d'un sprint : « N sur M stories terminées » et « X sur Y points » (les stories sans points comptent 0) ; jamais « 0 sur 0 » (sprint vide : « Aucune story dans ce sprint »). Terminer toutes les stories ne clôt pas le sprint toute seule.
 - Un sprint clos ne se démarre plus ; son nom et son objectif restent modifiables, pas ses dates ni son contenu. Les sprints se suppriment avec confirmation (« N stories retourneront au backlog »).
@@ -33,7 +34,7 @@ context:
 - Jours restants d'un sprint en cours : calculés à la date du jour de Paris dans `lib/domain/` (« se termine dans 3 jours », « se termine aujourd'hui », « terminé depuis 2 jours »), sans heure.
 - Test d'isolation étendu à `sprints` et à `user_stories.sprint_id` ; thèmes clair et sombre ; 44 px sur téléphone ; tutoiement ; erreurs en ligne ; clavier et annonces pour les changements de liste.
 
-**Never:** modification du cockpit (stories 5.x : il lira ces données plus tard) ; glisser-déposer **entre** listes (le changement de liste passe par un menu dans la story) ; sprint sans mission ; vélocité ou graphique d'avancement ; estimation en heures ; aide de l'IA (8.19) ; nouvelle dépendance.
+**Never:** modification du cockpit (stories 5.x : il lira ces données plus tard) ; retirer le menu « Sprint » (alternative clavier et lecteurs d'écran du glisser-déposer entre listes) ; sprint sans mission ; vélocité ou graphique d'avancement ; estimation en heures ; aide de l'IA (8.19) ; nouvelle dépendance.
 
 ## I/O & Edge-Case Matrix
 
@@ -52,6 +53,10 @@ context:
 | Mission supprimée | suppression confirmée | ses sprints disparaissent ; les stories aussi (déjà le cas) | N/A |
 | Sprint d'une autre mission | `sprint_id` forgé dans une story | refusé (policy) | 42501 |
 | Réordonner dans une liste | glisser-déposer dans le sprint ou le backlog | ordre enregistré dans cette liste seulement | liste changée entre-temps : « a changé entre-temps », rechargement |
+| Glisser une story dans une autre liste | dépôt sur une story ou sur la liste (même vide) d'un sprint planifié, en cours, ou du backlog | story dans la liste d'arrivée à la place visée (dernière si le dépôt vise la liste) ; avancements et annonce mis à jour | échec : ordre d'origine rétabli, message en ligne ; liste d'arrivée changée entre-temps : « a changé entre-temps », rechargement |
+| Glisser vers un sprint clos | dépôt au-dessus d'un sprint clos | impossible : pas de zone de dépôt, la story reste où elle était | action forgée : « Ce sprint est clos. » |
+| Glisser une story d'un sprint clos | tentative de saisie | impossible : pas de poignée | N/A |
+| Glisser avec le clavier | Espace sur la poignée, flèches haut et bas (de liste en liste), Espace, Échap annule | mêmes effets que la souris, annonces nommant la liste, focus rendu à la poignée de la story déposée | N/A |
 | Sans session | action appelée sans connexion | redirection vers `/auth/login` | N/A |
 
 ## Code Map
@@ -70,6 +75,7 @@ context:
 - [x] Accès aux données et Server Actions (sprints, `setStorySprint`, réordonnancement par liste)
 - [x] Page de la mission : trois blocs, menu « Sprint », création, démarrage, clôture, suppression
 - [x] Tests d'isolation, journal, relecture indépendante
+- [x] Glisser-déposer entre listes : règles pures + test (`lib/domain/story-board.ts`), action `moveStory`, un seul contexte de glisser-déposer dans `components/backlog.tsx`, zones de dépôt, aperçu, annonces ; vérifié dans Chrome (souris, clavier, téléphone)
 
 **Acceptance Criteria:**
 - Given une mission, when je crée un sprint (nom, objectif, début, fin), then il apparaît « planifié » ; si la fin précède le début, then une erreur en ligne nomme le champ.
@@ -77,6 +83,9 @@ context:
 - Given un sprint planifié et aucun en cours, when je le démarre, then il devient « en cours » et apparaît en tête de page ; s'il y en a déjà un, then c'est refusé.
 - Given un sprint en cours avec des stories non terminées, when je le clos, then les non terminées reviennent au backlog (ou passent au sprint planifié choisi), les terminées restent dans le sprint clos.
 - Given un sprint supprimé, then ses stories retournent au backlog.
+- Given une story du backlog, when je la glisse sur un sprint planifié ou en cours (sur une story ou sur la liste vide), then elle y entre à la place visée et les avancements se mettent à jour ; when je la glisse hors d'un sprint vers le backlog ou un autre sprint non clos, then elle change de liste de la même façon.
+- Given un sprint clos, then aucune story n'en sort ni n'y entre par glisser-déposer, et `moveStory` forgé vers ce sprint est refusé.
+- Given le clavier seul, when je saisis une story avec Espace et la déplace avec les flèches, then elle change de liste avec une annonce nommant la liste ; le menu « Sprint » fait toujours la même chose.
 - Given une story d'une autre mission ou d'un autre compte, when je forge un `sprint_id`, then c'est refusé (`npm run test:isolation`).
 - Given la migration appliquée, then `get_advisors` (sécurité) ne signale rien de nouveau.
 
@@ -154,7 +163,7 @@ Les policies d'insertion et de mise à jour de `user_stories` sont remplacées (
 ## Décisions à valider
 
 1. **Trois états** pour un sprint : planifié, en cours, clos ; **un seul en cours** par mission ; les sprints peuvent se chevaucher en dates.
-2. **Placer une story par un menu** « Sprint » dans la story dépliée (pas de glisser-déposer entre listes) ; le glisser-déposer reste dans chaque liste.
+2. **Placer une story** par le glisser-déposer entre listes (backlog, sprint planifié, sprint en cours ; jamais un sprint clos) **et** par le menu « Sprint » de la story dépliée, qui reste pour le clavier et les lecteurs d'écran. *(Décision initiale : menu seul. Changée le 17 octobre à la demande d'Alex.)*
 3. **À la clôture :** les stories non terminées reviennent au backlog par défaut, ou passent à un sprint planifié de ton choix ; les terminées restent dans le sprint clos.
 4. **Avancement d'un sprint** en stories et en points ; terminer toutes les stories ne clôt pas le sprint toute seule.
 5. **Lien avec le cockpit (à décider maintenant, à construire dans les stories 5.x) :** (a) le cockpit affichera les tâches non faites des stories « en cours » du sprint en cours, avec le motif « dans ton sprint, qui se termine dans N jours » ; (b) une **septième règle** prévient quand un sprint se termine à J-2 avec des stories non terminées ; (c) ces tâches passent **après** les six règles existantes (échéances, factures, plafond…) ; (d) le cockpit lit les données, l'IA ne décide rien. Si tu valides, je corrigerai le PRD (FR-14 passe à sept règles) et les stories 5.x au moment de les spécifier.
