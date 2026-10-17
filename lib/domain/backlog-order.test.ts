@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REASON_MAX, applyOrderToSlots, buildOrderMessage, moves, orderSources, parseOrderCall, sameOrder, verifyOrder } from "./backlog-order.ts";
+import { REASON_MAX, applyOrderToSlots, backlogUnchanged, buildOrderMessage, moves, orderSources, parseOrderCall, pickOrderable, sameOrder, verifyOrder } from "./backlog-order.ts";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -66,4 +66,47 @@ test("places avant et après, comparaison à l'ordre actuel", () => {
   assert.equal(sameOrder([A, B], [A, B]), true);
   assert.equal(sameOrder([A, B], [B, A]), false);
   assert.equal(sameOrder([A], [A, B]), false);
+});
+
+test("rangs : une raison qui parle de la place 11 ou 12 n'est pas un nombre inventé", () => {
+  const ids = Array.from({ length: 12 }, (_, i) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`);
+  const st = ids.map((id, i) => ({ id, title: `Story ${String.fromCharCode(65 + i)}`, role: null, benefit: null, acceptance_criteria: null, points: null }));
+  const sources = orderSources({ missionTitle: "M", clientName: "C", stories: st, sprintTitles: [], hint: "" });
+  const r = verifyOrder({ order: [{ id: ids[1], reason: "Passe de la place 12 à la place 11" }, { id: ids[0], reason: "Descend" }, ...ids.slice(2).map((id) => ({ id }))] }, { ids, sources });
+  assert.equal(r.reasons[ids[1]], "Passe de la place 12 à la place 11");
+  assert.equal(r.droppedTexts, 0);
+});
+
+test("raison retirée : comptée seulement pour une story dont la place change", () => {
+  const moved = verifyOrder({ order: [{ id: B, reason: "Pour 50 inscrits" }, { id: A }, { id: C }] }, ctx);
+  assert.equal(moved.droppedTexts, 1); // B change de place
+  const still = verifyOrder({ order: [{ id: A, reason: "Pour 50 inscrits" }, { id: B }, { id: C }] }, ctx);
+  assert.equal(still.droppedTexts, 0); // A ne bouge pas : sa raison n'aurait pas été affichée
+});
+
+test("stories à envoyer : les 60 premières non terminées, les suivantes et les terminées gardent leur place", () => {
+  const ids = Array.from({ length: 70 }, (_, i) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`);
+  const backlog = ids.map((id, i) => ({ id, status: i === 3 || i === 65 ? "done" : "todo" }));
+  const { sent, cut } = pickOrderable(backlog);
+  assert.equal(sent.length, 60);
+  assert.equal(cut, true);
+  assert.ok(!sent.includes(ids[3]) && sent[3] === ids[4]); // la terminée n'est pas envoyée
+  const reversed = [...sent].reverse();
+  const full = applyOrderToSlots(ids, sent, reversed)!;
+  assert.equal(full[3], ids[3]); // la terminée garde sa place
+  assert.deepEqual(full.slice(62), ids.slice(62)); // les stories au-delà des 60 premières ouvertes (la 60ᵉ est à la place 61) gardent leur place, la terminée de la place 65 aussi
+  assert.equal(pickOrderable(backlog.slice(0, 5)).cut, false);
+});
+
+test("péremption : story ajoutée, retirée, permutée ou ordonnée devenue terminée → changé ; une terminée hors envoi ne change rien", () => {
+  const backlog = [{ id: A, status: "todo" }, { id: B, status: "done" }, { id: C, status: "todo" }];
+  const base = [A, B, C];
+  const sent = [A, C];
+  assert.equal(backlogUnchanged(backlog, base, sent), true);
+  assert.equal(backlogUnchanged([...backlog, { id: D, status: "todo" }], base, sent), false); // ajoutée
+  assert.equal(backlogUnchanged(backlog.slice(0, 2), base, sent), false); // retirée
+  assert.equal(backlogUnchanged([backlog[2], backlog[1], backlog[0]], base, sent), false); // ordre changé ailleurs
+  assert.equal(backlogUnchanged([{ id: A, status: "done" }, backlog[1], backlog[2]], base, sent), false); // une ordonnée est devenue terminée
+  assert.equal(backlogUnchanged([backlog[0], { id: B, status: "todo" }, backlog[2]], base, sent), true); // une terminée hors envoi redevient ouverte : sans effet sur l'ordre
+  assert.equal(backlogUnchanged(backlog, base, [A, D]), false); // `sent` forgé hors backlog
 });

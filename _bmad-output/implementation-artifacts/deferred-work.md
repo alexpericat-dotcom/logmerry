@@ -166,3 +166,10 @@
 - L'objectif d'un sprint ne passe pas par `validateSprintInput` (longueur seulement) : retours à la ligne acceptés.
 - Compléter la mention de confidentialité des 8.16 et 8.17 (titre de la mission, nom du client, comme en 8.18 et 8.19).
 - Thème clair du panneau « Composer avec l'IA » non vérifié ; placement partiel et sprint clos par course vérifiés par la lecture du code seulement.
+
+## De la relecture de la 8.20 (18 octobre)
+- Fenêtre de course entre la relecture du serveur et `renumber` : un glisser-déposer passé entre les deux serait écrasé (`renumber` ne vérifie que l'ensemble des stories, pas l'ordre) ; écritures par ligne sans transaction (même limite que le glisser-déposer).
+- `parseReorderIds` plafonne à 500 identifiants : un backlog hors sprint de plus de 500 stories ne pourrait pas être réordonné (message « a changé entre-temps » trompeur).
+- Ouvrir l'ajout d'une story à la main démonte le panneau d'ordre et perd la proposition en cours.
+- Story omise par l'IA et identifiants forgés en sortie brute : couverts par les tests purs, pas par un essai réel.
+- Thème clair du panneau d'ordre non vérifié.

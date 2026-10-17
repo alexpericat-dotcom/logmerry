@@ -36,6 +36,7 @@ export function BacklogOrder({ missionId }: { missionId: string }) {
   const applyingNow = useRef(false);
   const closing = useRef(false);
   const openButton = useRef<HTMLButtonElement>(null);
+  const proposeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
   const run = useRef(0);
@@ -95,8 +96,10 @@ export function BacklogOrder({ missionId }: { missionId: string }) {
       if (!r.ok) {
         setError(r.error);
         if (r.gone) {
-          // La proposition est périmée : on l'efface, un nouveau clic ne ferait que répéter l'erreur ; il faut en demander une autre.
+          // La proposition est périmée : on l'efface, un nouveau clic ne ferait que répéter l'erreur ; il faut en demander une autre. Le bouton « Appliquer » qui avait le focus
+          // disparaît avec elle : le focus va à « Proposer à nouveau ».
           setResult(null);
+          requestAnimationFrame(() => proposeButton.current?.focus());
           router.refresh();
         }
         return;
@@ -153,7 +156,7 @@ export function BacklogOrder({ missionId }: { missionId: string }) {
             <ListOrdered size={16} aria-hidden="true" />
             Proposer un ordre logique
           </h3>
-          <Button type="button" variant="ghost" size="icon" className="max-md:size-11" disabled={applying} onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
+          <Button type="button" variant="ghost" size="icon" className="max-md:size-11" aria-disabled={applying} onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
             <X size={16} aria-hidden="true" />
           </Button>
         </div>
@@ -173,10 +176,10 @@ export function BacklogOrder({ missionId }: { missionId: string }) {
           mets pas de données réelles de clients. Rien n&apos;est réordonné tant que tu ne cliques pas sur « Appliquer cet ordre ».
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={generate} aria-disabled={pending || applying}>
+          <Button ref={proposeButton} type="button" onClick={generate} aria-disabled={pending || applying}>
             {pending ? "L'IA réfléchit…" : result ? "Proposer à nouveau" : "Proposer un ordre"}
           </Button>
-          <button type="button" disabled={applying} onClick={closePanel} className="text-sm underline underline-offset-4 disabled:opacity-50 max-md:inline-flex max-md:min-h-11 max-md:items-center">
+          <button type="button" aria-disabled={applying} onClick={closePanel} className="text-sm underline underline-offset-4 aria-disabled:opacity-50 max-md:inline-flex max-md:min-h-11 max-md:items-center">
             {pending ? "Annuler" : "Ignorer"}
           </button>
         </div>
@@ -194,7 +197,7 @@ export function BacklogOrder({ missionId }: { missionId: string }) {
             {error}
           </p>
         )}
-        {result?.same && <p className="text-sm">L&apos;ordre actuel te semble déjà logique à l&apos;IA.</p>}
+        {result?.same && result.omitted === 0 && <p className="text-sm">L&apos;ordre actuel te semble déjà logique à l&apos;IA.</p>}
         {result && !result.same && (
           <ol className="flex flex-col gap-2" aria-label="Ordre proposé pour le backlog">
             {result.items.map((it) => (

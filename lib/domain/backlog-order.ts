@@ -37,9 +37,13 @@ export function buildOrderMessage(input: { missionTitle: string; clientName: str
   return parts.join("\n");
 }
 
-/** Sources de la vérification des nombres : tout ce qui a été donné au modèle. */
+/**
+ * Sources de la vérification des nombres : tout ce qui a été donné au modèle (les critères coupés comme dans le message), et les rangs de 1 au nombre de stories envoyées : une raison qui dit
+ * « descend à la place 11 » ne contient pas un nombre inventé.
+ */
 export function orderSources(input: { missionTitle: string; clientName: string; stories: OrderStory[]; sprintTitles: string[]; hint: string }): string[] {
-  return [input.hint, input.missionTitle, input.clientName, ...input.sprintTitles, ...input.stories.flatMap((b) => [b.title, b.role ?? "", b.benefit ?? "", b.acceptance_criteria ?? "", String(b.points ?? "")])];
+  const ranks = Array.from({ length: input.stories.length }, (_, i) => String(i + 1)).join(" ");
+  return [input.hint, input.missionTitle, input.clientName, ranks, ...input.sprintTitles, ...input.stories.flatMap((b) => [b.title, b.role ?? "", b.benefit ?? "", cut(b.acceptance_criteria, 300), String(b.points ?? "")])];
 }
 
 /** Entrée du premier appel de l'outil `order_backlog` ayant une liste `order` ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
@@ -78,7 +82,7 @@ export function verifyOrder(raw: Record<string, unknown>, ctx: { ids: string[]; 
   const order: string[] = [];
   const reasons: Record<string, string> = {};
   let dropped = 0;
-  let droppedTexts = 0;
+  const inventedFor: string[] = [];
   for (const item of listOf(raw.order).slice(0, ORDER_MAX * 2)) {
     const o = (item ?? {}) as Record<string, unknown>;
     const key = text(o.id).trim().toLowerCase();
@@ -92,12 +96,14 @@ export function verifyOrder(raw: Record<string, unknown>, ctx: { ids: string[]; 
     let reason = [...text(o.reason).trim()].slice(0, REASON_MAX).join("");
     if (reason && inventedNumbers(reason, ctx.sources).length) {
       reason = "";
-      droppedTexts++;
+      inventedFor.push(id);
     }
     if (reason) reasons[id] = reason;
   }
   const missing = ctx.ids.filter((id) => !seen.has(id.toLowerCase()));
   order.push(...missing);
+  // Une raison retirée ne se compte que pour une story dont la place change : celle d'une story qui ne bouge pas n'est de toute façon pas affichée.
+  const droppedTexts = inventedFor.filter((id) => ctx.ids.indexOf(id) !== order.indexOf(id)).length;
   return { order, reasons, dropped, droppedTexts, omitted: missing.length };
 }
 
@@ -121,4 +127,19 @@ export type Move = { id: string; from: number; to: number };
 /** Place actuelle et nouvelle place (à partir de 1) de chaque story ordonnée, dans l'ordre proposé. */
 export function moves(currentSent: string[], proposed: string[]): Move[] {
   return proposed.map((id, i) => ({ id, from: currentSent.indexOf(id) + 1, to: i + 1 }));
+}
+
+/** Stories à envoyer à l'IA : les `max` premières non terminées du backlog (dans l'ordre affiché) ; `cut` dit s'il y en avait davantage (les suivantes gardent leur place). */
+export function pickOrderable(backlog: { id: string; status: string }[], max: number = ORDER_MAX): { sent: string[]; cut: boolean } {
+  const open = backlog.filter((s) => s.status !== "done").map((s) => s.id);
+  return { sent: open.slice(0, max), cut: open.length > max };
+}
+
+/**
+ * Le backlog (hors sprint) est-il resté celui de la proposition ? Mêmes stories dans le même ordre que `base`, et chaque story ordonnée (`sent`) encore ouverte et présente.
+ * Une story terminée qui ne fait pas partie de `sent` ne change rien.
+ */
+export function backlogUnchanged(backlog: { id: string; status: string }[], base: string[], sent: string[]): boolean {
+  const open = new Set(backlog.filter((s) => s.status !== "done").map((s) => s.id));
+  return sameOrder(backlog.map((s) => s.id), base) && sent.every((id) => open.has(id));
 }

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { orderWithClaude } from "@/lib/ai/backlog-order";
 import { renumber } from "@/lib/db/renumber";
-import { ORDER_MAX, applyOrderToSlots, buildOrderMessage, moves, orderSources, sameOrder, verifyOrder, type OrderStory } from "@/lib/domain/backlog-order";
+import { applyOrderToSlots, backlogUnchanged, buildOrderMessage, moves, orderSources, pickOrderable, sameOrder, verifyOrder, type OrderStory } from "@/lib/domain/backlog-order";
 import { isUuid } from "@/lib/domain/notes";
 import { validateHint } from "@/lib/domain/tasks";
 import { parseReorderIds } from "@/lib/domain/user-stories";
@@ -24,7 +24,7 @@ const COLUMNS = "id, title, role, benefit, acceptance_criteria, points, status";
 
 /** Le backlog d'une de mes missions (hors sprint), dans l'ordre de la page (position puis création). */
 async function loadBacklog(supabase: Parameters<Parameters<typeof withSession>[0]>[0], missionId: string) {
-  const found = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: true }).order("created_at", { ascending: true });
+  const found = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   if (found.error) throw new Error(`backlog ${found.error.code ?? ""}`.trim());
   return found.data as unknown as (OrderStory & { status: string })[];
 }
@@ -48,10 +48,12 @@ export async function proposeBacklogOrder(missionId: string, hint: string): Prom
     const backlog = await loadBacklog(supabase, missionId);
     const open = backlog.filter((s) => s.status !== "done");
     // Moins de 2 stories ouvertes : rien à ordonner, on le dit sans appeler Claude.
-    if (open.length < 2) return { ok: false, error: "Il faut au moins 2 stories ouvertes dans le backlog pour proposer un ordre." };
-    const sent = open.slice(0, ORDER_MAX);
+    if (open.length < 2) return { ok: false, error: "Il faut au moins 2 stories ouvertes pour proposer un ordre." };
+    const picked = pickOrderable(backlog);
+    const byIdAll = new Map(backlog.map((s) => [s.id, s]));
+    const sent = picked.sent.map((id) => byIdAll.get(id)!);
 
-    const inSprints = await supabase.from("user_stories").select("title").eq("mission_id", missionId).not("sprint_id", "is", null).order("position", { ascending: true });
+    const inSprints = await supabase.from("user_stories").select("title").eq("mission_id", missionId).not("sprint_id", "is", null).order("position", { ascending: true }).limit(100);
     if (inSprints.error) throw new Error(`sprints ${inSprints.error.code ?? ""}`.trim());
     const sprintTitles = inSprints.data.map((s) => s.title as string);
 
@@ -67,18 +69,27 @@ export async function proposeBacklogOrder(missionId: string, hint: string): Prom
     }
     const sentIds = sent.map((s) => s.id);
     const verified = verifyOrder(raw, { ids: sentIds, sources: orderSources(input) });
+    // L'IA n'a rien classé d'exploitable (liste vide, identifiants inconnus) : ce n'est pas « l'ordre est déjà logique ».
+    if (verified.omitted === sentIds.length) return { ok: false, error: "L'IA n'a rien classé d'exploitable. Réessaie." };
     const byId = new Map(sent.map((s) => [s.id, s]));
-    const items = moves(sentIds, verified.order).map((m) => ({ ...m, title: byId.get(m.id)!.title, points: byId.get(m.id)!.points, reason: m.from === m.to ? "" : (verified.reasons[m.id] ?? "") }));
+    // Places telles qu'on les voit dans le backlog affiché (stories terminées comprises) : avant = rang actuel, après = rang une fois l'ordre appliqué.
+    const baseIds = backlog.map((s) => s.id);
+    const full = applyOrderToSlots(baseIds, sentIds, verified.order) ?? baseIds;
+    const items = moves(sentIds, verified.order).map((m) => {
+      const from = baseIds.indexOf(m.id) + 1;
+      const to = full.indexOf(m.id) + 1;
+      return { id: m.id, title: byId.get(m.id)!.title, points: byId.get(m.id)!.points, from, to, reason: from === to ? "" : (verified.reasons[m.id] ?? "") };
+    });
     return {
       ok: true,
       items,
-      baseIds: backlog.map((s) => s.id),
+      baseIds,
       sentIds,
       same: sameOrder(sentIds, verified.order),
       dropped: verified.dropped,
       droppedTexts: verified.droppedTexts,
       omitted: verified.omitted,
-      cut: open.length > ORDER_MAX,
+      cut: picked.cut,
     };
   });
 
@@ -104,8 +115,7 @@ export async function applyBacklogOrder(missionId: string, baseIds: string[], se
 
     const backlog = await loadBacklog(supabase, mid);
     // Le backlog doit être exactement celui de la proposition (mêmes stories, même ordre) et les stories ordonnées toujours ouvertes.
-    const stillOpen = new Set(backlog.filter((s) => s.status !== "done").map((s) => s.id));
-    if (!sameOrder(backlog.map((s) => s.id), base) || !sent.every((id) => stillOpen.has(id))) return { ok: false, error: CHANGED, gone: true };
+    if (!backlogUnchanged(backlog, base, sent)) return { ok: false, error: CHANGED, gone: true };
     const full = applyOrderToSlots(base, sent, order);
     if (!full) return { ok: false, error: CHANGED, gone: true };
 
@@ -113,7 +123,7 @@ export async function applyBacklogOrder(missionId: string, baseIds: string[], se
     revalidatePath(`/missions/${mid}`);
     revalidatePath("/missions");
     if (done === "changed") return { ok: false, error: CHANGED, gone: true };
-    if (done !== "saved") return { ok: false, error: "Réordonnancement impossible pour le moment. Réessaie.", gone: true };
+    if (done !== "saved") return { ok: false, error: "Réordonnancement impossible pour le moment. Relance une proposition.", gone: true };
     const sentCurrent = base.filter((id) => sent.includes(id));
     return { ok: true, moved: order.filter((id, i) => sentCurrent[i] !== id).length };
   });
