@@ -507,6 +507,21 @@ En tant que propriétaire, je veux être alerté quand un devis envoyé dort 7 j
 **Et** avec moins de deux éléments au total parmi les missions « en cours » et les devis « envoyés », une tâche de règle 6 apparaît (« ton pipeline se vide ») ; un devis envoyé lié à une mission déjà en cours ne compte pas en plus (ce qui est lié compte une fois).
 **Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche, puis l'identifiant ; aucun e-mail n'est envoyé, un brouillon de relance peut être proposé.
 
+### Story 5.4b : Tâches de mon sprint
+
+*Nouvelle story du 18 octobre 2026 (décision de l'auteur du 17 octobre, septième règle du cockpit : PRD FR-14, architecture AD-5 et AD-13).*
+
+En tant que propriétaire, je veux voir sur le cockpit les tâches de mon sprint en cours, afin que mon travail de mission apparaisse avec mes échéances.
+
+**Critères d'acceptation :**
+
+**Étant donné** un sprint « en cours » avec des stories « en cours » ayant des tâches non faites, **quand** j'ouvre le cockpit, **alors** ces tâches apparaissent après les règles 1 à 7, avec le motif « dans ton sprint, qui se termine dans N jours » et leur contexte **« Client / Mission / Sprint X »** (un sprint appartient à une seule mission).
+**Et** trois tâches au plus s'affichent, dans l'ordre du sprint, suivies d'une ligne « N autres tâches dans ton sprint » qui renvoie à la page de la mission.
+**Et** cocher une tâche du cockpit coche la tâche de la story elle-même (une seule source de « fait ») ; décocher est possible.
+**Et** étant donné un sprint « en cours » qui se termine dans 0 à 2 jours avec au moins une story non terminée, une tâche de **règle 7** apparaît (« ton sprint se termine dans N jours, M stories non terminées »), classée avant les tâches du sprint.
+**Et** sans sprint en cours, ou sans story « en cours », rien n'apparaît.
+**Et** aucune décision n'est prise par l'IA ; les règles sont des fonctions pures testées avec `asOf`.
+
 ### Story 5.5 : Voir mon CA encaissé et ma jauge sur le cockpit
 
 En tant que propriétaire, je veux voir le CA encaissé et la jauge de plafond sur le cockpit, afin d'avoir tout au même endroit.
