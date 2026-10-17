@@ -1228,4 +1228,32 @@ describe("isolation des sprints entre deux comptes fictifs", () => {
     assert.ifError((await a.client.from("missions").delete().eq("id", m.data!.id)).error);
     assert.equal((await a.client.from("sprints").select("id").eq("mission_id", m.data!.id)).data!.length, 0);
   });
+
+  test("un sprint clos est figé en base : aucune story n'y entre ni n'en sort ; sa suppression renvoie ses stories au backlog", async () => {
+    const mk = async (status: "planned" | "closed", name: string) => {
+      const r = await a.client.from("sprints").insert({ mission_id: missionA.id, name, start_date: "2026-08-03", end_date: "2026-08-14", status }).select("id").single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    const story = async (title: string, sprint_id: string | null) => {
+      const r = await a.client.from("user_stories").insert({ mission_id: missionA.id, title, position: 90, sprint_id }).select("id").single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    // Un sprint planifié reçoit une story, puis est clos : la story est dedans, figée.
+    const sp = await mk("planned", "à clore");
+    const inside = await story("dans le sprint", sp.id);
+    assert.ifError((await a.client.from("sprints").update({ status: "closed" }).eq("id", sp.id)).error);
+    const loose = await story("libre", null);
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: sp.id }).eq("id", loose.id)).error?.code, "23514", "entrer dans un sprint clos refusé");
+    assert.equal((await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "neuve", position: 91, sprint_id: sp.id })).error?.code, "23514", "créer une story dans un sprint clos refusé");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: null }).eq("id", inside.id)).error?.code, "23514", "sortir d'un sprint clos refusé");
+    const other = await mk("planned", "autre");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: other.id }).eq("id", inside.id)).error?.code, "23514", "passer d'un sprint clos à un autre refusé");
+    assert.ifError((await a.client.from("user_stories").update({ status: "done", title: "renommée" }).eq("id", inside.id)).error); // statut et texte restent modifiables
+    assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", inside.id).single()).data!.sprint_id, sp.id);
+    // Supprimer le sprint clos reste possible et renvoie ses stories au backlog.
+    assert.ifError((await a.client.from("sprints").delete().eq("id", sp.id)).error);
+    assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", inside.id).single()).data!.sprint_id, null);
+  });
 });
