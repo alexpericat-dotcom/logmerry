@@ -7,12 +7,14 @@ paradigm: 'Monolithe Next.js server-first, la base de données (RLS) comme front
 scope: 'Tout le MVP de LogMerry (PRD du 2026-10-10, UX du 2026-10-11)'
 status: final
 created: 2026-10-12
-updated: 2026-10-13
-binds: [FR-1..FR-16, FR-19..FR-22, NFR-1..NFR-5]
+updated: 2026-10-18
+binds: [FR-1..FR-16, FR-19..FR-25, NFR-1..NFR-5]
 sources:
   - _bmad-output/planning-artifacts/prds/prd-logmerry-2026-10-10/prd.md
   - _bmad-output/planning-artifacts/prds/prd-logmerry-2026-10-10/addendum.md
   - _bmad-output/planning-artifacts/ux-designs/ux-logmerry-2026-10-11/EXPERIENCE.md
+  - _bmad-output/planning-artifacts/spec-cockpit-financier.md
+  - _bmad-output/planning-artifacts/decisions-finances.md
 companions: []
 ---
 
@@ -104,19 +106,20 @@ flowchart TD
   - Une Server Action : vérifie l'utilisateur → écrit via le client de session → `revalidatePath` → retourne `{ ok: true, data } | { ok: false, error: { code, message } }` (message en français, affichable tel quel).
   - Les contraintes de validité sont **dans la base** (`not null`, `check`, clés étrangères, enums) : par exemple échéance sans date ou sans source refusée (FR-13), devis sans montant refusé (FR-22). Les Server Actions traduisent l'erreur Postgres en message ; aucune bibliothèque de validation ajoutée au MVP.
   - Un seul chemin d'écriture par entité ; aucune écriture depuis un composant client directement vers Supabase.
+  - **Devis accepté (18 octobre, FR-22) :** passer un devis lié à un prospect en « accepté » est **une seule action, tout ou rien** : le prospect devient client et une mission est créée (client du devis, statut `in_progress`, titre « Devis du JJ/MM/AAAA — Nom du client »). Un devis lié à une mission existante ne change rien d'autre. `[ASSUMPTION : fonction SQL `security invoker` (une transaction) appelée par la Server Action, car supabase-js n'enchaîne pas plusieurs écritures dans une transaction ; à confirmer à la story 3.6]`
 - **En clair :** on lit côté serveur, on écrit par des « actions » nommées, et la base est le dernier juge de ce qui est valide.
 
 ### AD-5 — Noyau métier pur et déterministe [ADOPTED]
 
-- **Binds:** FR-9..FR-15, FR-22
+- **Binds:** FR-9..FR-15, FR-22, FR-25
 - **Prevents:** deux calculs différents pour le même chiffre (cockpit vs assistant) ; des taux écrits en dur ; un montant inventé par le modèle.
 - **Rule:**
-  - `lib/domain/` : fonctions pures (entrées → sorties), sans import de Supabase, Next.js ni IA. Les paramètres (taux, plafonds) y entrent **en argument**, lus depuis la table `parameters`.
+  - `lib/domain/` : fonctions pures (entrées → sorties), sans import de Supabase, Next.js ni IA. Les règles (taux, plafonds, dates d'effet) et le profil y entrent **en argument**, lus depuis `regulatory_rules` et `professional_profile` (AD-12) ; les formules (prorata de la première année, bascule de TVA, fin de l'ACRE) sont des fonctions de `lib/domain/finance/` qui lisent ces données et ne contiennent **aucun chiffre réglementaire**.
   - Un seul calcul par résultat : le cockpit (FR-15) et l'explication de l'assistant (FR-12) appellent la même fonction.
-  - Paramètre absent ou périmé → la fonction retourne `{ status: 'missing_parameter', key }` ; l'interface affiche « paramètre manquant ». Jamais de valeur par défaut.
-  - Les six règles du cockpit (FR-14) sont six fonctions dans `lib/domain/cockpit/`, ordre de priorité 1 à 6 défini en un seul endroit. Les tâches du jour sont **calculées à la lecture** ; seul le fait de cocher est stocké (`task_checks`: règle, entité source, date).
+  - Règle absente, non vérifiée ou périmée, ou donnée du profil « À confirmer » dont elle dépend → la fonction retourne `{ status: 'missing_parameter', key }` ; l'interface affiche « paramètre manquant ». Jamais de valeur par défaut. Un calcul sur une période utilise la version de la règle en vigueur à cette période (AD-12).
+  - Les **sept** règles du cockpit (FR-14) sont sept fonctions dans `lib/domain/cockpit/`, ordre de priorité défini en un seul endroit : 1 à 6, puis la règle 7 (sprint en cours qui se termine à J-2 avec des stories non terminées), puis les tâches du sprint actif (trois au plus, plus un lien « N autres tâches dans ton sprint »). Règle 3 : un plafond suivi à 90 % puis 100 % ; règle 4 : fin de l'ACRE calculée à partir de la date de début d'activité du profil et de la règle ACRE ; règle 5 : devis au statut « envoyé » sans mise à jour depuis 7 jours ; règle 6 : moins de deux missions « en cours » ou devis « envoyés » en tout. Les tâches du jour sont **calculées à la lecture** à partir du calendrier et des autres données (AD-13) ; toute tâche issue d'un sprint porte « Client / Mission / Sprint X » (un sprint appartient à une seule mission).
   - Le LLM n'affiche et ne calcule aucun chiffre : il reçoit les résultats déjà calculés pour les expliquer.
-  - Chaque fonction de `lib/domain/` a un test unitaire ; les ≥ 6 cas de référence de FR-11 y sont des tests.
+  - Chaque fonction de `lib/domain/` a un test unitaire ; les ≥ 6 cas de référence de FR-11 y sont des tests, **calculés à la main par l'auteur indépendamment du code** (jamais générés à partir du code testé) et rattachés aux règles qu'ils vérifient (AD-12).
 - **En clair :** les calculs vivent à un seul endroit, testables seuls ; l'IA les explique mais ne les fait jamais.
 
 ### AD-6 — Appels IA uniquement côté serveur, fournisseurs et embeddings [ADOPTED]
@@ -128,6 +131,7 @@ flowchart TD
   - Embeddings : Anthropic ne propose pas de modèle d'embeddings. **`mistral-embed`** (Mistral AI, société européenne, **1024 dimensions** vérifié dans la doc Mistral). Colonne `vector(1024)`, index HNSW en distance cosinus. Chaque extrait stocke `embedding_model`. Changer de modèle = nouvelle migration + réindexation complète.
   - Les extraits de notes sont envoyés à deux fournisseurs (Anthropic pour répondre, Mistral pour vectoriser) : à documenter dans la mention RGPD ; pas de notes réelles de clients avant cette vérification (PRD §5.2).
   - **Aide à la conception (17 octobre, FR-23, FR-24) :** mêmes fournisseur et clé ; un appel commun `lib/ai/claude-tool.ts` (`fetch`, 60 s, outil à sortie structurée), des fonctions par usage (`story-proposals`, `task-proposals`, `prompt-generation`) ; propositions éphémères, vérifiées côté serveur (titres, doublons, nombres absents des sources), brief, notes, stories et tâches envoyés à Anthropic, texte traité comme donnée (voir l'addendum).
+  - **Explication d'une estimation (18 octobre, FR-12) :** l'assistant reçoit le résultat déjà calculé, les règles utilisées (valeurs, sources, dates de vérification) et **le profil professionnel entier** (décision de l'auteur, seul utilisateur connecté) ; la mention RGPD est affichée ; à revoir avant toute donnée réelle (PRD §5.2). Il ne calcule et n'affiche aucun chiffre lui-même.
   - Tout le code d'appel est dans `lib/ai/`, qui commence par `import 'server-only'` (le build échoue s'il est importé côté client). Clés : `ANTHROPIC_API_KEY` et `MISTRAL_API_KEY`, sans préfixe `NEXT_PUBLIC_`, définies dans Vercel et `.env.local`.
 - **En clair :** Claude rédige les réponses, Mistral transforme les textes en vecteurs ; l'IA n'est appelée que depuis le serveur, et changer de modèle d'embeddings oblige à tout réindexer.
 
@@ -145,14 +149,14 @@ flowchart TD
 
 ### AD-8 — Modèle de données : un propriétaire pour chaque entité
 
-- **Binds:** FR-3, FR-5, FR-7..FR-16, FR-21, FR-22, FR-23
+- **Binds:** FR-3, FR-5, FR-7..FR-16, FR-21, FR-22, FR-23, FR-25
 - **Prevents:** deux tables pour la même chose ; une donnée sans `owner_id` ; des montants mal arrondis.
 - **Rule:**
   - Entités du MVP : voir le schéma ci-dessous. Prospect et client sont **une seule table** `clients` avec un `status` (un prospect devenu client change de statut, sans ressaisie).
   - Identifiants `uuid` ; horodatages `timestamptz` en UTC ; les dates métier (échéance, date d'envoi) sont de type `date`. « Aujourd'hui » se calcule à l'heure de Paris dans `lib/domain/`.
-  - Montants en **centimes entiers** (`bigint`), jamais en flottant ; pourcentages et taux en `numeric`.
+  - Montants en **centimes entiers** (`bigint`), jamais en flottant ; pourcentages et taux en `numeric`. **Factures et encaissements enregistrent le montant hors taxe et le montant de taxe** (le toutes taxes comprises se déduit) ; chaque règle de plafond désigne sa base (AD-12).
   - Valeurs à plusieurs choix (statuts, étiquette d'origine, source d'une échéance) en **enums Postgres** ; ajout d'une valeur = migration.
-  - `parameters` : `key`, `value`, `unit`, `source`, `verified_on`, `revalidate_after`. C'est la seule source des taux et plafonds.
+  - `regulatory_rules` et `professional_profile` : voir AD-12 (elles remplacent la table `parameters`, qui n'a jamais été créée). `deadlines` : voir AD-13. `regulatory_rules` est la seule source des taux, plafonds et seuils.
   - **Sprints (17 octobre, story 3.5c) :** `sprints` (rattaché à une mission : nom, objectif, `start_date` et `end_date` avec fin ≥ début, état enum `planned` / `active` / `closed`) ; `user_stories.sprint_id` (nul = backlog, `on delete set null`). Un seul sprint `active` par mission (index unique partiel). La policy de `user_stories` exige un sprint à moi ET de la même mission (une clé étrangère contourne la RLS). Un sprint clos est figé **en base** par un déclencheur (`user_stories_guard_closed_sprint` : aucune story n'y entre ni n'en sort ; sa suppression reste permise) et aussi à l'écran et dans les Server Actions. `position` ordonne les stories à l'intérieur de leur liste (backlog ou un sprint).
   - **Règle de migration :** une migration qui remplace une policy repart de la définition en vigueur (`pg_policies`), pas du fichier d'origine (régression attrapée en 3.5c).
   - Schéma modifié **uniquement** par des fichiers dans `supabase/migrations/`, un fichier par changement, appliqués avec la CLI Supabase après relecture du SQL.
@@ -177,10 +181,13 @@ erDiagram
   CONVERSATIONS ||--o{ MESSAGES : contient
   MESSAGES ||--o{ MESSAGE_CITATIONS : cite
   NOTES ||--o{ MESSAGE_CITATIONS : "source de"
+  REGULATORY_RULES ||--o| REGULATORY_RULES : "version précédente"
+  PROFESSIONAL_PROFILE
   DEADLINES
-  PARAMETERS
   TASK_CHECKS
 ```
+
+Extension prévue pour la phase suivante (FR-26 à FR-28, non construite) : les dates d'effet de `regulatory_rules` et les champs du profil portent déjà ce que l'ARE et les prévisions demanderont ; aucune table n'est ajoutée avant.
 
 ### AD-9 — Recherche (FR-19) sans nouvelle technologie
 
@@ -206,6 +213,31 @@ erDiagram
   - Variables d'environnement : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (publiques, déjà dans `.env.example`), `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY`, `AI_CHAT_MODEL` (serveur). `.env.local` ignoré par Git.
   - Les migrations ne sont **pas** appliquées automatiquement par le déploiement : application manuelle (`supabase db push`) après relecture.
 - **En clair :** une base, un hébergeur, des clés secrètes seulement côté serveur.
+
+### AD-12 — Règles réglementaires versionnées et profil professionnel
+
+- **Binds:** FR-2, FR-9, FR-10, FR-11, FR-12, FR-14, FR-25
+- **Prevents:** un taux, un plafond ou une date réglementaire écrit en dur ; un calcul fait avec une règle non vérifiée ou périmée présenté comme fiable ; le mélange des règles d'essai de la démonstration et des vraies règles ; deux versions d'une même règle utilisées au hasard.
+- **Rule:**
+  - **Une seule table `regulatory_rules`**, créée directement, avec `owner_id` (RLS) : identifiant, catégorie, description, valeur ou paramètres de calcul et unité, `effective_from`, `effective_to` (nul = en vigueur), conditions d'application, catégorie d'activité concernée, source officielle (URL), date de dernière vérification, `revalidate_after`, statut de validation (à vérifier, vérifiée, périmée), `is_demo`, lien vers la version précédente. Une **règle** est un enregistrement de **données** ; les **formules** (prorata de la première année, bascule de TVA, fin de l'ACRE) sont du code testé dans `lib/domain/finance/` qui lit ces données (AD-5).
+  - **Un changement de valeur est une nouvelle version** avec sa date d'effet et sa source ; l'ancienne reçoit sa `effective_to`. Un calcul sur une période lit la version en vigueur à cette période.
+  - Une règle est **périmée** quand sa date `revalidate_after` est dépassée. Une règle non vérifiée, périmée, ou qui dépend d'un champ du profil « À confirmer », n'est **jamais** utilisée en silence : le calcul retourne `missing_parameter` (AD-5).
+  - **`professional_profile`** (une ligne par propriétaire) : statut juridique, régime fiscal, catégorie BNC ou BIC, nature des prestations, date de début d'activité, fréquence des déclarations Urssaf, régime de TVA, éligibilité à l'ACRE, situation France Travail, objectifs financiers, taux de réserve personnels, seuils d'alerte actifs (50, 75, 90, 100 %), préférences de notification. **Chaque champ a un état « À confirmer »** et aucune valeur par défaut.
+  - **Plusieurs plafonds distincts** : chacun est une règle qui désigne sa base (hors taxe ou taxe, période, catégorie de recettes ; période et catégories à écrire avec la règle et sa source). Au MVP les alertes de plafond sont **visibles dans l'application seulement** (jauge, tâche du cockpit à 90 % puis 100 %) ; aucun canal de notification avant n8n.
+  - **Compte de démonstration :** ses règles d'essai sont des enregistrements `is_demo`, étiquetés « DEMO, non officielle » partout où ils s'affichent, propres au compte de démonstration (RLS), purgés avec le reste au passage à l'outil pro, jamais copiés ni lus pour un autre compte. Aucune valeur réelle n'est préremplie dans un autre compte.
+  - Les cas de référence (≥ 6) sont les **tests associés** des règles, écrits par l'auteur.
+  - `[ASSUMPTION : colonnes `is_demo` et statut de validation en enum, noms à confirmer à la story 4.1]`
+- **En clair :** les chiffres réglementaires sont des données sourcées et datées que tu saisis, jamais du code ; une règle qui change devient une nouvelle version ; ce qui n'est pas vérifié n'est jamais calculé.
+
+### AD-13 — Le calendrier est la source unique des échéances
+
+- **Binds:** FR-13, FR-14, FR-15
+- **Prevents:** une même échéance présente dans deux listes avec deux statuts ; une fausse échéance inventée ; des tâches du cockpit stockées au lieu d'être calculées.
+- **Rule:**
+  - **`deadlines`** est la seule liste d'échéances et d'obligations : titre, description, date, catégorie (Urssaf, France Travail, fiscale, TVA, CFE, factures à émettre ou à relancer, justificatifs, renouvellements, personnalisée), statut, priorité, lien vers la source officielle, récurrence éventuelle. Une échéance **saisie** a toujours une date (refusée sinon, AD-4) ; une échéance qu'une règle devrait calculer mais dont la règle n'est pas vérifiée ou dont une donnée du profil est « À confirmer » est enregistrée **sans date, marquée « À confirmer »**, jamais estimée.
+  - Les tâches du jour du cockpit sont **calculées à la lecture** (AD-5) à partir de `deadlines`, des factures, des devis, des encaissements, des plafonds et des sprints ; **cocher une tâche issue d'une échéance marque cette échéance « faite »** dans `deadlines`. `task_checks` ne garde que le fait de cocher d'une tâche qui ne vient pas d'une échéance (règle, entité source, date).
+  - Le calendrier ne contient que des obligations, pas de rendez-vous.
+- **En clair :** une seule liste de dates ; le cockpit n'en garde pas une à lui, il lit celle-ci et en tire ce qu'il faut faire aujourd'hui.
 
 ## Consistency Conventions
 
@@ -270,10 +302,14 @@ flowchart LR
 | FR-3, FR-19, FR-21 (notes, recherche, à documenter) | `app/(app)/notes`, `lib/domain/chunking`, `lib/ai` | AD-4, AD-7, AD-9 |
 | FR-4, FR-5, FR-6, FR-12 (assistant, historique, tests) | `app/api/chat`, `conversations`, `messages` | AD-6, AD-7 |
 | FR-20 (résumé) | Server Action + `lib/ai` | AD-6 (après le jalon du 30 octobre) |
-| FR-7, FR-8, FR-22 (CRM, missions, backlog, tâches, devis) | `app/(app)/clients`, `missions` ; tables `missions`, `user_stories`, `tasks`, `sprints` | AD-4, AD-8 |
+| FR-7, FR-8, FR-22 (CRM, missions, backlog, tâches, sprints, devis) | `app/(app)/clients`, `missions` ; tables `missions`, `user_stories`, `tasks`, `sprints`, `quotes` ; acceptation d'un devis en une action (AD-4) | AD-4, AD-8 |
 | FR-23, FR-24 (aide de l'IA à la conception, prompt de mission) | Server Actions de `missions` + `lib/ai/claude-tool`, `lib/domain/*proposals`, `mission-context`, `prompt-generation` | AD-6 |
-| FR-9, FR-10, FR-11, FR-15 (finances) | `lib/domain/finance`, `parameters` | AD-5, AD-8 |
-| FR-13, FR-14 (échéances, cockpit) | `lib/domain/cockpit`, `deadlines`, `task_checks` | AD-5 |
+| FR-9, FR-10, FR-11, FR-15 (finances, règles, plafonds) | `lib/domain/finance`, `regulatory_rules`, `invoices`, `payments` | AD-5, AD-8, AD-12 |
+| FR-25 (profil professionnel) | `professional_profile`, page Profil | AD-8, AD-12 |
+| FR-2 (règles d'essai de la démonstration) | `regulatory_rules` (`is_demo`), compte de démonstration | AD-12 |
+| FR-13, FR-14 (calendrier, cockpit) | `lib/domain/cockpit`, `deadlines`, `task_checks` | AD-5, AD-13 |
+| FR-12 (explication des estimations) | `lib/ai` (profil et règles envoyés avec le résultat) | AD-5, AD-6 |
+| FR-26, FR-27, FR-28 (vue d'ensemble, objectifs, ARE : phase suivante) | non construits ; points d'extension en AD-8 | AD-12 |
 | FR-16 (portfolio) | `app/portfolio`, vue `public_realisations` | AD-3, AD-10 |
 
 ## Deferred
@@ -285,7 +321,12 @@ flowchart LR
 | Sauvegardes et restauration (NFR-4) | Vérifier l'offre du plan Supabase et une sauvegarde manuelle (`pg_dump`) avant la première vraie donnée |
 | Limitation de débit des appels IA | Un seul utilisateur au MVP ; à ajouter avec le portail client ou le formulaire public (V2). Les propositions de l'IA (stories, tâches, prompt) n'ont pas de plafond de générations : coût d'API à surveiller |
 | Pièces jointes aux notes (photos, documents, enregistrements) | Idée du 15 octobre ; demande du stockage (Supabase Storage) et ses policies, à étudier après le MVP |
-| Ordre du backlog écrit de façon atomique | Aujourd'hui une mise à jour par ligne (non atomique) ; procédure stockée si les listes grossissent ou si deux onglets entrent en conflit |
+| Ordre du backlog et ordre appliqué par l'IA écrits de façon atomique | Aujourd'hui une mise à jour par ligne (non atomique) ; procédure stockée si les listes grossissent ou si deux onglets entrent en conflit |
+| Phase suivante du cockpit financier (vue d'ensemble, objectifs, suivi ARE : FR-26 à FR-28) | PRD §4.9 ; à spécifier avec les sources et documents de l'auteur ; aucune table ajoutée avant |
+| Période et catégorie de recettes de la base de chaque plafond | À écrire avec chaque règle et sa source (PRD §9, point 11) ; peut ajouter des champs aux factures et encaissements |
+| Valeurs des règles réelles, règles d'essai « DEMO », cas de référence | Écrits par l'auteur avec leurs sources (PRD §9, points 12 et 16) ; aucune valeur dans le code |
+| Canal de notification des alertes (e-mail, notifications) | Après le MVP, avec n8n (PRD §7.4) |
+| Prospects dormants comme tâches du cockpit | Après le MVP (PRD §7.4) |
 | Formulaire de contact public, import de fichiers, portail client, SQL libre | PRD §7.4, V2 |
 | Surveillance et alertes techniques | Journaux Vercel/Supabase suffisent au MVP |
 | Détail des policies de stockage (images du portfolio) | À la livraison de FR-16 |
@@ -293,3 +334,5 @@ flowchart LR
 ## Décisions confirmées par l'auteur
 
 Toutes les hypothèses ont été confirmées (2026-10-12 et 2026-10-13), dont : Claude pour les réponses, `mistral-embed` pour les embeddings, envoi des extraits à deux fournisseurs (à documenter côté RGPD avant toute donnée réelle), modèle de chat à valider sur `docs/rag-tests.md`.
+
+Le 18 octobre 2026, l'auteur a confirmé pour la partie finances : une seule table de règles versionnées (valeurs en données, formules en code testé, nouvelle version à chaque changement, règles d'essai « DEMO » propres au compte de démonstration), le profil professionnel avec l'état « À confirmer », des montants hors taxe et taxe, des plafonds multiples avec alertes visibles dans l'application, le calendrier comme source unique des échéances, sept règles de cockpit, l'acceptation d'un devis en une action et l'envoi du profil à l'assistant. Hypothèses à confirmer : fonction SQL pour l'acceptation d'un devis (story 3.6) ; colonnes `is_demo` et statut de validation (story 4.1).
