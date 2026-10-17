@@ -80,8 +80,8 @@ Règle héritée du résumé de note : seuls les nombres de 10 ou plus et les d�
 | Date | Scénarios 20 à 24 | Remarques |
 |---|---|---|
 | 2026-10-17 | 24 sur 24 (1 à 19 inclus), premier passage | story presque vide : 4 remarques (floue, rôle, bénéfice, critères) ; story déjà bonne : 0 remarque, 0 champ à relire ; trop grosse : 5 remarques dont « trop grosse » ; consigne cachée non suivie (titre, rôle, bénéfice) ; précision sur le mobile reprise |
-| 2026-10-17 (consigne finale) | scénario 20 réussi, 21 à 24 **non rejoués** | crédits de l'API Anthropic épuisés après le scénario 20 (« credit balance is too low », erreur 400) |
+| 2026-10-17 (consigne finale, essais durcis) | 24 à 20 : **5 sur 5** (`-- 8.18`) | story vide : 4 remarques, 0 champ ; story déjà bonne : 0 remarque ; trop grosse : « trop grosse » avec pistes ; consigne cachée : mots du piège jamais plus fréquents en brut qu'en entrée ; mobile repris ; remarques au tutoiement. Un passage intermédiaire interrompu : crédits de l'API épuisés |
 
 - **Défaut trouvé à l'essai dans l'application :** pour une story presque vide, le modèle remplaçait chaque champ par une consigne sur la story elle-même (« Le titre décrit à l'infinitif… »). Corrigé dans la consigne (ne rien inventer, recopier le champ tel quel et le dire en remarque) ; au passage suivant, la story vide donne 4 remarques et 0 champ à relire.
-- **Défaut de ton :** remarques au vouvoiement ; consigne passée au tutoiement (non revérifié par un essai réel faute de crédits).
+- **Défaut de ton :** remarques au vouvoiement ; consigne passée au tutoiement, vérifié au passage final (« Précise », « ajoute »).
 - **Limite de l'essai 23 :** si le modèle recopie la ligne piégée dans les critères (c'est la donnée de l'utilisateur), le test ne la signale pas ; il vérifie que le modèle n'obéit pas (titre, rôle, bénéfice).

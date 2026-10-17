@@ -72,3 +72,41 @@ test("application : champs cochés seulement ; refus si un champ coché a chang�
   assert.equal(mergeReview(base, base, "todo", { title: "x".repeat(201) }).ok, false);
   assert.equal(mergeReview(base, base, "todo", { title: 42 as unknown as string }).ok, false); // non textuel : ignoré, donc rien de coché
 });
+
+test("seuils des nombres : 9 accepté, 10 et décimal refusés, « 1 200 » égal à « 1200 » ; précision, note et nom du client sont des sources", () => {
+  const pick = (extra: string, src: string[] = sources) => verifyReview(raw({ acceptance_criteria: `- ${extra}` }), story, src).changes.length;
+  assert.equal(pick("gérer 9 inscrits"), 1);
+  assert.equal(pick("gérer 10 inscrits"), 0);
+  assert.equal(pick("gérer 2,5 jours"), 0);
+  const withSource = (text: string) => reviewSources({ hint: text, missionTitle: "Inscriptions", story, otherTitles: [], note: null });
+  assert.equal(pick("gérer 1200 inscrits", withSource("1 200 inscrits")), 1);
+  assert.equal(pick("gérer 47 inscrits", withSource("la précision parle de 47 inscrits")), 1);
+  assert.equal(pick("gérer 2024 familles", reviewSources({ hint: "", missionTitle: "M", clientName: "Studio 2024", story, otherTitles: [], note: null })), 1);
+  assert.equal(pick("gérer 77 familles", reviewSources({ hint: "", missionTitle: "M", story, otherTitles: [], note: { id: "n", title: "T", body: "77 familles" } })), 1);
+});
+
+test("titre proposé qui copie celui d'une autre story : écarté et compté ; le titre actuel lui-même n'est pas un doublon", () => {
+  const dup = verifyReview(raw({ title: "EXPORTER LES PAIEMENTS." }), story, sources, ["Exporter les paiements"]);
+  assert.deepEqual(dup.changes, []);
+  assert.equal(dup.dropped, 1);
+  assert.equal(verifyReview(raw({ title: "Voir les inscriptions" }), story, sources, ["Exporter les paiements"]).changes.length, 1);
+});
+
+test("remarque avec un nombre inventé : écartée et comptée", () => {
+  const r = verifyReview(raw({}, [{ kind: "trop_grosse", text: "Découpe en 12 stories." }, { kind: "floue", text: "Critère vague." }]), story, sources);
+  assert.deepEqual(r.remarks.map((m) => m.text), ["Critère vague."]);
+  assert.equal(r.dropped, 1);
+});
+
+test("application : points « » vers « 5 » acceptés ; « afin de » retiré du bénéfice ; rôle normalisé ; champ coché inchangé accepté", () => {
+  const base = toFieldValues(story);
+  assert.deepEqual(mergeReview(base, base, "todo", { points: "5" }), { ok: true, fields: { points: "5" } });
+  assert.deepEqual(mergeReview(base, base, "todo", { benefit: "afin de gagner du temps", role: "en tant que responsable" }), { ok: true, fields: { benefit: "gagner du temps", role: "responsable" } });
+  assert.equal(mergeReview(base, base, "todo", { title: base.title }).ok, true);
+});
+
+test("une valeur actuelle déjà invalide (donnée ancienne) ne change rien et ne casse pas la relecture", () => {
+  const old = { ...story, title: "x".repeat(250) };
+  const r = verifyReview(raw({ title: old.title, role: "coordinatrice" }), old, reviewSources({ hint: "", missionTitle: "M", story: old, otherTitles: [], note: null }));
+  assert.ok(r.changes.every((c) => c.field !== "title"));
+});

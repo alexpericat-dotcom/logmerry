@@ -150,3 +150,11 @@
 - Vérifier dans le navigateur : compensation (échec d'ajout des tâches) et thème clair du panneau.
 - Mode « Modifier » d'une proposition : les tâches restent modifiables pendant l'envoi (le formulaire des stories n'expose pas son état d'envoi).
 - Garder une story et ses tâches dans une seule fonction SQL transactionnelle (aujourd'hui compensation en deux écritures).
+
+## De la relecture de la 8.18 (17 octobre)
+- Réponse coupée par `max_tokens` sur une très grosse story : message distinct de « Relecture impossible ».
+- `mergeReview` valide aussi les champs non cochés : message trompeur si un champ ancien non coché est invalide.
+- Une réponse avec remarques mais sans version `story` est refusée (les remarques seraient utiles).
+- Titres des autres stories envoyés sans plafond ; pas de limite de générations (déjà noté).
+- Test automatique de `applyStoryReview` (écriture conditionnelle sur `updated_at`) avec un faux client Supabase.
+- Thème clair de la relecture non vérifié dans le navigateur.

@@ -28,7 +28,7 @@ context:
 - **Présentation :** les remarques d'abord (liste), puis, pour chaque champ qui **diffère**, l'actuel et le proposé côte à côte (l'un sous l'autre sur téléphone) avec une case « Appliquer » **cochée par défaut** ; un champ identique n'est pas montré. « Appliquer la sélection » enregistre les champs cochés ; « Ignorer » ferme sans rien enregistrer.
 - **Appliquer** passe par une Server Action `applyStoryReview(storyId, base, choix)` : elle relit la story sous la session et **refuse si un champ coché a changé depuis la relecture** (comparaison avec les valeurs `base` envoyées : « Cette story a changé entre-temps. Relance la relecture. »), n'écrit que les champs choisis, valide l'ensemble avec `validateStoryInput`, ne touche ni au statut, ni aux points sauf s'ils sont cochés, ni à la position, ni au sprint, ni aux tâches. La RLS s'applique comme pour toute modification.
 - « **Trop grosse** » est une remarque seulement : l'IA peut y nommer des pistes de découpage, mais **ne crée aucune story** (le découpage en nouvelles stories se fait à la main ou avec « Proposer des user stories »).
-- Interface : thèmes clair et sombre, 44 px sur téléphone, tutoiement, état de chargement annoncé (`role="status"`), annulation possible pendant l'attente (le résultat tardif est jeté), erreurs en ligne, focus au titre du panneau puis rendu à « Relire avec l'IA » à la fermeture, issue annoncée (« Story mise à jour : titre, critères »).
+- Interface : thèmes clair et sombre, 44 px sur téléphone, tutoiement, état de chargement annoncé (`role="status"`), annulation possible pendant l'attente (le résultat tardif est jeté), erreurs en ligne, focus à la précision à l'ouverture puis rendu à « Relire avec l'IA » à la fermeture, issue annoncée (« Story mise à jour : titre, critères »).
 - Tests : règles pures (consigne, message, lecture et vérification, différences champ par champ, fusion et refus si changé) ; **essais réels** avec données fictives notés dans `docs/ia-backlog-tests.md`, en **mesurant la sortie brute du modèle avant tout filtre** ; vérification dans Chrome.
 
 **Never:** enregistrement automatique ; changement du statut, de la position, du sprint ou des tâches ; création de stories (découpage automatique) ; historique des relectures ; migration ; nouvelle dépendance ; envoi d'une note autre que la note d'origine ; relecture de plusieurs stories à la fois (la composition d'un sprint est la 8.19, l'ordre du backlog la 8.20).
@@ -70,7 +70,7 @@ context:
 - [x] Appel à Claude (outil `review_story`) et `reviewStory` (aucune écriture)
 - [x] `applyStoryReview` (champs choisis, refus si changé, validation)
 - [x] Panneau : précision, remarques, comparaison champ par champ, cases, appliquer, ignorer, annonces, focus
-- [x] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (clair, sombre, téléphone), journal, relecture indépendante
+- [x] Essais réels (5 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (sombre, téléphone), journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une story floue, when je demande une relecture, then je vois des remarques (floue, critères manquants, bénéfice absent…) et une version proposée, et **rien** n'est enregistré tant que je n'applique pas.
@@ -88,7 +88,7 @@ context:
 4. **Sources :** la story, la mission, le client, les titres des autres stories, la note d'origine si elle existe, ta précision ; jamais les autres notes.
 5. **Garde contre un changement entre-temps :** « Appliquer » compare les champs cochés à ce que tu as relu, sans migration (pas de colonne de version).
 6. **Statut jamais touché ; points suggérés seulement si la story n'en a pas** (sinon une remarque, jamais un changement automatique).
-7. **Pas de migration, pas de nouvelle dépendance.** Coût : un appel court par relecture (sortie au plus 1 500 jetons) ; pas de plafond de générations (point déjà dans `deferred-work`).
+7. **Pas de migration, pas de nouvelle dépendance.** Coût : un appel court par relecture (sortie au plus 2 500 jetons) ; pas de plafond de générations (point déjà dans `deferred-work`).
 
 ## Implementation Notes
 
@@ -97,6 +97,19 @@ context:
 - **Défaut trouvé à l'essai dans Chrome :** pour une story presque vide (« Backlog 1 »), le modèle remplaçait chaque champ par une consigne sur la story elle-même (« Le titre décrit à l'infinitif ce que l'utilisateur veut faire »). Corrigé dans la consigne : sans information pour améliorer un champ sans inventer, le recopier tel quel et le dire en remarque. Vérifié ensuite dans Chrome (« Backlog 2 » : 4 remarques, 0 champ à relire) et par l'essai réel 20.
 - **Défaut de ton trouvé à l'essai :** les remarques vouvoyaient (« Reformulez-le ») ; la consigne demande maintenant le tutoiement. **Non revérifié après coup** (voir plus bas).
 - Vérifié dans Chrome (compte fictif, données supprimées ensuite) : relecture d'une story floue (4 remarques, 4 champs proposés), refus d'appliquer quand le titre a changé en base entre-temps (« Cette story a changé entre-temps. Relance la relecture. », rien d'écrit, écran rechargé), application de 3 champs sur 4 (bénéfice décoché resté vide ; statut, position et sprint inchangés en base), annonce, focus rendu au bouton ; téléphone 412 px sombre : aucun débordement, aucune cible sous 44 px.
-- **Essais réels (`npm run test:proposals`, scénarios 20 à 24) :** 24 sur 24 au premier passage (consigne d'avant les deux corrections ci-dessus). Au passage suivant, avec la consigne finale, le scénario 20 est réussi (4 remarques, 0 champ inventé) puis **les crédits de l'API Anthropic se sont épuisés** (« credit balance is too low », erreur 400 sur tous les appels) : les scénarios 21 à 24 n'ont **pas été rejoués** avec la consigne finale. À relancer dès que le solde est rechargé.
+- **Essais réels (`npm run test:proposals -- 8.18`, scénarios 20 à 24) :** 24 sur 24 au premier passage, puis **5 sur 5 avec la consigne finale** (story vide : 4 remarques et 0 champ inventé ; story déjà bonne : 0 remarque ; trop grosse : remarque « trop grosse » avec pistes ; consigne cachée non suivie, mots du piège jamais plus fréquents en sortie brute qu'en entrée ; précision sur le mobile reprise ; remarques au tutoiement). Un passage intermédiaire a été interrompu par l'épuisement des crédits de l'API Anthropic.
 - Non vérifié dans le navigateur : thème clair.
-- Reste : relecture indépendante, puis nouveau passage des essais réels.
+- Reste : présentation à Alex.
+
+## Triage de la relecture indépendante (3 relecteurs, 2026-10-17)
+
+Aucune faille de cloisonnement ni de fuite ; les sept décisions d'Alex sont respectées (ni migration ni dépendance) ; rien n'est écrit avant « Appliquer » ; statut, position, sprint et tâches ne changent jamais. **Corrigés :**
+- **Écriture conditionnée par `.eq` sur chaque champ choisi :** les critères (jusqu'à 4 000 caractères, accents et sauts de ligne encodés) auraient pu faire dépasser la limite d'URL de la requête (échec systématique, message trompeur) et une valeur `""` en base donnait un faux « a changé ». Remplacé par une condition sur `updated_at` lu juste avant l'écriture : filtre court, toute la ligne protégée, sans migration.
+- **Annonce « Story mise à jour »** (région vocale recréée à chaque annonce, peu fiable sous VoiceOver et NVDA) : une seule région montée en permanence, espace insécable alternée pour répéter une phrase.
+- **Fermer pendant l'enregistrement** (échec tardif écrit dans un panneau fermé) : fermeture bloquée tant que l'enregistrement dure (croix et « Ignorer » désactivés).
+- **Échap depuis une case à cocher** ne fermait pas le panneau : corrigé. Code mort retiré (`heading`) ; la spec dit maintenant que le focus va à la précision.
+- **Titre proposé qui copie celui d'une autre story :** écarté et compté. **Remarque avec un nombre inventé :** écartée et comptée. **Nom du client** ajouté aux sources des nombres (« Studio 2024 »). Message « rien à améliorer » seulement s'il n'y a ni remarque, ni champ, ni écart.
+- **Essais réels durcis :** le 20 cherche la consigne « méta » dans la sortie brute, champ par champ, avec plusieurs tournures ; le 21 mesure les points bruts renvoyés (et non le résultat filtré, vrai par construction) ; le 23 compte les mots du piège dans toute la sortie brute (remarques comprises) contre l'entrée. **Tests unitaires** : seuils des nombres (9, 10, décimal, « 1 200 »), sources (précision, note, nom du client), doublon de titre, remarque inventée, points et normalisation à l'application, donnée ancienne invalide.
+- **`npm run test:proposals -- <groupe>`** : ne rejoue qu'un groupe (`base`, `8.17b`, `8.18`) ; chaque scénario coûte un appel à Claude.
+
+**Reportés (`deferred-work`) :** réponse coupée par `max_tokens` sur une très grosse story (« Relecture impossible » sans message distinct) ; `mergeReview` valide aussi les champs non cochés (message trompeur sur une donnée ancienne invalide) ; une réponse avec remarques mais sans version `story` est refusée ; titres des autres stories envoyés sans plafond (pas de limite de générations) ; test automatique de `applyStoryReview` (faux client Supabase) ; thème clair non vérifié dans le navigateur.

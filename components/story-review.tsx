@@ -26,20 +26,28 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
   const [checked, setChecked] = useState<Set<ReviewField>>(new Set());
   const [error, setError] = useState("");
   // L'annonce vit hors du panneau (qui se ferme après « Appliquer ») ; elle porte un numéro : la même phrase deux fois de suite est relue.
-  const [announce, setAnnounceState] = useState({ text: "", n: 0 });
-  const setAnnounce = useCallback((text: string) => setAnnounceState((a) => ({ text, n: a.n + 1 })), []);
+  const [announce, setAnnounceState] = useState("");
+  // Une seule région vocale, montée en permanence : le texte change, la région reste (une région insérée déjà pleine n'est pas annoncée de façon fiable).
+  // Une espace insécable alternée en fin de phrase permet de répéter la même phrase.
+  const flip = useRef(false);
+  const setAnnounce = useCallback((text: string) => {
+    flip.current = !flip.current;
+    setAnnounceState(text ? text + (flip.current ? "\u00a0" : "") : "");
+  }, []);
   // `pending` : une relecture est attendue (fermer le panneau la libère, son résultat tardif est jeté) ; `applying` : un enregistrement est en cours.
   const [pending, setPending] = useState(false);
   const [applying, setApplying] = useState(false);
   const applyingNow = useRef(false);
+  const closing = useRef(false);
   const openButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const heading = useRef<HTMLHeadingElement>(null);
   const wasOpen = useRef(false);
   const run = useRef(0);
   const titleId = useId();
 
   const closePanel = useCallback(() => {
+    // Pendant l'enregistrement le panneau ne se ferme pas (un échec tardif écrirait son erreur dans un panneau fermé) ; `apply` ferme lui-même au succès.
+    if (applyingNow.current && !closing.current) return;
     run.current++; // une relecture en cours est abandonnée : son résultat ne remplira pas un panneau fermé
     setOpen(false);
     setResult(null);
@@ -94,7 +102,9 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
         return;
       }
       setAnnounce(`Story mise à jour : ${r.applied.map((f) => FIELD_NAMES[f]).join(", ")}.`);
+      closing.current = true;
       closePanel();
+      closing.current = false;
     } catch (e) {
       if (isRedirect(e)) throw e;
       setError(UNREACHABLE);
@@ -105,8 +115,8 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
   };
 
   const status = (
-    <p key={announce.n} role="status" aria-live="polite" className="sr-only">
-      {announce.text}
+    <p role="status" aria-live="polite" className="sr-only">
+      {announce}
     </p>
   );
 
@@ -122,7 +132,7 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
     );
   }
 
-  const nothing = result && result.remarks.length === 0 && result.changes.length === 0;
+  const nothing = result && result.remarks.length === 0 && result.changes.length === 0 && result.dropped === 0;
   return (
     <>
       <div
@@ -132,18 +142,18 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
         onKeyDown={(e) => {
           if (e.key !== "Escape") return;
           // Échap dans la précision ne doit pas faire perdre la saisie : seuls « Fermer » et la croix ferment alors.
-          if ((e.target as HTMLElement).closest("textarea, input, select, form")) return;
+          if ((e.target as HTMLElement).closest("textarea, input:not([type=checkbox]), select, form")) return;
           e.preventDefault();
           closePanel();
         }}
         className="flex flex-col gap-3 rounded-md border border-primary/30 bg-primary/10 p-3"
       >
         <div className="flex items-start justify-between gap-3">
-          <h4 id={titleId} ref={heading} tabIndex={-1} className="flex items-center gap-2 text-sm font-semibold outline-none">
+          <h4 id={titleId} className="flex items-center gap-2 text-sm font-semibold">
             <Sparkles size={16} aria-hidden="true" />
             Relire la user story avec l&apos;IA
           </h4>
-          <Button type="button" variant="ghost" size="icon" className="max-md:size-11" onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
+          <Button type="button" variant="ghost" size="icon" className="max-md:size-11" disabled={applying} onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
             <X size={16} aria-hidden="true" />
           </Button>
         </div>
@@ -166,7 +176,7 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
           <Button type="button" size="sm" onClick={generate} disabled={pending || applying}>
             {pending ? "L'IA relit…" : result ? "Relire à nouveau" : "Relire"}
           </Button>
-          <button type="button" onClick={closePanel} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
+          <button type="button" disabled={applying} onClick={closePanel} className="text-sm underline underline-offset-4 disabled:opacity-50 max-md:inline-flex max-md:min-h-11 max-md:items-center">
             {pending ? "Annuler" : "Ignorer"}
           </button>
         </div>
@@ -231,7 +241,7 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
         )}
         {result && result.dropped > 0 && (
           <p className="text-sm text-muted-foreground">
-            {result.dropped} champ{result.dropped > 1 ? "s" : ""} proposé{result.dropped > 1 ? "s" : ""} écarté{result.dropped > 1 ? "s" : ""} (invalide, ou chiffre absent de tes sources).
+            {result.dropped} proposition{result.dropped > 1 ? "s" : ""} écartée{result.dropped > 1 ? "s" : ""} (champ ou remarque invalide, ou chiffre absent de tes sources).
           </p>
         )}
         {result?.noteCut && <p className="text-sm text-muted-foreground">La note d&apos;origine n&apos;a pas été envoyée : trop de texte.</p>}

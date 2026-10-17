@@ -1,5 +1,5 @@
 import { inventedNumbers } from "./citations.ts";
-import { toolInputs, type NoteForProposal } from "./story-proposals.ts";
+import { titleKey, toolInputs, type NoteForProposal } from "./story-proposals.ts";
 import { STORY_POINTS, validateStoryInput, type StoryStatus } from "./user-stories.ts";
 
 export const REVIEW_REMARKS_MAX = 5;
@@ -69,8 +69,9 @@ export function buildReviewMessage(input: { missionTitle: string; clientName: st
 }
 
 /** Sources de la vérification des nombres : tout ce qui a été donné au modèle ; un nombre qui n'y figure pas est inventé. */
-export function reviewSources(input: { hint: string; missionTitle: string; story: StoryForReview; otherTitles: string[]; note: NoteForProposal | null }): string[] {
-  return [input.hint, input.missionTitle, ...Object.values(toFieldValues(input.story)), ...input.otherTitles, ...(input.note ? [input.note.title, input.note.body] : [])];
+export function reviewSources(input: { hint: string; missionTitle: string; clientName?: string; story: StoryForReview; otherTitles: string[]; note: NoteForProposal | null }): string[] {
+  // Le nom du client est envoyé au modèle : « Studio 2024 » reprend un nombre qui n'est pas inventé.
+  return [input.hint, input.missionTitle, input.clientName ?? "", ...Object.values(toFieldValues(input.story)), ...input.otherTitles, ...(input.note ? [input.note.title, input.note.body] : [])];
 }
 
 /** Entrée du premier appel de l'outil `review_story` qui a une version `story` ; une réponse coupée, refusée ou sans l'outil lève une erreur. */
@@ -102,16 +103,22 @@ function listOf(v: unknown): unknown[] {
 
 /**
  * Relecture vérifiée. Remarques : au plus 5, texte de 200 caractères au plus (coupé au-delà), un type inconnu devient « autre ».
- * Version proposée : un champ invalide (règles de `validateStoryInput`) ou contenant un nombre absent des sources (10 ou plus, ou décimal) est écarté
+ * Version proposée : un champ invalide (ou un titre déjà porté par une autre story du backlog) (règles de `validateStoryInput`) ou contenant un nombre absent des sources (10 ou plus, ou décimal) est écarté
  * et compté, l'actuel est gardé ; un champ vide ne remplace jamais un champ rempli ; les points ne sont proposés que si la story n'en a pas.
  * `changes` ne contient que les champs qui diffèrent de l'actuel, une fois normalisés comme à la saisie.
  */
-export function verifyReview(raw: Record<string, unknown>, current: StoryForReview, sources: string[]): Review {
+export function verifyReview(raw: Record<string, unknown>, current: StoryForReview, sources: string[], otherTitles: string[] = []): Review {
   const remarks: Remark[] = [];
+  let dropped = 0;
   for (const r of listOf(raw.remarks).slice(0, REVIEW_REMARKS_MAX)) {
     const o = (r ?? {}) as Record<string, unknown>;
     const t = [...text(o.text).trim()].slice(0, REMARK_MAX).join("");
     if (!t) continue;
+    // Une remarque qui contient un nombre absent des sources (« découpe en 12 stories ») est écartée et comptée, comme un champ proposé.
+    if (inventedNumbers(t, sources).length) {
+      dropped++;
+      continue;
+    }
     const kind = text(o.kind).trim();
     remarks.push({ kind: REMARK_KIND_SET.has(kind) ? (kind as RemarkKind) : "autre", text: t });
   }
@@ -124,7 +131,6 @@ export function verifyReview(raw: Record<string, unknown>, current: StoryForRevi
     if (p.trim()) candidate[f] = p; // jamais un champ vidé
   }
   const validate = () => validateStoryInput({ ...candidate, points: "", status: "todo" });
-  let dropped = 0;
   let checked = validate();
   if (!checked.ok) {
     for (const f of TEXT_FIELDS) {
@@ -143,7 +149,9 @@ export function verifyReview(raw: Record<string, unknown>, current: StoryForRevi
   const changes: FieldChange[] = [];
   for (const f of TEXT_FIELDS) {
     if (normalized[f] === cur[f]) continue;
-    if (inventedNumbers(normalized[f], sources).length) {
+    // Un titre qui en copie un autre du backlog est écarté (comparaison sans accents, casse ni ponctuation finale).
+    const duplicate = f === "title" && otherTitles.some((t) => titleKey(t) === titleKey(normalized.title));
+    if (duplicate || inventedNumbers(normalized[f], sources).length) {
       dropped++;
       continue;
     }

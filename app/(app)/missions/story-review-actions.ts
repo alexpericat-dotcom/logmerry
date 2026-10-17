@@ -57,7 +57,7 @@ export async function reviewStory(storyId: string, hint: string): Promise<Review
       console.error("Relecture de story impossible :", e instanceof Error ? e.message : "erreur inconnue");
       throw e;
     }
-    const review = verifyReview(raw, current, reviewSources({ hint: text, missionTitle: mission.title, story: current, otherTitles, note }));
+    const review = verifyReview(raw, current, reviewSources({ hint: text, missionTitle: mission.title, clientName: mission.client?.name, story: current, otherTitles, note }), otherTitles);
     return { ok: true, ...review, noteCut: cut > 0, base: toFieldValues(current) };
   });
 
@@ -69,8 +69,8 @@ export async function reviewStory(storyId: string, hint: string): Promise<Review
 
 /**
  * Applique les champs choisis d'une relecture. `base` est ce que l'utilisateur a relu : si un champ choisi a changé depuis (autre onglet), rien n'est écrit.
- * Seuls les champs choisis sont écrits (jamais le statut, la position, le sprint ni les tâches) ; l'écriture elle-même est conditionnée à la valeur de base
- * (même lecture-puis-écriture que `setStoryStatus`, mais refusée si la ligne a bougé entre les deux).
+ * Seuls les champs choisis sont écrits (jamais le statut, la position, le sprint ni les tâches) ; l'écriture elle-même est conditionnée à la date de dernière modification lue
+ * (même lecture-puis-écriture que `setStoryStatus`, mais refusée si la ligne a bougé entre les deux : condition sur `updated_at`).
  */
 export async function applyStoryReview(storyId: string, base: FieldValues, chosen: Partial<FieldValues>): Promise<ApplyState> {
   const result = await withSession(async (supabase): Promise<ApplyState> => {
@@ -85,7 +85,7 @@ export async function applyStoryReview(storyId: string, base: FieldValues, chose
     // `base` doit être complet pour chaque champ choisi.
     for (const f of Object.keys(picked) as (keyof FieldValues)[]) if (typeof baseText[f] !== "string") return { ok: false, error: "Relance la relecture." };
 
-    const found = await supabase.from("user_stories").select(`mission_id, ${COLUMNS}`).eq("id", storyId).maybeSingle();
+    const found = await supabase.from("user_stories").select(`mission_id, updated_at, ${COLUMNS}`).eq("id", storyId).maybeSingle();
     if (found.error) throw new Error(`story ${found.error.code ?? ""}`.trim());
     if (!found.data) return { ok: false, error: STORY_GONE, gone: true };
     const status = parseStoryStatus(found.data.status);
@@ -94,17 +94,15 @@ export async function applyStoryReview(storyId: string, base: FieldValues, chose
     const merged = mergeReview({ ...current, ...baseText }, current, status, picked);
     if (!merged.ok) return { ok: false, error: merged.error, gone: merged.changed };
 
-    // Écriture conditionnée à l'état lu : une modification arrivée entre la lecture et l'écriture fait refuser (aucune ligne touchée).
+    // Écriture conditionnée à la ligne telle que je viens de la lire (sa date de dernière modification) : une modification arrivée entre la lecture et l'écriture
+    // fait refuser (aucune ligne touchée). Une condition sur chaque champ mettrait jusqu'à 4 000 caractères de critères dans l'URL de la requête.
     const values: Record<string, string | number | null> = {};
-    const conditions: { field: string; was: string }[] = [];
     for (const f of REVIEW_FIELDS) {
       if (merged.fields[f] === undefined) continue;
       const v = merged.fields[f] as string;
       values[f] = f === "title" ? v : v === "" ? null : f === "points" ? Number(v) : v;
-      conditions.push({ field: f, was: current[f] });
     }
-    let query = supabase.from("user_stories").update(values).eq("id", storyId);
-    for (const { field, was } of conditions) query = was === "" && field !== "title" ? query.is(field, null) : query.eq(field, field === "points" ? Number(was) : was);
+    const query = supabase.from("user_stories").update(values).eq("id", storyId).eq("updated_at", found.data.updated_at as string);
     const { data, error } = await query.select("id");
     if (error) throw new Error(`mise à jour ${error.code ?? ""}`.trim());
     if (!data?.length) return { ok: false, error: "Cette story a changé entre-temps. Relance la relecture.", gone: true };
