@@ -434,15 +434,35 @@ En tant que propriétaire, je veux une estimation de mes cotisations à partir d
 
 Le cockpit me dit quoi faire aujourd'hui et pourquoi.
 
-### Story 5.1 : Enregistrer mes échéances
+### Story 5.1a : Échéances saisies
+
+*Ancienne story 5.1, adaptée le 18 octobre 2026 (calendrier source unique des échéances : PRD FR-13, architecture AD-13).*
 
 En tant que propriétaire, je veux enregistrer mes échéances administratives avec leur date et leur source, afin de ne rien rater.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `deadlines` créée par une migration (RLS), **quand** je crée une échéance avec titre, date et source, **alors** elle apparaît dans la liste triée par date.
-**Et** une échéance sans date ou sans source est refusée.
-**Et** je peux la modifier, la marquer faite ou la supprimer.
+**Étant donné** la table `deadlines` créée par une migration (RLS), **quand** je crée une échéance avec titre, date, source et catégorie, **alors** elle apparaît dans la liste triée par date.
+**Et** une échéance saisie sans date ou sans source est refusée : une échéance saisie a toujours une date.
+**Et** je peux la modifier, la marquer faite ou la supprimer ; « faite » se marque par une seule action (`markDeadlineDone`), la même que celle du cockpit.
+**Et** les échéances en retard sont listées à part (« En retard ») avec leur retard en jours.
+**Et** la catégorie se choisit parmi celles du calendrier (Urssaf, France Travail, fiscale, TVA, CFE, justificatifs, renouvellements, personnalisée) ; la priorité et la récurrence arrivent avec la story 5.1b.
+**Et** le test d'isolation couvre `deadlines` (un autre compte ne les voit ni ne les modifie).
+
+### Story 5.1b : Calendrier administratif complet
+
+*Nouvelle story du 18 octobre 2026 (PRD FR-13, architecture AD-13). Première candidate à la coupe si le temps manque (PRD §7.3) : on coupe d'abord les catégories avancées et la récurrence, jamais le socle de règles ni les plafonds.*
+
+En tant que propriétaire, je veux un calendrier unique de mes obligations avec priorité, récurrence et vues, afin de voir d'un coup d'œil ce qui arrive.
+
+**Critères d'acceptation :**
+
+**Étant donné** des échéances (story 5.1a), **quand** j'ouvre le calendrier, **alors** je choisis une vue : « Aujourd'hui », « Cette semaine », « Ce mois-ci » ou « En retard ».
+**Et** chaque échéance a une priorité, un statut, un lien vers sa source officielle et une récurrence éventuelle ; une échéance récurrente crée **une ligne par occurrence** (les 12 prochains mois, complétées à la lecture quand il en manque), que je coche une par une.
+**Et** une échéance qu'une règle devrait calculer mais dont la règle est absente ou non vérifiée (ou dont une donnée du profil est vide) apparaît **sans date, marquée « À confirmer »** ; elle n'est jamais estimée en silence.
+**Et** les factures à émettre et à relancer apparaissent dans le calendrier comme des lignes calculées à partir des factures, sans être des échéances stockées.
+**Et** le calendrier ne contient que des obligations, pas de rendez-vous.
+**Et** le test d'isolation couvre les occurrences d'une série (un autre compte ne les voit ni ne les coche).
 
 ### Story 5.2 : Voir mes tâches du jour (échéances et factures échues)
 
