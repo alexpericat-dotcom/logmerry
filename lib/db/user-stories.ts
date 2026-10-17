@@ -25,7 +25,7 @@ const COLUMNS = "id, mission_id, title, role, benefit, acceptance_criteria, poin
 /** Le backlog d'une de mes missions, dans l'ordre de priorité (la RLS limite aux miens). */
 export async function listStories(missionId: string): Promise<StoryRecord[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).order("position", { ascending: true }).order("created_at", { ascending: true });
+  const { data, error } = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   if (error) throw new Error("Impossible de charger le backlog.");
   return data as unknown as StoryRecord[];
 }

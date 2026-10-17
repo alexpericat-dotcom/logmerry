@@ -29,6 +29,7 @@ import { SprintBlock } from "@/components/sprint-block";
 import { SprintForm } from "@/components/sprint-form";
 import { StoryForm } from "@/components/story-form";
 import { StoryList } from "@/components/story-list";
+import { BacklogOrder } from "@/components/backlog-order";
 import { StoryProposals, type LinkedNote } from "@/components/story-proposals";
 import { Button } from "@/components/ui/button";
 import type { SprintRecord } from "@/lib/db/sprints";
@@ -314,6 +315,8 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
           <div className={adding ? "hidden" : "contents"}>
             <StoryProposals missionId={missionId} notes={notes} />
           </div>
+          {/* Au moins 2 stories ouvertes : sinon il n'y a rien à ordonner. */}
+          {!adding && backlog.filter((st) => st.status !== "done").length >= 2 && <BacklogOrder missionId={missionId} />}
           {dndError && (
             <p role="alert" className="text-sm text-destructive">
               {dndError}
