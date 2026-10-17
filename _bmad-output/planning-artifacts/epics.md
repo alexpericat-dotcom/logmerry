@@ -293,6 +293,7 @@ En tant que propriétaire, je veux planifier des sprints et y placer des stories
 **Et** un seul sprint est « en cours » par mission ; je peux le démarrer et le clore ; à la clôture, les stories non terminées retournent au backlog ou passent au sprint suivant (mon choix).
 **Et** la page d'une mission montre le sprint en cours, son avancement et le reste du backlog ; la fin ne peut pas précéder le début.
 **Et** une story se glisse d'une liste à l'autre (backlog, sprint planifié, sprint en cours) à la souris, au toucher et au clavier avec annonces ; le menu « Sprint » de la story reste l'équivalent clavier et lecteur d'écran (ajouté le 17 octobre).
+**Et** à la création, le nom du sprint est prérempli (« Sprint 1 », « Sprint 2 »… par mission, numéro calculé côté serveur) et modifiable ; le cockpit affichera toujours « Client / Mission / Sprint X » (stories 5.x) (ajouté le 18 octobre).
 **Et** un sprint clos est figé : aucune story n'y entre ni n'en sort, côté écran, côté serveur et côté base ; son nom et son objectif restent modifiables ; le supprimer renvoie ses stories au backlog, à la suite, dans leur ordre.
 
 ### Story 3.6 : Suivre mes devis

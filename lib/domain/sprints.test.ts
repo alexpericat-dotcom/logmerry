@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SPRINT_GOAL_MAX, SPRINT_NAME_MAX, acceptsStories, daysBetween, parisToday, parseSprintStatus, sprintProgress, sprintProgressLabel, sprintTimeLabel, validateSprintInput } from "./sprints.ts";
+import { SPRINT_GOAL_MAX, SPRINT_NAME_MAX, acceptsStories, nextSprintName, sprintNameForCreate, daysBetween, parisToday, parseSprintStatus, sprintProgress, sprintProgressLabel, sprintTimeLabel, validateSprintInput } from "./sprints.ts";
 
 const ok = { name: "Sprint 1", goal: "Premier tableau des inscriptions", start_date: "2026-10-19", end_date: "2026-10-30" };
 
@@ -86,4 +86,26 @@ test("statuts : seuls trois états ; un sprint clos n'accepte plus de story", ()
   assert.equal(acceptsStories("planned"), true);
   assert.equal(acceptsStories("active"), true);
   assert.equal(acceptsStories("closed"), false);
+});
+
+test("nom automatique : premier sprint, suite, trou laissé par une suppression, noms renommés à la main", () => {
+  assert.equal(nextSprintName([]), "Sprint 1");
+  assert.equal(nextSprintName(["Sprint 1", "Sprint 2"]), "Sprint 3");
+  assert.equal(nextSprintName(["Sprint 1", "Sprint 3"]), "Sprint 4"); // « Sprint 2 » supprimé : son numéro n'est pas réutilisé
+  assert.equal(nextSprintName(["Livraison", "Recette"]), "Sprint 3"); // aucun « Sprint N » : le nombre de sprints plus 1
+  assert.equal(nextSprintName(["Livraison", "Sprint 5"]), "Sprint 6");
+  assert.equal(nextSprintName([" sprint  7 ", "Sprint 12"]), "Sprint 13"); // casse et espaces tolérés
+  assert.equal(nextSprintName(["Sprint 2 bis", "Sprint A"]), "Sprint 3"); // pas de la forme « Sprint N »
+});
+
+test("nom à la création : vide = automatique ; « Sprint N » déjà pris = numéro libre ; autre nom gardé ; nul retiré", () => {
+  const existing = ["Sprint 1", "Sprint 2"];
+  assert.equal(sprintNameForCreate("", existing), "Sprint 3");
+  assert.equal(sprintNameForCreate("   ", existing), "Sprint 3");
+  assert.equal(sprintNameForCreate("\u0000", existing), "Sprint 3");
+  assert.equal(sprintNameForCreate("Sprint 3", existing), "Sprint 3"); // numéro libre : gardé
+  assert.equal(sprintNameForCreate("Sprint 2", existing), "Sprint 3"); // pris dans un autre onglet
+  assert.equal(sprintNameForCreate("sprint 02", existing), "Sprint 3"); // même numéro, écrit autrement
+  assert.equal(sprintNameForCreate("  Livraison du portail ", existing), "Livraison du portail");
+  assert.equal(sprintNameForCreate("Sprint 9", []), "Sprint 9");
 });

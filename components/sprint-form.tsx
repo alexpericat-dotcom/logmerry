@@ -16,6 +16,7 @@ export function SprintForm({
   idPrefix,
   action,
   initial,
+  suggestedName,
   submitLabel,
   datesLocked = false,
   onDone,
@@ -24,6 +25,8 @@ export function SprintForm({
   idPrefix: string;
   action: (state: SprintFormState, formData: FormData) => Promise<SprintFormState>;
   initial?: SprintFormValues;
+  /** Création : nom proposé (« Sprint 3 »), préremplit le champ ; un champ vidé reçoit le nom automatique côté serveur. Absent : le nom est obligatoire (modification). */
+  suggestedName?: string;
   submitLabel: string;
   /** Sprint clos : seuls le nom et l'objectif se modifient. */
   datesLocked?: boolean;
@@ -33,7 +36,7 @@ export function SprintForm({
   const router = useRouter();
   const [state, formAction, pending] = useActionState<SprintFormState, FormData>(async (prev, formData) => ({ ...(await action(prev, formData)), sent: (prev.sent ?? 0) + 1 }), {});
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
-  const values = state.values ?? initial ?? EMPTY;
+  const values = state.values ?? initial ?? (suggestedName ? { ...EMPTY, name: suggestedName } : EMPTY);
   const errors = state.errors ?? {};
   const name = useRef<HTMLInputElement>(null);
 
@@ -60,8 +63,8 @@ export function SprintForm({
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-4 rounded-md border border-primary/30 bg-primary/10 p-4">
       <div className="grid gap-2">
-        <Label htmlFor={`${idPrefix}-name`}>Nom du sprint (obligatoire)</Label>
-        <Input {...field("name")} ref={name} aria-required="true" autoComplete="off" maxLength={SPRINT_NAME_MAX * 2} placeholder="Sprint 1" />
+        <Label htmlFor={`${idPrefix}-name`}>{suggestedName ? "Nom du sprint (laisse vide pour le nom automatique)" : "Nom du sprint (obligatoire)"}</Label>
+        <Input {...field("name")} ref={name} aria-required={suggestedName ? undefined : "true"} autoComplete="off" maxLength={SPRINT_NAME_MAX * 2} placeholder={suggestedName ?? "Sprint 1"} />
         {errorLine("name")}
       </div>
       <div className="grid gap-2">
