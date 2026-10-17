@@ -153,6 +153,8 @@ flowchart TD
   - Montants en **centimes entiers** (`bigint`), jamais en flottant ; pourcentages et taux en `numeric`.
   - Valeurs à plusieurs choix (statuts, étiquette d'origine, source d'une échéance) en **enums Postgres** ; ajout d'une valeur = migration.
   - `parameters` : `key`, `value`, `unit`, `source`, `verified_on`, `revalidate_after`. C'est la seule source des taux et plafonds.
+  - **Sprints (17 octobre, story 3.5c) :** `sprints` (rattaché à une mission : nom, objectif, `start_date` et `end_date` avec fin ≥ début, état enum `planned` / `active` / `closed`) ; `user_stories.sprint_id` (nul = backlog, `on delete set null`). Un seul sprint `active` par mission (index unique partiel). La policy de `user_stories` exige un sprint à moi ET de la même mission (une clé étrangère contourne la RLS). Un sprint clos est figé **en base** par un déclencheur (`user_stories_guard_closed_sprint` : aucune story n'y entre ni n'en sort ; sa suppression reste permise) et aussi à l'écran et dans les Server Actions. `position` ordonne les stories à l'intérieur de leur liste (backlog ou un sprint).
+  - **Règle de migration :** une migration qui remplace une policy repart de la définition en vigueur (`pg_policies`), pas du fichier d'origine (régression attrapée en 3.5c).
   - Schéma modifié **uniquement** par des fichiers dans `supabase/migrations/`, un fichier par changement, appliqués avec la CLI Supabase après relecture du SQL.
 - **En clair :** une table par notion, tout est rattaché à un propriétaire, l'argent est en centimes, le schéma ne bouge que par migration.
 
@@ -162,6 +164,8 @@ erDiagram
   CLIENTS ||--o{ MISSIONS : a
   CLIENTS ||--o{ NOTES : "lié à (optionnel)"
   MISSIONS ||--o{ USER_STORIES : "a pour backlog"
+  MISSIONS ||--o{ SPRINTS : "est livrée en"
+  SPRINTS |o--o{ USER_STORIES : "contient (optionnel)"
   USER_STORIES ||--o{ TASKS : "découpée en"
   NOTES ||--o{ USER_STORIES : "source (optionnelle)"
   MISSIONS ||--o{ QUOTES : a
@@ -266,7 +270,7 @@ flowchart LR
 | FR-3, FR-19, FR-21 (notes, recherche, à documenter) | `app/(app)/notes`, `lib/domain/chunking`, `lib/ai` | AD-4, AD-7, AD-9 |
 | FR-4, FR-5, FR-6, FR-12 (assistant, historique, tests) | `app/api/chat`, `conversations`, `messages` | AD-6, AD-7 |
 | FR-20 (résumé) | Server Action + `lib/ai` | AD-6 (après le jalon du 30 octobre) |
-| FR-7, FR-8, FR-22 (CRM, missions, backlog, tâches, devis) | `app/(app)/clients`, `missions` ; tables `missions`, `user_stories`, `tasks` (sprints à venir) | AD-4, AD-8 |
+| FR-7, FR-8, FR-22 (CRM, missions, backlog, tâches, devis) | `app/(app)/clients`, `missions` ; tables `missions`, `user_stories`, `tasks`, `sprints` | AD-4, AD-8 |
 | FR-23, FR-24 (aide de l'IA à la conception, prompt de mission) | Server Actions de `missions` + `lib/ai/claude-tool`, `lib/domain/*proposals`, `mission-context`, `prompt-generation` | AD-6 |
 | FR-9, FR-10, FR-11, FR-15 (finances) | `lib/domain/finance`, `parameters` | AD-5, AD-8 |
 | FR-13, FR-14 (échéances, cockpit) | `lib/domain/cockpit`, `deadlines`, `task_checks` | AD-5 |
