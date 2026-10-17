@@ -363,13 +363,20 @@ En tant que propriétaire, je veux saisir mes règles (plafonds, taux, dates d'e
 
 ### Story 4.2 : Enregistrer mes factures
 
-En tant que propriétaire, je veux enregistrer mes factures (payée ou non, date d'échéance), afin de savoir lesquelles relancer.
+*Modifiée le 18 octobre 2026 (hors taxe et taxe, statut « payée » calculé, lien facultatif vers le devis : PRD FR-9, architecture AD-8).*
+
+En tant que propriétaire, je veux enregistrer mes factures (hors taxe, taxe, date d'échéance), afin de savoir lesquelles relancer.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `invoices` créée par une migration (RLS, montant en centimes), **quand** je crée une facture liée à une mission avec montant et date d'échéance, **alors** elle apparaît dans la liste avec son statut.
-**Et** je peux filtrer « non payées » et « échues ».
+**Étant donné** la table `invoices` créée par une migration (RLS, montants en centimes), **quand** je crée une facture liée à une mission avec un montant hors taxe, un montant de taxe (facultatif : inconnu reste vide, jamais 0) et une date d'échéance, **alors** elle apparaît dans la liste avec son statut.
+**Et** une facture peut pointer, facultativement, vers le devis d'origine (un devis de ma fiche, la base refuse celui d'un autre compte).
+**Et** le statut « payée » n'est pas saisi : il se déduit des encaissements (story 4.3) ; une facture sans encaissement est « non payée ».
+**Et** je peux filtrer « non payées » et « échues » (non payée, date d'échéance dépassée).
+**Et** le toutes taxes comprises s'affiche, calculé à partir du hors taxe et de la taxe, uniquement quand la taxe est connue.
+**Et** une facture sans montant hors taxe ou sans date d'échéance est refusée.
 **Et** ce n'est pas une facture légale : un texte le rappelle.
+**Et** le test d'isolation couvre `invoices` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma mission ou à mon devis).
 
 ### Story 4.3 : Enregistrer un encaissement
 
