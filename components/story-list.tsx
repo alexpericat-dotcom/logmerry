@@ -10,6 +10,7 @@ import { useActionState, useCallback, useEffect, useId, useOptimistic, useRef, u
 import { deleteStory, setStoryStatus, setStorySprint, updateStory, type StoryActionState } from "@/app/(app)/missions/story-actions";
 import { Row } from "@/components/sortable-list";
 import { StoryForm, selectClass } from "@/components/story-form";
+import { StoryReview } from "@/components/story-review";
 import { Badge } from "@/components/ui/badge";
 import { Tasks } from "@/components/tasks";
 import { Button } from "@/components/ui/button";
@@ -246,6 +247,7 @@ export function StoryItem({
             </select>
             {currentSprint?.status === "closed" && <span className="text-xs text-muted-foreground">Sprint clos : la story n&apos;en sort plus.</span>}
           </div>
+          <StoryReview storyId={story.id} storyTitle={story.title} />
           <Tasks storyId={story.id} storyTitle={story.title} tasks={tasks} />
           {mode === "view" && (
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">

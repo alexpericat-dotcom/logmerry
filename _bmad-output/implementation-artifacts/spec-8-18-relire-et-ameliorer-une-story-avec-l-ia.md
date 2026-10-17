@@ -2,7 +2,7 @@
 title: 'Story 8.18 : Relire et améliorer une story avec l''IA'
 type: 'feature'
 created: '2026-10-17'
-status: 'draft'
+status: 'review'
 baseline_commit: 'e5f3550'
 route: 'dispatch'
 context:
@@ -66,11 +66,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Règles pures + tests (`lib/domain/story-review.ts`)
-- [ ] Appel à Claude (outil `review_story`) et `reviewStory` (aucune écriture)
-- [ ] `applyStoryReview` (champs choisis, refus si changé, validation)
-- [ ] Panneau : précision, remarques, comparaison champ par champ, cases, appliquer, ignorer, annonces, focus
-- [ ] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (clair, sombre, téléphone), journal, relecture indépendante
+- [x] Règles pures + tests (`lib/domain/story-review.ts`)
+- [x] Appel à Claude (outil `review_story`) et `reviewStory` (aucune écriture)
+- [x] `applyStoryReview` (champs choisis, refus si changé, validation)
+- [x] Panneau : précision, remarques, comparaison champ par champ, cases, appliquer, ignorer, annonces, focus
+- [x] Essais réels (4 scénarios fictifs, sortie brute mesurée), vérification dans Chrome (clair, sombre, téléphone), journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une story floue, when je demande une relecture, then je vois des remarques (floue, critères manquants, bénéfice absent…) et une version proposée, et **rien** n'est enregistré tant que je n'applique pas.
@@ -89,3 +89,14 @@ context:
 5. **Garde contre un changement entre-temps :** « Appliquer » compare les champs cochés à ce que tu as relu, sans migration (pas de colonne de version).
 6. **Statut jamais touché ; points suggérés seulement si la story n'en a pas** (sinon une remarque, jamais un changement automatique).
 7. **Pas de migration, pas de nouvelle dépendance.** Coût : un appel court par relecture (sortie au plus 1 500 jetons) ; pas de plafond de générations (point déjà dans `deferred-work`).
+
+## Implementation Notes
+
+- Décisions validées par Alex le 17 octobre (« go »). Aucune migration, aucune dépendance, aucun ajout au test d'isolation (pas de nouvelle table : la modification d'une story passe par la RLS existante).
+- Écarts au Code Map : `FIELD_NAMES` (noms courts pour l'annonce) en plus de `FIELD_LABELS` ; `applyStoryReview` conditionne l'écriture elle-même à la valeur lue (`.eq` sur chaque champ choisi) en plus de la comparaison avec `base`, pour qu'une modification arrivée entre la lecture et l'écriture soit refusée ; la région vocale est hors du panneau (même place dans l'état ouvert et fermé) pour que « Story mise à jour : titre, critères » soit annoncé après la fermeture.
+- **Défaut trouvé à l'essai dans Chrome :** pour une story presque vide (« Backlog 1 »), le modèle remplaçait chaque champ par une consigne sur la story elle-même (« Le titre décrit à l'infinitif ce que l'utilisateur veut faire »). Corrigé dans la consigne : sans information pour améliorer un champ sans inventer, le recopier tel quel et le dire en remarque. Vérifié ensuite dans Chrome (« Backlog 2 » : 4 remarques, 0 champ à relire) et par l'essai réel 20.
+- **Défaut de ton trouvé à l'essai :** les remarques vouvoyaient (« Reformulez-le ») ; la consigne demande maintenant le tutoiement. **Non revérifié après coup** (voir plus bas).
+- Vérifié dans Chrome (compte fictif, données supprimées ensuite) : relecture d'une story floue (4 remarques, 4 champs proposés), refus d'appliquer quand le titre a changé en base entre-temps (« Cette story a changé entre-temps. Relance la relecture. », rien d'écrit, écran rechargé), application de 3 champs sur 4 (bénéfice décoché resté vide ; statut, position et sprint inchangés en base), annonce, focus rendu au bouton ; téléphone 412 px sombre : aucun débordement, aucune cible sous 44 px.
+- **Essais réels (`npm run test:proposals`, scénarios 20 à 24) :** 24 sur 24 au premier passage (consigne d'avant les deux corrections ci-dessus). Au passage suivant, avec la consigne finale, le scénario 20 est réussi (4 remarques, 0 champ inventé) puis **les crédits de l'API Anthropic se sont épuisés** (« credit balance is too low », erreur 400 sur tous les appels) : les scénarios 21 à 24 n'ont **pas été rejoués** avec la consigne finale. À relancer dès que le solde est rechargé.
+- Non vérifié dans le navigateur : thème clair.
+- Reste : relecture indépendante, puis nouveau passage des essais réels.
