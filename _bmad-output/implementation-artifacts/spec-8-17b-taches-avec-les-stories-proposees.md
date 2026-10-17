@@ -2,7 +2,7 @@
 title: 'Story 8.17b : Tâches proposées avec les stories du backlog'
 type: 'feature'
 created: '2026-10-17'
-status: 'review'
+status: 'done'
 baseline_commit: '8895056'
 route: 'dispatch'
 context:
