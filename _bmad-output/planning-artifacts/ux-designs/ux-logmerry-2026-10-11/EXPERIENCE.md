@@ -11,7 +11,7 @@ sources:
 
 > Guide de lecture : Information Architecture, Component Patterns et Key Flows pour savoir quoi construire et où ; Voice and Tone et State Patterns pour les messages et états ; Interaction Primitives et Accessibility Floor pour le clavier et l'accessibilité ; Open items pour les décisions et hypothèses restantes.
 
-> Termes du glossaire du PRD repris tels quels : Propriétaire, Note, Extrait, Citation, Mission, Étape, Paramètre, Estimation, Encaissement, Échéance, Règle d'adaptation, Réalisation. Les exigences sont référencées par numéro (FR-n), pas recopiées. En cas de conflit, DESIGN.md et EXPERIENCE.md l'emportent sur toute maquette (`mockups/`).
+> Termes du glossaire du PRD repris tels quels : Propriétaire, Note, Extrait, Citation, Mission, Backlog, User story, Tâche, Paramètre, Estimation, Encaissement, Échéance, Règle d'adaptation, Réalisation. Les exigences sont référencées par numéro (FR-n), pas recopiées. En cas de conflit, DESIGN.md et EXPERIENCE.md l'emportent sur toute maquette (`mockups/`).
 
 ## Foundation
 
@@ -28,7 +28,7 @@ Barre latérale fixe à gauche, repliable en icônes, le Cockpit en première en
 | Assistant (panneau) + Historique | Bouton ou raccourci, toute page ; historique dans le panneau | Question, réponse citée, échanges conservés ([maquette](mockups/key-assistant.html)) | FR-4, FR-5, FR-12 |
 | Notes (liste, éditeur, recherche) | Barre latérale | Base de connaissances, résumé généré | FR-3, FR-19, FR-20 |
 | Clients / prospects / contacts | Barre latérale ; création depuis une Note | CRM minimal | FR-7 |
-| Missions et Étapes | Barre latérale ; fiche client | Découpage et avancement | FR-8 |
+| Missions (backlog, user stories, tâches) | Barre latérale ; fiche client | Backlog compact, tâches, glisser-déposer, aide de l'IA, prompt de mission | FR-8, FR-23, FR-24 |
 | Factures et Encaissements | Barre latérale | Statut payé ou non, saisie des Encaissements | FR-9 |
 | Échéances | Barre latérale ; Cockpit | Obligations datées avec source | FR-13 |
 | Paramètres | Barre latérale | Valeurs avec source et date de vérification | FR-10 |
@@ -71,7 +71,7 @@ Comportement ; l'aspect est dans `DESIGN.md`, Components.
 | `citation-chip` | Lien (navigation) ou bouton (copie), jamais un `div` cliquable ; cible ≥ 24 px. Ouvre la Note source à l'Extrait, dans le même onglet (sinon « (nouvel onglet) » dans le nom accessible) ; le focus va à l'Extrait (`tabindex="-1"`), surligné par fond + contour (pas la couleur seule) ; le panneau reste ouvert. La source est relue en base par identifiant (FR-4). |
 | `gradient-banner` | Voir `DESIGN.md`, Components. Décoratif, au-dessus de la liste des tâches uniquement ; ne porte que le titre de page. |
 | `data-table` | Tri, filtre (statut, étiquette d'origine, FR-7), recherche ; chiffres et dates tabulaires alignés à droite ; `<table>` natif avec `<caption>` masquée visuellement ; `th scope="col"` ; colonne triable = `<button>` dans le `th` portant `aria-sort="ascending|descending"` (un seul `th` actif), colonnes non triables sans bouton ; focus et ordre conservés après tri. Ligne cliquable : le lien (nom du client) est dans la 1re cellule, étendu à la ligne par CSS ; pas de `role` ni d'`onClick` sur `tr`. Après filtre ou recherche : `role="status"` « 12 clients sur 40 ». Défilement horizontal dans un conteneur focalisable (`tabindex="0"`) nommé. Pas de dégradé. |
-| Formulaires | **Champs obligatoires (minimum)** : prospect = nom + origine ; Mission = client + titre ; Étape = titre + date ; devis = montant + date d'envoi (statut « envoyé » par défaut ; « accepté », « refusé » ; remarque facultative ; accepté = Mission créée ou confirmée, refusé = tâche du Cockpit retirée ; pas de document) ; Échéance = date + source (FR-13 ; enregistrement refusé si la source manque). Tout le reste en divulgation progressive (« Plus de champs », modifiable plus tard). Libellé associé à chaque champ, erreur en ligne + récapitulatif. Champs requis : « (obligatoire) » dans le libellé + `aria-required`. Erreur : `aria-invalid` + `aria-describedby`, récapitulatif en tête (focus dessus, sans `role="alert"` en plus), ses liens déplacent le focus sur le champ. Date : saisie texte JJ/MM/AAAA, format indiqué dans le libellé, sélecteur `Calendar` optionnel navigable aux flèches ; date de vérification d'un Paramètre préremplie à aujourd'hui. Montant : `inputmode="decimal"`, virgule acceptée. `autocomplete` sur les champs d'identité. « Plus de champs » : `aria-expanded`/`aria-controls`. Toute information déjà saisie dans le parcours (client, Mission) est préremplie, jamais redemandée. |
+| Formulaires | **Champs obligatoires (minimum)** : prospect = nom + origine ; Mission = client + titre ; User story = titre ; Tâche = titre ; devis = montant + date d'envoi (statut « envoyé » par défaut ; « accepté », « refusé » ; remarque facultative ; accepté = Mission créée ou confirmée, refusé = tâche du Cockpit retirée ; pas de document) ; Échéance = date + source (FR-13 ; enregistrement refusé si la source manque). Tout le reste en divulgation progressive (« Plus de champs », modifiable plus tard). Libellé associé à chaque champ, erreur en ligne + récapitulatif. Champs requis : « (obligatoire) » dans le libellé + `aria-required`. Erreur : `aria-invalid` + `aria-describedby`, récapitulatif en tête (focus dessus, sans `role="alert"` en plus), ses liens déplacent le focus sur le champ. Date : saisie texte JJ/MM/AAAA, format indiqué dans le libellé, sélecteur `Calendar` optionnel navigable aux flèches ; date de vérification d'un Paramètre préremplie à aujourd'hui. Montant : `inputmode="decimal"`, virgule acceptée. `autocomplete` sur les champs d'identité. « Plus de champs » : `aria-expanded`/`aria-controls`. Toute information déjà saisie dans le parcours (client, Mission) est préremplie, jamais redemandée. |
 | Contact (portfolio public) | **MVP : `mailto-link`.** Lien « m'écrire » (`mailto:`), souligné, `{colors.primary}`, cible ≥ 24 px, focus visible `{colors.ring}`. Aucune écriture en base : la page reste en lecture seule (FR-16), aucun e-mail automatique. Vouvoiement autour (« Vous pouvez m'écrire »).<br>**Après MVP : `contact-form`.** Vouvoiement. Champs : nom, e-mail, message, tous avec libellé visible, `aria-required`, `autocomplete="name"`/`"email"`. Erreurs : récapitulatif en tête (focus) + erreur en ligne reliée par `aria-describedby`, saisie conservée. Envoi : bouton désactivé seulement pendant l'envoi ; succès dans une région `role="status"` (« Message envoyé. ») ; échec : message d'erreur + « Réessayer ». Anti-spam sans test cognitif : champ piège masqué (`aria-hidden`, `tabindex="-1"`), délai minimal de soumission, limitation de débit côté serveur ; aucun CAPTCHA à image, énigme ou calcul. Destination : table de demandes en insertion seule (voir Open items). |
 | `status-badge` | Voir `DESIGN.md`, Components (icône + texte, la couleur n'est qu'un renfort). |
 | Sidebar | Libellé visible en texte ; quand la barre est repliée, `aria-label` ; page courante `aria-current="page"` + indicateur non coloré (règle F-03, Interaction Primitives) ; bouton de repli `aria-expanded`, état mémorisé ; infobulle au survol et au focus, survolable et fermable par Esc (WCAG 1.4.13). Téléphone (`Sheet`) : focus sur le premier lien à l'ouverture, retour au bouton à la fermeture. |
@@ -174,9 +174,9 @@ Elle ne voit jamais le nom du client sans son accord ni une donnée privée (FR-
 
 1. Alex crée le prospect depuis la Note de rendez-vous (nom + origine).
 2. Le prospect devient client, puis Alex crée la ou les Missions (client + titre).
-3. Il ajoute des Étapes datées (titre + date), puis le devis (montant + date d'envoi, statut « envoyé » par défaut ; « accepté » ou « refusé » ensuite), puis les Échéances (date + source).
+3. Il construit le Backlog de la mission (User stories, puis Tâches ; l'IA peut les proposer, il relit), puis le devis (montant + date d'envoi, statut « envoyé » par défaut ; « accepté » ou « refusé » ensuite), puis les Échéances (date + source).
 4. Chaque formulaire n'exige que ses champs minimaux ; le reste reste en divulgation progressive.
-5. **Climax :** il ouvre le Cockpit et voit l'effet de sa saisie : les tâches issues de ses Étapes et Échéances apparaissent avec leur motif.
+5. **Climax :** il ouvre le Cockpit et voit l'effet de sa saisie : les tâches issues de ses Échéances, factures et devis apparaissent avec leur motif (le lien avec le backlog n'est pas décidé : PRD §9, point 6).
 
 ### UJ-5 : Alex enregistre un paiement et règle son plafond (Alex) `[NOTE FOR UX : absent du PRD]`
 
@@ -196,6 +196,21 @@ Cas limite : si le plafond manque, la jauge est en état « paramètre manquant 
   - suivi de devis (montant, date d'envoi, statut envoyé/accepté/refusé) ;
   - champs de Réalisation (accord, nom du client masqué, étiquette d'origine) ;
   - contact = lien mailto au MVP, formulaire après MVP ;
-  - « prendre de l'avance » après MVP, avec les deux boutons, marqués « après MVP » (tâches futures = Étapes à venir et Échéances des 30 jours, date la plus proche, 3 au plus, étiquetées « à venir », opt-in strict SM-C1) ;
+  - « prendre de l'avance » après MVP, avec les deux boutons, marqués « après MVP » (tâches futures = sprints ou stories à venir, à redéfinir, et Échéances des 30 jours, date la plus proche, 3 au plus, étiquetées « à venir », opt-in strict SM-C1) ;
   - import Notion/PDF après MVP ;
   - catalogue d'outils (FR-17/18) hors MVP, le rappel d'Échéance (FR-13) ne s'applique pas au catalogue.
+
+### UJ-6 : Alex conçoit une mission en agile avec l'IA (Alex) (17 octobre)
+
+1. Sur la page d'une mission, le Backlog liste les User stories en une ligne chacune (poignée, titre, points, avancement des tâches, statut) ; une story se déplie pour montrer sa phrase « En tant que… », ses critères et ses tâches.
+2. **Proposer des user stories avec l'IA** : il colle un brief et/ou coche des notes liées au client ; les propositions arrivent dans un panneau, à garder, modifier puis garder, ou rejeter ; la mention dit que le contenu part chez Anthropic.
+3. Dans une story dépliée, **Proposer des tâches avec l'IA** (précision facultative) : tâches ordonnées, à garder une par une ou **Tout garder**.
+4. Il réordonne stories et tâches par **glisser-déposer** (souris, doigt par la poignée, ou clavier : Espace, flèches, Espace, Échap annule) ; chaque déplacement est annoncé.
+5. **Générer un prompt avec l'IA** : contenu (la mission seule, ou tout le contexte), ce qu'il veut obtenir (en citant l'outil : n8n, Claude Code…), case « sans le nom du client » (le nom est remplacé par « le client » partout) ; le prompt est modifiable, avec un bouton « Copier le prompt ».
+6. **Climax :** il colle le prompt dans Claude Code ou Claude relié à n8n et l'assistant commence par poser ses questions.
+
+Cas limites : un chiffre inventé écarte la proposition (dit à l'écran) ; « Annuler » libère l'écran pendant la génération ; une mission d'un autre compte ne se charge jamais.
+
+### Interface : thèmes et première page (17 octobre)
+- Deux thèmes : **Rétro** (clair, pixel art « Arcade clair ») et **Futur** (sombre, par défaut). **La première page est la connexion** (décision d'Alex : plus sobre, plus professionnelle) ; l'écran de choix du thème a été retiré. Le thème se change par le bouton de la barre latérale et le choix est mémorisé. Le message du cockpit s'écrit au clavier une fois par session. Détail visuel : `DESIGN.md`.
+- Mobile : cibles de 44 px, aucune barre de défilement horizontale ; une story dépliée se glisse mal au doigt (la replier avant).

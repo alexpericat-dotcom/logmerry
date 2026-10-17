@@ -202,7 +202,7 @@ Le thème clair adopte un style web rétro en pixel art (référence d'Alex), en
 - **Bandeau** (`gradient-2` en clair) : ciel pâle à grille fine de 16 px (`--banner-size`) ; `hero` (cockpit) : pas de décor (l'étoile violette et l'écran au portrait ont été retirés le 2026-10-15).
 - **Sélection** : une pastille orange cernée de marine à ombre dure (`.neon` en clair) ; le gras et `aria-current` portent aussi l'état. En sombre, le néon d'origine.
 - **Focus** : anneau cobalt (`ring`) de 2 px décalé de 2 px.
-- **Images** (`public/images/`) : portrait (barre latérale), scène « chemise bleue » (premier écran et connexion, clair), scène « t-shirt » (écran du bandeau du cockpit, image entière), scène de nuit (premier écran, côté futur), logo en pixels `logo-pixel.svg` (36 × 36 tiré du vecteur ; remplace le logo vectoriel en clair seulement). Décoratives (`alt=""`), `image-rendering: pixelated`. Le nom « LogMerry » et le slogan de la connexion sont en Pixelify Sans en clair.
+- **Images** (`public/images/`) : portrait (barre latérale), scène « t-shirt » (écran du bandeau du cockpit, image entière ; les scènes « chemise bleue » et de nuit, qui servaient à l'ancien écran de choix du thème, ont été retirées le 2026-10-17), logo en pixels `logo-pixel.svg` (36 × 36 tiré du vecteur ; remplace le logo vectoriel en clair seulement). Décoratives (`alt=""`), `image-rendering: pixelated`. Le nom « LogMerry » et le slogan de la connexion sont en Pixelify Sans en clair.
 - Les règles de contraste ne changent pas : texte 4,5:1, éléments d'interface 3:1 ; `display` est limité à 3:1 (grand texte).
 
 ## Colors

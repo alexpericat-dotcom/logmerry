@@ -17,12 +17,14 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 - Hébergement : Vercel (région Paris), Next.js 16.x. Détail dans `_bmad-output/planning-artifacts/architecture/architecture-logmerry-2026-10-12/ARCHITECTURE-SPINE.md`, qui fait foi.
 - IA : Claude (Anthropic) pour les réponses, `mistral-embed` (Mistral AI, 1024 dimensions) pour les embeddings. Appels côté serveur uniquement. Modèle Claude exact à valider sur `docs/rag-tests.md`.
 - Chat et indexation : Route Handler et Server Actions Next.js (ni fonction Supabase, ni n8n).
+- Glisser-déposer des stories et des tâches : dnd-kit (seule dépendance ajoutée pour cela). Tests unitaires : lanceur intégré de Node (`node --test`), pas Vitest.
 - n8n : hors MVP (rappels, résumé hebdomadaire, calendrier : après le MVP).
 
 ## Règles à respecter
 - Sécurité par ligne (RLS) activée sur toutes les tables, avec `owner_id = auth.uid()`. La recherche vectorielle filtre aussi par `owner_id`.
 - Aucun taux, plafond ou montant fiscal codé en dur : table de paramètres avec source et date de vérification. Les provisions sont des estimations étiquetées comme telles, jamais des montants officiels.
 - Aucun conseil fiscal ou juridique généré par l'IA.
+- Propositions de l'IA (stories, tâches, prompts) : éphémères tant que le propriétaire ne les garde pas ; texte fourni traité comme donnée ; un chiffre absent des sources fait écarter la proposition ; seules les notes liées à la fiche du client de la mission peuvent être envoyées.
 - Aucune clé secrète (service role) côté client, dans le code ou dans un commit. `.env.local` est ignoré par git.
 - Le schéma évolue par migrations versionnées dans `supabase/migrations/`, pas par du SQL non tracé. Montrer le SQL avant de l'appliquer.
 - MCP Supabase : tant que la base ne contient que des données fictives, lecture seule hors modification du schéma, approbation manuelle des appels. Avant la première vraie donnée client (passage à l'outil pro), débrancher le MCP ou réécrire cette règle.
@@ -31,7 +33,7 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 - Si une information manque (statut juridique, plafond, modèle d'IA), demander plutôt que supposer.
 
 ## Périmètre
-- MVP : mini CRM, missions, suivi des factures, cockpit « Aujourd'hui », échéances, base de connaissances avec RAG, réalisations (portfolio avec vue publique en lecture seule pour les réalisations publiées avec accord du client).
+- MVP : mini CRM, missions gérées en agile (backlog, user stories, tâches, sprints) avec l'aide de l'IA pour les concevoir et pour générer un prompt à confier à un autre assistant, suivi des factures, cockpit « Aujourd'hui », échéances, base de connaissances avec RAG, réalisations (portfolio avec vue publique en lecture seule pour les réalisations publiées avec accord du client).
 - Cockpit étendu, par ordre de priorité : jauge de plafond, capacité, rappels d'échéances ; provision et dépenses en second temps.
 - Hors périmètre : facturation légale et électronique, calcul officiel des cotisations, de l'impôt ou de la TVA, agenda complet.
 - Version 2 : portail client en lecture seule (cloisonnement strict, partage activé volontairement, test avec deux comptes clients fictifs) ; questions libres générant du SQL.

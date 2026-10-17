@@ -10,7 +10,7 @@ Un cockpit personnel pour piloter une activité de conseil No-Code/IA, avec un a
 - **Assistant** : panneau ouvrable depuis toute page, réponses citées, historique.
 - **Notes** : la base de connaissances, avec recherche et résumé généré.
 - **Clients / prospects / contacts** : le suivi minimal des relations.
-- **Missions et Étapes** : le découpage d'un projet et son avancement.
+- **Missions** : backlog agile (user stories, tâches, glisser-déposer), avec l'aide de l'IA pour proposer stories et tâches et pour générer un prompt à confier à un autre assistant.
 - **Factures et Encaissements** : payé ou non, sommes reçues.
 - **Échéances** : obligations datées, avec leur source.
 - **Paramètres** : valeurs (dont le plafond) avec source et date de vérification.
