@@ -1087,3 +1087,173 @@ describe("isolation des tâches entre deux comptes fictifs", () => {
     assert.equal((await b.client.from("tasks").select("id").eq("story_id", storyB.id)).data!.length, 1, "la tâche de B reste");
   });
 });
+
+describe("isolation des sprints entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let missionA: { id: string };
+  let missionA2: { id: string };
+  let missionB: { id: string };
+  let sprintA: { id: string };
+  let storyA: { id: string };
+  let storyB: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      // Sprints et stories partent avec leur mission (cascade) ; les missions partent avant leur fiche (restrict).
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const mk = async (account: Account, who: string, title: string) => {
+      const f = await account.client.from("clients").insert({ name: `${PREFIX} fiche sprints ${who}${title}`, origin: "demo" }).select("id").single();
+      assert.ifError(f.error);
+      const m = await account.client.from("missions").insert({ client_id: f.data!.id, title: `${PREFIX} mission sprints ${who}${title}` }).select("id").single();
+      assert.ifError(m.error);
+      return m.data!;
+    };
+    missionA = await mk(a, "A", "");
+    missionA2 = await mk(a, "A", " 2");
+    missionB = await mk(b, "B", "");
+    const sp = await a.client.from("sprints").insert({ mission_id: missionA.id, name: "Sprint 1", goal: "un objectif", start_date: "2026-10-19", end_date: "2026-10-30" }).select("id").single();
+    assert.ifError(sp.error);
+    sprintA = sp.data!;
+    const sa = await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "story A", position: 0 }).select("id").single();
+    assert.ifError(sa.error);
+    storyA = sa.data!;
+    const sb = await b.client.from("user_stories").insert({ mission_id: missionB.id, title: "story B", position: 0 }).select("id").single();
+    assert.ifError(sb.error);
+    storyB = sb.data!;
+  });
+
+  after(cleanup);
+
+  test("propriétaire et état posés par la base ; B ne voit rien de A", async () => {
+    const own = await a.client.from("sprints").select("owner_id, status").eq("id", sprintA.id).single();
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.status, "planned");
+    assert.ok(!(await b.client.from("sprints").select("id")).data!.some((s) => s.id === sprintA.id));
+  });
+
+  test("B ne peut ni modifier, ni démarrer, ni supprimer le sprint de A", async () => {
+    const upd = await b.client.from("sprints").update({ name: "piraté", status: "active" }).eq("id", sprintA.id).select("id");
+    assert.equal(upd.data?.length ?? 0, 0);
+    assert.equal((await b.client.from("sprints").delete().eq("id", sprintA.id).select("id")).data?.length ?? 0, 0);
+    const after = await a.client.from("sprints").select("name, status").eq("id", sprintA.id).single();
+    assert.deepEqual(after.data, { name: "Sprint 1", status: "planned" });
+  });
+
+  test("B ne peut pas créer un sprint sur la mission de A, ni déplacer le sien vers elle, ni forger un propriétaire", async () => {
+    const base = { name: "intrus", start_date: "2026-10-19", end_date: "2026-10-30" };
+    assert.equal((await b.client.from("sprints").insert({ ...base, mission_id: missionA.id })).error?.code, "42501");
+    const mine = await b.client.from("sprints").insert({ ...base, mission_id: missionB.id }).select("id").single();
+    assert.ifError(mine.error);
+    const move = await b.client.from("sprints").update({ mission_id: missionA.id }).eq("id", mine.data!.id).select("id");
+    assert.ok(move.error || (move.data?.length ?? 0) === 0);
+    assert.equal((await b.client.from("sprints").select("mission_id").eq("id", mine.data!.id).single()).data!.mission_id, missionB.id, "le sprint de B est resté sur la mission de B");
+    assert.equal((await b.client.from("sprints").insert({ ...base, mission_id: missionB.id, owner_id: a.userId })).error?.code, "42501");
+  });
+
+  test("sans connexion : rien de visible, rien de créable ni de supprimable", async () => {
+    const anon = newClient();
+    const read = await anon.from("sprints").select("id");
+    assert.ok(read.error || read.data!.length === 0);
+    assert.ok((await anon.from("sprints").insert({ mission_id: missionA.id, name: "anonyme", start_date: "2026-10-19", end_date: "2026-10-30" })).error);
+    assert.equal((await anon.from("sprints").delete().eq("id", sprintA.id).select("id")).data?.length ?? 0, 0);
+  });
+
+  test("la base refuse, pour le bon motif : nom vide ou trop long, objectif trop long, fin avant début, dates absentes, état inconnu", async () => {
+    const ok = { mission_id: missionA.id, name: "valide", start_date: "2026-11-02", end_date: "2026-11-13" };
+    for (const [label, row, code] of [
+      ["nom vide", { ...ok, name: "   " }, "23514"],
+      ["nom de 121 caractères", { ...ok, name: "x".repeat(121) }, "23514"],
+      ["objectif vide", { ...ok, goal: "  " }, "23514"],
+      ["objectif de 301 caractères", { ...ok, goal: "x".repeat(301) }, "23514"],
+      ["fin avant début", { ...ok, start_date: "2026-11-13", end_date: "2026-11-02" }, "23514"],
+      ["début absent", { ...ok, start_date: null }, "23502"],
+      ["fin absente", { ...ok, end_date: null }, "23502"],
+      ["état inconnu", { ...ok, status: "pause" }, "22P02"],
+    ] as const) {
+      assert.equal((await a.client.from("sprints").insert(row)).error?.code, code, `${label} refusé pour le bon motif`);
+    }
+    assert.ifError((await a.client.from("sprints").insert({ ...ok, name: "x".repeat(120), start_date: "2026-11-02", end_date: "2026-11-02" })).error);
+  });
+
+  test("un seul sprint « en cours » par mission ; plusieurs autorisés dans deux missions ; démarrer deux fois le même est sans effet", async () => {
+    const mk = async (mission: { id: string }, name: string) => {
+      const r = await a.client.from("sprints").insert({ mission_id: mission.id, name, start_date: "2026-12-01", end_date: "2026-12-12" }).select("id").single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    const s1 = await mk(missionA, "actif 1");
+    const s2 = await mk(missionA, "actif 2");
+    const other = await mk(missionA2, "autre mission");
+    assert.ifError((await a.client.from("sprints").update({ status: "active" }).eq("id", s1.id)).error);
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s2.id)).error?.code, "23505", "deuxième sprint en cours refusé");
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", other.id)).error?.message ?? null, null, "une autre mission peut avoir son sprint en cours");
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s1.id).eq("status", "planned").select("id")).data?.length ?? 0, 0, "déjà en cours : la condition « planifié » ne trouve rien");
+    assert.ifError((await a.client.from("sprints").update({ status: "closed" }).eq("id", s1.id)).error);
+    assert.equal((await a.client.from("sprints").update({ status: "active" }).eq("id", s2.id)).error?.message ?? null, null, "après la clôture, un autre sprint peut démarrer");
+  });
+
+  test("placer une story : mon sprint de la même mission oui ; sprint d'une autre mission, d'un autre compte ou inexistant refusés (insertion et mise à jour)", async () => {
+    assert.ifError((await a.client.from("user_stories").update({ sprint_id: sprintA.id }).eq("id", storyA.id)).error);
+    assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", storyA.id).single()).data!.sprint_id, sprintA.id);
+    const other = await a.client.from("sprints").insert({ mission_id: missionA2.id, name: "autre mission", start_date: "2026-10-19", end_date: "2026-10-30" }).select("id").single();
+    assert.ifError(other.error);
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: other.data!.id }).eq("id", storyA.id).select("id")).error?.code, "42501", "sprint d'une autre de mes missions refusé");
+    assert.equal((await b.client.from("user_stories").update({ sprint_id: sprintA.id }).eq("id", storyB.id).select("id")).error?.code, "42501", "sprint d'un autre compte refusé");
+    assert.equal((await b.client.from("user_stories").insert({ mission_id: missionB.id, title: "forgée", position: 5, sprint_id: sprintA.id })).error?.code, "42501");
+    assert.equal((await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "sprint inexistant", position: 6, sprint_id: "00000000-0000-4000-8000-000000000000" })).error?.code, "42501");
+    assert.equal((await b.client.from("user_stories").select("sprint_id").eq("id", storyB.id).single()).data!.sprint_id, null, "la story de B n'a pas bougé");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: null }).eq("id", storyA.id)).error?.message ?? null, null, "retour au backlog");
+  });
+
+  test("supprimer un sprint renvoie ses stories au backlog ; supprimer une mission emporte ses sprints", async () => {
+    const sp = await a.client.from("sprints").insert({ mission_id: missionA.id, name: "éphémère", start_date: "2026-10-19", end_date: "2026-10-30" }).select("id").single();
+    assert.ifError(sp.error);
+    assert.ifError((await a.client.from("user_stories").update({ sprint_id: sp.data!.id }).eq("id", storyA.id)).error);
+    assert.ifError((await a.client.from("sprints").delete().eq("id", sp.data!.id)).error);
+    const back = await a.client.from("user_stories").select("id, sprint_id").eq("id", storyA.id).single();
+    assert.ok(back.data && back.data.sprint_id === null, "la story est restée, sans sprint");
+    const m = await a.client.from("missions").insert({ client_id: (await a.client.from("clients").select("id").like("name", `${PREFIX}%`).limit(1).single()).data!.id, title: `${PREFIX} mission éphémère sprints` }).select("id").single();
+    assert.ifError(m.error);
+    assert.ifError((await a.client.from("sprints").insert({ mission_id: m.data!.id, name: "partira", start_date: "2026-10-19", end_date: "2026-10-30" })).error);
+    assert.ifError((await a.client.from("missions").delete().eq("id", m.data!.id)).error);
+    assert.equal((await a.client.from("sprints").select("id").eq("mission_id", m.data!.id)).data!.length, 0);
+  });
+
+  test("un sprint clos est figé en base : aucune story n'y entre ni n'en sort ; sa suppression renvoie ses stories au backlog", async () => {
+    const mk = async (status: "planned" | "closed", name: string) => {
+      const r = await a.client.from("sprints").insert({ mission_id: missionA.id, name, start_date: "2026-08-03", end_date: "2026-08-14", status }).select("id").single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    const story = async (title: string, sprint_id: string | null) => {
+      const r = await a.client.from("user_stories").insert({ mission_id: missionA.id, title, position: 90, sprint_id }).select("id").single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    // Un sprint planifié reçoit une story, puis est clos : la story est dedans, figée.
+    const sp = await mk("planned", "à clore");
+    const inside = await story("dans le sprint", sp.id);
+    assert.ifError((await a.client.from("sprints").update({ status: "closed" }).eq("id", sp.id)).error);
+    const loose = await story("libre", null);
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: sp.id }).eq("id", loose.id)).error?.code, "23514", "entrer dans un sprint clos refusé");
+    assert.equal((await a.client.from("user_stories").insert({ mission_id: missionA.id, title: "neuve", position: 91, sprint_id: sp.id })).error?.code, "23514", "créer une story dans un sprint clos refusé");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: null }).eq("id", inside.id)).error?.code, "23514", "sortir d'un sprint clos refusé");
+    const other = await mk("planned", "autre");
+    assert.equal((await a.client.from("user_stories").update({ sprint_id: other.id }).eq("id", inside.id)).error?.code, "23514", "passer d'un sprint clos à un autre refusé");
+    assert.ifError((await a.client.from("user_stories").update({ status: "done", title: "renommée" }).eq("id", inside.id)).error); // statut et texte restent modifiables
+    assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", inside.id).single()).data!.sprint_id, sp.id);
+    // Supprimer le sprint clos reste possible et renvoie ses stories au backlog.
+    assert.ifError((await a.client.from("sprints").delete().eq("id", sp.id)).error);
+    assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", inside.id).single()).data!.sprint_id, null);
+  });
+});

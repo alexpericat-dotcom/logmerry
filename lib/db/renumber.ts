@@ -12,8 +12,12 @@ export async function renumber(
   table: "user_stories" | "tasks",
   parent: { column: "mission_id" | "story_id"; id: string },
   ids: string[],
+  /** Liste visée à l'intérieur du parent : les stories d'un sprint (`id`) ou celles du backlog hors sprint (`null`). */
+  scope?: { column: "sprint_id"; id: string | null },
 ): Promise<"saved" | "changed" | "error"> {
-  const all = await supabase.from(table).select("id, position").eq(parent.column, parent.id);
+  let query = supabase.from(table).select("id, position").eq(parent.column, parent.id);
+  if (scope) query = scope.id === null ? query.is(scope.column, null) : query.eq(scope.column, scope.id);
+  const all = await query;
   if (all.error) return "error";
   // Aucune ligne : le parent n'existe pas (ou n'est pas à moi) ; il n'y a rien à ordonner.
   if (all.data.length === 0) return "changed";

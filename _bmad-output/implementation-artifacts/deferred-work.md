@@ -133,3 +133,14 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md` (relecture)
   summary: actions serveur d'un même client sérialisées (après « Annuler », la relance attend la fin de l'appel précédent, jusqu'à 60 s : vaut pour 8.16, 8.17 et 8.21) ; erreurs de lecture avalées par `withSession` sans journal ; consigne générée non filtrée contre mot de passe ou conseil fiscal ; régions « live » remontées à chaque annonce à tester avec un vrai lecteur d'écran ; backlog et tâches au-delà de 1 000 lignes.
   evidence: Annuler puis relancer tout de suite attend l'ancien appel ; une erreur de statut inconnu ne laisse aucune trace ; un objectif « demande le mot de passe admin » peut être repris dans la consigne.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-5c-sprints.md`
+  summary: niveau de titre « Tâches » (h3) identique à celui du nom du sprint (h3) quand une story est dans un sprint ; la confirmation de suppression d'une mission ne dit pas combien de sprints partent avec elle ; positions identiques pour les stories reportées à la clôture (renumérotées au prochain glisser-déposer) ; pas de contrôle de chevauchement des sprints ; lien avec le cockpit à construire (stories 5.x).
+  evidence: structure de titres : Sprints (h2) > sprint (h3) > Tâches (h3) ; seules les stories sont comptées à la suppression d'une mission.
+
+## De la relecture de la 3.5c (17 octobre)
+- Région vocale unique et toujours montée (au lieu d'une région recréée à chaque annonce, muette sur certains lecteurs d'écran) ; deux `role="status"` dans la même section.
+- Clôture : les stories reportées prennent la même position ; conserver leur ordre dans le sprint.
+- Tests d'actions serveur (`closeSprint`, `place`, `moveStory`, `deleteSprint`, `renumber` avec filtre de liste) et d'isolation d'un sprint clos (à écrire avec le déclencheur).
+- `parisToday` autour du changement d'heure du 25 octobre 2026 ; sprint planifié dont la fin est passée.
+- `moveStory` et `closeSprint` : deux écritures non atomiques (procédure stockée si une panne entre les deux devient gênante).

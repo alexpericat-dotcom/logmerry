@@ -11,9 +11,11 @@ import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
 import { getMission } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
+import { listSprints } from "@/lib/db/sprints";
 import { listTasks } from "@/lib/db/tasks";
 import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
+import { parisToday } from "@/lib/domain/sprints";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Mission · LogMerry" };
@@ -26,7 +28,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   const mission = await getMission(id);
   if (!mission) notFound();
   const [stories, notes] = await Promise.all([listStories(id), listNotesForClient(mission.client_id)]);
-  const tasks = await listTasks(stories.map((s) => s.id));
+  const [tasks, sprints] = await Promise.all([listTasks(stories.map((s) => s.id)), listSprints(id)]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,7 +86,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
         </dl>
       </section>
       <MissionPrompt missionId={id} hasClient={!!mission.client} />
-      <Backlog missionId={id} stories={stories} tasks={tasks} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
+      <Backlog missionId={id} stories={stories} tasks={tasks} sprints={sprints} today={parisToday()} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />
     </div>
   );
 }
