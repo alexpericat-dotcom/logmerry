@@ -496,13 +496,16 @@ En tant que propriétaire, je veux être alerté quand un plafond approche et un
 
 ### Story 5.4 : Tâches « devis sans réponse » et « pipeline vide »
 
-En tant que propriétaire, je veux être alerté quand un devis ou un prospect dort 7 jours, ou quand mon pipeline se vide, afin de relancer.
+*Adaptée le 18 octobre 2026 (devis envoyés seulement, pipeline sans date : PRD FR-14).*
+
+En tant que propriétaire, je veux être alerté quand un devis envoyé dort 7 jours, ou quand mon pipeline se vide, afin de relancer.
 
 **Critères d'acceptation :**
 
-**Étant donné** un devis « envoyé » sans mise à jour depuis 7 jours, **quand** j'ouvre le cockpit, **alors** une tâche de règle 5 apparaît ; un devis « accepté » ou « refusé » n'en déclenche pas.
-**Et** avec moins de deux missions ou prospects planifiés le mois suivant, une tâche de règle 6 apparaît.
-**Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche ; aucun e-mail n'est envoyé.
+**Étant donné** un devis « envoyé » dont la dernière modification date de plus de 7 jours (jours de Paris), **quand** j'ouvre le cockpit, **alors** une tâche de règle 5 apparaît (« devis sans réponse depuis N jours ») ; un devis « accepté » ou « refusé » n'en déclenche pas, un prospect sans devis non plus.
+**Et** toute modification du devis (remarque comprise) remet le compteur à zéro.
+**Et** avec moins de deux éléments au total parmi les missions « en cours » et les devis « envoyés », une tâche de règle 6 apparaît (« ton pipeline se vide ») ; un devis envoyé lié à une mission déjà en cours ne compte pas en plus (ce qui est lié compte une fois).
+**Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche, puis l'identifiant ; aucun e-mail n'est envoyé, un brouillon de relance peut être proposé.
 
 ### Story 5.5 : Voir mon CA encaissé et ma jauge sur le cockpit
 
