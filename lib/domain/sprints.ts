@@ -87,4 +87,27 @@ export function sprintTimeLabel(sprint: { status: SprintStatus; start_date: stri
 }
 
 /** Une story ne se place que dans un sprint planifié ou en cours, jamais dans un sprint clos. */
+const AUTO_NAME = /^Sprint\s+(\d+)$/i;
+const autoNumbers = (names: string[]): number[] => names.map((n) => AUTO_NAME.exec(n.trim())?.[1]).filter((n): n is string => !!n).map(Number);
+
+/**
+ * Prochain nom automatique d'un sprint d'une mission : « Sprint N », N étant le plus grand numéro des noms « Sprint N » existants plus 1 ; sans aucun nom de cette forme,
+ * le nombre de sprints plus 1 (des sprints renommés à la main comptent quand même). Supprimer « Sprint 2 » ne fait pas réutiliser son numéro : jamais de doublon.
+ */
+export function nextSprintName(existingNames: string[]): string {
+  const numbers = autoNumbers(existingNames);
+  return `Sprint ${numbers.length ? Math.max(...numbers) + 1 : existingNames.length + 1}`;
+}
+
+/**
+ * Nom à enregistrer à la création : vide = prochain nom automatique ; un nom de la forme « Sprint N » dont le numéro existe déjà dans la mission (deux onglets ont proposé
+ * le même) passe au prochain numéro libre ; tout autre nom est gardé tel quel.
+ */
+export function sprintNameForCreate(typed: string, existingNames: string[]): string {
+  const name = typed.replaceAll("\u0000", "").trim();
+  if (!name) return nextSprintName(existingNames);
+  const m = AUTO_NAME.exec(name);
+  return m && autoNumbers(existingNames).includes(Number(m[1])) ? nextSprintName(existingNames) : name;
+}
+
 export const acceptsStories = (status: SprintStatus): boolean => status !== "closed";

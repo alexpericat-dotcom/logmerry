@@ -35,6 +35,7 @@ import type { SprintRecord } from "@/lib/db/sprints";
 import type { TaskRecord } from "@/lib/db/tasks";
 import type { StoryRecord } from "@/lib/db/user-stories";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
+import { nextSprintName } from "@/lib/domain/sprints";
 import { BACKLOG, findList, moveToList, type Lists } from "@/lib/domain/story-board";
 import { progressLabel, storyProgress } from "@/lib/domain/user-stories";
 
@@ -273,7 +274,7 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
             </details>
           )}
           {addingSprint ? (
-            <SprintForm idPrefix="new-sprint" action={createSprint.bind(null, missionId)} submitLabel="Créer le sprint" onDone={doneSprint} onCancel={doneSprint} />
+            <SprintForm idPrefix="new-sprint" action={createSprint.bind(null, missionId)} suggestedName={nextSprintName(sprints.map((sp) => sp.name))} submitLabel="Créer le sprint" onDone={doneSprint} onCancel={doneSprint} />
           ) : (
             <Button ref={addSprintButton} type="button" variant="outline" className="self-start" onClick={() => setAddingSprint(true)}>
               Ajouter un sprint

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isUuid } from "@/lib/domain/notes";
-import { validateSprintInput, type SprintErrors } from "@/lib/domain/sprints";
+import { sprintNameForCreate, validateSprintInput, type SprintErrors } from "@/lib/domain/sprints";
 import { nextPosition } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
@@ -30,9 +30,14 @@ const refresh = (missionId: string) => revalidatePath(`/missions/${missionId}`);
 type Outcome = "saved" | "not-found" | "error";
 
 /** Session, validation, écriture d'un sprint ; `write` dit si la base a enregistré ou si la mission ou le sprint a disparu. */
-async function save(values: SprintFormValues, write: (supabase: SupabaseClient, value: ReturnType<typeof okValue>) => Promise<{ outcome: Outcome; missionId?: string; gone?: string }>): Promise<SprintFormState> {
+async function save(
+  values: SprintFormValues,
+  write: (supabase: SupabaseClient, value: ReturnType<typeof okValue>) => Promise<{ outcome: Outcome; missionId?: string; gone?: string }>,
+  /** Avant la validation : complète les valeurs (le nom automatique d'un nouveau sprint dépend des sprints de la mission). */
+  prepare?: (supabase: SupabaseClient, values: SprintFormValues) => Promise<SprintFormValues>,
+): Promise<SprintFormState> {
   const result = await withSession(async (supabase) => {
-    const checked = validateSprintInput(values);
+    const checked = validateSprintInput(prepare ? await prepare(supabase, values) : values);
     if (!checked.ok) return { errors: checked.errors } as const;
     const written = await write(supabase, checked.value);
     if (written.outcome === "saved" && written.missionId) refresh(written.missionId);
@@ -50,14 +55,24 @@ const okValue = () => ({ name: "", goal: null as string | null, start_date: "", 
 
 /** Crée un sprint « planifié » dans une de mes missions (la RLS refuse une mission qui n'est pas à moi). */
 export async function createSprint(missionId: string, _prev: SprintFormState, formData: FormData): Promise<SprintFormState> {
-  return save(readValues(formData), async (supabase, value) => {
-    if (!isUuid(missionId)) return { outcome: "not-found", gone: MISSION_GONE };
-    const mission = await supabase.from("missions").select("id").eq("id", missionId).maybeSingle();
-    if (mission.error) return { outcome: "error" };
-    if (!mission.data) return { outcome: "not-found", gone: MISSION_GONE };
-    const { error } = await supabase.from("sprints").insert({ ...value, mission_id: missionId });
-    return error ? { outcome: "error" } : { outcome: "saved", missionId };
-  });
+  return save(
+    readValues(formData),
+    async (supabase, value) => {
+      if (!isUuid(missionId)) return { outcome: "not-found", gone: MISSION_GONE };
+      const mission = await supabase.from("missions").select("id").eq("id", missionId).maybeSingle();
+      if (mission.error) return { outcome: "error" };
+      if (!mission.data) return { outcome: "not-found", gone: MISSION_GONE };
+      const { error } = await supabase.from("sprints").insert({ ...value, mission_id: missionId });
+      return error ? { outcome: "error" } : { outcome: "saved", missionId };
+    },
+    // Nom vide ou « Sprint N » déjà pris : prochain numéro libre de la mission (calculé ici, côté serveur, pour que deux onglets ne créent pas deux « Sprint 3 »).
+    async (supabase, values) => {
+      if (!isUuid(missionId)) return values;
+      const names = await supabase.from("sprints").select("name").eq("mission_id", missionId);
+      if (names.error) throw new Error(`noms ${names.error.code ?? ""}`.trim());
+      return { ...values, name: sprintNameForCreate(String(values.name ?? ""), names.data.map((r) => r.name as string)) };
+    },
+  );
 }
 
 /** Modifie un sprint. Un sprint clos garde ses dates (seuls le nom et l'objectif changent) : les dates envoyées sont alors ignorées. */
