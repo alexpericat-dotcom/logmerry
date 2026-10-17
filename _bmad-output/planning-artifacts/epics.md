@@ -328,6 +328,22 @@ En tant que propriétaire, je veux que ⌘K trouve aussi mes clients et missions
 
 Je suis mes factures et mes encaissements, et je vois où j'en suis par rapport à mon plafond, avec des chiffres étiquetés « estimation ».
 
+### Story 4.1a : Profil professionnel
+
+*Nouvelle story du 18 octobre 2026 (PRD FR-25, architecture AD-12).*
+
+En tant que propriétaire, je veux renseigner mon profil professionnel avec l'état de chaque information, afin que les règles et les calculs s'appuient sur ma vraie situation, sans valeur inventée.
+
+**Critères d'acceptation :**
+
+**Étant donné** la table `professional_profile` créée par une migration (une ligne par propriétaire, RLS), **quand** j'ouvre la page Profil, **alors** je vois les champs : statut juridique, régime fiscal, catégorie BNC ou BIC, nature des prestations, date de début d'activité, fréquence des déclarations Urssaf, régime de TVA, éligibilité à l'ACRE, situation France Travail, objectifs financiers, taux de réserve personnels, préférences de notification.
+**Et** chaque champ a l'un de trois états, en texte et en icône : **« À confirmer »** (vide), **« Déclaré »** (rempli, non confirmé) ou **« Confirmé »** (avec la date de confirmation) ; aucune valeur n'est jamais préremplie.
+**Et** je peux enregistrer un champ sans le confirmer puis le confirmer plus tard ; modifier une valeur confirmée la repasse en « Déclaré ».
+**Et** je choisis quels seuils d'alerte de plafond sont actifs (50, 75, 90, 100 %).
+**Et** au départ, le statut est « micro-entreprise, BNC » en « Déclaré » et la date de début d'activité est « À confirmer ».
+**Et** un champ à choix n'accepte que ses valeurs prévues (listes courtes sans règle fiscale, plus « Autre » avec un champ libre) ; les objectifs financiers et les taux de réserve sont des champs libres sans calcul au MVP ; une date inexistante est refusée avec une erreur en ligne.
+**Et** le test d'isolation couvre le profil (un autre compte ne le voit ni ne le modifie).
+
 ### Story 4.1 : Renseigner mes paramètres
 
 En tant que propriétaire, je veux saisir mes paramètres (plafond, taux, dates) avec leur source et leur date de vérification, afin qu'aucun chiffre ne soit écrit en dur.
