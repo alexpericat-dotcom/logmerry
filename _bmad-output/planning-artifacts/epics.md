@@ -298,13 +298,19 @@ En tant que propriétaire, je veux planifier des sprints et y placer des stories
 
 ### Story 3.6 : Suivre mes devis
 
-En tant que propriétaire, je veux enregistrer un devis et son statut, afin de savoir lesquels attendent une réponse.
+*Réécrite le 18 octobre 2026 (montants hors taxe et taxe, acceptation en une action, mission créée automatiquement : PRD FR-22, architecture AD-4 et AD-8).*
+
+En tant que propriétaire, je veux enregistrer un devis et son statut, afin de savoir lesquels attendent une réponse et d'ouvrir ma mission quand il est accepté.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `quotes` créée par une migration (RLS), **quand** je crée un devis (montant, date d'envoi, rattaché à une mission ou un prospect), **alors** son statut est « envoyé » par défaut.
-**Et** je peux le passer en « accepté » (la mission liée est créée ou confirmée) ou « refusé ».
-**Et** un devis sans montant ou sans date d'envoi est refusé ; aucun document de devis n'est produit.
+**Étant donné** la table `quotes` créée par une migration (RLS, `client_id` obligatoire, `mission_id` facultatif, montants en centimes), **quand** je crée un devis (montant hors taxe, montant de taxe, date d'envoi, rattaché à un client ou prospect et, si elle existe, à une mission), **alors** son statut est « envoyé » par défaut.
+**Et** un devis sans montant hors taxe ou sans date d'envoi est refusé ; une taxe inconnue reste vide, jamais 0 ; aucun document de devis n'est produit.
+**Et** je peux le passer en « refusé » : il disparaît des alertes du cockpit.
+**Et** « accepté » est **une seule action, tout ou rien** (fonction `accept_quote`) : pour un devis lié à un prospect, le prospect devient client et une mission « en cours » est créée automatiquement (client du devis, titre « Devis du JJ/MM/AAAA — Nom du client » avec la date d'envoi, modifiable ensuite) et rattachée au devis ; pour un devis lié à une mission existante, rien d'autre ne change.
+**Et** accepter deux fois le même devis (double clic, deux onglets) ne crée qu'une seule mission, et aucun autre chemin ne peut passer un devis en « accepté » (la base le refuse).
+**Et** un devis accepté ne change plus de statut (pour corriger, on crée un nouveau devis).
+**Et** le test d'isolation couvre les devis (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma fiche).
 
 ### Story 3.7 : Rechercher aussi clients et missions
 
