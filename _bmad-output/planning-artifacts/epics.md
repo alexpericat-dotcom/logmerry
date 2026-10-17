@@ -394,15 +394,21 @@ En tant que propriétaire, je veux enregistrer un encaissement sur une facture (
 **Et** les montants s'affichent en euros avec deux décimales (stockés en centimes).
 **Et** le test d'isolation couvre `payments` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma facture).
 
-### Story 4.4 : Voir ma position par rapport au plafond
+### Story 4.4 : Suivre mes plafonds
 
-En tant que propriétaire, je veux voir mes encaissements cumulés comparés au plafond, afin de savoir où j'en suis.
+*Ancienne story « Voir ma position par rapport au plafond », élargie le 18 octobre 2026 (plusieurs plafonds, alertes visibles : PRD FR-11, architecture AD-12).*
+
+En tant que propriétaire, je veux voir plusieurs jauges de plafond, chacune calculée sur la base de sa règle, afin de savoir où j'en suis pour chaque seuil.
 
 **Critères d'acceptation :**
 
-**Étant donné** un paramètre « plafond » et des encaissements, **quand** j'ouvre la page Finances, **alors** je vois une jauge avec le cumul, le plafond, un marqueur à 90 % et l'étiquette « estimation » avec la source et la date du plafond.
-**Et** sans plafond, la jauge affiche « paramètre manquant : plafond non renseigné » avec un lien vers Paramètres, jamais un chiffre.
-**Et** le calcul est une fonction pure de `lib/domain/` testée sur au moins 3 cas de référence calculés à la main.
+**Étant donné** des règles de plafond vérifiées (story 4.1b), un profil (story 4.1a) et des encaissements, **quand** j'ouvre la page Plafonds, **alors** je vois une jauge par plafond suivi avec : le seuil, le montant consommé, le pourcentage atteint, le montant restant, la période de référence, la date de dernière mise à jour, la source officielle, la date d'effet de la règle et l'étiquette « estimation ».
+**Et** chaque plafond se calcule sur **la base que sa règle désigne** (hors taxe ou taxe, période, catégorie de recettes) : le même montant n'est jamais réutilisé pour tous les plafonds.
+**Et** la jauge change d'état à chacun des seuils **actifs au profil** (50, 75, 90, 100 %), en texte et en icône, jamais par la couleur seule ; aucun e-mail ni notification.
+**Et** sans règle vérifiée pour un plafond, ou avec un champ de profil vide dont elle dépend, la jauge affiche « paramètre manquant » avec ce qui manque et un lien vers la page concernée, jamais un chiffre ; avec un champ « Déclaré » non confirmé, le calcul se fait avec le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** un résultat calculé avec une règle « Essai » porte l'étiquette « DEMO, non officielle ».
+**Et** le calcul est une fonction pure de `lib/domain/finance/` recevant `asOf` (le jour), testée sur au moins 3 cas de référence calculés à la main par l'auteur, dont les fixtures sont étiquetées « FICTIF » (valeurs inventées, elles vérifient la formule) ou « RÉEL + source + date de vérification ». La story est livrée avec des cas fictifs ; les cas réels s'ajoutent avant qu'un chiffre réel soit affiché (le compte réel affiche « paramètre manquant » en attendant).
+**Et** la page Plafonds n'écrit rien : elle lit les règles, le profil et les encaissements (aucun second calcul : le cockpit appelle la même fonction).
 
 ### Story 4.5 : Voir une estimation de cotisations
 
