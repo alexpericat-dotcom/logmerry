@@ -101,7 +101,22 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
     lists: Lists;
     start: Lists;
   } | null>(null);
-  const lists = drag?.lists ?? optimistic;
+  // Miroir synchrone de `drag` : deux événements de survol rapprochés arrivent avant le rendu et ne doivent pas s'écraser.
+  const dragRef = useRef(drag);
+  const updateDrag = (next: typeof drag) => {
+    dragRef.current = next;
+    setDrag(next);
+  };
+  // Une story ou un sprint arrivé pendant l'action (ajout dans un autre onglet) n'est pas dans l'état optimiste : on l'ajoute à sa liste plutôt que de le masquer.
+  const shownLists: Lists = { ...optimistic };
+  if (!drag) {
+    const known = new Set(Object.values(optimistic).flat());
+    for (const [key, ids] of Object.entries(baseLists)) {
+      const missing = ids.filter((id) => !known.has(id));
+      if (missing.length) shownLists[key] = [...(shownLists[key] ?? []), ...missing];
+    }
+  }
+  const lists = drag?.lists ?? shownLists;
   const byId = new Map(stories.map((s) => [s.id, s]));
   const storiesIn = (key: string) =>
     (lists[key] ?? []).flatMap((id) => {
@@ -154,15 +169,19 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
     onDragCancel: ({ active: a }) => `Déplacement annulé : « ${titleOf(a.id)} » reste dans ${drag ? listName(findList(drag.start, String(a.id)) ?? BACKLOG) : "sa liste"}.`,
   };
 
-  const onDragStart = ({ active: a }: DragStartEvent) => setDrag({ id: String(a.id), lists: optimistic, start: optimistic });
+  const onDragStart = ({ active: a }: DragStartEvent) => updateDrag({ id: String(a.id), lists: shownLists, start: shownLists });
   const onDragOver = ({ active: a, over }: DragOverEvent) => {
+    const drag = dragRef.current;
     if (!drag || !over) return;
     const below = !!a.rect.current.translated && a.rect.current.translated.top > over.rect.top + over.rect.height;
     const next = moveToList(drag.lists, String(a.id), String(over.id), below);
-    if (next !== drag.lists) setDrag({ ...drag, lists: next });
+    if (next !== drag.lists) updateDrag({ ...drag, lists: next });
   };
   const onDragEnd = ({ active: a, over, activatorEvent }: DragEndEvent) => {
+    const drag = dragRef.current;
     if (!drag) return;
+    // Relâché hors de toute zone : c'est une annulation, la story reste où elle était.
+    if (!over) return updateDrag(null);
     const id = String(a.id);
     let final = drag.lists;
     const key = findList(final, id);
@@ -174,7 +193,7 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
       };
     }
     const from = findList(drag.start, id);
-    setDrag(null);
+    updateDrag(null);
     if (!key || !from) return;
     if (activatorEvent instanceof KeyboardEvent) focusAfterDrop.current = id;
     const sprintId = key === BACKLOG ? null : key;
@@ -223,7 +242,7 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
-      onDragCancel={() => setDrag(null)}
+      onDragCancel={() => updateDrag(null)}
       accessibility={{
         announcements,
         screenReaderInstructions: {

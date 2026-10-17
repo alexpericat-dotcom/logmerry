@@ -23,3 +23,10 @@ test("moveToList : même liste ou cible inconnue ne change rien (même objet)", 
   assert.equal(moveToList(lists, "a", "zz", true), lists);
   assert.equal(moveToList(lists, "zz", "c", true), lists);
 });
+
+test("moveToList ne modifie pas les listes d'origine", () => {
+  const original = { [BACKLOG]: ["a", "b"], s1: ["c"] };
+  const copy = structuredClone(original);
+  moveToList(original, "a", "c", true);
+  assert.deepEqual(original, copy);
+});

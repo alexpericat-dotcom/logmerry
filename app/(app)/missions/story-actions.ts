@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
+import { acceptsStories } from "@/lib/domain/sprints";
 import { nextPosition, parseReorderIds, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
 
@@ -120,6 +121,11 @@ export async function reorderStories(missionId: string, ids: string[], sprintId:
   const result = await withSession(async (supabase): Promise<Outcome> => {
     const order = parseReorderIds(ids);
     if (!isUuid(missionId) || !order || (sprintId !== null && !isUuid(String(sprintId)))) return "not-found";
+    if (sprintId !== null) {
+      const sprint = await supabase.from("sprints").select("status").eq("id", sprintId).maybeSingle();
+      if (sprint.error) return "error";
+      if (!sprint.data || sprint.data.status === "closed") return "not-found"; // sprint disparu ou clos : liste figée, l'écran se recharge
+    }
     // La liste ordonnée est celle d'un sprint (`sprintId`) ou le backlog hors sprint (`null`) : les positions ne se comparent qu'à l'intérieur d'une liste.
     const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, order, { column: "sprint_id", id: sprintId });
     await refresh(supabase, missionId); // même en cas d'échec ou de conflit : l'écran montre l'état réel
@@ -145,20 +151,24 @@ export async function deleteStory(id: string): Promise<StoryActionState> {
   return {};
 }
 
-type Placed = "saved" | "story-gone" | "sprint-gone" | "closed" | "error";
+type Placed = "saved" | "story-gone" | "sprint-gone" | "closed" | "source-closed" | "error";
 
 /** Place une story à la dernière place de la liste d'arrivée (un sprint non clos de la même mission, ou le backlog si `sprintId` est nul). */
-async function place(supabase: SupabaseClient, storyId: string, sprintId: string | null): Promise<Placed> {
+async function place(supabase: SupabaseClient, storyId: string, sprintId: string | null, expectedMissionId?: string): Promise<Placed> {
   if (!isUuid(storyId) || (sprintId !== null && !isUuid(String(sprintId)))) return "story-gone";
-  const story = await supabase.from("user_stories").select("mission_id").eq("id", storyId).maybeSingle();
+  const story = await supabase.from("user_stories").select("mission_id, sprint:sprints(status)").eq("id", storyId).maybeSingle();
   if (story.error) return "error";
   if (!story.data) return "story-gone";
   const missionId = story.data.mission_id as string;
+  if (expectedMissionId !== undefined && expectedMissionId !== missionId) return "story-gone";
+  // Le contenu d'un sprint clos est figé : la story n'en sort plus (l'écran le sait déjà, le serveur le garantit aussi).
+  const from = story.data.sprint as unknown as { status: string } | null;
+  if (from?.status === "closed") return "source-closed";
   if (sprintId !== null) {
     const sprint = await supabase.from("sprints").select("status, mission_id").eq("id", sprintId).maybeSingle();
     if (sprint.error) return "error";
     if (!sprint.data || sprint.data.mission_id !== missionId) return "sprint-gone";
-    if (sprint.data.status === "closed") return "closed";
+    if (!acceptsStories(sprint.data.status)) return "closed";
   }
   let last = supabase.from("user_stories").select("position").eq("mission_id", missionId).order("position", { ascending: false }).limit(1);
   last = sprintId === null ? last.is("sprint_id", null) : last.eq("sprint_id", sprintId);
@@ -176,6 +186,7 @@ function placedMessage(placed: Placed): StoryActionState {
   if (placed === "story-gone") return { message: STORY_GONE, gone: true };
   if (placed === "sprint-gone") return { message: "Ce sprint n'existe plus.", gone: true };
   if (placed === "closed") return { message: "Ce sprint est clos : il n'accepte plus de story.", gone: true };
+  if (placed === "source-closed") return { message: "Cette story est dans un sprint clos : elle n'en sort plus.", gone: true };
   return {};
 }
 
@@ -196,17 +207,19 @@ export async function setStorySprint(storyId: string, sprintId: string | null): 
  * ponytail : deux écritures non atomiques (placer, puis renuméroter) ; une procédure stockée si une panne entre les deux devient gênante.
  */
 export async function moveStory(missionId: string, storyId: string, sprintId: string | null, ids: string[]): Promise<StoryActionState> {
-  const result = await withSession(async (supabase): Promise<Placed | "changed"> => {
+  const result = await withSession(async (supabase): Promise<Placed | "changed" | "order-lost"> => {
     const order = parseReorderIds(ids);
-    if (!isUuid(missionId) || !order || !order.includes(storyId.toLowerCase())) return "story-gone";
-    const placed = await place(supabase, storyId, sprintId);
+    if (typeof storyId !== "string" || !isUuid(missionId) || !order || !order.includes(storyId.toLowerCase())) return "story-gone";
+    const placed = await place(supabase, storyId, sprintId, missionId);
     if (placed !== "saved") return placed;
     const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, order, { column: "sprint_id", id: sprintId });
     await refresh(supabase, missionId);
-    return done === "saved" ? "saved" : done === "changed" ? "changed" : "error";
+    return done === "saved" ? "saved" : done === "changed" ? "changed" : "order-lost";
   });
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed") return placedMessage("error");
+  // La story a bien changé de liste mais son ordre n'est pas enregistré : l'écran se recharge pour montrer l'état réel.
+  if (result.value === "order-lost") return { message: "La story a changé de liste, mais sa place n'a pas pu être enregistrée. Elle est en dernière place.", gone: true };
   if (result.value === "changed") return { message: "La liste a changé entre-temps. Elle est rechargée : recommence le déplacement.", gone: true };
   return placedMessage(result.value);
 }

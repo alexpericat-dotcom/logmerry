@@ -109,13 +109,14 @@ export async function closeSprint(id: string, moveToId: string | null): Promise<
     if (sprint.data.status !== "active") return "not-active";
     const missionId = sprint.data.mission_id as string;
 
-    if (moveToId !== null) {
+    const open = await supabase.from("user_stories").select("id").eq("sprint_id", id).neq("status", "done");
+    if (open.error) return "error";
+    // La cible n'est contrôlée que s'il y a des stories à y mettre.
+    if (moveToId !== null && open.data.length) {
       const target = await supabase.from("sprints").select("status, mission_id").eq("id", moveToId).maybeSingle();
       if (target.error) return "error";
       if (!target.data || target.data.mission_id !== missionId || target.data.status !== "planned") return "target-gone";
     }
-    const open = await supabase.from("user_stories").select("id").eq("sprint_id", id).neq("status", "done");
-    if (open.error) return "error";
     if (open.data.length) {
       let tail = supabase.from("user_stories").select("position").eq("mission_id", missionId).order("position", { ascending: false }).limit(1);
       tail = moveToId === null ? tail.is("sprint_id", null) : tail.eq("sprint_id", moveToId);
@@ -141,6 +142,18 @@ export async function closeSprint(id: string, moveToId: string | null): Promise<
 export async function deleteSprint(id: string): Promise<SprintActionState> {
   const result = await withSession(async (supabase): Promise<Outcome> => {
     if (!isUuid(id)) return "not-found";
+    // Les stories gardent leur position de sprint en retournant au backlog et s'y mélangeraient : on les met d'abord à la suite du backlog, dans leur ordre.
+    const own = await supabase.from("user_stories").select("id, mission_id").eq("sprint_id", id).order("position", { ascending: true }).order("created_at", { ascending: true });
+    if (own.error) return "error";
+    if (own.data.length) {
+      const tail = await supabase.from("user_stories").select("position").eq("mission_id", own.data[0].mission_id).is("sprint_id", null).order("position", { ascending: false }).limit(1);
+      if (tail.error) return "error";
+      const start = nextPosition(tail.data.map((r) => r.position));
+      for (const [i, s] of own.data.entries()) {
+        const moved = await supabase.from("user_stories").update({ position: start + i }).eq("id", s.id);
+        if (moved.error) return "error";
+      }
+    }
     const { data, error } = await supabase.from("sprints").delete().eq("id", id).select("id, mission_id");
     if (error) return "error";
     // Déjà supprimé (autre onglet, double clic) : l'état voulu est atteint.

@@ -65,9 +65,14 @@ export function SprintBlock({
   const progress = sprintProgress(stories);
   const open = stories.filter((s) => s.status !== "done").length;
   const planned = sprints.filter((sp) => sp.status === "planned" && sp.id !== sprint.id);
+  // Le sprint choisi a pu disparaître ou démarrer entre-temps : le menu montre alors « backlog », l'appel doit faire de même.
+  const target = planned.some((sp) => sp.id === moveTo) ? moveTo : "";
+  // La garde `pending` lit le rendu courant : deux clics avant le rendu lanceraient deux appels. Ce verrou est synchrone.
+  const busy = useRef(false);
 
   const run = (task: () => Promise<SprintActionState>, onOk: () => void) => {
-    if (pending) return;
+    if (pending || busy.current) return;
+    busy.current = true;
     startTransition(async () => {
       setError("");
       try {
@@ -79,6 +84,8 @@ export function SprintBlock({
       } catch (e) {
         if (isRedirect(e)) throw e;
         setError(UNREACHABLE);
+      } finally {
+        busy.current = false;
       }
     });
   };
@@ -150,7 +157,7 @@ export function SprintBlock({
           }}
           onSubmit={(e) => {
             e.preventDefault();
-            run(() => closeSprint(sprint.id, moveTo === "" ? null : moveTo), () => onChanged(`Sprint « ${sprint.name} » clos.`));
+            run(() => closeSprint(sprint.id, target === "" ? null : target), () => onChanged(`Sprint « ${sprint.name} » clos.`));
           }}
         >
           <p className="text-sm font-semibold">
@@ -160,7 +167,7 @@ export function SprintBlock({
           {open > 0 && (
             <div className="grid gap-2">
               <Label htmlFor={`${titleId}-move`}>Les stories non terminées</Label>
-              <select id={`${titleId}-move`} value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className={`${selectClass} sm:max-w-md`}>
+              <select id={`${titleId}-move`} value={target} onChange={(e) => setMoveTo(e.target.value)} className={`${selectClass} sm:max-w-md`}>
                 <option value="">Retournent au backlog</option>
                 {planned.map((sp) => (
                   <option key={sp.id} value={sp.id}>
