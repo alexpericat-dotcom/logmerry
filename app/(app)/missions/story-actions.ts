@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
+import { PROPOSAL_TASKS_MAX } from "@/lib/domain/story-proposals";
+import { validateTaskTitle } from "@/lib/domain/tasks";
 import { acceptsStories } from "@/lib/domain/sprints";
 import { nextPosition, parseReorderIds, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
@@ -45,7 +47,7 @@ async function refresh(supabase: SupabaseClient, missionId: string) {
 /** Session, validation, écriture d'une user story ; `write` dit si la base a enregistré ou si la mission ou la story a disparu. */
 async function save(
   values: StoryFormValues,
-  write: (supabase: SupabaseClient, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string }>,
+  write: (supabase: SupabaseClient, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string; failMessage?: string }>,
 ): Promise<StoryFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateStoryInput(values);
@@ -60,8 +62,37 @@ async function save(
   if ("errors" in result.value) return { errors: result.value.errors, values };
   const { written } = result.value;
   if (written.outcome === "not-found") return { message: written.gone ?? STORY_GONE, values, gone: true };
-  if (written.outcome !== "saved") return { message: SAVE_FAILED, values };
+  if (written.outcome !== "saved") return { message: written.failMessage ?? SAVE_FAILED, values };
   return { ok: true };
+}
+
+/** Insère une user story à la dernière place du backlog d'une de mes missions (la RLS refuse une mission qui n'est pas à moi) ; renvoie son identifiant. */
+async function insertStory(
+  supabase: SupabaseClient,
+  missionId: string,
+  value: StoryValues,
+  source: string | null,
+): Promise<{ outcome: Outcome; missionId?: string; gone?: string; id?: string }> {
+  if (!isUuid(missionId)) return { outcome: "not-found", gone: MISSION_GONE };
+  const mission = await supabase.from("missions").select("id, client_id").eq("id", missionId).maybeSingle();
+  if (mission.error) return { outcome: "error" };
+  if (!mission.data) return { outcome: "not-found", gone: MISSION_GONE };
+  // La note d'origine doit être une note de la fiche de cette mission ; si elle a disparu (supprimée pendant la relecture) ou n'en est pas une,
+  // la story est gardée sans source plutôt que de buter sur une clé étrangère.
+  let sourceId: string | null = null;
+  if (source) {
+    const note = await supabase.from("notes").select("id").eq("id", source).eq("client_id", mission.data.client_id).maybeSingle();
+    if (note.error) return { outcome: "error" };
+    sourceId = note.data ? source : null;
+  }
+  const last = await supabase.from("user_stories").select("position").eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: false }).limit(1);
+  if (last.error) return { outcome: "error" };
+  const { data, error } = await supabase
+    .from("user_stories")
+    .insert({ ...value, mission_id: missionId, position: nextPosition(last.data.map((r) => r.position)), source_note_id: sourceId })
+    .select("id")
+    .single();
+  return error || !data ? { outcome: "error" } : { outcome: "saved", missionId, id: data.id as string };
 }
 
 /** Ajoute une user story à la dernière place du backlog d'une de mes missions (la RLS refuse une mission qui n'est pas à moi). */
@@ -69,23 +100,35 @@ export async function addStory(missionId: string, _prev: StoryFormState, formDat
   // Note d'origine d'une proposition de l'IA gardée (facultative) : la base refuse une note qui n'est pas à moi.
   const rawSource = String(formData.get("source_note_id") ?? "");
   const source = isUuid(rawSource) ? rawSource : null;
-  return save(readValues(formData), async (supabase, value) => {
-    if (!isUuid(missionId)) return { outcome: "not-found", gone: MISSION_GONE };
-    const mission = await supabase.from("missions").select("id, client_id").eq("id", missionId).maybeSingle();
-    if (mission.error) return { outcome: "error" };
-    if (!mission.data) return { outcome: "not-found", gone: MISSION_GONE };
-    // La note d'origine doit être une note de la fiche de cette mission ; si elle a disparu (supprimée pendant la relecture) ou n'en est pas une,
-    // la story est gardée sans source plutôt que de buter sur une clé étrangère.
-    let sourceId: string | null = null;
-    if (source) {
-      const note = await supabase.from("notes").select("id").eq("id", source).eq("client_id", mission.data.client_id).maybeSingle();
-      if (note.error) return { outcome: "error" };
-      sourceId = note.data ? source : null;
-    }
-    const last = await supabase.from("user_stories").select("position").eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: false }).limit(1);
-    if (last.error) return { outcome: "error" };
-    const { error } = await supabase.from("user_stories").insert({ ...value, mission_id: missionId, position: nextPosition(last.data.map((r) => r.position)), source_note_id: sourceId });
-    return error ? { outcome: "error" } : { outcome: "saved", missionId };
+  return save(readValues(formData), (supabase, value) => insertStory(supabase, missionId, value, source));
+}
+
+/**
+ * Ajoute une proposition de l'IA avec ses tâches (8.17b) : la story, puis ses tâches en UNE insertion. Tout ou rien : si les tâches échouent, la story est retirée
+ * et le message le dit ; si ce retrait échoue aussi, le message dit que la story est dans le backlog sans ses tâches.
+ * ponytail : compensation en deux écritures, pas une transaction ; une fonction SQL si une panne entre les deux devient gênante.
+ */
+export async function addStoryWithTasks(missionId: string, taskTitles: string[], _prev: StoryFormState, formData: FormData): Promise<StoryFormState> {
+  const rawSource = String(formData.get("source_note_id") ?? "");
+  const source = isUuid(rawSource) ? rawSource : null;
+  const values = readValues(formData);
+  // Titres contrôlés avant toute écriture, en nommant la tâche en cause.
+  const titles: string[] = [];
+  if (!Array.isArray(taskTitles) || taskTitles.length > PROPOSAL_TASKS_MAX) return { message: `Une proposition a ${PROPOSAL_TASKS_MAX} tâches au plus.`, values };
+  for (const [i, raw] of taskTitles.entries()) {
+    const checked = validateTaskTitle(raw);
+    if (!checked.ok) return { message: `Tâche ${i + 1} : ${checked.error}`, values };
+    titles.push(checked.value);
+  }
+  return save(values, async (supabase, value) => {
+    const story = await insertStory(supabase, missionId, value, source);
+    if (story.outcome !== "saved" || !story.id || titles.length === 0) return story;
+    const { error } = await supabase.from("tasks").insert(titles.map((title, position) => ({ story_id: story.id, title, position })));
+    if (!error) return story;
+    const undone = await supabase.from("user_stories").delete().eq("id", story.id).select("id");
+    if (!undone.error && undone.data?.length) return { outcome: "error", failMessage: "Les tâches n'ont pas pu être ajoutées : rien n'a été ajouté. Réessaie." };
+    await refresh(supabase, missionId); // la story existe : la page doit la montrer
+    return { outcome: "error", failMessage: "La user story a été ajoutée sans ses tâches (elles n'ont pas pu l'être). Ajoute-les depuis la story." };
   });
 }
 

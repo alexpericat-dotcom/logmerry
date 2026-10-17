@@ -8,7 +8,7 @@ import { isUuid } from "@/lib/domain/notes";
 import { BRIEF_MAX, buildProposalMessage, limitNotes, verifyProposals, type Proposal } from "@/lib/domain/story-proposals";
 import { withSession } from "@/lib/supabase/with-session";
 
-export type ProposalState = { ok: true; proposals: Proposal[]; dropped: number; cut: number } | { ok: false; error: string };
+export type ProposalState = { ok: true; proposals: Proposal[]; dropped: number; droppedTasks: number; cut: number } | { ok: false; error: string };
 
 const FAILED = "Proposition impossible pour le moment. Réessaie.";
 const NOTHING = "L'IA n'a rien proposé d'exploitable. Précise ton brief.";
@@ -18,7 +18,7 @@ const NOTHING = "L'IA n'a rien proposé d'exploitable. Précise ton brief.";
  * **liées à la fiche de cette mission** (lecture sous RLS : jamais la note d'un autre compte ni d'un autre client). N'écrit rien : les
  * propositions n'existent qu'à l'écran tant que l'utilisateur ne garde pas l'une d'elles. Sans session : connexion.
  */
-export async function proposeStories(missionId: string, brief: string, noteIds: string[]): Promise<ProposalState> {
+export async function proposeStories(missionId: string, brief: string, noteIds: string[], withTasks = false): Promise<ProposalState> {
   const result = await withSession(async (supabase): Promise<ProposalState> => {
     // Toutes les vérifications sont faites sous la session : sans connexion, c'est la redirection qui répond, jamais un message de validation.
     const text = String(brief ?? "");
@@ -46,20 +46,21 @@ export async function proposeStories(missionId: string, brief: string, noteIds: 
     const message = buildProposalMessage({ missionTitle: mission.data.title, clientName, brief: text, notes: kept, existingTitles });
     let raw: unknown[];
     try {
-      raw = await proposeWithClaude(message);
+      raw = await proposeWithClaude(message, withTasks === true);
     } catch (e) {
       // Journal sans contenu de brief ni de note ni clé : seulement la nature de l'échec.
       console.error("Proposition de backlog impossible :", e instanceof Error ? e.message : "erreur inconnue");
       throw e;
     }
-    const { proposals, dropped } = verifyProposals(raw, {
+    const { proposals, dropped, droppedTasks } = verifyProposals(raw, {
+      withTasks: withTasks === true,
       // Les titres du backlog sont aussi des sources : « Phase 12 » copié d'une story existante n'est pas un chiffre inventé.
       texts: [text, mission.data.title, ...existingTitles, ...kept.flatMap((n) => [n.title, n.body])],
       sentNoteIds: kept.map((n) => n.id),
       existingTitles,
     });
     if (!proposals.length) return { ok: false, error: NOTHING };
-    return { ok: true, proposals, dropped, cut };
+    return { ok: true, proposals, dropped, droppedTasks, cut };
   });
 
   // redirect() lève une exception : à appeler hors du try.

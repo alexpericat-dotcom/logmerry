@@ -2,7 +2,7 @@
 title: 'Story 8.17b : Tâches proposées avec les stories du backlog'
 type: 'feature'
 created: '2026-10-17'
-status: 'draft'
+status: 'review'
 baseline_commit: '8895056'
 route: 'dispatch'
 context:
@@ -61,11 +61,11 @@ context:
 
 ## Tasks & Acceptance
 
-- [ ] Règles pures + tests (`lib/domain/story-proposals.ts` : consigne, vérification des tâches par story, plafonds)
-- [ ] Appel à Claude (schéma avec tâches) et `proposeStories(…, withTasks)`
-- [ ] `addStoryWithTasks` (une insertion de tâches, compensation)
-- [ ] Panneau : case, tâches modifiables et retirables, « Garder » et « Modifier » avec tâches, annonces
-- [ ] Essais réels (3 scénarios fictifs), vérification dans Chrome (clair, sombre, téléphone), journal, relecture indépendante
+- [x] Règles pures + tests (`lib/domain/story-proposals.ts` : consigne, vérification des tâches par story, plafonds)
+- [x] Appel à Claude (schéma avec tâches) et `proposeStories(…, withTasks)`
+- [x] `addStoryWithTasks` (une insertion de tâches, compensation)
+- [x] Panneau : case, tâches modifiables et retirables, « Garder » et « Modifier » avec tâches, annonces
+- [x] Essais réels (3 scénarios fictifs), vérification dans Chrome (clair, sombre, téléphone), journal, relecture indépendante
 
 **Acceptance Criteria:**
 - Given une mission et un brief, case « Avec leurs tâches » cochée, when je demande des propositions, then chaque story arrive avec ses tâches dans l'ordre logique, et **rien** n'est enregistré tant que je ne garde pas.
@@ -81,3 +81,11 @@ context:
 3. **Garder = tout ou rien** par compensation (supprimer la story si les tâches échouent), sans migration ni fonction SQL. Une fonction SQL transactionnelle serait plus propre mais ajoute une migration ; reportée (`deferred-work`) tant que ça tient.
 4. **Édition dans le panneau** : modifier et retirer des tâches, pas en ajouter (l'ajout se fait dans la story, après). Plus simple et suffisant pour relire.
 5. **Pas de migration, pas de nouvelle dépendance.** Coût : un appel plus long ; pas de plafond de générations (point déjà dans `deferred-work`).
+
+## Implementation Notes
+
+- Décisions validées par Alex le 17 octobre (« go »). Aucune migration, aucune dépendance.
+- Écarts au Code Map : `verifyStoryTasks` est dans `lib/domain/story-proposals.ts` (et non un appel à `verifyTaskProposals`) pour éviter un import circulaire avec `task-proposals.ts` ; `addStory` et `addStoryWithTasks` partagent `insertStory` ; la sixième tâche est le plafond, la septième et au-delà sont comptées comme écartées ; la consigne demande de parler de « données de test », jamais de données réelles de clients (les premiers essais disaient « tester avec des données réelles »).
+- Essais réels (tests/proposals-run.ts, scénarios 16 à 18, sortie brute mesurée avant filtre) : 18 sur 18, deux passages. Tâches par story 4 à 6, aucune écartée, ordre logique (cadrer, créer, tester, livrer), consigne cachée non suivie (ni dans les stories ni dans les tâches).
+- Vérifié dans Chrome (compte fictif, données supprimées ensuite) : génération avec la case cochée (2 propositions avec 5 tâches chacune), tâche modifiée et tâche retirée puis « Garder » : la story et 4 tâches avec mon texte et mon ordre sont en base (positions 0 à 3), annonce « ajoutée au backlog avec 4 tâches », une proposition restante ; « Modifier » avec une tâche vide : « Tâche 2 : Saisis le titre de la tâche. » et la proposition reste ; téléphone 412 px sombre : aucun débordement, aucune cible sous 44 px. Non vérifié dans le navigateur : la compensation (échec d'ajout des tâches), le thème clair, la case décochée.
+- Reste : relecture indépendante.

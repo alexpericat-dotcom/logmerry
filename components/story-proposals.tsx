@@ -4,10 +4,11 @@ import { Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import { addStory, type StoryFormState } from "@/app/(app)/missions/story-actions";
+import { addStoryWithTasks, type StoryFormState } from "@/app/(app)/missions/story-actions";
 import { proposeStories } from "@/app/(app)/missions/proposal-actions";
 import { StoryForm } from "@/components/story-form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BRIEF_MAX, type Proposal } from "@/lib/domain/story-proposals";
@@ -18,11 +19,38 @@ export type LinkedNote = { id: string; title: string; created_at: string };
 
 type Item = Proposal & { key: number };
 
-/** Une proposition gardée telle quelle : même ajout qu'à la main (mêmes règles, dernière place du backlog) ; la proposition disparaît quand c'est enregistré. */
-function KeepButton({ missionId, proposal, onKept }: { missionId: string; proposal: Proposal; onKept: () => void }) {
+type TaskRow = { id: number; text: string };
+
+/** Les tâches proposées avec une story : chacune se modifie ou se retire avant de garder (l'ajout d'une tâche à la main se fait ensuite, dans la story). */
+function TaskEditor({ storyTitle, tasks, onChange }: { storyTitle: string; tasks: TaskRow[]; onChange: (next: TaskRow[]) => void }) {
+  if (tasks.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-sm font-semibold">{tasks.length > 1 ? `${tasks.length} tâches proposées` : "1 tâche proposée"}</p>
+      <ol className="flex flex-col gap-1">
+        {tasks.map((t, i) => (
+          <li key={t.id} className="flex items-center gap-2">
+            <Input
+              aria-label={`Tâche ${i + 1} de la proposition ${storyTitle}`}
+              value={t.text}
+              maxLength={400}
+              onChange={(e) => onChange(tasks.map((x) => (x.id === t.id ? { ...x, text: e.target.value } : x)))}
+            />
+            <Button type="button" variant="ghost" size="icon" aria-label={`Retirer la tâche ${i + 1} de la proposition ${storyTitle}`} onClick={() => onChange(tasks.filter((x) => x.id !== t.id))}>
+              <X size={16} aria-hidden="true" />
+            </Button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/** Une proposition gardée telle quelle avec ses tâches : même ajout qu'à la main (mêmes règles, dernière place du backlog), tout ou rien ; la proposition disparaît quand c'est enregistré. */
+function KeepButton({ missionId, proposal, tasks, onKept }: { missionId: string; proposal: Proposal; tasks: string[]; onKept: () => void }) {
   // Les erreurs de champ (titre trop long…) sont dites avec le message : « Modifier » permet de les corriger.
   const [state, action, pending] = useActionState<StoryFormState, FormData>(async (prev, formData) => {
-    const result = await addStory(missionId, prev, formData);
+    const result = await addStoryWithTasks(missionId, tasks, prev, formData);
     if (result.ok) onKept();
     return result;
   }, {});
@@ -48,8 +76,10 @@ function KeepButton({ missionId, proposal, onKept }: { missionId: string; propos
   );
 }
 
-function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: string; item: Item; noteTitle: string | null; onDone: (kind: "kept" | "rejected") => void }) {
+function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: string; item: Item; noteTitle: string | null; onDone: (kind: "kept" | "rejected", taskCount: number) => void }) {
   const [editing, setEditing] = useState(false);
+  const [rows, setRows] = useState<TaskRow[]>(() => item.tasks.map((text, id) => ({ id, text })));
+  const tasks = rows.map((r) => r.text);
   const close = useCallback(() => setEditing(false), []);
   if (editing) {
     return (
@@ -59,8 +89,8 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
           action={async (prev, formData) => {
             // La note d'origine suit la proposition modifiée.
             formData.set("source_note_id", item.source_note_id ?? "");
-            const result = await addStory(missionId, prev, formData);
-            if (result.ok) onDone("kept");
+            const result = await addStoryWithTasks(missionId, tasks, prev, formData);
+            if (result.ok) onDone("kept", tasks.length);
             return result;
           }}
           initial={{
@@ -75,6 +105,7 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
           onDone={close}
           onCancel={close}
         />
+        <TaskEditor storyTitle={item.title} tasks={rows} onChange={setRows} />
       </li>
     );
   }
@@ -93,14 +124,15 @@ function ProposalCard({ missionId, item, noteTitle, onDone }: { missionId: strin
           </span>
         )}
       </p>
+      <TaskEditor storyTitle={item.title} tasks={rows} onChange={setRows} />
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
-        <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={() => onDone("rejected")}>
+        <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={() => onDone("rejected", 0)}>
           Rejeter<span className="sr-only"> la proposition {item.title}</span>
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
           Modifier<span className="sr-only"> la proposition {item.title}</span>
         </Button>
-        <KeepButton missionId={missionId} proposal={item} onKept={() => onDone("kept")} />
+        <KeepButton missionId={missionId} proposal={item} tasks={tasks} onKept={() => onDone("kept", tasks.length)} />
       </div>
     </li>
   );
@@ -115,6 +147,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
   const [brief, setBrief] = useState("");
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<Item[]>([]);
+  const [withTasks, setWithTasks] = useState(true);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -143,9 +176,9 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
     wasOpen.current = open;
   }, [open]);
   // Une proposition gardée ou rejetée emporte le bouton qui avait le focus : il va au titre du panneau, et l'issue est annoncée.
-  const done = useCallback((key: number, kind: "kept" | "rejected") => {
+  const done = useCallback((key: number, kind: "kept" | "rejected", taskCount: number) => {
     setItems((all) => all.filter((i) => i.key !== key));
-    setAnnounce(kind === "kept" ? "Proposition ajoutée au backlog." : "Proposition rejetée.");
+    setAnnounce(kind === "kept" ? (taskCount > 0 ? `Proposition ajoutée au backlog avec ${taskCount} tâche${taskCount > 1 ? "s" : ""}.` : "Proposition ajoutée au backlog.") : "Proposition rejetée.");
     heading.current?.focus();
   }, []);
 
@@ -158,7 +191,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
     const mine = ++run.current;
     startTransition(async () => {
       try {
-        const result = await proposeStories(missionId, brief, [...checked]);
+        const result = await proposeStories(missionId, brief, [...checked], withTasks);
         if (mine !== run.current) return; // annulé ou fermé entre-temps
         if (!result.ok) {
           setError(result.error);
@@ -167,6 +200,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
         setItems(result.proposals.map((p) => ({ ...p, key: counter.current++ })));
         const remarks = [
           result.dropped ? `${result.dropped} proposition${result.dropped > 1 ? "s écartées" : " écartée"} (invalide, doublon d'un titre du backlog, ou chiffre absent de tes sources).` : "",
+          result.droppedTasks ? `${result.droppedTasks} tâche${result.droppedTasks > 1 ? "s écartées" : " écartée"} (invalide, doublon, au-delà de 6, ou chiffre absent de tes sources).` : "",
           result.cut ? `${result.cut} note${result.cut > 1 ? "s n'ont" : " n'a"} pas été envoyée${result.cut > 1 ? "s" : ""} : trop de texte.` : "",
         ].filter(Boolean);
         setInfo(remarks.join(" "));
@@ -245,6 +279,10 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
           </ul>
         )}
       </fieldset>
+      <label className="flex min-h-9 items-center gap-2 text-sm max-md:min-h-11">
+        <input type="checkbox" className="size-4" checked={withTasks} disabled={pending} onChange={(e) => setWithTasks(e.target.checked)} />
+        Avec leurs tâches (jusqu&apos;à 6 par user story)
+      </label>
       <p className="text-xs text-muted-foreground">Ton brief et les notes cochées sont envoyés à Anthropic pour générer les propositions. N&apos;y mets pas de données réelles de clients. Rien n&apos;est enregistré tant que tu ne gardes pas une proposition.</p>
       <div className="flex items-center gap-3">
         <Button type="button" onClick={generate} disabled={pending}>
@@ -275,7 +313,7 @@ export function StoryProposals({ missionId, notes }: { missionId: string; notes:
               missionId={missionId}
               item={item}
               noteTitle={item.source_note_id ? (noteTitles.get(item.source_note_id) ?? null) : null}
-              onDone={(kind) => done(item.key, kind)}
+              onDone={(kind, count) => done(item.key, kind, count)}
             />
           ))}
         </ol>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { NOTES_CHARS_MAX, buildProposalMessage, limitNotes, parseToolInput, titleKey, verifyProposals } from "./story-proposals.ts";
+import { NOTES_CHARS_MAX, PROPOSAL_TASKS_MAX, buildProposalMessage, limitNotes, parseToolInput, proposalSystemPrompt, titleKey, verifyProposals, verifyStoryTasks } from "./story-proposals.ts";
 
 const note = (id: string, size = 100) => ({ id, title: `Note ${id}`, body: "x".repeat(size) });
 const toolResponse = (stories: unknown, stop = "tool_use") => ({ stop_reason: stop, content: [{ type: "text", text: "ok" }, { type: "tool_use", name: "propose_stories", input: { stories } }] });
@@ -110,4 +110,34 @@ test("note citée : identifiant en majuscules ou avec espaces retrouvé ; points
   const r = verifyProposals([story({ note: " N1 " }), story({ title: "b", points: "0x5" }), story({ title: "c", points: "5.0" }), story({ title: "d", points: "8" })], sources);
   assert.equal(r.proposals[0].source_note_id, "n1");
   assert.deepEqual(r.proposals.slice(1).map((p) => p.points), [null, null, 8]);
+});
+
+test("tâches d'une story (8.17b) : ordre gardé, 6 au plus, doublons, titres invalides et chiffres inventés écartés et comptés", () => {
+  const texts = ["brief : 120 inscrits"];
+  const ok = verifyStoryTasks(["Créer le tableau", { title: "Relancer 120 familles" }, "créer  le TABLEAU.", "  ", "Relancer 47 familles", "Livrer"], texts);
+  assert.deepEqual(ok.tasks, ["Créer le tableau", "Relancer 120 familles", "Livrer"]);
+  assert.equal(ok.dropped, 3); // doublon, vide, 47 inventé
+  const bad = verifyStoryTasks(["x".repeat(201), 42, null, "Livrer"], texts);
+  assert.deepEqual(bad, { tasks: ["Livrer"], dropped: 3 }); // trop long, non textuel, nul
+  const many = verifyStoryTasks(["a", "b", "c", "d", "e", "f", "g", "h"], texts);
+  assert.equal(many.tasks.length, PROPOSAL_TASKS_MAX);
+  assert.equal(many.dropped, 2);
+  assert.deepEqual(verifyStoryTasks(undefined, texts), { tasks: [], dropped: 0 });
+  assert.deepEqual(verifyStoryTasks("pas une liste", texts), { tasks: [], dropped: 0 });
+});
+
+test("propositions avec tâches : vérifiées si demandées, ignorées sinon, emportées avec une story écartée ; tâches en texte JSON acceptées", () => {
+  const withTasks = { ...sources, withTasks: true };
+  const r = verifyProposals([story({ tasks: ["Créer la liste", "Relancer 47 familles"] }), story({ title: "EXPORTER LA LISTE", tasks: ["Jamais vue"] }), story({ title: "autre chose", tasks: JSON.stringify(["Une seule"]) })], withTasks);
+  assert.deepEqual(r.proposals.map((p) => p.tasks), [["Créer la liste"], ["Une seule"]]);
+  assert.equal(r.dropped, 1);
+  assert.equal(r.droppedTasks, 1);
+  const off = verifyProposals([story({ tasks: ["Créer la liste"] })], sources);
+  assert.deepEqual(off.proposals[0].tasks, []);
+  assert.equal(off.droppedTasks, 0);
+});
+
+test("consigne : les tâches ne sont demandées que si la case est cochée", () => {
+  assert.ok(!proposalSystemPrompt(false).includes("« tasks »"));
+  assert.ok(proposalSystemPrompt(true).includes("« tasks »") && proposalSystemPrompt(true).startsWith(proposalSystemPrompt(false)));
 });
