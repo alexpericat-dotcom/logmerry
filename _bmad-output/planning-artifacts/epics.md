@@ -479,15 +479,20 @@ En tant que propriétaire, je veux voir sur le cockpit les tâches du jour avec 
 **Et** quand tout est fait, « Bravo, tu as fait toutes tes tâches du jour. » s'affiche.
 **Et** les règles sont des fonctions pures testées qui reçoivent la date du jour (`asOf`, jour de Paris) ; aucune règle ne passe par l'IA.
 
-### Story 5.3 : Tâches liées au plafond et à l'ACRE
+### Story 5.3 : Alertes de plafond et fin de l'ACRE
 
-En tant que propriétaire, je veux être alerté à 90 % du plafond et un mois avant la fin de l'ACRE, afin d'anticiper.
+*Ancienne story « Tâches liées au plafond et à l'ACRE », adaptée le 18 octobre 2026 (plusieurs plafonds, seuils actifs au profil : PRD FR-11 et FR-14, architecture AD-5).*
+
+En tant que propriétaire, je veux être alerté quand un plafond approche et un mois avant la fin de l'ACRE, afin d'anticiper.
 
 **Critères d'acceptation :**
 
-**Étant donné** des encaissements à 90 % du plafond, **quand** j'ouvre le cockpit, **alors** une tâche de règle 3 apparaît avec son motif.
-**Et** étant donné une date de fin d'ACRE à un mois, une tâche de règle 4 apparaît.
-**Et** si le paramètre manque, la règle s'affiche « paramètre manquant » au lieu d'être ignorée.
+**Étant donné** un plafond suivi dont le seuil 90 % est actif au profil et des encaissements à 90 % de ce plafond, **quand** j'ouvre le cockpit, **alors** une tâche de règle 3 apparaît avec son motif (« plafond [nom] à 90 % ») ; à 100 %, seule la tâche à 100 % reste.
+**Et** un seuil non actif au profil n'émet aucune tâche ; chaque plafond et chaque seuil donnent une tâche distincte ; cocher la tâche à 90 % ne masque pas celle à 100 %.
+**Et** étant donné une fin d'ACRE dans 31 jours au plus, calculée à partir de la date de début d'activité du profil et de la règle ACRE, une tâche de règle 4 apparaît.
+**Et** si la règle réglementaire est absente ou non vérifiée, ou si la date de début d'activité est « À confirmer », la règle s'affiche comme une ligne « paramètre manquant » sous les tâches, avec ce qui manque ; elle n'est ni ignorée ni classée comme une tâche.
+**Et** avec une donnée de profil « Déclarée » non confirmée, la tâche porte le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** une tâche issue d'une règle « Essai » porte l'étiquette « DEMO, non officielle ».
 
 ### Story 5.4 : Tâches « devis sans réponse » et « pipeline vide »
 
