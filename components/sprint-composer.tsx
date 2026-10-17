@@ -92,7 +92,7 @@ export function SprintComposer({ sprintId, sprintName }: { sprintId: string; spr
   };
 
   const chosen = result ? result.stories.filter((s) => checked.has(s.id)) : [];
-  const verdict = result ? capacityVerdict({ proposed: pointsTotal(chosen), placed: result.placedPoints, capacity: result.capacity }) : null;
+  const verdict = result ? capacityVerdict({ proposed: pointsTotal(chosen), placed: result.placedPoints, capacity: result.capacity, noPoints: chosen.filter((s) => s.points === null).length }) : null;
   const goalTooLong = [...goal].length > SPRINT_GOAL_MAX;
   const useGoal = !!result?.goal && goalChecked && goal.trim() !== "";
 
@@ -109,11 +109,17 @@ export function SprintComposer({ sprintId, sprintName }: { sprintId: string; spr
       );
       if (!r.ok) {
         setError(r.error);
-        if (r.gone) router.refresh();
+        if (r.gone) {
+          // La proposition est périmée (ou partiellement appliquée) : on l'efface, un nouveau « Placer » ne ferait que répéter l'erreur ; il faut recomposer.
+          setResult(null);
+          setChecked(new Set());
+          if (r.placed) setAnnounce(r.error);
+          router.refresh();
+        }
         return;
       }
       setAnnounce(
-        `${r.placed} stor${r.placed > 1 ? "ies placées" : "y placée"} dans le sprint « ${sprintName} »${r.goalSet ? ", objectif mis à jour" : r.goalSkipped ? ", objectif inchangé : le sprint en avait déjà un" : ""}.`,
+        `${r.placed} stor${r.placed > 1 ? "ies placées" : "y placée"} dans le sprint « ${sprintName} »${r.goalSet ? ", objectif mis à jour" : r.goalSkipped ? ", objectif inchangé : le sprint en avait déjà un" : r.goalFailed ? ", objectif non enregistré (réessaie depuis « Modifier »)" : ""}.`,
       );
       closing.current = true;
       closePanel();
@@ -185,11 +191,11 @@ export function SprintComposer({ sprintId, sprintName }: { sprintId: string; spr
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Le sprint, ses stories, le backlog (titres, points, rôles, critères), ta capacité et ta précision sont envoyés à Anthropic pour la proposition. N&apos;y mets pas de données réelles de clients. Rien n&apos;est
+          Le titre de la mission, le nom du client, le sprint, ses stories, le backlog (titres, points, rôles, critères), ta capacité et ta précision sont envoyés à Anthropic pour la proposition. N&apos;y mets pas de données réelles de clients. Rien n&apos;est
           placé tant que tu ne cliques pas sur « Placer ».
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" size="sm" onClick={generate} disabled={pending || placing}>
+          <Button type="button" size="sm" onClick={generate} aria-disabled={pending || placing}>
             {pending ? "L'IA compose…" : result ? "Composer à nouveau" : "Composer"}
           </Button>
           <button type="button" disabled={placing} onClick={closePanel} className="text-sm underline underline-offset-4 disabled:opacity-50 max-md:inline-flex max-md:min-h-11 max-md:items-center">
@@ -237,7 +243,7 @@ export function SprintComposer({ sprintId, sprintName }: { sprintId: string; spr
               ))}
             </ol>
             {verdict && (
-              <p role="status" className={`text-sm font-semibold ${verdict.over > 0 ? "text-destructive" : ""}`}>
+              <p className={`text-sm font-semibold ${verdict.over > 0 ? "text-destructive" : ""}`}>
                 {verdict.label}
               </p>
             )}
@@ -267,7 +273,7 @@ export function SprintComposer({ sprintId, sprintName }: { sprintId: string; spr
               </p>
             )}
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" size="sm" onClick={place} disabled={placing || chosen.length === 0 || (useGoal && goalTooLong)}>
+              <Button type="button" size="sm" onClick={place} aria-disabled={placing || chosen.length === 0 || (useGoal && goalTooLong)}>
                 {placing ? "Placement…" : `Placer ${chosen.length} stor${chosen.length > 1 ? "ies" : "y"}`}
               </Button>
             </div>

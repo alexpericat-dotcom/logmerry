@@ -17,7 +17,7 @@ export const sprintDays = (s: { start_date: string; end_date: string }): number 
 
 /** Capacité visée : vide acceptée (aucune), sinon un entier de 1 à 200 ; tout autre type ou valeur est refusé. */
 export function validateCapacity(raw: unknown): { ok: true; value: number | null } | { ok: false; error: string } {
-  if (raw === undefined || raw === null || raw === "") return { ok: true, value: null };
+  if (raw === undefined || raw === null || raw === "" || (typeof raw === "string" && raw.trim() === "")) return { ok: true, value: null };
   const n = typeof raw === "number" ? raw : typeof raw === "string" && /^\d{1,4}$/.test(raw.trim()) ? Number(raw.trim()) : Number.NaN;
   if (!Number.isInteger(n) || n < 1 || n > CAPACITY_MAX) return { ok: false, error: `La capacité visée est un nombre entier de points entre 1 et ${CAPACITY_MAX}.` };
   return { ok: true, value: n };
@@ -151,11 +151,14 @@ export const pointsTotal = (stories: { points: number | null }[]): number => sto
  * Total des points (proposés + déjà dans le sprint) et verdict face à la capacité visée : « 13 points proposés + 5 déjà dans le sprint = 18 sur 20 visés »,
  * « dépasse de 3 points » ; sans capacité, le total seul. Une story sans points compte 0.
  */
-export function capacityVerdict(input: { proposed: number; placed: number; capacity: number | null }): { total: number; over: number; label: string } {
+export function capacityVerdict(input: { proposed: number; placed: number; capacity: number | null; noPoints?: number }): { total: number; over: number; label: string } {
   const total = input.proposed + input.placed;
   const pts = (n: number) => `${n} point${n > 1 ? "s" : ""}`;
-  const base = `${pts(input.proposed)} proposé${input.proposed > 1 ? "s" : ""}${input.placed > 0 ? ` + ${pts(input.placed)} déjà dans le sprint` : ""} = ${total}`;
+  const none = input.noPoints ?? 0;
+  // Des stories sans points comptent pour 0 : on le dit, sinon « 0 point proposé » laisserait croire que le sprint est vide.
+  const noPoints = none > 0 ? ` (dont ${none} stor${none > 1 ? "ies" : "y"} sans points, comptée${none > 1 ? "s" : ""} pour 0)` : "";
+  const base = `${pts(input.proposed)} proposé${input.proposed > 1 ? "s" : ""}${noPoints}${input.placed > 0 ? ` + ${pts(input.placed)} déjà dans le sprint` : ""} = ${total}`;
   if (input.capacity === null) return { total, over: 0, label: `${base} point${total > 1 ? "s" : ""}` };
   const over = Math.max(0, total - input.capacity);
-  return { total, over, label: `${base} sur ${input.capacity} visés${over > 0 ? ` : dépasse de ${pts(over)}` : ""}` };
+  return { total, over, label: `${base} sur ${input.capacity} ${input.capacity > 1 ? "visés" : "visé"}${over > 0 ? ` : dépasse de ${pts(over)}` : ""}` };
 }

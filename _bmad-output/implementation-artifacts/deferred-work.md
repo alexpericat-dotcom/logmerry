@@ -158,3 +158,11 @@
 - Titres des autres stories envoyés sans plafond ; pas de limite de générations (déjà noté).
 - Test automatique de `applyStoryReview` (écriture conditionnelle sur `updated_at`) avec un faux client Supabase.
 - Thème clair de la relecture non vérifié dans le navigateur.
+
+## De la relecture de la 8.19 (17 octobre)
+- Test automatique de `placeStoriesInSprint` et `composeSprint` (faux client Supabase).
+- Deux placements concurrents dans le même sprint depuis deux onglets : positions à égalité (aucune perte).
+- Lecture du backlog plafonnée à 1 000 lignes par PostgREST (négligeable en solo).
+- L'objectif d'un sprint ne passe pas par `validateSprintInput` (longueur seulement) : retours à la ligne acceptés.
+- Compléter la mention de confidentialité des 8.16 et 8.17 (titre de la mission, nom du client, comme en 8.18 et 8.19).
+- Thème clair du panneau « Composer avec l'IA » non vérifié ; placement partiel et sprint clos par course vérifiés par la lecture du code seulement.

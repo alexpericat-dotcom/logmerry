@@ -24,7 +24,8 @@ export type ComposeStory = { id: string; title: string; points: number | null; r
 export type ComposeState =
   | { ok: true; stories: ComposeStory[]; goal: string | null; dropped: number; droppedTexts: number; cutBacklog: boolean; placedPoints: number; capacity: number | null; sprintName: string }
   | { ok: false; error: string };
-export type PlaceState = { ok: true; placed: number; goalSet: boolean; goalSkipped: boolean } | { ok: false; error: string; gone?: boolean };
+/** `goalSkipped` : le sprint avait déjà un objectif ; `goalFailed` : l'objectif n'a pas pu être écrit. `ok: false` avec `gone` : la proposition est périmée (`placed` : stories déjà placées malgré tout). */
+export type PlaceState = { ok: true; placed: number; goalSet: boolean; goalSkipped: boolean; goalFailed: boolean } | { ok: false; error: string; gone?: boolean; placed?: number };
 
 const FAILED = "Proposition impossible pour le moment. Réessaie.";
 const SPRINT_GONE = "Ce sprint n'existe plus.";
@@ -44,6 +45,7 @@ export async function composeSprint(sprintId: string, capacity: unknown, hint: s
     if (!checkedHint.ok) return { ok: false, error: checkedHint.error };
     const text = checkedHint.value;
     if (!isUuid(String(sprintId))) return { ok: false, error: SPRINT_GONE };
+    sprintId = String(sprintId).toLowerCase(); // `isUuid` accepte les majuscules, la comparaison avec `sprint_id` ne les accepterait pas
 
     const found = await supabase.from("sprints").select(`${SPRINT_COLUMNS}, mission:missions(title, client:clients(name))`).eq("id", sprintId).maybeSingle();
     if (found.error) throw new Error(`sprint ${found.error.code ?? ""}`.trim());
@@ -125,35 +127,43 @@ export async function placeStoriesInSprint(sprintId: string, storyIds: string[],
     const missionId = sprint.data.mission_id as string;
 
     // Chaque story doit toujours être au backlog, de la même mission que le sprint (la RLS filtre déjà les autres comptes).
-    const rows = await supabase.from("user_stories").select("id, mission_id, sprint_id, position").in("id", order);
+    const rows = await supabase.from("user_stories").select("id, mission_id, sprint_id, status").in("id", order);
     if (rows.error) throw new Error(`stories ${rows.error.code ?? ""}`.trim());
-    if (rows.data.length !== order.length || rows.data.some((r) => r.mission_id !== missionId || r.sprint_id !== null)) return { ok: false, error: CHANGED, gone: true };
+    if (rows.data.length !== order.length || rows.data.some((r) => r.mission_id !== missionId || r.sprint_id !== null || r.status === "done")) return { ok: false, error: CHANGED, gone: true };
 
     const inSprint = await supabase.from("user_stories").select("id, position").eq("mission_id", missionId).eq("sprint_id", sprintId).order("position", { ascending: true }).order("created_at", { ascending: true });
     if (inSprint.error) throw new Error(`sprint ${inSprint.error.code ?? ""}`.trim());
     const existing = inSprint.data.map((r) => r.id as string);
     const tail = nextPosition(inSprint.data.map((r) => r.position as number));
 
-    const moved = await supabase.from("user_stories").update({ sprint_id: sprintId, position: tail }).in("id", order).is("sprint_id", null).select("id");
+    // La condition vit dans l'écriture elle-même : « toujours au backlog » et « pas terminée » (un changement arrivé depuis la lecture fait refuser la story).
+    const moved = await supabase.from("user_stories").update({ sprint_id: sprintId, position: tail }).in("id", order).is("sprint_id", null).neq("status", "done").select("id");
+    // Le sprint clos entre la lecture et l'écriture : le déclencheur de la base refuse, on le dit comme le contrôle d'avant.
+    if (moved.error?.code === "23514") return { ok: false, error: SPRINT_CLOSED, gone: true };
     if (moved.error) throw new Error(`placement ${moved.error.code ?? ""}`.trim());
-    // Une story partie entre la lecture et l'écriture : celles qui ont pu être placées le sont, on le dit (l'écran se recharge).
-    if ((moved.data?.length ?? 0) !== order.length) {
+    // Une story partie entre la lecture et l'écriture : celles qui ont été placées le sont, leur ordre est enregistré, et on le dit (l'écran se recharge).
+    const placedIds = new Set((moved.data ?? []).map((r) => r.id as string));
+    if (placedIds.size !== order.length) {
+      if (placedIds.size > 0) await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, [...existing, ...order.filter((id) => placedIds.has(id))], { column: "sprint_id", id: sprintId });
       revalidatePath(`/missions/${missionId}`);
-      return { ok: false, error: CHANGED, gone: true };
+      revalidatePath("/missions");
+      return { ok: false, error: `${placedIds.size} stor${placedIds.size > 1 ? "ies sur" : "y sur"} ${order.length} ${placedIds.size > 1 ? "ont" : "a"} été placée${placedIds.size > 1 ? "s" : ""} ; les autres ont changé de liste entre-temps. Relance la proposition.`, gone: true, placed: placedIds.size };
     }
     const done = await renumber(supabase, "user_stories", { column: "mission_id", id: missionId }, [...existing, ...order], { column: "sprint_id", id: sprintId });
     let goalSet = false;
     let goalSkipped = false;
+    let goalFailed = false;
     if (goalText) {
-      // L'objectif existant n'est jamais écrasé : l'écriture est conditionnée à « pas d'objectif ».
-      const g = await supabase.from("sprints").update({ goal: goalText }).eq("id", sprintId).is("goal", null).select("id");
+      // L'objectif existant n'est jamais écrasé et un sprint clos entre-temps n'est pas touché : l'écriture est conditionnée à « pas d'objectif » et « pas clos ».
+      const g = await supabase.from("sprints").update({ goal: goalText }).eq("id", sprintId).is("goal", null).neq("status", "closed").select("id");
+      goalFailed = !!g.error;
       goalSet = !g.error && !!g.data?.length;
-      goalSkipped = !goalSet;
+      goalSkipped = !g.error && !goalSet;
     }
     revalidatePath(`/missions/${missionId}`);
     revalidatePath("/missions");
-    if (done !== "saved") return { ok: false, error: "Les stories sont placées, mais leur ordre n'a pas pu être enregistré. Elles sont à la fin du sprint.", gone: true };
-    return { ok: true, placed: order.length, goalSet, goalSkipped };
+    if (done !== "saved") return { ok: false, error: `Les stories sont placées${goalSet ? " et l'objectif est mis à jour" : ""}, mais leur ordre n'a pas pu être enregistré. Elles sont à la fin du sprint.`, gone: true, placed: order.length };
+    return { ok: true, placed: order.length, goalSet, goalSkipped, goalFailed };
   });
 
   if (result.status === "signed-out") redirect("/auth/login");

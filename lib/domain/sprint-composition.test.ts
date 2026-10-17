@@ -24,6 +24,8 @@ test("capacité : vide acceptée, 1 à 200, le reste refusé", () => {
   assert.deepEqual(validateCapacity(""), { ok: true, value: null });
   assert.deepEqual(validateCapacity("13"), { ok: true, value: 13 });
   assert.deepEqual(validateCapacity(200), { ok: true, value: 200 });
+  assert.deepEqual(validateCapacity(" 13 "), { ok: true, value: 13 });
+  assert.deepEqual(validateCapacity("   "), { ok: true, value: null }); // espaces seuls : comme vide
   for (const bad of [0, 201, -3, 2.5, "abc", "1e2", {}, NaN]) assert.equal(validateCapacity(bad).ok, false, String(bad));
 });
 
@@ -71,7 +73,28 @@ test("objectif : gardé seulement si le sprint n'en a pas, 300 caractères au pl
 test("points et capacité : stories sans points = 0 ; dépassement dit ; sans capacité le total seul", () => {
   assert.equal(pointsTotal(backlog), 8);
   assert.deepEqual(capacityVerdict({ proposed: 13, placed: 5, capacity: 20 }), { total: 18, over: 0, label: "13 points proposés + 5 points déjà dans le sprint = 18 sur 20 visés" });
+  assert.deepEqual(capacityVerdict({ proposed: 13, placed: 7, capacity: 20 }), { total: 20, over: 0, label: "13 points proposés + 7 points déjà dans le sprint = 20 sur 20 visés" }); // pile la capacité : pas de dépassement
+  assert.equal(capacityVerdict({ proposed: 0, placed: 0, capacity: 1 }).label, "0 point proposé = 0 sur 1 visé");
+  assert.equal(capacityVerdict({ proposed: 0, placed: 0, capacity: 13, noPoints: 5 }).label, "0 point proposé (dont 5 stories sans points, comptées pour 0) = 0 sur 13 visés");
+  assert.equal(capacityVerdict({ proposed: 3, placed: 0, capacity: null, noPoints: 1 }).label, "3 points proposés (dont 1 story sans points, comptée pour 0) = 3 points");
   assert.deepEqual(capacityVerdict({ proposed: 13, placed: 5, capacity: 15 }), { total: 18, over: 3, label: "13 points proposés + 5 points déjà dans le sprint = 18 sur 15 visés : dépasse de 3 points" });
   assert.equal(capacityVerdict({ proposed: 1, placed: 0, capacity: null }).label, "1 point proposé = 1 point");
   assert.equal(capacityVerdict({ proposed: 0, placed: 0, capacity: null }).label, "0 point proposé = 0 point");
+});
+
+test("liste de plus de 60 stories : seules les 60 premières valides sont gardées, le reste est compté ; id d'une story déjà placée refusé", () => {
+  const ids = Array.from({ length: 70 }, (_, i) => `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`);
+  const r = verifyComposition({ stories: ids.map((id) => ({ id, reason: "ok" })) }, { backlogIds: ids, sources: [], hasGoal: true });
+  assert.equal(r.picks.length, 60);
+  assert.equal(r.dropped, 10);
+  const placedId = "99999999-9999-4999-8999-999999999999"; // déjà dans le sprint : absent de backlogIds
+  assert.equal(verifyComposition({ stories: [{ id: placedId, reason: "x" }] }, ctx()).picks.length, 0);
+});
+
+test("types inattendus : raison ou objectif non textuels, élément nul, JSON invalide ; un petit nombre connu ou non (moins de 10) est gardé", () => {
+  const r = verifyComposition({ stories: [null, { id: A, reason: 42 }, { id: B, reason: "Environ 3 jours" }], goal: 7 }, ctx());
+  assert.deepEqual(r.picks, [{ id: A, reason: "" }, { id: B, reason: "Environ 3 jours" }]);
+  assert.equal(r.goal, null);
+  assert.equal(r.dropped, 1);
+  assert.deepEqual(verifyComposition({ stories: "pas du JSON" }, ctx()).picks, []);
 });
