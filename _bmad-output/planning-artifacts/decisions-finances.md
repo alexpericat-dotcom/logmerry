@@ -10,7 +10,13 @@ Journal de travail du contrôle de préparation du 18 octobre 2026. Chaque déci
 3. **Spec « cockpit financier » (18 octobre) :** écrite par l'auteur avec l'aide de Claude (conversation externe), versée dans `spec-cockpit-financier.md` (ses modules 1 à 5 n'existent pas). **Périmètre du MVP : les modules 6 (plafonds), 7 (calendrier), 9 (règles versionnées) et 10 (profil professionnel) entrent dans les epics 4 et 5 ; les modules A (vue d'ensemble), B (objectifs) et 8 (ARE) sont une phase suivante** (option « b » de l'auteur).
 4. **Plafonds :** plusieurs plafonds distincts, chacun calculé sur le chiffre d'affaires pertinent pour sa règle (jamais le même montant réutilisé), alertes configurables à 50, 75, 90 et 100 % (module 6).
 5. **Donnée inconnue :** état « À confirmer », jamais une valeur par défaut (modules 9 et 10). Conséquence : plusieurs points ouverts disparaissent comme décisions à prendre maintenant, ils deviennent des **champs du profil** (statut, régime fiscal, catégorie, fréquence des déclarations, régime de TVA, ACRE, date de début d'activité), tous « À confirmer » au départ.
-6. **Démo (18 octobre, après la relecture du PRD) :** le compte de démonstration reçoit des **règles d'essai fictives, étiquetées « DEMO, non officielle »**, réservées à ce compte (isolation par compte) et purgées au passage à l'outil pro ; elles ne se mélangent jamais aux vraies règles de l'auteur. Tant que les vraies règles ne sont pas confirmées à la source, le compte réel affiche « paramètre manquant ».
+6. **Démo (18 octobre, après la relecture du PRD) :** le compte de démonstration reçoit des **règles d'essai fictives, étiquetées « DEMO, non officielle »**, réservées à ce compte (isolation par compte) et purgées au passage à l'outil pro ; elles ne se mélangent jamais aux vraies règles de l'auteur. Tant que les vraies règles ne sont pas confirmées à la source, le compte réel affiche « paramètre manquant ».7. **Règles :** données saisies et versionnées (valeurs, dates d'effet, sources) + formules en code testé qui les lit ; un changement de valeur est une **nouvelle version avec date d'effet**, l'ancienne gardant sa date de fin.
+8. **Calendrier :** source unique des échéances ; le cockpit en tire ses tâches du jour ; cocher marque l'échéance faite.
+9. **Alertes de plafond :** visibles dans l'application, seuils actifs choisis au profil, tâche du cockpit à 90 % puis 100 % ; pas de notification au MVP.
+10. **Règle 5 du cockpit :** devis « envoyés » seulement. **Règle 6 :** moins de deux missions en cours ou devis envoyés. **Devis accepté sur un prospect :** le prospect devient client et la mission est créée automatiquement, titre « Devis du JJ/MM/AAAA — Nom du client », modifiable.
+11. **Ordre de construction :** socle de règles et profil, factures, plafonds, cotisations, échéances simples puis calendrier complet ; on coupe d'abord les catégories et la récurrence du calendrier.
+12. **Profil et assistant :** le profil peut être envoyé à l'assistant (seul utilisateur connecté), mention affichée, à revoir avant les données réelles.
+
 ## Ce qui n'est plus une question maintenant
 - Un ou deux plafonds : plusieurs, selon les règles (décision 4).
 - Hors taxe ou toutes taxes comprises, fréquence de déclaration, ACRE : champs du profil et paramètres de règles, saisis avec leur source (décision 5).
@@ -18,10 +24,8 @@ Journal de travail du contrôle de préparation du 18 octobre 2026. Chaque déci
 
 ## À trancher (dans l'ordre)
 
-- Règle 5 du cockpit : devis seulement, ou aussi les prospects.
-- Règle 6 du cockpit : ce que veut dire « planifié » (avec les sprints).
-- Devis accepté : ce que veut dire « mission créée ou confirmée ».
-- Septième règle du cockpit (sprint) et affichage « Client / Mission / Sprint X ».
-- Module 8 (ARE) : confirmer qu'il reste après le MVP (l'auteur n'a pas encore répondu).
-- Les 6 cas de référence calculés à la main (prérequis de FR-11), à réécrire comme « tests associés » des règles (module 9).
-- Sécurité : la table `parameters` devient-elle la table de règles versionnées (colonnes ajoutées) ou y a-t-il une table de règles à part ? À trancher avec `bmad-architecture`.
+- Le suivi ARE (module 8) reste-t-il bien après le MVP : à confirmer explicitement.
+- Base de calcul de chaque plafond (hors taxe ou toutes taxes comprises, période, catégories) : avec la règle et sa source.
+- Les 6 cas de référence calculés à la main, les règles de prorata, de bascule de TVA et de fin d'ACRE avec leurs sources, et les règles d'essai « DEMO » du compte de démonstration : à écrire par l'auteur.
+- Nombre maximum de tâches de sprint affichées sur le cockpit.
+- Architecture : où vivent les règles versionnées (table `parameters` étendue ou table à part) : à trancher avec `bmad-architecture`.
