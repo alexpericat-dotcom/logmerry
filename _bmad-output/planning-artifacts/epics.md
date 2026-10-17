@@ -167,7 +167,7 @@ En tant que propriétaire, je veux que l'application porte les couleurs et la ty
 
 **Critères d'acceptation :**
 
-**Étant donné** `DESIGN.md`, **quand** j'ouvre l'application en mode clair puis sombre, **alors** les couleurs sont celles des jetons sémantiques (fond, texte, carte, primaire, accent, bordure, anneau de focus, états succès, avertissement, erreur) et la police est Plus Jakarta Sans.
+**Étant donné** `DESIGN.md`, **quand** j'ouvre l'application en mode clair puis sombre, **alors** les couleurs sont celles des jetons sémantiques (fond, texte, carte, primaire, accent, bordure, anneau de focus, états succès, avertissement, erreur) et les polices sont celles de `DESIGN.md` (Hanken Grotesk pour le texte, IBM Plex Mono pour les chiffres, Pixelify Sans pour les titres de bandeau en clair, Bricolage Grotesque pour le logotype). *Mise à jour du 17 octobre : le thème clair est « Arcade clair » (pixel art) et le sombre est le thème par défaut ; la police d'origine, Plus Jakarta Sans, n'est plus utilisée.*
 **Et** les contrastes de texte sont de 4,5:1 au moins dans les deux thèmes pour les couples de jetons utilisés (vérifiés par un test automatique), et aucun état ne repose sur la couleur seule.
 **Et** les pages existantes (connexion, cockpit, notes, paramètres, panneau de l'assistant) s'affichent correctement dans les deux thèmes, sans couleur écrite en dur hors des jetons.
 

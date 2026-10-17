@@ -43,7 +43,7 @@ Un cockpit personnel pour piloter une activité de conseil No-Code/IA, avec un a
 ## Le style visuel
 - **Ambiance** : sobre, grille nette, fort contraste.
 - **Couleurs** : fond Chalk, cartes Dawn, texte Forest, boutons et focus en vert Kyuri. Mode sombre : fond Forest, accent jaune Sneezeweeds. L'orange Tobiko ne marque que les 90 % de la jauge. Quelques dégradés (portfolio, connexion, en-tête du cockpit), jamais derrière les tâches ou les tableaux.
-- **Typographie** : Plus Jakarta Sans, chiffres alignés pour les montants et les dates.
+- **Typographie** : Hanken Grotesk (texte), IBM Plex Mono (chiffres alignés pour les montants et les dates), Pixelify Sans (titres de bandeau, thème clair seulement), Bricolage Grotesque (logotype) ; voir `DESIGN.md`.
 
 ## Les points encore ouverts
 - Tester le raccourci `⌘K` (recherche et assistant) sur Safari, Chrome et Firefox Mac.
