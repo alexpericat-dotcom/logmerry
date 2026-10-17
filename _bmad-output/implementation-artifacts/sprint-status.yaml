@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-17-2026 16:56
+last_updated: 10-17-2026 21:47
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -62,19 +62,22 @@ development_status:
   epic-3-retrospective: optional
 
   epic-4: backlog
-  4-1-renseigner-mes-paramètres: backlog
+  4-1a-profil-professionnel: backlog
+  4-1b-règles-réglementaires-versionnées: backlog
   4-2-enregistrer-mes-factures: backlog
   4-3-enregistrer-un-encaissement: backlog
-  4-4-voir-ma-position-par-rapport-au-plafond: backlog
+  4-4-suivre-mes-plafonds: backlog
   4-5-voir-une-estimation-de-cotisations: backlog
   epic-4-retrospective: optional
 
   epic-5: backlog
-  5-1-enregistrer-mes-échéances: backlog
+  5-1a-échéances-saisies: backlog
+  5-1b-calendrier-administratif-complet: backlog
   5-2-voir-mes-tâches-du-jour-échéances-et-factures-échues: backlog
-  5-3-tâches-liées-au-plafond-et-à-l-acre: backlog
+  5-3-alertes-de-plafond-et-fin-de-l-acre: backlog
   5-4-tâches-devis-sans-réponse-et-pipeline-vide: backlog
-  5-5-voir-mon-ca-encaissé-et-ma-jauge-sur-le-cockpit: backlog
+  5-4b-tâches-de-mon-sprint: backlog
+  5-5-voir-mon-ca-encaissé-et-mes-jauges-sur-le-cockpit: backlog
   5-6-écran-à-faire-et-ligne-de-synthèse: backlog
   epic-5-retrospective: optional
 
@@ -111,7 +114,7 @@ development_status:
   8-17-découper-une-story-en-tâches-avec-l-ia: done
   8-17b-tâches-proposées-avec-les-stories-du-backlog: done
   8-18-relire-et-améliorer-une-story-avec-l-ia: done
-  8-19-composer-un-sprint-avec-l-ia: review
-  8-20-ordonner-le-backlog-avec-l-ia: review
+  8-19-composer-un-sprint-avec-l-ia: done
+  8-20-ordonner-le-backlog-avec-l-ia: done
   8-21-générer-un-prompt-depuis-une-mission: done
   epic-8-retrospective: optional

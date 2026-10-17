@@ -31,12 +31,12 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-6 : jeu de test du RAG (15 à 20 questions), score mesuré, aucune fuite entre comptes.
 - FR-7 : prospects, clients, contacts, statut, étiquette d'origine, lien avec les notes.
 - FR-8 : missions pilotées en agile (changement du 2026-10-16, décision d'Alex) : backlog de user stories, tâches, sprints, avec progression ; l'IA aide à les concevoir (FR-23, stories 8.16 à 8.20) et à en tirer un prompt (FR-24, story 8.21). Remplace les « étapes datées ».
-- FR-9 : factures (payée ou non, échéance) et encaissements.
-- FR-10 : table de paramètres (taux, plafonds) avec source et date de vérification.
-- FR-11 : estimations (cotisations, plafond) calculées par le code, étiquetées « estimation ».
+- FR-9 : factures (hors taxe, taxe, échéance) et encaissements ; le statut « payée » se déduit des encaissements.
+- FR-10 : règles réglementaires versionnées (valeur, dates d'effet, source officielle, date de vérification, statut) ; une nouvelle version à chaque changement ; formules en code testé, jamais de chiffre en dur (18 octobre).
+- FR-11 : estimations de cotisations et suivi de plusieurs plafonds, calculés par le code sur la base de chaque règle, étiquetés « estimation » ; alertes visibles à chaque seuil actif (18 octobre).
 - FR-12 : garde-fous de l'assistant (pas de conseil fiscal ou juridique).
-- FR-13 : échéances avec date et source obligatoires.
-- FR-14 : six règles qui ordonnent les tâches du jour, chacune avec son motif.
+- FR-13 : échéances et calendrier administratif, source unique ; date et source obligatoires à la saisie ; « À confirmer » pour une échéance qu'une règle ne peut pas calculer (18 octobre).
+- FR-14 : sept règles qui ordonnent les tâches du jour, chacune avec son motif, plus les tâches du sprint actif (trois au plus) ; « Client / Mission / Sprint X » (18 octobre).
 - FR-15 : cockpit avec CA encaissé, position par rapport au plafond, estimations étiquetées.
 - FR-16 : réalisations publiables (avec accord du client) sur une page publique en lecture seule.
 - FR-19 : recherche dans les notes, clients et missions.
@@ -45,6 +45,8 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-22 : suivi de devis (montant, date d'envoi, statut).
 - FR-23 : aide de l'IA à la conception d'une mission (17 octobre) : propositions de user stories, de tâches, relecture d'une story, composition d'un sprint, ordre logique du backlog ; rien n'est enregistré sans l'accord du propriétaire.
 - FR-24 : générer un prompt depuis une mission (17 octobre) : l'IA rédige la consigne, le code recopie le contexte.
+- FR-25 : profil professionnel (statut, régime, date de début d'activité…), chaque champ « À confirmer », « Déclaré » ou « Confirmé » (18 octobre).
+- Phase suivante, hors MVP : FR-26 (vue d'ensemble financière), FR-27 (objectifs), FR-28 (suivi ARE).
 - Hors MVP : FR-17 et FR-18 (catalogue d'outils, brouillon de devis).
 
 ### Exigences non fonctionnelles
@@ -94,11 +96,11 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
 | FR-8 | 3 | 3.4, 3.5a, 3.5b, 3.5c |
 | FR-9 | 4 | 4.2, 4.3 |
-| FR-10 | 4 | 4.1 |
+| FR-10 | 4 | 4.1b |
 | FR-11 | 4 | 4.4, 4.5 |
 | FR-12 | 8 | 8.12 |
-| FR-13 | 5 | 5.1 |
-| FR-14 | 5 | 5.2, 5.3, 5.4 |
+| FR-13 | 5 | 5.1a, 5.1b |
+| FR-14 | 5 | 5.2, 5.3, 5.4, 5.4b |
 | FR-15 | 5 | 5.5 |
 | FR-16 | 6 | 6.1, 6.2, 6.3 |
 | FR-19 | 2, 3, 8 | 2.4, 3.7, 8.6 |
@@ -107,6 +109,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-22 | 3 | 3.6 |
 | FR-23 | 8 | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20 |
 | FR-24 | 8 | 8.21 |
+| FR-25 | 4 | 4.1a |
 
 ## Liste des epics
 
@@ -324,9 +327,9 @@ En tant que propriétaire, je veux que ⌘K trouve aussi mes clients et missions
 
 ---
 
-## Epic 4 : Factures et finances
+## Epic 4 : Profil, règles, factures et plafonds
 
-Je suis mes factures et mes encaissements, et je vois où j'en suis par rapport à mon plafond, avec des chiffres étiquetés « estimation ».
+Je renseigne mon profil et mes règles réglementaires (sourcées, datées, versionnées), je suis mes factures et mes encaissements en hors taxe et taxe, et je vois où j'en suis par rapport à mes plafonds, avec des chiffres étiquetés « estimation ». Aucune valeur réglementaire n'est écrite en dur ni préremplie.
 
 ### Story 4.1a : Profil professionnel
 
@@ -432,7 +435,7 @@ En tant que propriétaire, je veux une estimation de mes cotisations à partir d
 
 ## Epic 5 : Échéances et cockpit « Aujourd'hui »
 
-Le cockpit me dit quoi faire aujourd'hui et pourquoi.
+Le calendrier range mes échéances ; le cockpit en tire, avec mes factures, mes devis, mes plafonds et mon sprint, ce que je dois faire aujourd'hui et pourquoi (sept règles).
 
 ### Story 5.1a : Échéances saisies
 
@@ -522,15 +525,18 @@ En tant que propriétaire, je veux voir sur le cockpit les tâches de mon sprint
 **Et** sans sprint en cours, ou sans story « en cours », rien n'apparaît.
 **Et** aucune décision n'est prise par l'IA ; les règles sont des fonctions pures testées avec `asOf`.
 
-### Story 5.5 : Voir mon CA encaissé et ma jauge sur le cockpit
+### Story 5.5 : Voir mon CA encaissé et mes jauges sur le cockpit
 
-En tant que propriétaire, je veux voir le CA encaissé et la jauge de plafond sur le cockpit, afin d'avoir tout au même endroit.
+*Adaptée le 18 octobre 2026 (plusieurs plafonds : PRD FR-15).*
+
+En tant que propriétaire, je veux voir le CA encaissé et mes jauges de plafond sur le cockpit, afin d'avoir tout au même endroit.
 
 **Critères d'acceptation :**
 
-**Étant donné** des encaissements et un plafond, **quand** j'ouvre le cockpit, **alors** je vois le CA encaissé et la jauge, avec les mêmes chiffres que la page Finances (même fonction de calcul).
-**Et** chaque estimation porte l'étiquette « estimation » ; un paramètre absent affiche « paramètre manquant ».
+**Étant donné** des encaissements et des plafonds suivis, **quand** j'ouvre le cockpit, **alors** je vois un repère « CA encaissé (hors taxe, année en cours) » et les jauges des plafonds suivis, avec **les mêmes chiffres que la page Plafonds** (même fonction de calcul, aucun second calcul) ; chaque jauge affiche sa propre base.
+**Et** chaque estimation porte l'étiquette « estimation » ; un plafond sans règle vérifiée affiche « paramètre manquant » avec ce qui manque ; une donnée de profil « Déclarée » non confirmée affiche le bandeau « à confirmer » ; une règle « Essai » porte « DEMO, non officielle ».
 **Et** après avoir enregistré un encaissement, le cockpit est à jour à mon retour, sans bouton d'actualisation.
+**Et** les jauges ne sont pas des tâches : elles n'entrent ni dans l'ordre de priorité ni dans la liste du jour.
 
 ### Story 5.6 : Écran « À faire » et ligne de synthèse
 
@@ -863,10 +869,10 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
 | 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
 | 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20, 8.21 | IA |
-| 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
-| 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
-| 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |
-| 12 | Lister ce qu'il reste à documenter et publier mon portfolio public. | 5.6, 6.1, 6.2, 6.3 | Standard |
+| 9 | Renseigner mon profil et mes règles, enregistrer mes factures et mes encaissements. | 4.1a, 4.1b, 4.2, 4.3 | Standard |
+| 10 | Voir mes plafonds, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1a | Standard + IA |
+| 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.4b, 5.5 | Standard |
+| 12 | Lister ce qu'il reste à documenter, publier mon portfolio public et compléter mon calendrier. | 5.6, 6.1, 6.2, 6.3, 5.1b | Standard |
 | 13 | Montrer toute l'application : démo, accessibilité, sauvegarde. | 7.1, 7.2, 7.3, 7.4 | Standard |
 
 ## Hypothèses à confirmer
@@ -876,6 +882,7 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 - [ASSUMPTION] Les notes (Epic 2) existent avant l'IA ; l'indexation est branchée en 8.3 (sprint 3), donc FR-3 est livré en deux temps.
 - [ASSUMPTION] FR-21 est coupé en deux : bouton « Créer une note à documenter plus tard » au sprint 6 (8.11), écran « À faire » et ligne de synthèse au sprint 12 (5.6). Entre les deux, les brouillons se retrouvent par un filtre dans la liste des notes.
 - [ASSUMPTION] FR-12 (garde-fous) est placé au sprint 10, avec les finances, car il explique les estimations.
-- [ASSUMPTION] Les cas de référence des calculs (4.4 et 4.5) sont fournis par l'auteur et vérifiés à la source avant le code (PRD §9.5).
+- [ASSUMPTION] Les cas de référence des calculs (4.4 et 4.5) sont calculés à la main par l'auteur, indépendamment du code, avec leurs sources (PRD §9, points 5 et 12) ; la 4.4 est livrée avec des cas FICTIFS et les cas RÉELS s'ajoutent avant d'afficher un chiffre réel ; la 4.5 attend les règles de prorata, d'ACRE et de bascule de TVA écrites par l'auteur (prérequis bloquant).
+- [ASSUMPTION] Ordre de coupe si le temps manque (18 octobre, PRD §7.3) : on coupe d'abord les catégories avancées et la récurrence du calendrier (5.1b, sprint 12), jamais le socle de règles (4.1a, 4.1b) ni les plafonds (4.4). Le périmètre ajouté le 18 octobre n'est pas chiffré.
 - [ASSUMPTION] Pas de story pour Vercel Pro, provisions détaillées, dépenses, n8n, import de fichiers, formulaire de contact (hors MVP).
 - [ASSUMPTION] Les comptes « démo A » et « démo B » sont créés à la main dans Supabase pendant le sprint 2 ; les notes fictives servant au jeu de test RAG sont écrites avant le sprint 6.
