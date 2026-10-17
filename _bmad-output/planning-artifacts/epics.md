@@ -30,7 +30,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-5 : historique des échanges conservé, avec citations cliquables.
 - FR-6 : jeu de test du RAG (15 à 20 questions), score mesuré, aucune fuite entre comptes.
 - FR-7 : prospects, clients, contacts, statut, étiquette d'origine, lien avec les notes.
-- FR-8 : missions pilotées en agile (changement du 2026-10-16, décision d'Alex) : backlog de user stories, tâches, sprints, avec progression ; l'IA aide à les concevoir (stories 8.16 à 8.19). Remplace les « étapes datées ».
+- FR-8 : missions pilotées en agile (changement du 2026-10-16, décision d'Alex) : backlog de user stories, tâches, sprints, avec progression ; l'IA aide à les concevoir (FR-23, stories 8.16 à 8.20) et à en tirer un prompt (FR-24, story 8.21). Remplace les « étapes datées ».
 - FR-9 : factures (payée ou non, échéance) et encaissements.
 - FR-10 : table de paramètres (taux, plafonds) avec source et date de vérification.
 - FR-11 : estimations (cotisations, plafond) calculées par le code, étiquetées « estimation ».
@@ -43,6 +43,8 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-20 : résumé automatique d'une note (après le jalon RAG).
 - FR-21 : « Créer une note à documenter plus tard » et écran « À faire ».
 - FR-22 : suivi de devis (montant, date d'envoi, statut).
+- FR-23 : aide de l'IA à la conception d'une mission (17 octobre) : propositions de user stories, de tâches, relecture d'une story, composition d'un sprint, ordre logique du backlog ; rien n'est enregistré sans l'accord du propriétaire.
+- FR-24 : générer un prompt depuis une mission (17 octobre) : l'IA rédige la consigne, le code recopie le contexte.
 - Hors MVP : FR-17 et FR-18 (catalogue d'outils, brouillon de devis).
 
 ### Exigences non fonctionnelles
@@ -90,7 +92,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-5 | 8 | 8.10 |
 | FR-6 | 8 | 8.14, 8.15 |
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
-| FR-8 | 3, 8 | 3.4, 3.5a, 3.5b, 3.5c, 8.16, 8.17, 8.18, 8.19, 8.20, 8.21 |
+| FR-8 | 3 | 3.4, 3.5a, 3.5b, 3.5c |
 | FR-9 | 4 | 4.2, 4.3 |
 | FR-10 | 4 | 4.1 |
 | FR-11 | 4 | 4.4, 4.5 |
@@ -103,6 +105,8 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-20 | 8 | 8.13 |
 | FR-21 | 5, 8 | 5.6, 8.11 |
 | FR-22 | 3 | 3.6 |
+| FR-23 | 8 | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20 |
+| FR-24 | 8 | 8.21 |
 
 ## Liste des epics
 
@@ -288,6 +292,8 @@ En tant que propriétaire, je veux planifier des sprints et y placer des stories
 **Étant donné** la table `sprints` créée par une migration (RLS), **quand** je crée un sprint (nom, objectif en une phrase, date de début, date de fin), **alors** je peux y placer des stories du backlog ou les en retirer ; une story n'est que dans un sprint à la fois.
 **Et** un seul sprint est « en cours » par mission ; je peux le démarrer et le clore ; à la clôture, les stories non terminées retournent au backlog ou passent au sprint suivant (mon choix).
 **Et** la page d'une mission montre le sprint en cours, son avancement et le reste du backlog ; la fin ne peut pas précéder le début.
+**Et** une story se glisse d'une liste à l'autre (backlog, sprint planifié, sprint en cours) à la souris, au toucher et au clavier avec annonces ; le menu « Sprint » de la story reste l'équivalent clavier et lecteur d'écran (ajouté le 17 octobre).
+**Et** un sprint clos est figé : aucune story n'y entre ni n'en sort, côté écran, côté serveur et côté base ; son nom et son objectif restent modifiables ; le supprimer renvoie ses stories au backlog, à la suite, dans leur ordre.
 
 ### Story 3.6 : Suivre mes devis
 
@@ -692,7 +698,17 @@ En tant que propriétaire, je veux que l'IA propose des tâches pour une user st
 
 **Étant donné** une user story, **quand** je demande de la découper, **alors** l'IA propose des tâches que je valide une à une ; rien n'est ajouté sans mon accord, et les tâches existantes ne sont pas dupliquées.
 **Et** les tâches sont proposées **dans un ordre logique de réalisation**, déduites de la story (rôle, bénéfice, critères d'acceptation) et de la note d'origine si elle existe ; une fois gardées, elles se réordonnent comme les autres.
-**Et** une proposition de la 8.16 peut venir avec ses tâches : « Garder » ajoute alors la story et ses tâches ensemble (modifiables avant d'être gardées).
+
+### Story 8.17b : Tâches proposées avec les stories du backlog
+
+*Séparée de la 8.17 le 17 octobre 2026 : ce critère n'était pas livré avec la 8.17.*
+
+En tant que propriétaire, je veux que les stories proposées par l'IA arrivent avec leurs tâches, afin de ne pas relancer un découpage story par story.
+
+**Critères d'acceptation :**
+
+**Étant donné** des user stories proposées par la 8.16, **quand** je garde une proposition, **alors** la story et ses tâches proposées sont ajoutées ensemble ; les tâches sont modifiables et supprimables avant d'être gardées, et dans un ordre logique de réalisation.
+**Et** les règles de la 8.17 s'appliquent (rien n'est enregistré sans mon accord, pas de doublon, un chiffre absent des sources fait écarter la proposition) ; l'ajout de la story et de ses tâches est tout ou rien.
 
 ### Story 8.18 : Relire et améliorer une story avec l'IA
 
@@ -744,7 +760,7 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 6 | Clore le jalon du 30 octobre : refus « je ne trouve pas », jeu de test et test de fuite. | 8.11, 8.14, 8.15 | IA |
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
 | 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
-| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.18, 8.19, 8.20, 8.21 | IA |
+| 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20, 8.21 | IA |
 | 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
 | 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
 | 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |
