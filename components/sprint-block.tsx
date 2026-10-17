@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 
 import { closeSprint, deleteSprint, startSprint, updateSprint, type SprintActionState } from "@/app/(app)/missions/sprint-actions";
+import { SprintComposer } from "@/components/sprint-composer";
 import { SprintForm } from "@/components/sprint-form";
 import { StoryList } from "@/components/story-list";
 import { selectClass } from "@/components/story-form";
@@ -144,6 +145,7 @@ export function SprintBlock({
           </Button>
         </div>
       )}
+      {mode === "view" && sprint.status !== "closed" && <SprintComposer sprintId={sprint.id} sprintName={sprint.name} />}
       {mode === "close" && (
         <form
           role="group"

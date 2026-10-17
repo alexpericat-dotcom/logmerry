@@ -169,7 +169,7 @@ export function StoryReview({ storyId, storyTitle }: { storyId: string; storyTit
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Le texte de la story, sa note d&apos;origine, les titres des autres stories et ta précision sont envoyés à Anthropic pour la relecture. N&apos;y mets pas de données réelles de clients. Rien n&apos;est
+          Le texte de la story, sa note d&apos;origine, le titre de la mission, le nom du client, les titres des autres stories et ta précision sont envoyés à Anthropic pour la relecture. N&apos;y mets pas de données réelles de clients. Rien n&apos;est
           enregistré tant que tu n&apos;appliques pas.
         </p>
         <div className="flex flex-wrap items-center gap-3">
