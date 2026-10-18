@@ -115,6 +115,7 @@ begin
 
   -- Droits sur les fonctions
   perform pg_temp.chk('create_rule_version n''est pas appelable sans connexion', has_function_privilege('anon', 'public.create_rule_version(text,text,date,jsonb,text,date,date,text,public.regulatory_rule_status)', 'execute')::text, 'false');
+  perform pg_temp.chk('rule_version_is_mine n''est pas appelable sans connexion', has_function_privilege('anon', 'public.rule_version_is_mine(uuid,text)', 'execute')::text, 'false');
   perform pg_temp.chk('la fonction du déclencheur n''est pas appelable par l''API', has_function_privilege('authenticated', 'public.regulatory_rules_guard()', 'execute')::text, 'false');
 
   select 'ROLLBACK_OK passed=' || count(*) filter (where ok) || ' failed=' || count(*) filter (where not ok)
