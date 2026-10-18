@@ -5,15 +5,15 @@ import { existsSync } from "node:fs";
 
 import { HOME_PATH, NAV_ITEMS, isCurrent } from "./nav.ts";
 
-test("la barre a les 9 entrées prévues, dans l'ordre", () => {
+test("la barre a les 10 entrées prévues, dans l'ordre", () => {
   assert.deepEqual(
     NAV_ITEMS.map((i) => i.label),
-    ["Cockpit", "Notes", "Clients", "Missions", "Factures", "Échéances", "Paramètres", "Réalisations", "À faire"],
+    ["Cockpit", "Notes", "Clients", "Missions", "Factures", "Échéances", "Paramètres", "Réalisations", "À faire", "Profil"],
   );
 });
 
-test("le cockpit, les notes, les clients, les missions et les paramètres sont disponibles pour l'instant", () => {
-  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/parametres"]);
+test("le cockpit, les notes, les clients, les missions, le profil et les paramètres sont disponibles pour l'instant", () => {
+  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/parametres", "/profil"]);
 });
 
 test("isCurrent : page exacte ou sous-page, pas un préfixe de mot", () => {

@@ -1398,3 +1398,104 @@ describe("isolation de la recherche de missions (⌘K) entre deux comptes fictif
     assert.equal(embedded?.name, `${PREFIX} fiche recherche A`, "le nom du client lié est lisible pour son propriétaire");
   });
 });
+
+describe("isolation du profil professionnel entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+
+  // La ligne du profil ne se supprime pas (aucune règle de suppression) : les essais remettent le champ touché à vide.
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("professional_profile").update({ financial_goals: null, vat_regime: null, vat_regime_other: null, alert_thresholds: [90, 100] }).eq("owner_id", account.userId);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    for (const account of [a, b]) {
+      const { error } = await account.client.from("professional_profile").upsert({}, { onConflict: "owner_id", ignoreDuplicates: true });
+      assert.ifError(error);
+    }
+    await cleanup();
+  });
+
+  after(cleanup);
+
+  test("ma ligne porte mon propriétaire, statut et catégorie « Déclaré » (sans date), seuils 90 et 100 ; B ne voit que la sienne", async () => {
+    const mine = await a.client.from("professional_profile").select("*");
+    assert.ifError(mine.error);
+    assert.equal(mine.data!.length, 1);
+    assert.equal(mine.data![0].owner_id, a.userId);
+    assert.equal(mine.data![0].legal_status, "micro_enterprise");
+    assert.equal(mine.data![0].legal_status_confirmed_at, null);
+    assert.equal(mine.data![0].activity_category, "bnc");
+    assert.equal(mine.data![0].tax_regime, null);
+    assert.equal(mine.data![0].activity_start_date, null);
+    assert.deepEqual(mine.data![0].alert_thresholds, [90, 100]);
+    const theirs = await b.client.from("professional_profile").select("owner_id").eq("owner_id", a.userId);
+    assert.deepEqual(theirs.data, []);
+  });
+
+  test("B ne modifie ni ne supprime le profil de A", async () => {
+    const upd = await b.client.from("professional_profile").update({ financial_goals: `${PREFIX} piraté` }).eq("owner_id", a.userId).select("owner_id");
+    assert.ifError(upd.error);
+    assert.deepEqual(upd.data, []);
+    const del = await b.client.from("professional_profile").delete().eq("owner_id", a.userId).select("owner_id");
+    assert.deepEqual(del.data, []);
+    const del2 = await a.client.from("professional_profile").delete().eq("owner_id", a.userId).select("owner_id");
+    assert.deepEqual(del2.data, [], "aucune règle de suppression, même pour le propriétaire");
+    const still = await a.client.from("professional_profile").select("financial_goals");
+    assert.equal(still.data![0].financial_goals, null);
+  });
+
+  test("B ne crée pas de ligne au nom de A ; A ne déplace pas sa ligne chez B", async () => {
+    const ins = await b.client.from("professional_profile").insert({ owner_id: a.userId });
+    assert.ok(ins.error, "insertion au nom d'un autre refusée");
+    const move = await a.client.from("professional_profile").update({ owner_id: b.userId }).eq("owner_id", a.userId).select("owner_id");
+    assert.ifError(move.error); // acceptée mais sans effet : le déclencheur garde le propriétaire
+    const mine = await a.client.from("professional_profile").select("owner_id");
+    assert.equal(mine.data![0].owner_id, a.userId, "la ligne reste chez A");
+    const theirs = await b.client.from("professional_profile").select("owner_id");
+    assert.deepEqual(theirs.data, [{ owner_id: b.userId }], "B n'a toujours que la sienne");
+  });
+
+  test("sans connexion : rien de visible ni de créable", async () => {
+    const anon = newClient();
+    const read = await anon.from("professional_profile").select("owner_id");
+    assert.deepEqual(read.data ?? [], []);
+    const ins = await anon.from("professional_profile").insert({});
+    assert.ok(ins.error);
+  });
+
+  test("modifier une valeur confirmée la repasse en « Déclaré » ; la confirmer pose la date ; la vider efface la date", async () => {
+    const set = await a.client.from("professional_profile").update({ vat_regime: "franchise" }).eq("owner_id", a.userId).select("vat_regime, vat_regime_confirmed_at").single();
+    assert.ifError(set.error);
+    assert.equal(set.data!.vat_regime_confirmed_at, null);
+    const conf = await a.client.from("professional_profile").update({ vat_regime_confirmed_at: new Date().toISOString() }).eq("owner_id", a.userId).select("vat_regime_confirmed_at").single();
+    assert.ok(conf.data!.vat_regime_confirmed_at);
+    const change = await a.client.from("professional_profile").update({ vat_regime: "normal" }).eq("owner_id", a.userId).select("vat_regime_confirmed_at").single();
+    assert.equal(change.data!.vat_regime_confirmed_at, null, "valeur modifiée sans nouvelle date : Déclaré");
+    await a.client.from("professional_profile").update({ vat_regime_confirmed_at: new Date().toISOString() }).eq("owner_id", a.userId);
+    const clear = await a.client.from("professional_profile").update({ vat_regime: null }).eq("owner_id", a.userId).select("vat_regime_confirmed_at").single();
+    assert.equal(clear.data!.vat_regime_confirmed_at, null, "champ vidé : date effacée");
+  });
+
+  test("la base refuse, pour le bon motif : « Autre » sans texte, texte sans « Autre », date de confirmation sans valeur, date inexistante, seuil inconnu ou doublon, texte trop long", async () => {
+    const upd = (patch: Record<string, unknown>) => a.client.from("professional_profile").update(patch).eq("owner_id", a.userId).select("owner_id");
+    const code = async (patch: Record<string, unknown>) => (await upd(patch)).error?.code;
+    assert.equal(await code({ vat_regime: "other" }), "23514");
+    assert.equal(await code({ vat_regime: "franchise", vat_regime_other: "x" }), "23514");
+    assert.equal(await code({ vat_regime: "other", vat_regime_other: "   " }), "23514");
+    assert.equal(await code({ vat_regime: null, vat_regime_confirmed_at: new Date().toISOString() }), "23514");
+    assert.equal(await code({ activity_start_date: "2026-02-30" }), "22008");
+    assert.equal(await code({ alert_thresholds: [60] }), "23514");
+    assert.equal(await code({ alert_thresholds: [90, 90] }), "23514");
+    assert.equal(await code({ financial_goals: "x".repeat(2001) }), "23514");
+    assert.equal(await code({ vat_regime: "inconnu" }), "22P02");
+    assert.equal((await upd({ activity_start_date: "2099-01-01" })).error, null, "date future permise");
+    await upd({ activity_start_date: null });
+    assert.equal((await upd({ alert_thresholds: [] })).error, null, "aucun seuil permis");
+  });
+});
