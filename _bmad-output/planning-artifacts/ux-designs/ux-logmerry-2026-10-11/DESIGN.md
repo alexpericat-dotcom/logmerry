@@ -1,7 +1,7 @@
 ---
 status: final
 created: 2026-10-11
-updated: 2026-10-15
+updated: 2026-10-18
 name: LogMerry
 description: Cockpit personnel de conseil No-Code/IA avec assistant RAG. shadcn/ui (new-york, base neutral, lucide) sur Next.js + Tailwind 3 + next-themes ; ce DESIGN.md ne spécifie que la couche de marque (palette Cobalt, polices Hanken Grotesk et IBM Plex Mono, filets, composants propres). Il l'emporte sur toute maquette. Refonte du 2026-10-14 (direction 2 « Cobalt », polices B) : voir docs/refonte/propositions.md.
 colors:
@@ -177,6 +177,10 @@ spacing:
     foreground: '{colors.muted-foreground}'
     link: '{colors.foreground}'
     typography: '{typography.label}'
+  demo-label:
+    foreground: '{colors.muted-foreground}'
+    border: '{colors.border}'
+    radius: '{rounded.sm}'
   contact-form:
     foreground: '{colors.foreground}'
     border: '{colors.input}'
@@ -275,10 +279,11 @@ Seuls les composants propres à LogMerry sont spécifiés ; leur comportement es
 | `task-row` | Fond `{colors.card}`, bordure `{colors.filet}`, rayon `{rounded.md}`. Case à cocher à gauche (bordure `{colors.input}`), titre en `{typography.body}` gras, **motif** (`task-motif`) sous le titre : icône lucide + texte `{typography.label}` en `{colors.muted-foreground}`. Tâche cochée : titre barré et icône de coche, pas seulement une teinte. |
 | `plafond-bar` | Barre type bullet chart : remplissage `{colors.primary}`, marqueur vertical 90 % `{colors.marker}` de 3 px, entouré d'un liseré de 2 px `{colors.background}` et dépassant de 4 px de chaque côté de la piste (marqueur contre fond : 5,12 en clair, 10,50 en sombre). La barre ne contient aucun texte. Fond de piste `{colors.background}` ; piste à bordure `{colors.input}`. Le chiffre et le seuil s'affichent à côté, en `{typography.numeric}`. Marqueur `aria-hidden`. Jamais dans une carte Surface. En `forced-colors: active`, piste, remplissage et marqueur passent par `border`/`outline` (`Highlight`/`CanvasText`), pas seulement `background`. |
 | `estimation-label` | Étiquette « estimation » : bordure `{colors.border}`, rayon `{rounded.sm}`, icône + texte `{typography.label}`. Accompagne tout montant calculé. |
-| `status-badge` | Pastille `{rounded.full}` : icône + mot, couleur d'état en complément (succès, attention, erreur) ; le statut « prospect » utilise la signature avec une icône distincte, jamais une couleur de statut. |
+| `status-badge` | Pastille `{rounded.full}` : icône + mot, couleur d'état en complément (succès, attention, erreur) ; le statut « prospect » utilise la signature avec une icône distincte, jamais une couleur de statut. (18 octobre) Sert aussi aux trois états d'un champ du profil (« À confirmer » en `{colors.warning}`, « Déclaré » en `{colors.muted-foreground}`, « Confirmé » en `{colors.success}`, chacun avec son icône), aux statuts de règle (« À vérifier », « Vérifiée », « Essai », « périmée ») et aux seuils atteints d'une jauge : aucun jeton nouveau, la couleur n'est qu'un renfort. |
+| `demo-label` | (18 octobre) Étiquette « DEMO, non officielle » : même construction que `estimation-label` (bordure `{colors.border}`, rayon `{rounded.sm}`, icône + `{typography.label}`), posée à côté de tout élément calculé ou saisi avec une règle d'essai. Aucun jeton nouveau. |
 | `assistant-panel` | Panneau ancré à droite, fond `{colors.popover}`, bordure `{colors.border}`, rayon `{rounded.lg}`. Réponse en `{typography.body}`, puces lisibles en diagonale, sources dessous. |
 | `citation-chip` | Puce `{rounded.full}`, fond `{colors.muted}`, bordure `{colors.border}`, titre de la Note source ; focus visible `{colors.ring}`. |
-| `gradient-banner` | **Bandeau d'en-tête de chaque écran principal** (Aujourd'hui, Notes, Paramètres, Nouvelle note, Modifier la note) : `{gradients.gradient-2}`, rayon `{rounded.lg}`, filet `{colors.filet}`, titre de page en `{colors.foreground}` posé **en haut** (zone calme, 45 % du haut) ; hauteur d'environ 170 px pour que le dégradé se voie ; titre sur une ligne, en haut ; une **explication courte facultative** (état vide, cockpit sans tâche) se place au bas du bandeau, dans un cartouche presque opaque (`{colors.background}` à 90 %, texte `{colors.foreground}`) ; les **filtres** (pastilles) sont posés directement sur le bandeau, chacune avec son propre fond `{colors.background}` à 90 % : le texte ne repose jamais directement sur la zone colorée du dégradé. Au-dessus du contenu, jamais derrière. |
+| `gradient-banner` | **Bandeau d'en-tête de chaque écran principal** (Aujourd'hui, Notes, Profil, Règles, Plafonds, Calendrier, Nouvelle note, Modifier la note) : `{gradients.gradient-2}`, rayon `{rounded.lg}`, filet `{colors.filet}`, titre de page en `{colors.foreground}` posé **en haut** (zone calme, 45 % du haut) ; hauteur d'environ 170 px pour que le dégradé se voie ; titre sur une ligne, en haut ; une **explication courte facultative** (état vide, cockpit sans tâche) se place au bas du bandeau, dans un cartouche presque opaque (`{colors.background}` à 90 %, texte `{colors.foreground}`) ; les **filtres** (pastilles) sont posés directement sur le bandeau, chacune avec son propre fond `{colors.background}` à 90 % : le texte ne repose jamais directement sur la zone colorée du dégradé. Au-dessus du contenu, jamais derrière. |
 | `client-card` | Carte de la **fiche** (page d'un client ou prospect) : grande (`{rounded.lg}`, bordure de 2 px `{colors.filet}`, fond `{gradients.gradient-1}`), tuile d'icône (bâtiment) de 56 px, nom en `{typography.heading}` gras, puis statut, origine et dates. Bouton « Modifier » (lien vers la page de modification). |
 | `contact-card` | Carte d'un **contact**, plus petite que la fiche : `{rounded.md}`, fond `{colors.card}`, **avatar rond** d'initiales (`{colors.primary}` à 15 %), nom, fonction, e-mail, téléphone, adresse, boutons « Modifier » et « Supprimer » ; en grille de deux colonnes sous le titre « Contacts ». La différence de taille, de forme (tuile carrée contre avatar rond) et de fond permet de distinguer la fiche et ses contacts d'un coup d'œil. |
 | `data-table` | Shadcn Table sur `{colors.card}`, lignes séparées par `{colors.border}`, en-têtes `{typography.label}`, chiffres tabulaires alignés à droite. |
@@ -299,5 +304,6 @@ Seuls les composants propres à LogMerry sont spécifiés ; leur comportement es
 | Mettre en mono tabulaire tout montant, date et durée | Laisser des chiffres proportionnels dans un tableau ou la jauge |
 | Définir chaque jeton en clair et en sombre ensemble | Livrer un thème sans son pendant |
 | Étiqueter « estimation » tout montant calculé | Présenter un montant calculé comme officiel |
+| Marquer « DEMO, non officielle » toute règle d'essai et tout résultat calculé avec elle (18 octobre) | Montrer un chiffre d'essai sans étiquette ou y mettre une couleur de statut |
 | Hériter des composants shadcn par défaut | Redessiner Dialog, Sheet, Command sans raison de marque |
 | Respecter `prefers-reduced-motion` et `forced-colors`, ne jamais animer un dégradé | Ignorer `prefers-reduced-motion` ou `forced-colors`, animer un dégradé |

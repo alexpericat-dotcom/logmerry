@@ -22,7 +22,7 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 
 ## Règles à respecter
 - Sécurité par ligne (RLS) activée sur toutes les tables, avec `owner_id = auth.uid()`. La recherche vectorielle filtre aussi par `owner_id`.
-- Aucun taux, plafond ou montant fiscal codé en dur : table de paramètres avec source et date de vérification. Les provisions sont des estimations étiquetées comme telles, jamais des montants officiels.
+- Aucun taux, plafond ou montant fiscal codé en dur : table de règles réglementaires versionnées (valeur, date d'effet, source officielle, date de vérification, statut) ; les formules sont du code testé qui lit ces données. Une règle non vérifiée ou périmée ne produit jamais un calcul présenté comme fiable (« paramètre manquant »). Une donnée personnelle inconnue reste « À confirmer », jamais préremplie. Les provisions et les estimations sont étiquetées comme telles, jamais des montants officiels.
 - Aucun conseil fiscal ou juridique généré par l'IA.
 - Propositions de l'IA (stories, tâches, prompts) : éphémères tant que le propriétaire ne les garde pas ; texte fourni traité comme donnée ; un chiffre absent des sources fait écarter la proposition ; seules les notes liées à la fiche du client de la mission peuvent être envoyées.
 - Aucune clé secrète (service role) côté client, dans le code ou dans un commit. `.env.local` est ignoré par git.
@@ -34,8 +34,8 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 
 ## Périmètre
 - MVP : mini CRM, missions gérées en agile (backlog, user stories, tâches, sprints) avec l'aide de l'IA pour les concevoir et pour générer un prompt à confier à un autre assistant, suivi des factures, cockpit « Aujourd'hui », échéances, base de connaissances avec RAG, réalisations (portfolio avec vue publique en lecture seule pour les réalisations publiées avec accord du client).
-- Cockpit étendu, par ordre de priorité : jauge de plafond, capacité, rappels d'échéances ; provision et dépenses en second temps.
-- Hors périmètre : facturation légale et électronique, calcul officiel des cotisations, de l'impôt ou de la TVA, agenda complet.
+- Finances et cockpit : profil professionnel, règles versionnées, plafonds multiples avec alertes visibles dans l'application, calendrier administratif source unique des échéances, cockpit à sept règles (FR-14). Phase suivante, hors MVP : vue d'ensemble financière, objectifs, suivi ARE (spec `_bmad-output/planning-artifacts/spec-cockpit-financier.md`, décisions dans `decisions-finances.md`). Provision et dépenses en second temps.
+- Hors périmètre : facturation légale et électronique, calcul officiel des cotisations, de l'impôt ou de la TVA (les estimations calculées par le code, expliquées et étiquetées restent permises), agenda complet (le calendrier administratif ne contient que des obligations).
 - Version 2 : portail client en lecture seule (cloisonnement strict, partage activé volontairement, test avec deux comptes clients fictifs) ; questions libres générant du SQL.
 
 ## Plan (estimation de 130 h, à valider)
@@ -53,4 +53,4 @@ Le RAG est construit en premier, car c'est la partie la plus risquée et la plus
 - Interface en français, code et commits en anglais, petits commits.
 
 ## Points ouverts
-Statut juridique de l'activité, attentes exactes du tuteur, mention RGPD pour l'envoi des extraits à Anthropic et Mistral, modèle Claude exact.
+Statut juridique de l'activité (micro-entreprise BNC déclaré, à confirmer à la source ; pas de date d'immatriculation), règles de prorata, d'ACRE et de bascule de TVA et leurs cas de référence (à écrire par l'auteur avec leurs sources), attentes exactes du tuteur, mention RGPD pour l'envoi des extraits à Anthropic et Mistral, modèle Claude exact.

@@ -31,12 +31,12 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-6 : jeu de test du RAG (15 à 20 questions), score mesuré, aucune fuite entre comptes.
 - FR-7 : prospects, clients, contacts, statut, étiquette d'origine, lien avec les notes.
 - FR-8 : missions pilotées en agile (changement du 2026-10-16, décision d'Alex) : backlog de user stories, tâches, sprints, avec progression ; l'IA aide à les concevoir (FR-23, stories 8.16 à 8.20) et à en tirer un prompt (FR-24, story 8.21). Remplace les « étapes datées ».
-- FR-9 : factures (payée ou non, échéance) et encaissements.
-- FR-10 : table de paramètres (taux, plafonds) avec source et date de vérification.
-- FR-11 : estimations (cotisations, plafond) calculées par le code, étiquetées « estimation ».
+- FR-9 : factures (hors taxe, taxe, échéance) et encaissements ; le statut « payée » se déduit des encaissements.
+- FR-10 : règles réglementaires versionnées (valeur, dates d'effet, source officielle, date de vérification, statut) ; une nouvelle version à chaque changement ; formules en code testé, jamais de chiffre en dur (18 octobre).
+- FR-11 : estimations de cotisations et suivi de plusieurs plafonds, calculés par le code sur la base de chaque règle, étiquetés « estimation » ; alertes visibles à chaque seuil actif (18 octobre).
 - FR-12 : garde-fous de l'assistant (pas de conseil fiscal ou juridique).
-- FR-13 : échéances avec date et source obligatoires.
-- FR-14 : six règles qui ordonnent les tâches du jour, chacune avec son motif.
+- FR-13 : échéances et calendrier administratif, source unique ; date et source obligatoires à la saisie ; « À confirmer » pour une échéance qu'une règle ne peut pas calculer (18 octobre).
+- FR-14 : sept règles qui ordonnent les tâches du jour, chacune avec son motif, plus les tâches du sprint actif (trois au plus) ; « Client / Mission / Sprint X » (18 octobre).
 - FR-15 : cockpit avec CA encaissé, position par rapport au plafond, estimations étiquetées.
 - FR-16 : réalisations publiables (avec accord du client) sur une page publique en lecture seule.
 - FR-19 : recherche dans les notes, clients et missions.
@@ -45,6 +45,8 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 - FR-22 : suivi de devis (montant, date d'envoi, statut).
 - FR-23 : aide de l'IA à la conception d'une mission (17 octobre) : propositions de user stories, de tâches, relecture d'une story, composition d'un sprint, ordre logique du backlog ; rien n'est enregistré sans l'accord du propriétaire.
 - FR-24 : générer un prompt depuis une mission (17 octobre) : l'IA rédige la consigne, le code recopie le contexte.
+- FR-25 : profil professionnel (statut, régime, date de début d'activité…), chaque champ « À confirmer », « Déclaré » ou « Confirmé » (18 octobre).
+- Phase suivante, hors MVP : FR-26 (vue d'ensemble financière), FR-27 (objectifs), FR-28 (suivi ARE).
 - Hors MVP : FR-17 et FR-18 (catalogue d'outils, brouillon de devis).
 
 ### Exigences non fonctionnelles
@@ -94,11 +96,11 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-7 | 3 | 3.1, 3.2, 3.3 |
 | FR-8 | 3 | 3.4, 3.5a, 3.5b, 3.5c |
 | FR-9 | 4 | 4.2, 4.3 |
-| FR-10 | 4 | 4.1 |
+| FR-10 | 4 | 4.1b |
 | FR-11 | 4 | 4.4, 4.5 |
 | FR-12 | 8 | 8.12 |
-| FR-13 | 5 | 5.1 |
-| FR-14 | 5 | 5.2, 5.3, 5.4 |
+| FR-13 | 5 | 5.1a, 5.1b |
+| FR-14 | 5 | 5.2, 5.3, 5.4, 5.4b |
 | FR-15 | 5 | 5.5 |
 | FR-16 | 6 | 6.1, 6.2, 6.3 |
 | FR-19 | 2, 3, 8 | 2.4, 3.7, 8.6 |
@@ -107,6 +109,7 @@ Vocabulaire : *story* = une petite fonctionnalité ; *epic* = un groupe de stori
 | FR-22 | 3 | 3.6 |
 | FR-23 | 8 | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20 |
 | FR-24 | 8 | 8.21 |
+| FR-25 | 4 | 4.1a |
 
 ## Liste des epics
 
@@ -298,13 +301,19 @@ En tant que propriétaire, je veux planifier des sprints et y placer des stories
 
 ### Story 3.6 : Suivre mes devis
 
-En tant que propriétaire, je veux enregistrer un devis et son statut, afin de savoir lesquels attendent une réponse.
+*Réécrite le 18 octobre 2026 (montants hors taxe et taxe, acceptation en une action, mission créée automatiquement : PRD FR-22, architecture AD-4 et AD-8).*
+
+En tant que propriétaire, je veux enregistrer un devis et son statut, afin de savoir lesquels attendent une réponse et d'ouvrir ma mission quand il est accepté.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `quotes` créée par une migration (RLS), **quand** je crée un devis (montant, date d'envoi, rattaché à une mission ou un prospect), **alors** son statut est « envoyé » par défaut.
-**Et** je peux le passer en « accepté » (la mission liée est créée ou confirmée) ou « refusé ».
-**Et** un devis sans montant ou sans date d'envoi est refusé ; aucun document de devis n'est produit.
+**Étant donné** la table `quotes` créée par une migration (RLS, `client_id` obligatoire, `mission_id` facultatif, montants en centimes), **quand** je crée un devis (montant hors taxe, montant de taxe, date d'envoi, rattaché à un client ou prospect et, si elle existe, à une mission), **alors** son statut est « envoyé » par défaut.
+**Et** un devis sans montant hors taxe ou sans date d'envoi est refusé ; une taxe inconnue reste vide, jamais 0 ; aucun document de devis n'est produit.
+**Et** je peux le passer en « refusé » : il disparaît des alertes du cockpit.
+**Et** « accepté » est **une seule action, tout ou rien** (fonction `accept_quote`) : pour un devis lié à un prospect, le prospect devient client et une mission « en cours » est créée automatiquement (client du devis, titre « Devis du JJ/MM/AAAA — Nom du client » avec la date d'envoi, modifiable ensuite) et rattachée au devis ; pour un devis lié à une mission existante, rien d'autre ne change.
+**Et** accepter deux fois le même devis (double clic, deux onglets) ne crée qu'une seule mission, et aucun autre chemin ne peut passer un devis en « accepté » (la base le refuse).
+**Et** un devis accepté ne change plus de statut (pour corriger, on crée un nouveau devis).
+**Et** le test d'isolation couvre les devis (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma fiche).
 
 ### Story 3.7 : Rechercher aussi clients et missions
 
@@ -318,118 +327,216 @@ En tant que propriétaire, je veux que ⌘K trouve aussi mes clients et missions
 
 ---
 
-## Epic 4 : Factures et finances
+## Epic 4 : Profil, règles, factures et plafonds
 
-Je suis mes factures et mes encaissements, et je vois où j'en suis par rapport à mon plafond, avec des chiffres étiquetés « estimation ».
+Je renseigne mon profil et mes règles réglementaires (sourcées, datées, versionnées), je suis mes factures et mes encaissements en hors taxe et taxe, et je vois où j'en suis par rapport à mes plafonds, avec des chiffres étiquetés « estimation ». Aucune valeur réglementaire n'est écrite en dur ni préremplie.
 
-### Story 4.1 : Renseigner mes paramètres
+### Story 4.1a : Profil professionnel
 
-En tant que propriétaire, je veux saisir mes paramètres (plafond, taux, dates) avec leur source et leur date de vérification, afin qu'aucun chiffre ne soit écrit en dur.
+*Nouvelle story du 18 octobre 2026 (PRD FR-25, architecture AD-12).*
+
+En tant que propriétaire, je veux renseigner mon profil professionnel avec l'état de chaque information, afin que les règles et les calculs s'appuient sur ma vraie situation, sans valeur inventée.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `parameters` créée par une migration (RLS), **quand** je saisis un paramètre avec valeur, unité, source et date de vérification, **alors** il apparaît dans la page Paramètres.
-**Et** un paramètre sans source ou sans date est refusé.
-**Et** un paramètre dont la date de revérification est dépassée est signalé (icône + texte).
-**Et** aucune valeur fiscale n'est préremplie.
+**Étant donné** la table `professional_profile` créée par une migration (une ligne par propriétaire, RLS), **quand** j'ouvre la page Profil, **alors** je vois les champs : statut juridique, régime fiscal, catégorie BNC ou BIC, nature des prestations, date de début d'activité, fréquence des déclarations Urssaf, régime de TVA, éligibilité à l'ACRE, situation France Travail, objectifs financiers, taux de réserve personnels, préférences de notification.
+**Et** chaque champ a l'un de trois états, en texte et en icône : **« À confirmer »** (vide), **« Déclaré »** (rempli, non confirmé) ou **« Confirmé »** (avec la date de confirmation) ; aucune valeur n'est jamais préremplie.
+**Et** je peux enregistrer un champ sans le confirmer puis le confirmer plus tard ; modifier une valeur confirmée la repasse en « Déclaré ».
+**Et** je choisis quels seuils d'alerte de plafond sont actifs (50, 75, 90, 100 %).
+**Et** au départ, le statut est « micro-entreprise, BNC » en « Déclaré » et la date de début d'activité est « À confirmer ».
+**Et** un champ à choix n'accepte que ses valeurs prévues (listes courtes sans règle fiscale, plus « Autre » avec un champ libre) ; les objectifs financiers et les taux de réserve sont des champs libres sans calcul au MVP ; une date inexistante est refusée avec une erreur en ligne.
+**Et** le test d'isolation couvre le profil (un autre compte ne le voit ni ne le modifie).
+
+### Story 4.1b : Règles réglementaires versionnées
+
+*Ancienne story 4.1 « Renseigner mes paramètres », élargie le 18 octobre 2026 (PRD FR-10, architecture AD-12).*
+
+En tant que propriétaire, je veux saisir mes règles (plafonds, taux, dates d'effet) avec leur source officielle et leur date de vérification, et créer une nouvelle version quand une valeur change, afin qu'aucun chiffre réglementaire ne soit écrit en dur ni utilisé sans être vérifié.
+
+**Critères d'acceptation :**
+
+**Étant donné** la table `regulatory_rules` créée par une migration (RLS), **quand** je saisis une règle (clé de règle parmi une liste fermée, valeur et unité, catégorie d'activité, date d'effet, source officielle avec lien, date de vérification, date de revérification), **alors** elle apparaît dans la page Règles avec son statut de validation (« À vérifier », « Vérifiée », « Essai »).
+**Et** une règle sans source, sans date de vérification ou sans date d'effet est refusée ; aucune valeur réglementaire n'est préremplie.
+**Et** une règle ne passe en « Vérifiée » qu'avec un vrai lien officiel et sa date de vérification ; une règle « Essai » accepte une source « DEMO » sans lien officiel (seule exception, réservée au compte de démonstration).
+**Et** un changement de valeur est une **nouvelle version** avec sa date d'effet : l'ancienne version reçoit sa date de fin ; deux versions d'une même règle ne se chevauchent jamais (la base le refuse).
+**Et** une règle en vigueur dont la date de revérification est dépassée est signalée « périmée » (icône + texte) ; une version close n'est jamais signalée périmée.
+**Et** la saisie vérifie le format des paramètres de chaque règle (par exemple la durée de l'ACRE, la base de calcul d'un plafond : période, catégorie de recettes, hors taxe ou taxe) : ce sont des champs de la règle, jamais des constantes du code.
+**Et** le compte de démonstration reçoit des règles d'essai fictives (statut « Essai »), étiquetées « DEMO, non officielle » partout où elles s'affichent, par un script de démonstration (`npm run seed:demo`) ; un autre compte n'en voit jamais.
+**Et** le test d'isolation couvre `regulatory_rules` (lecture, écriture, chevauchement de versions, règle d'un autre compte).
 
 ### Story 4.2 : Enregistrer mes factures
 
-En tant que propriétaire, je veux enregistrer mes factures (payée ou non, date d'échéance), afin de savoir lesquelles relancer.
+*Modifiée le 18 octobre 2026 (hors taxe et taxe, statut « payée » calculé, lien facultatif vers le devis : PRD FR-9, architecture AD-8).*
+
+En tant que propriétaire, je veux enregistrer mes factures (hors taxe, taxe, date d'échéance), afin de savoir lesquelles relancer.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `invoices` créée par une migration (RLS, montant en centimes), **quand** je crée une facture liée à une mission avec montant et date d'échéance, **alors** elle apparaît dans la liste avec son statut.
-**Et** je peux filtrer « non payées » et « échues ».
+**Étant donné** la table `invoices` créée par une migration (RLS, montants en centimes), **quand** je crée une facture liée à une mission avec un montant hors taxe, un montant de taxe (facultatif : inconnu reste vide, jamais 0) et une date d'échéance, **alors** elle apparaît dans la liste avec son statut.
+**Et** une facture peut pointer, facultativement, vers le devis d'origine (un devis de ma fiche, la base refuse celui d'un autre compte).
+**Et** le statut « payée » n'est pas saisi : il se déduit des encaissements (story 4.3) ; une facture sans encaissement est « non payée ».
+**Et** je peux filtrer « non payées » et « échues » (non payée, date d'échéance dépassée).
+**Et** le toutes taxes comprises s'affiche, calculé à partir du hors taxe et de la taxe, uniquement quand la taxe est connue.
+**Et** une facture sans montant hors taxe ou sans date d'échéance est refusée.
 **Et** ce n'est pas une facture légale : un texte le rappelle.
+**Et** le test d'isolation couvre `invoices` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma mission ou à mon devis).
 
 ### Story 4.3 : Enregistrer un encaissement
 
-En tant que propriétaire, je veux marquer une facture payée en saisissant l'encaissement, afin que mes calculs reposent sur de l'argent réellement reçu.
+*Modifiée le 18 octobre 2026 (hors taxe et taxe, statut de la facture calculé sur le toutes taxes comprises : PRD FR-9, architecture AD-8).*
+
+En tant que propriétaire, je veux enregistrer un encaissement sur une facture (hors taxe, taxe, date), afin que mes calculs reposent sur de l'argent réellement reçu.
 
 **Critères d'acceptation :**
 
-**Étant donné** une facture non payée, **quand** je saisis un encaissement (montant, date), **alors** la facture passe en « payée » (ou « partiellement payée ») et l'encaissement est listé.
-**Et** un encaissement sans montant ou sans date est refusé.
-**Et** le montant s'affiche en euros avec deux décimales (stocké en centimes).
+**Étant donné** la table `payments` créée par une migration (RLS, montants en centimes), **quand** je saisis un encaissement sur une facture (montant hors taxe, montant de taxe, date), **alors** il est listé sur la facture et le statut de la facture se met à jour : « payée » quand le total encaissé (hors taxe plus taxe) atteint le toutes taxes comprises de la facture, « partiellement payée » avant, « non payée » sans encaissement.
+**Et** quand la taxe de la facture est inconnue (vide), le statut se calcule sur le hors taxe et la facture affiche « taxe à confirmer » ; dès que la taxe est saisie, il se calcule sur le toutes taxes comprises.
+**Et** la taxe d'un encaissement partiel est **saisie**, jamais répartie automatiquement au prorata ; une taxe inconnue reste vide, jamais 0.
+**Et** un encaissement sans montant hors taxe ou sans date est refusé ; un encaissement qui ferait dépasser le montant de la facture est signalé par un message en ligne (non bloquant : un trop-perçu existe).
+**Et** je peux modifier ou supprimer un encaissement, et le statut de la facture suit.
+**Et** les montants s'affichent en euros avec deux décimales (stockés en centimes).
+**Et** le test d'isolation couvre `payments` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma facture).
 
-### Story 4.4 : Voir ma position par rapport au plafond
+### Story 4.4 : Suivre mes plafonds
 
-En tant que propriétaire, je veux voir mes encaissements cumulés comparés au plafond, afin de savoir où j'en suis.
+*Ancienne story « Voir ma position par rapport au plafond », élargie le 18 octobre 2026 (plusieurs plafonds, alertes visibles : PRD FR-11, architecture AD-12).*
+
+En tant que propriétaire, je veux voir plusieurs jauges de plafond, chacune calculée sur la base de sa règle, afin de savoir où j'en suis pour chaque seuil.
 
 **Critères d'acceptation :**
 
-**Étant donné** un paramètre « plafond » et des encaissements, **quand** j'ouvre la page Finances, **alors** je vois une jauge avec le cumul, le plafond, un marqueur à 90 % et l'étiquette « estimation » avec la source et la date du plafond.
-**Et** sans plafond, la jauge affiche « paramètre manquant : plafond non renseigné » avec un lien vers Paramètres, jamais un chiffre.
-**Et** le calcul est une fonction pure de `lib/domain/` testée sur au moins 3 cas de référence calculés à la main.
+**Étant donné** des règles de plafond vérifiées (story 4.1b), un profil (story 4.1a) et des encaissements, **quand** j'ouvre la page Plafonds, **alors** je vois une jauge par plafond suivi avec : le seuil, le montant consommé, le pourcentage atteint, le montant restant, la période de référence, la date de dernière mise à jour, la source officielle, la date d'effet de la règle et l'étiquette « estimation ».
+**Et** chaque plafond se calcule sur **la base que sa règle désigne** (hors taxe ou taxe, période, catégorie de recettes) : le même montant n'est jamais réutilisé pour tous les plafonds.
+**Et** la jauge change d'état à chacun des seuils **actifs au profil** (50, 75, 90, 100 %), en texte et en icône, jamais par la couleur seule ; aucun e-mail ni notification.
+**Et** sans règle vérifiée pour un plafond, ou avec un champ de profil vide dont elle dépend, la jauge affiche « paramètre manquant » avec ce qui manque et un lien vers la page concernée, jamais un chiffre ; avec un champ « Déclaré » non confirmé, le calcul se fait avec le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** un résultat calculé avec une règle « Essai » porte l'étiquette « DEMO, non officielle ».
+**Et** le calcul est une fonction pure de `lib/domain/finance/` recevant `asOf` (le jour), testée sur au moins 3 cas de référence calculés à la main par l'auteur, dont les fixtures sont étiquetées « FICTIF » (valeurs inventées, elles vérifient la formule) ou « RÉEL + source + date de vérification ». La story est livrée avec des cas fictifs ; les cas réels s'ajoutent avant qu'un chiffre réel soit affiché (le compte réel affiche « paramètre manquant » en attendant).
+**Et** la page Plafonds n'écrit rien : elle lit les règles, le profil et les encaissements (aucun second calcul : le cockpit appelle la même fonction).
 
 ### Story 4.5 : Voir une estimation de cotisations
+
+*Adaptée le 18 octobre 2026 (règles versionnées, profil, cas de référence : PRD FR-10 et FR-11, architecture AD-12).*
+
+**Prérequis (bloquant) :** l'auteur écrit les règles de **prorata de la première année**, de **fin de l'ACRE** et de **bascule de TVA**, chacune avec sa source officielle et sa date de vérification, et leurs cas de référence calculés à la main. Sans elles, la story ne démarre pas.
 
 En tant que propriétaire, je veux une estimation de mes cotisations à partir de mes encaissements, afin d'anticiper.
 
 **Critères d'acceptation :**
 
-**Étant donné** un taux de cotisation en paramètre et des encaissements, **quand** j'ouvre Finances, **alors** je vois un montant étiqueté « estimation » avec les paramètres utilisés et leurs dates.
-**Et** si un paramètre manque ou est périmé, aucun calcul n'est affiché et « paramètre manquant » apparaît.
-**Et** la fonction de calcul passe au moins 6 cas de référence calculés à la main, dont prorata de première année, fin de l'ACRE et bascule de TVA.
-**Et** une modification d'un paramètre est prise en compte au calcul suivant.
+**Étant donné** des règles de cotisation vérifiées (story 4.1b), un profil (story 4.1a) et des encaissements, **quand** j'ouvre la page Finances, **alors** je vois un montant étiqueté « estimation », avec les règles utilisées, leurs versions, leurs sources et leurs dates, et le détail du calcul.
+**Et** si une règle est absente, non vérifiée ou périmée, ou si un champ de profil dont elle dépend est vide, aucun calcul n'est affiché et la liste de ce qui manque apparaît (« paramètre manquant »).
+**Et** avec un champ de profil « Déclaré » non confirmé, le calcul se fait avec le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** le prorata de la première année, la fin de l'ACRE et la bascule de TVA sont des règles écrites par l'auteur avec leur source ; le code ne contient que les formules, jamais un chiffre.
+**Et** la fonction de calcul reçoit `asOf` et passe au moins 6 cas de référence calculés à la main par l'auteur, indépendamment du code, dont ces trois cas limites ; la story est testée avec des cas « FICTIF » et les cas « RÉEL + source + date » s'ajoutent avant d'afficher un chiffre réel.
+**Et** une nouvelle version d'une règle est prise en compte au calcul suivant, et un calcul sur une période passée utilise la version en vigueur à cette période.
+**Et** l'estimation n'est jamais un montant officiel ni un conseil ; aucun chiffre ne vient du modèle de langage.
 
 ---
 
 ## Epic 5 : Échéances et cockpit « Aujourd'hui »
 
-Le cockpit me dit quoi faire aujourd'hui et pourquoi.
+Le calendrier range mes échéances ; le cockpit en tire, avec mes factures, mes devis, mes plafonds et mon sprint, ce que je dois faire aujourd'hui et pourquoi (sept règles).
 
-### Story 5.1 : Enregistrer mes échéances
+### Story 5.1a : Échéances saisies
+
+*Ancienne story 5.1, adaptée le 18 octobre 2026 (calendrier source unique des échéances : PRD FR-13, architecture AD-13).*
 
 En tant que propriétaire, je veux enregistrer mes échéances administratives avec leur date et leur source, afin de ne rien rater.
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `deadlines` créée par une migration (RLS), **quand** je crée une échéance avec titre, date et source, **alors** elle apparaît dans la liste triée par date.
-**Et** une échéance sans date ou sans source est refusée.
-**Et** je peux la modifier, la marquer faite ou la supprimer.
+**Étant donné** la table `deadlines` créée par une migration (RLS), **quand** je crée une échéance avec titre, date, source et catégorie, **alors** elle apparaît dans la liste triée par date.
+**Et** une échéance saisie sans date ou sans source est refusée : une échéance saisie a toujours une date.
+**Et** je peux la modifier, la marquer faite ou la supprimer ; « faite » se marque par une seule action (`markDeadlineDone`), la même que celle du cockpit.
+**Et** les échéances en retard sont listées à part (« En retard ») avec leur retard en jours.
+**Et** la catégorie se choisit parmi celles du calendrier (Urssaf, France Travail, fiscale, TVA, CFE, justificatifs, renouvellements, personnalisée) ; la priorité et la récurrence arrivent avec la story 5.1b.
+**Et** le test d'isolation couvre `deadlines` (un autre compte ne les voit ni ne les modifie).
+
+### Story 5.1b : Calendrier administratif complet
+
+*Nouvelle story du 18 octobre 2026 (PRD FR-13, architecture AD-13). Première candidate à la coupe si le temps manque (PRD §7.3) : on coupe d'abord les catégories avancées et la récurrence, jamais le socle de règles ni les plafonds.*
+
+En tant que propriétaire, je veux un calendrier unique de mes obligations avec priorité, récurrence et vues, afin de voir d'un coup d'œil ce qui arrive.
+
+**Critères d'acceptation :**
+
+**Étant donné** des échéances (story 5.1a), **quand** j'ouvre le calendrier, **alors** je choisis une vue : « Aujourd'hui », « Cette semaine », « Ce mois-ci » ou « En retard ».
+**Et** chaque échéance a une priorité, un statut, un lien vers sa source officielle et une récurrence éventuelle ; une échéance récurrente crée **une ligne par occurrence** (les 12 prochains mois, complétées à la lecture quand il en manque), que je coche une par une.
+**Et** une échéance qu'une règle devrait calculer mais dont la règle est absente ou non vérifiée (ou dont une donnée du profil est vide) apparaît **sans date, marquée « À confirmer »** ; elle n'est jamais estimée en silence.
+**Et** les factures à émettre et à relancer apparaissent dans le calendrier comme des lignes calculées à partir des factures, sans être des échéances stockées.
+**Et** le calendrier ne contient que des obligations, pas de rendez-vous.
+**Et** le test d'isolation couvre les occurrences d'une série (un autre compte ne les voit ni ne les coche).
 
 ### Story 5.2 : Voir mes tâches du jour (échéances et factures échues)
+
+*Adaptée le 18 octobre 2026 (tâches calculées à partir du calendrier, tri unique : PRD FR-14, architecture AD-5 et AD-13).*
 
 En tant que propriétaire, je veux voir sur le cockpit les tâches du jour avec leur motif, afin de savoir quoi faire en premier.
 
 **Critères d'acceptation :**
 
-**Étant donné** une échéance à J-3 et une facture échue à J+1, **quand** j'ouvre le cockpit, **alors** deux tâches s'affichent avec leur motif (« échéance dans 3 jours », « facture échue depuis 1 jour »), dans l'ordre de priorité des règles 1 puis 2.
-**Et** cocher une tâche la barre, la réordonne et l'annonce aux lecteurs d'écran ; décocher est possible.
+**Étant donné** une échéance à J-3 (dans le calendrier) et une facture échue depuis 1 jour, **quand** j'ouvre le cockpit, **alors** deux tâches s'affichent avec leur motif (« échéance dans 3 jours », « facture échue depuis 1 jour »), dans l'ordre des règles 1 puis 2.
+**Et** la règle 1 retient les échéances dans 0 à 3 jours (une échéance déjà en retard relève de la vue « En retard » du calendrier, pas du cockpit) ; la règle 2 retient les factures non payées en retard d'au moins 1 jour.
+**Et** les tâches sont **calculées à la lecture** à partir du calendrier et des factures, sans liste propre au cockpit ; une même échéance ou facture ne donne qu'une seule tâche ; le tri est unique : numéro de règle, puis date la plus proche, puis identifiant.
+**Et** cocher une tâche d'échéance marque l'échéance « faite » dans le calendrier ; cocher une tâche de facture la barre pour la journée sans changer la facture (elle revient le lendemain si la facture est toujours échue) ; décocher est possible ; la liste se réordonne et l'annonce est faite aux lecteurs d'écran.
 **Et** quand tout est fait, « Bravo, tu as fait toutes tes tâches du jour. » s'affiche.
-**Et** les règles sont des fonctions pures testées ; aucune règle ne passe par l'IA.
+**Et** les règles sont des fonctions pures testées qui reçoivent la date du jour (`asOf`, jour de Paris) ; aucune règle ne passe par l'IA.
 
-### Story 5.3 : Tâches liées au plafond et à l'ACRE
+### Story 5.3 : Alertes de plafond et fin de l'ACRE
 
-En tant que propriétaire, je veux être alerté à 90 % du plafond et un mois avant la fin de l'ACRE, afin d'anticiper.
+*Ancienne story « Tâches liées au plafond et à l'ACRE », adaptée le 18 octobre 2026 (plusieurs plafonds, seuils actifs au profil : PRD FR-11 et FR-14, architecture AD-5).*
+
+En tant que propriétaire, je veux être alerté quand un plafond approche et un mois avant la fin de l'ACRE, afin d'anticiper.
 
 **Critères d'acceptation :**
 
-**Étant donné** des encaissements à 90 % du plafond, **quand** j'ouvre le cockpit, **alors** une tâche de règle 3 apparaît avec son motif.
-**Et** étant donné une date de fin d'ACRE à un mois, une tâche de règle 4 apparaît.
-**Et** si le paramètre manque, la règle s'affiche « paramètre manquant » au lieu d'être ignorée.
+**Étant donné** un plafond suivi dont le seuil 90 % est actif au profil et des encaissements à 90 % de ce plafond, **quand** j'ouvre le cockpit, **alors** une tâche de règle 3 apparaît avec son motif (« plafond [nom] à 90 % ») ; à 100 %, seule la tâche à 100 % reste.
+**Et** un seuil non actif au profil n'émet aucune tâche ; chaque plafond et chaque seuil donnent une tâche distincte ; cocher la tâche à 90 % ne masque pas celle à 100 %.
+**Et** étant donné une fin d'ACRE dans 31 jours au plus, calculée à partir de la date de début d'activité du profil et de la règle ACRE, une tâche de règle 4 apparaît.
+**Et** si la règle réglementaire est absente ou non vérifiée, ou si la date de début d'activité est « À confirmer », la règle s'affiche comme une ligne « paramètre manquant » sous les tâches, avec ce qui manque ; elle n'est ni ignorée ni classée comme une tâche.
+**Et** avec une donnée de profil « Déclarée » non confirmée, la tâche porte le bandeau « calcul basé sur une donnée déclarée, non confirmée ».
+**Et** une tâche issue d'une règle « Essai » porte l'étiquette « DEMO, non officielle ».
 
 ### Story 5.4 : Tâches « devis sans réponse » et « pipeline vide »
 
-En tant que propriétaire, je veux être alerté quand un devis ou un prospect dort 7 jours, ou quand mon pipeline se vide, afin de relancer.
+*Adaptée le 18 octobre 2026 (devis envoyés seulement, pipeline sans date : PRD FR-14).*
+
+En tant que propriétaire, je veux être alerté quand un devis envoyé dort 7 jours, ou quand mon pipeline se vide, afin de relancer.
 
 **Critères d'acceptation :**
 
-**Étant donné** un devis « envoyé » sans mise à jour depuis 7 jours, **quand** j'ouvre le cockpit, **alors** une tâche de règle 5 apparaît ; un devis « accepté » ou « refusé » n'en déclenche pas.
-**Et** avec moins de deux missions ou prospects planifiés le mois suivant, une tâche de règle 6 apparaît.
-**Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche ; aucun e-mail n'est envoyé.
+**Étant donné** un devis « envoyé » dont la dernière modification date de plus de 7 jours (jours de Paris), **quand** j'ouvre le cockpit, **alors** une tâche de règle 5 apparaît (« devis sans réponse depuis N jours ») ; un devis « accepté » ou « refusé » n'en déclenche pas, un prospect sans devis non plus.
+**Et** toute modification du devis (remarque comprise) remet le compteur à zéro.
+**Et** avec moins de deux éléments au total parmi les missions « en cours » et les devis « envoyés », une tâche de règle 6 apparaît (« ton pipeline se vide ») ; un devis envoyé lié à une mission déjà en cours ne compte pas en plus (ce qui est lié compte une fois).
+**Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche, puis l'identifiant ; aucun e-mail n'est envoyé, un brouillon de relance peut être proposé.
 
-### Story 5.5 : Voir mon CA encaissé et ma jauge sur le cockpit
+### Story 5.4b : Tâches de mon sprint
 
-En tant que propriétaire, je veux voir le CA encaissé et la jauge de plafond sur le cockpit, afin d'avoir tout au même endroit.
+*Nouvelle story du 18 octobre 2026 (décision de l'auteur du 17 octobre, septième règle du cockpit : PRD FR-14, architecture AD-5 et AD-13).*
+
+En tant que propriétaire, je veux voir sur le cockpit les tâches de mon sprint en cours, afin que mon travail de mission apparaisse avec mes échéances.
 
 **Critères d'acceptation :**
 
-**Étant donné** des encaissements et un plafond, **quand** j'ouvre le cockpit, **alors** je vois le CA encaissé et la jauge, avec les mêmes chiffres que la page Finances (même fonction de calcul).
-**Et** chaque estimation porte l'étiquette « estimation » ; un paramètre absent affiche « paramètre manquant ».
+**Étant donné** un sprint « en cours » avec des stories « en cours » ayant des tâches non faites, **quand** j'ouvre le cockpit, **alors** ces tâches apparaissent après les règles 1 à 7, avec le motif « dans ton sprint, qui se termine dans N jours » et leur contexte **« Client / Mission / Sprint X »** (un sprint appartient à une seule mission).
+**Et** trois tâches au plus s'affichent, dans l'ordre du sprint, suivies d'une ligne « N autres tâches dans ton sprint » qui renvoie à la page de la mission.
+**Et** cocher une tâche du cockpit coche la tâche de la story elle-même (une seule source de « fait ») ; décocher est possible.
+**Et** étant donné un sprint « en cours » qui se termine dans 0 à 2 jours avec au moins une story non terminée, une tâche de **règle 7** apparaît (« ton sprint se termine dans N jours, M stories non terminées »), classée avant les tâches du sprint.
+**Et** sans sprint en cours, ou sans story « en cours », rien n'apparaît.
+**Et** aucune décision n'est prise par l'IA ; les règles sont des fonctions pures testées avec `asOf`.
+
+### Story 5.5 : Voir mon CA encaissé et mes jauges sur le cockpit
+
+*Adaptée le 18 octobre 2026 (plusieurs plafonds : PRD FR-15).*
+
+En tant que propriétaire, je veux voir le CA encaissé et mes jauges de plafond sur le cockpit, afin d'avoir tout au même endroit.
+
+**Critères d'acceptation :**
+
+**Étant donné** des encaissements et des plafonds suivis, **quand** j'ouvre le cockpit, **alors** je vois un repère « CA encaissé (hors taxe, année en cours) » et les jauges des plafonds suivis, avec **les mêmes chiffres que la page Plafonds** (même fonction de calcul, aucun second calcul) ; chaque jauge affiche sa propre base.
+**Et** chaque estimation porte l'étiquette « estimation » ; un plafond sans règle vérifiée affiche « paramètre manquant » avec ce qui manque ; une donnée de profil « Déclarée » non confirmée affiche le bandeau « à confirmer » ; une règle « Essai » porte « DEMO, non officielle ».
 **Et** après avoir enregistré un encaissement, le cockpit est à jour à mon retour, sans bouton d'actualisation.
+**Et** les jauges ne sont pas des tâches : elles n'entrent ni dans l'ordre de priorité ni dans la liste du jour.
 
 ### Story 5.6 : Écran « À faire » et ligne de synthèse
 
@@ -762,10 +869,10 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 | 7 | Résumer une note et suivre mes prospects et clients. | 8.13, 3.1, 3.2, 3.3 | IA + standard |
 | 8 | Suivre mes missions en agile (backlog, tâches, sprints), mes devis, et tout chercher avec ⌘K. | 3.4, 3.5a, 3.5b, 3.5c, 3.6, 3.7 | Standard |
 | 8b | Concevoir mes missions avec l'IA : backlog, tâches, relecture, sprint, ordre. | 8.16, 8.17, 8.17b, 8.18, 8.19, 8.20, 8.21 | IA |
-| 9 | Enregistrer mes paramètres, mes factures et mes encaissements. | 4.1, 4.2, 4.3 | Standard |
-| 10 | Voir mon plafond, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1 | Standard + IA |
-| 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.5 | Standard |
-| 12 | Lister ce qu'il reste à documenter et publier mon portfolio public. | 5.6, 6.1, 6.2, 6.3 | Standard |
+| 9 | Renseigner mon profil et mes règles, enregistrer mes factures et mes encaissements. | 4.1a, 4.1b, 4.2, 4.3 | Standard |
+| 10 | Voir mes plafonds, mes cotisations estimées, faire expliquer mes estimations à l'assistant, et saisir mes échéances. | 4.4, 4.5, 8.12, 5.1a | Standard + IA |
+| 11 | Avoir un cockpit « Aujourd'hui » qui me dit quoi faire et pourquoi. | 5.2, 5.3, 5.4, 5.4b, 5.5 | Standard |
+| 12 | Lister ce qu'il reste à documenter, publier mon portfolio public et compléter mon calendrier. | 5.6, 6.1, 6.2, 6.3, 5.1b | Standard |
 | 13 | Montrer toute l'application : démo, accessibilité, sauvegarde. | 7.1, 7.2, 7.3, 7.4 | Standard |
 
 ## Hypothèses à confirmer
@@ -775,6 +882,7 @@ Un sprint = 3 à 4 stories, un objectif en une phrase, et une version qui marche
 - [ASSUMPTION] Les notes (Epic 2) existent avant l'IA ; l'indexation est branchée en 8.3 (sprint 3), donc FR-3 est livré en deux temps.
 - [ASSUMPTION] FR-21 est coupé en deux : bouton « Créer une note à documenter plus tard » au sprint 6 (8.11), écran « À faire » et ligne de synthèse au sprint 12 (5.6). Entre les deux, les brouillons se retrouvent par un filtre dans la liste des notes.
 - [ASSUMPTION] FR-12 (garde-fous) est placé au sprint 10, avec les finances, car il explique les estimations.
-- [ASSUMPTION] Les cas de référence des calculs (4.4 et 4.5) sont fournis par l'auteur et vérifiés à la source avant le code (PRD §9.5).
+- [ASSUMPTION] Les cas de référence des calculs (4.4 et 4.5) sont calculés à la main par l'auteur, indépendamment du code, avec leurs sources (PRD §9, points 5 et 12) ; la 4.4 est livrée avec des cas FICTIFS et les cas RÉELS s'ajoutent avant d'afficher un chiffre réel ; la 4.5 attend les règles de prorata, d'ACRE et de bascule de TVA écrites par l'auteur (prérequis bloquant).
+- [ASSUMPTION] Ordre de coupe si le temps manque (18 octobre, PRD §7.3) : on coupe d'abord les catégories avancées et la récurrence du calendrier (5.1b, sprint 12), jamais le socle de règles (4.1a, 4.1b) ni les plafonds (4.4). Le périmètre ajouté le 18 octobre n'est pas chiffré.
 - [ASSUMPTION] Pas de story pour Vercel Pro, provisions détaillées, dépenses, n8n, import de fichiers, formulaire de contact (hors MVP).
 - [ASSUMPTION] Les comptes « démo A » et « démo B » sont créés à la main dans Supabase pendant le sprint 2 ; les notes fictives servant au jeu de test RAG sont écrites avant le sprint 6.
