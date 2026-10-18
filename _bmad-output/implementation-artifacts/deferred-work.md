@@ -198,3 +198,13 @@
 - `missingFields` ne signale pas statut et catégorie préremplis (« Déclaré ») : les règles futures devront exiger l'état « Confirmé » ou lire `unconfirmedInputs` (AD-5), pas seulement l'absence de valeur.
 - La course entre deux onglets est couverte pour « Confirmer » (valeur vue envoyée et vérifiée), pas testée de bout en bout : vérifiée à la lecture seulement.
 - Catégorie (BNC / BIC) et ACRE n'ont pas d'option « Autre » (ACRE a « Je ne sais pas », qui compte comme « À confirmer ») : décision de l'auteur (18 octobre) : on laisse ainsi.
+
+## De la relecture de la 4.1b (18 octobre)
+- Supprimer la version en vigueur d'une règle laisse la précédente close à sa date de fin : plus aucune règle en vigueur (« paramètre manquant », échec sûr) jusqu'à une nouvelle saisie à partir de cette date. Le panneau de suppression le dit. Une fonction `delete_rule_version` qui rouvre la précédente serait la suite si cela gêne.
+- Une règle « essai » reste créable par l'API par n'importe quel compte (la base accepte « essai » avec la source DEMO, décision 5) : l'application ne l'offre pas et l'étiquette « DEMO, non officielle » la suit partout, mais rien dans la base ne la réserve au compte de démonstration.
+- Les `params` ne sont validés que par l'action serveur (la base vérifie seulement que c'est un objet) : quand les formules arriveront (4.4 et suivantes), `usableRule` devra relancer `parseParams` sur la ligne lue et traiter un échec comme « paramètre manquant ».
+- La date de vérification dans le futur et l'horizon de revérification (5 ans) sont bornés par le code seulement, pas par la base (`now()` n'est pas immuable dans un `CHECK`).
+- Une source saisie sans lien (« à vérifier ») ne se corrige pas : il faut supprimer la version et la ressaisir ; une action « corriger la source » serait un confort.
+- Le motif d'un lien officiel diffère légèrement entre le code (`\S`) et la base (`[^[:space:]]`) pour les espaces Unicode exotiques ; sans effet exploitable.
+- `displayState` compare la revérification à la date visée par le calcul (`asOf`), conformément à AD-12 : un calcul sur une période passée ne voit pas une règle encore en vigueur comme périmée.
+- Aucun test de la cascade de suppression d'un compte avec des règles chaînées ou vérifiées (comme pour le profil : compte jetable nécessaire).
