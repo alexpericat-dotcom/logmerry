@@ -1575,3 +1575,121 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
     await cleanup();
   });
 });
+
+describe("isolation des règles réglementaires entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  const KEY = `${PREFIX.replace(/[^a-z-]/g, "")}rule`.replaceAll("-", "_"); // clé fictive : la base ne connaît pas le catalogue
+  const SRC = "https://example.org/isolation";
+
+  // Seules des règles « à vérifier » ou « essai » sont créées ici : elles se suppriment. Le cycle des règles vérifiées est dans tests/sql/rules-lifecycle.sql.
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      const { error } = await account.client.from("regulatory_rules").delete().like("rule_key", `${KEY}%`);
+      if (error) console.warn(`Nettoyage incomplet : ${error.message}`);
+    }
+  };
+  const create = (account: Account, over: Record<string, unknown> = {}) =>
+    account.client.rpc("create_rule_version", {
+      p_rule_key: KEY, p_activity_category: "bnc", p_effective_from: "2026-01-01", p_params: { v: 1 }, p_source: SRC, p_verified_on: "2026-10-01", p_revalidate_after: "2027-10-01", ...over,
+    });
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+  });
+  after(cleanup);
+
+  test("créer une règle : propriétaire posé par la base, « à vérifier », en vigueur ; B ne voit rien", async () => {
+    const r = await create(a);
+    assert.ifError(r.error);
+    const mine = await a.client.from("regulatory_rules").select("*").eq("rule_key", KEY);
+    assert.equal(mine.data!.length, 1);
+    assert.equal(mine.data![0].owner_id, a.userId);
+    assert.equal(mine.data![0].status, "a_verifier");
+    assert.equal(mine.data![0].effective_to, null);
+    const theirs = await b.client.from("regulatory_rules").select("id").eq("rule_key", KEY);
+    assert.deepEqual(theirs.data, []);
+  });
+
+  test("nouvelle version : la précédente est close à la date d'effet et chaînée ; une date qui chevauche est refusée (23P01)", async () => {
+    const v2 = await create(a, { p_effective_from: "2026-07-01", p_params: { v: 2 } });
+    assert.ifError(v2.error);
+    const rows = await a.client.from("regulatory_rules").select("id, effective_from, effective_to, previous_version_id").eq("rule_key", KEY).order("effective_from");
+    assert.equal(rows.data!.length, 2);
+    assert.equal(rows.data![0].effective_to, "2026-07-01");
+    assert.equal(rows.data![1].effective_to, null);
+    assert.equal(rows.data![1].previous_version_id, rows.data![0].id);
+    for (const from of ["2026-07-01", "2025-06-01", "2026-03-01"]) {
+      const bad = await create(a, { p_effective_from: from });
+      assert.equal(bad.error?.code, "23P01", `date d'effet ${from}`);
+    }
+    const after = await a.client.from("regulatory_rules").select("id").eq("rule_key", KEY);
+    assert.equal(after.data!.length, 2, "les tentatives refusées ne laissent aucune trace");
+  });
+
+  test("B ne modifie ni ne supprime la règle de A, ne crée rien à son nom, et sa propre règle n'entre pas en conflit avec celle de A", async () => {
+    const id = (await a.client.from("regulatory_rules").select("id").eq("rule_key", KEY).is("effective_to", null).single()).data!.id;
+    const upd = await b.client.from("regulatory_rules").update({ description: "piraté" }).eq("id", id).select("id");
+    assert.deepEqual(upd.data, []);
+    const del = await b.client.from("regulatory_rules").delete().eq("id", id).select("id");
+    assert.deepEqual(del.data, []);
+    const forged = await b.client.from("regulatory_rules").insert({ owner_id: a.userId, rule_key: KEY, activity_category: "bic", params: {}, effective_from: "2026-01-01", source: SRC, verified_on: "2026-10-01", revalidate_after: "2027-10-01" });
+    assert.equal(forged.error?.code, "42501");
+    const own = await create(b);
+    assert.ifError(own.error);
+    const aStill = await a.client.from("regulatory_rules").select("effective_to").eq("id", id).single();
+    assert.equal(aStill.data!.effective_to, null, "la création de B n'a pas fermé la version de A");
+  });
+
+  test("chaînage forgé refusé par la RLS (fonction SECURITY DEFINER) : vers la version de A, vers une autre clé à soi", async () => {
+    const aRule = (await a.client.from("regulatory_rules").select("id").eq("rule_key", KEY).is("effective_to", null).single()).data!.id;
+    const row = { activity_category: "bnc", params: {}, effective_from: "2030-01-01", source: SRC, verified_on: "2026-10-01", revalidate_after: "2027-10-01" };
+    const toA = await b.client.from("regulatory_rules").insert({ ...row, rule_key: KEY, previous_version_id: aRule });
+    assert.equal(toA.error?.code, "42501", "B ne chaîne pas à la version de A");
+    const otherKey = await a.client.from("regulatory_rules").insert({ ...row, rule_key: `${KEY}_autre`, previous_version_id: aRule });
+    assert.equal(otherKey.error?.code, "42501", "A ne chaîne pas à une autre clé");
+    const ok = await a.client.from("regulatory_rules").insert({ ...row, rule_key: KEY, previous_version_id: aRule });
+    assert.equal(ok.error?.code, "23P01", "même clé, à soi : la RLS passe, c'est le chevauchement qui refuse");
+  });
+
+  test("la base refuse, pour le bon motif : « vérifiée » sans lien, DEMO sans essai, essai sans DEMO, source vide, fin à la main, dates incohérentes", async () => {
+    const code = async (over: Record<string, unknown>) =>
+      (await a.client.from("regulatory_rules").insert({ rule_key: `${KEY}_x`, activity_category: "bnc", params: {}, effective_from: "2026-01-01", source: SRC, verified_on: "2026-10-01", revalidate_after: "2027-10-01", ...over })).error?.code;
+    assert.equal(await code({ status: "verifiee", source: "texte" }), "23514");
+    assert.equal(await code({ status: "verifiee", source: "http://example.org" }), "23514");
+    assert.equal(await code({ source: "DEMO" }), "23514");
+    assert.equal(await code({ status: "essai" }), "23514");
+    assert.equal(await code({ source: "" }), "23514");
+    assert.equal(await code({ revalidate_after: "2026-09-30" }), "23514");
+    assert.equal(await code({ effective_to: "2026-01-01" }), "23514");
+    assert.equal(await code({ params: [1] }), "23514");
+    assert.equal(await code({ activity_category: "xyz" }), "23514");
+    assert.equal(await code({ verified_on: null }), "23502");
+    const open = (await a.client.from("regulatory_rules").select("id").eq("rule_key", KEY).is("effective_to", null).single()).data!.id;
+    const hand = await a.client.from("regulatory_rules").update({ effective_to: "2027-01-01" }).eq("id", open);
+    assert.equal(hand.error?.code, "23514", "la date de fin ne se pose pas à la main");
+    const key = await a.client.from("regulatory_rules").update({ rule_key: "autre" }).eq("id", open);
+    assert.equal(key.error?.code, "23514", "la clé est figée");
+    const verify = await a.client.from("regulatory_rules").update({ status: "verifiee" }).eq("id", open);
+    assert.ifError(verify.error); // la source est un lien https : « vérifiée » passe…
+    const noLink = await a.client.from("regulatory_rules").update({ source: "texte" }).eq("id", open);
+    assert.equal(noLink.error?.code, "23514", "… mais une règle vérifiée ne garde pas une source sans lien");
+    const back = await a.client.from("regulatory_rules").update({ status: "a_verifier" }).eq("id", open).select("status").single();
+    assert.equal(back.data!.status, "a_verifier", "repassée à vérifier pour pouvoir être nettoyée");
+  });
+
+  test("règle d'essai : source DEMO acceptée par la fonction ; sans connexion : rien de visible, fonction refusée", async () => {
+    const demo = await create(a, { p_rule_key: `${KEY}_demo`, p_source: "DEMO", p_status: "essai" });
+    assert.ifError(demo.error);
+    const anon = newClient();
+    const read = await anon.from("regulatory_rules").select("id");
+    assert.deepEqual(read.data ?? [], []);
+    const call = await anon.rpc("create_rule_version", { p_rule_key: KEY, p_activity_category: "bnc", p_effective_from: "2031-01-01", p_params: {}, p_source: SRC, p_verified_on: "2026-10-01", p_revalidate_after: "2027-10-01" });
+    assert.ok(call.error);
+    const guard = await a.client.rpc("regulatory_rules_guard");
+    assert.ok(guard.error, "la fonction du déclencheur n'est pas appelable");
+  });
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, CircleDashed, CircleDot } from "lucide-react";
-import { useActionState, useState, startTransition } from "react";
+import { useActionState, useState } from "react";
 
 import { saveProfile, type ProfileFormState } from "@/app/(app)/profil/actions";
 import { Button } from "@/components/ui/button";
@@ -10,19 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OTHER, OTHER_MAX, FREE_TEXT_MAX, THRESHOLDS, fieldState, type FieldState, type ProfileFieldDef } from "@/lib/domain/profile";
 import { formatDateTime } from "@/lib/format";
+import { submitWith } from "@/lib/submit-with";
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
-
-/**
- * React 19 réinitialise un formulaire après chaque action (le menu retomberait sur sa valeur d'origine alors que l'état local dit « Autre »).
- * On envoie donc le FormData nous-mêmes, sans `action=` : les champs gardent ce que l'utilisateur a saisi.
- */
-const submitWith = (formAction: (data: FormData) => void) => (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  const data = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
-  startTransition(() => formAction(data));
-};
 
 /** État d'un champ : icône et mot, jamais la couleur seule. */
 export function ConfirmationState({ state, confirmedAt }: { state: FieldState; confirmedAt: string | null }) {
