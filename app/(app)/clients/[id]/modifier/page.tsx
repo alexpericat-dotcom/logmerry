@@ -8,6 +8,7 @@ import { PageBanner } from "@/components/page-banner";
 import { getClientRecord } from "@/lib/db/clients";
 import { countMissionsForClient } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
+import { countQuotesForClient } from "@/lib/db/quotes";
 import { isUuid } from "@/lib/domain/notes";
 
 export const metadata = { title: "Modifier la fiche · LogMerry" };
@@ -17,7 +18,7 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [notes, missionCount] = await Promise.all([listNotesForClient(id), countMissionsForClient(id)]);
+  const [notes, missionCount, quoteCount] = await Promise.all([listNotesForClient(id), countMissionsForClient(id), countQuotesForClient(id)]);
   const noteCount = notes.length;
 
   return (
@@ -30,7 +31,7 @@ async function EditClient({ params }: { params: Promise<{ id: string }> }) {
         submitLabel="Enregistrer les modifications"
         cancelHref={`/clients/${id}`}
       />
-      <DeleteClient id={id} noteCount={noteCount} missionCount={missionCount} />
+      <DeleteClient id={id} noteCount={noteCount} missionCount={missionCount} quoteCount={quoteCount} />
     </div>
   );
 }

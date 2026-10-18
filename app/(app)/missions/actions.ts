@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { validateMissionInput, type MissionErrors, type MissionValues } from "@/lib/domain/missions";
 import { isUuid } from "@/lib/domain/notes";
+import { MISSION_QUOTE_REFUSAL } from "@/lib/domain/quotes";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type MissionFormValues = { client_id: string; title: string; status: string; start_date: string; end_date: string };
@@ -98,15 +99,21 @@ export async function updateMission(id: string, _prev: MissionFormState, formDat
 
 export async function deleteMission(id: string): Promise<DeleteMissionState> {
   let clientId: string | null = null;
-  const result = await withSession(async (supabase): Promise<WriteOutcome> => {
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "has-quote"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("missions").delete().eq("id", id).select("id, client_id");
+    // 23503 : un devis est lié à cette mission (clé étrangère sans cascade) ; on le vérifie avant d'affirmer que c'est le motif.
+    if (error?.code === "23503") {
+      const { count } = await supabase.from("quotes").select("id", { count: "exact", head: true }).eq("mission_id", id);
+      return (count ?? 0) > 0 ? "has-quote" : "error";
+    }
     if (error) return "error";
     clientId = data?.[0]?.client_id ?? null;
     return data?.length ? "saved" : "not-found";
   });
 
   if (result.status === "signed-out") redirect("/auth/login");
+  if (result.status === "ok" && result.value === "has-quote") return { message: MISSION_QUOTE_REFUSAL };
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La mission est conservée. Réessaie." };
 
   // Déjà supprimée (autre onglet, double clic) : l'état voulu est atteint, on revient à la liste plutôt que de rester sur une page morte.

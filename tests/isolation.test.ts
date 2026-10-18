@@ -1257,3 +1257,106 @@ describe("isolation des sprints entre deux comptes fictifs", () => {
     assert.equal((await a.client.from("user_stories").select("sprint_id").eq("id", inside.id).single()).data!.sprint_id, null);
   });
 });
+
+describe("isolation des devis entre deux comptes fictifs", () => {
+  // Brouillons seulement : un devis envoyé, refusé ou accepté ne se supprime jamais (le cycle complet est dans tests/sql/quotes-lifecycle.sql).
+  let a: Account;
+  let b: Account;
+  let clientA: { id: string };
+  let clientB: { id: string };
+  let missionA: { id: string };
+  let quoteA: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const mk = async (account: Account, who: string) => {
+      const f = await account.client.from("clients").insert({ name: `${PREFIX} fiche devis ${who}`, origin: "demo" }).select("id").single();
+      assert.ifError(f.error);
+      return f.data!;
+    };
+    clientA = await mk(a, "A");
+    clientB = await mk(b, "B");
+    const m = await a.client.from("missions").insert({ client_id: clientA.id, title: `${PREFIX} mission devis A` }).select("id").single();
+    assert.ifError(m.error);
+    missionA = m.data!;
+    const q = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 12345 }).select("id").single();
+    assert.ifError(q.error);
+    quoteA = q.data!;
+  });
+
+  after(async () => {
+    // Les devis d'abord (restrict sur la fiche et la mission) ; seuls des brouillons sont créés ici.
+    for (const account of [a, b]) if (account) await account.client.from("quotes").delete().in("client_id", [clientA?.id, clientB?.id].filter(Boolean) as string[]);
+    await cleanup();
+  });
+
+  test("propriétaire et brouillon posés par la base ; B ne voit rien de A", async () => {
+    const own = await a.client.from("quotes").select("owner_id, status, tax_cents").eq("id", quoteA.id).single();
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.status, "draft");
+    assert.equal(own.data!.tax_cents, null, "taxe inconnue : jamais 0");
+    const seen = await b.client.from("quotes").select("id").eq("id", quoteA.id);
+    assert.deepEqual(seen.data, []);
+  });
+
+  test("B ne modifie ni ne supprime le devis de A", async () => {
+    const upd = await b.client.from("quotes").update({ amount_ht_cents: 1 }).eq("id", quoteA.id).select("id");
+    assert.deepEqual(upd.data, []);
+    const del = await b.client.from("quotes").delete().eq("id", quoteA.id).select("id");
+    assert.deepEqual(del.data, []);
+    const still = await a.client.from("quotes").select("amount_ht_cents").eq("id", quoteA.id).single();
+    assert.equal(still.data!.amount_ht_cents, 12345);
+  });
+
+  test("B ne crée pas de devis sur la fiche de A ni vers la mission de A ; A ne forge pas le propriétaire ni ne déplace son devis chez B", async () => {
+    const onA = await b.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100 });
+    assert.equal(onA.error?.code, "42501");
+    const withMission = await b.client.from("quotes").insert({ client_id: clientB.id, mission_id: missionA.id, amount_ht_cents: 100 });
+    assert.equal(withMission.error?.code, "42501");
+    const forged = await a.client.from("quotes").insert({ owner_id: b.userId, client_id: clientA.id, amount_ht_cents: 100 });
+    assert.equal(forged.error?.code, "42501");
+    const moved = await a.client.from("quotes").update({ client_id: clientB.id }).eq("id", quoteA.id);
+    assert.equal(moved.error?.code, "42501");
+  });
+
+  test("accept_quote : un brouillon est refusé, le devis de A est introuvable pour B", async () => {
+    const draft = await a.client.rpc("accept_quote", { p_quote_id: quoteA.id });
+    assert.equal(draft.error?.code, "23514");
+    const foreign = await b.client.rpc("accept_quote", { p_quote_id: quoteA.id });
+    assert.equal(foreign.error?.code, "P0002");
+  });
+
+  test("sans connexion : rien de visible ni de créable, accept_quote refusée", async () => {
+    const anon = newClient();
+    const read = await anon.from("quotes").select("id");
+    assert.ifError(read.error);
+    assert.deepEqual(read.data, []);
+    const write = await anon.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100 });
+    assert.equal(write.error?.code, "42501");
+    const accept = await anon.rpc("accept_quote", { p_quote_id: quoteA.id });
+    assert.equal(accept.error?.code, "42501");
+  });
+
+  test("la base refuse un montant nul, une taxe négative, un devis créé « envoyé », « accepté » ou « refusé » ; un brouillon se supprime", async () => {
+    const zero = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 0 });
+    assert.equal(zero.error?.code, "23514");
+    const tax = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100, tax_cents: -1 });
+    assert.equal(tax.error?.code, "23514");
+    for (const status of ["sent", "accepted", "refused"]) {
+      const direct = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100, status, sent_on: "2026-10-19" });
+      assert.equal(direct.error?.code, "42501", `création directe « ${status} » refusée`);
+    }
+    const del = await a.client.from("quotes").delete().eq("id", quoteA.id).select("id");
+    assert.equal(del.data?.length, 1, "un brouillon se supprime");
+  });
+});

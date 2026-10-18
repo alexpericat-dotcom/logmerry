@@ -1,9 +1,10 @@
-import { Check, CircleDot, X } from "lucide-react";
+import { CalendarClock, Check, CircleDot, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { MISSION_STATUS_LABELS, type MissionStatus } from "@/lib/domain/missions";
 
 const STATUS_STYLE = {
+  planned: { icon: CalendarClock, variant: "outline" },
   in_progress: { icon: CircleDot, variant: "secondary" },
   done: { icon: Check, variant: "success" },
   cancelled: { icon: X, variant: "outline" },

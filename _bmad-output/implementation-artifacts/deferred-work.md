@@ -173,3 +173,12 @@
 - Ouvrir l'ajout d'une story à la main démonte le panneau d'ordre et perd la proposition en cours.
 - Story omise par l'IA et identifiants forgés en sortie brute : couverts par les tests purs, pas par un essai réel.
 - Thème clair du panneau d'ordre non vérifié.
+
+## De la relecture de la 3.6 (18 octobre)
+- Deux acceptations simultanées : la sérialisation repose sur `select … for update` dans `accept_quote` (correct à la lecture) mais aucun test à deux connexions ne la prouve ; le script SQL ne joue qu'une transaction (un retrait du `for update` passerait inaperçu). Test à écrire avec deux sessions du même compte (le devis envoyé qu'il crée n'est pas supprimable : fiche jetable à nettoyer par SQL).
+- Les actions `quote-actions.ts` (gardes `.eq("status", …)`, correspondance des codes d'erreur, cas « figé ») n'ont pas de test propre : couvertes par le script SQL et le parcours Chrome seulement.
+- Le cycle complet des devis (figés, `accept_quote`) vit dans `tests/sql/quotes-lifecycle.sql`, collé à la main : pas dans la CI. À automatiser si un compte de test jetable devient possible.
+- « Mission liée » propose aussi les missions terminées et annulées.
+- Date d'envoi dans le futur acceptée sans avertissement (pas de règle dans la spec).
+- `set_updated_at` reste exécutable par `anon` et `public` (antérieur à la 3.6, non exploitable : fonction de déclencheur) ; `quotes_guard` durci dans la migration 20261018100300.
+- Le cockpit (epic 5) devra filtrer `status = 'sent'` pour les règles 5 et 6 : un brouillon n'y compte pas.

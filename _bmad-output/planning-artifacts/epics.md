@@ -307,12 +307,16 @@ En tant que propriétaire, je veux enregistrer un devis et son statut, afin de s
 
 **Critères d'acceptation :**
 
-**Étant donné** la table `quotes` créée par une migration (RLS, `client_id` obligatoire, `mission_id` facultatif, montants en centimes), **quand** je crée un devis (montant hors taxe, montant de taxe, date d'envoi, rattaché à un client ou prospect et, si elle existe, à une mission), **alors** son statut est « envoyé » par défaut.
-**Et** un devis sans montant hors taxe ou sans date d'envoi est refusé ; une taxe inconnue reste vide, jamais 0 ; aucun document de devis n'est produit.
-**Et** je peux le passer en « refusé » : il disparaît des alertes du cockpit.
-**Et** « accepté » est **une seule action, tout ou rien** (fonction `accept_quote`) : pour un devis lié à un prospect, le prospect devient client et une mission « en cours » est créée automatiquement (client du devis, titre « Devis du JJ/MM/AAAA — Nom du client » avec la date d'envoi, modifiable ensuite) et rattachée au devis ; pour un devis lié à une mission existante, rien d'autre ne change.
+**Étant donné** la table `quotes` créée par une migration (RLS, `client_id` obligatoire, `mission_id` facultatif, montants en centimes), **quand** je crée un devis (montant hors taxe, montant de taxe, date d'envoi, rattaché à un client ou prospect et, si elle existe, à une mission), **alors** son statut est « brouillon » par défaut (brouillon, envoyé, accepté, refusé).
+**Et** un devis sans montant hors taxe est refusé ; la date d'envoi est obligatoire pour passer en « envoyé » (pas pour un brouillon) ; une taxe inconnue reste vide, jamais 0 ; aucun document de devis n'est produit.
+**Et** un brouillon ne compte ni dans les règles 5 et 6 du cockpit ni dans aucune alerte ; seul « envoyé » y compte.
+**Et** un brouillon se modifie et se supprime (avec confirmation) ; il ne peut pas être « refusé », seulement supprimé.
+**Et** un devis « envoyé » reste modifiable (montants, date d'envoi, rattachement) ; refusé ou accepté, il est figé et définitif (la base refuse la modification et le retour en arrière) ; si le client revient, on crée un nouveau devis.
+**Et** un devis envoyé, refusé ou accepté ne se supprime jamais (la base le refuse) : l'historique est gardé, on corrige par un nouveau devis.
+**Et** je peux passer un devis « envoyé » en « refusé » : il disparaît des alertes du cockpit.
+**Et** « accepté » n'est possible que depuis « envoyé » et est **une seule action, tout ou rien** (fonction `accept_quote`) : pour un devis lié à un prospect, le prospect devient client et une mission « à planifier » est créée automatiquement (client du devis, titre « Devis du JJ/MM/AAAA — Nom du client » avec la date d'envoi, modifiable ensuite) et rattachée au devis ; pour un devis lié à une mission existante, rien d'autre ne change.
 **Et** accepter deux fois le même devis (double clic, deux onglets) ne crée qu'une seule mission, et aucun autre chemin ne peut passer un devis en « accepté » (la base le refuse).
-**Et** un devis accepté ne change plus de statut (pour corriger, on crée un nouveau devis).
+**Et** l'état de mission « à planifier » est ajouté à l'énumération (migration) ; je passe moi-même la mission à « en cours » quand je la démarre.
 **Et** le test d'isolation couvre les devis (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma fiche).
 
 ### Story 3.7 : Rechercher aussi clients et missions
@@ -507,7 +511,7 @@ En tant que propriétaire, je veux être alerté quand un devis envoyé dort 7 j
 
 **Étant donné** un devis « envoyé » dont la dernière modification date de plus de 7 jours (jours de Paris), **quand** j'ouvre le cockpit, **alors** une tâche de règle 5 apparaît (« devis sans réponse depuis N jours ») ; un devis « accepté » ou « refusé » n'en déclenche pas, un prospect sans devis non plus.
 **Et** toute modification du devis (remarque comprise) remet le compteur à zéro.
-**Et** avec moins de deux éléments au total parmi les missions « en cours » et les devis « envoyés », une tâche de règle 6 apparaît (« ton pipeline se vide ») ; un devis envoyé lié à une mission déjà en cours ne compte pas en plus (ce qui est lié compte une fois).
+**Et** avec moins de deux éléments au total parmi les missions « à planifier » ou « en cours » et les devis « envoyés », une tâche de règle 6 apparaît (« ton pipeline se vide ») ; un devis envoyé lié à une mission déjà en cours ne compte pas en plus (ce qui est lié compte une fois).
 **Et** l'ordre final suit les règles 1 à 6, puis la date la plus proche, puis l'identifiant ; aucun e-mail n'est envoyé, un brouillon de relance peut être proposé.
 
 ### Story 5.4b : Tâches de mon sprint
