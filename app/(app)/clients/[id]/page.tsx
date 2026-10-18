@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { Button } from "@/components/ui/button";
 import { listMissionsForClient } from "@/lib/db/missions";
+import { listQuotesForClient } from "@/lib/db/quotes";
+import { QuotesSection } from "@/components/quotes-section";
+import { parisToday } from "@/lib/domain/sprints";
 import { storyProgressByMission } from "@/lib/db/user-stories";
 import { progressLabel } from "@/lib/domain/user-stories";
 import { listNotesForClient } from "@/lib/db/notes";
@@ -27,7 +30,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const client = await getClientRecord(id);
   if (!client) notFound();
-  const [contacts, notes, missions] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id)]);
+  const [contacts, notes, missions, quotes] = await Promise.all([listContacts(id), listNotesForClient(id), listMissionsForClient(id), listQuotesForClient(id)]);
   const progress = await storyProgressByMission(missions.map((m) => m.id)); // seulement les missions de cette fiche
 
   return (
@@ -65,6 +68,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
           </ul>
         )}
       </section>
+      <QuotesSection clientId={id} clientStatus={client.status} quotes={quotes} missions={missions.map((m) => ({ id: m.id, title: m.title }))} today={parisToday()} />
       <section aria-labelledby="notes-title" className="flex flex-col gap-3">
         <h2 id="notes-title" className="text-lg font-semibold">
           Notes

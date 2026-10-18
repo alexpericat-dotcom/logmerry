@@ -2,14 +2,14 @@ import { isUuid } from "./notes.ts";
 
 export const MISSION_TITLE_MAX = 200;
 
-export const MISSION_STATUSES = ["in_progress", "done", "cancelled"] as const;
+export const MISSION_STATUSES = ["planned", "in_progress", "done", "cancelled"] as const;
 export type MissionStatus = (typeof MISSION_STATUSES)[number];
 
-export const MISSION_STATUS_LABELS: Record<MissionStatus, string> = { in_progress: "En cours", done: "Terminée", cancelled: "Annulée" };
+export const MISSION_STATUS_LABELS: Record<MissionStatus, string> = { planned: "À planifier", in_progress: "En cours", done: "Terminée", cancelled: "Annulée" };
 /** Filtre de la liste (pluriel). */
-export const MISSION_STATUS_FILTER_LABELS: Record<MissionStatus, string> = { in_progress: "En cours", done: "Terminées", cancelled: "Annulées" };
+export const MISSION_STATUS_FILTER_LABELS: Record<MissionStatus, string> = { planned: "À planifier", in_progress: "En cours", done: "Terminées", cancelled: "Annulées" };
 /** Valeur du filtre dans l'adresse (`?statut=`) : jamais le nom de l'enum de la base. */
-export const MISSION_STATUS_SLUGS: Record<MissionStatus, string> = { in_progress: "en-cours", done: "terminee", cancelled: "annulee" };
+export const MISSION_STATUS_SLUGS: Record<MissionStatus, string> = { planned: "a-planifier", in_progress: "en-cours", done: "terminee", cancelled: "annulee" };
 
 export const parseMissionStatus = (value: unknown): MissionStatus | null => MISSION_STATUSES.find((s) => s === value) ?? null;
 const parseStatusSlug = (value: unknown): MissionStatus | null => MISSION_STATUSES.find((s) => MISSION_STATUS_SLUGS[s] === value) ?? null;
