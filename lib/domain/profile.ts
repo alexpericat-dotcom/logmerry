@@ -38,9 +38,13 @@ export const DEFAULT_THRESHOLDS: readonly number[] = [90, 100];
 
 export type FieldState = "missing" | "declared" | "confirmed";
 
-/** « À confirmer » (vide), « Déclaré » (rempli, non confirmé) ou « Confirmé » (avec date). */
-export function fieldState(value: unknown, confirmedAt: string | null | undefined): FieldState {
+/** Valeurs de liste qui disent « je ne sais pas » : elles comptent comme « À confirmer », jamais comme une donnée connue. */
+const UNKNOWN_VALUES: Record<string, string> = { acre: "unknown" };
+
+/** « À confirmer » (vide ou « je ne sais pas »), « Déclaré » (rempli, non confirmé) ou « Confirmé » (avec date). */
+export function fieldState(value: unknown, confirmedAt: string | null | undefined, key?: string): FieldState {
   if (value === null || value === undefined || value === "") return "missing";
+  if (key && UNKNOWN_VALUES[key] === value) return "missing";
   return confirmedAt ? "confirmed" : "declared";
 }
 
@@ -90,5 +94,5 @@ export type ProfileRow = Record<string, unknown> & { alert_thresholds: number[] 
 
 /** Les champs encore « À confirmer » : utile aux règles qui en dépendent (« paramètre manquant »). */
 export function missingFields(row: ProfileRow | null): string[] {
-  return PROFILE_FIELDS.filter((f) => fieldState(row?.[f.key], row?.[`${f.key}_confirmed_at`] as string | null) === "missing").map((f) => f.key);
+  return PROFILE_FIELDS.filter((f) => fieldState(row?.[f.key], row?.[`${f.key}_confirmed_at`] as string | null, f.key) === "missing").map((f) => f.key);
 }

@@ -49,8 +49,10 @@ export function ProfileField({ def, value, other, confirmedAt }: { def: ProfileF
   const [state, formAction, pending] = useActionState<ProfileFormState, FormData>(saveProfile.bind(null, def.key), {});
   const [draft, setDraft] = useState(value ?? "");
   const [draftOther, setDraftOther] = useState(other ?? "");
-  const saved = fieldState(value, confirmedAt);
-  const dirty = draft !== (value ?? "") || (draft === OTHER && draftOther !== (other ?? ""));
+  const saved = fieldState(value, confirmedAt, def.key);
+  // Comparé comme le serveur l'enregistre (espaces et NUL retirés) : sinon un texte « abc  » resterait « modifié » après l'envoi.
+  const clean = (t: string) => t.replaceAll("\u0000", "").trim();
+  const dirty = clean(draft) !== (value ?? "") || (draft === OTHER && clean(draftOther) !== (other ?? ""));
   const id = `pf-${def.key}`;
   // Le bouton cliqué annonce l'envoi ; aria-disabled plutôt que disabled : le focus n'est pas perdu pendant l'envoi.
   const [sending, setSending] = useState<"save" | "confirm">("save");
@@ -77,13 +79,20 @@ export function ProfileField({ def, value, other, confirmedAt }: { def: ProfileF
             {def.allowOther && <option value={OTHER}>Autre</option>}
           </select>
           {def.allowOther && draft === OTHER && (
-            <Input name="other" aria-label={`${def.label} : précise`} value={draftOther} onChange={(e) => setDraftOther(e.target.value)} maxLength={OTHER_MAX} autoComplete="off" />
+            <Input name="other" aria-describedby={state.error ? `${id}-error` : undefined} aria-label={`${def.label} : précise`} value={draftOther} onChange={(e) => setDraftOther(e.target.value)} maxLength={OTHER_MAX} autoComplete="off" />
           )}
         </>
       )}
       {def.kind === "date" && <Input id={id} name="value" type="date" value={draft} onChange={(e) => setDraft(e.target.value)} aria-describedby={state.error ? `${id}-error` : undefined} />}
-      {def.kind === "text" && <Textarea id={id} name="value" value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={FREE_TEXT_MAX} rows={3} />}
+      {def.kind === "text" && <Textarea id={id} name="value" aria-describedby={state.error ? `${id}-error` : undefined} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={FREE_TEXT_MAX} rows={3} />}
       {def.hint && <p className="text-sm text-muted-foreground">{def.hint}</p>}
+      {saved === "declared" && !dirty && (
+        <>
+          <input type="hidden" name="expected" value={value ?? ""} />
+          <input type="hidden" name="expected_other" value={other ?? ""} />
+        </>
+      )}
+      {saved === "confirmed" && dirty && <input type="hidden" name="was_confirmed" value="1" />}
       {state.error && (
         <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
           {state.error}
@@ -99,9 +108,9 @@ export function ProfileField({ def, value, other, confirmedAt }: { def: ProfileF
           </Button>
         )}
       </div>
-      <span role="status" className="sr-only">
+      <p role="status" className="text-sm text-muted-foreground">
         {state.message}
-      </span>
+      </p>
     </form>
   );
 }
@@ -131,9 +140,9 @@ export function AlertThresholds({ active }: { active: number[] }) {
           {pending ? "Enregistrement…" : "Enregistrer"}
         </Button>
       </div>
-      <span role="status" className="sr-only">
+      <p role="status" className="text-sm text-muted-foreground">
         {state.message}
-      </span>
+      </p>
     </form>
   );
 }

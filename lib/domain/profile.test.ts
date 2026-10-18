@@ -64,3 +64,19 @@ test("missingFields : tout manque sans ligne, sauf ce qui est rempli", () => {
   assert.deepEqual(missingFields(row).includes("legal_status"), false);
   assert.equal(missingFields(row).length, PROFILE_FIELDS.length - 2);
 });
+
+test("« Je ne sais pas » (ACRE) reste « À confirmer » : jamais Déclaré, jamais Confirmé, signalé comme manquant", () => {
+  assert.equal(fieldState("unknown", null, "acre"), "missing");
+  assert.equal(fieldState("unknown", "2026-10-18T10:00:00Z", "acre"), "missing");
+  assert.equal(fieldState("eligible", null, "acre"), "declared");
+  assert.ok(missingFields({ alert_thresholds: [], acre: "unknown" }).includes("acre"));
+});
+
+test("longueur en points de code, comme char_length : 2 000 émojis passent, 2 001 non ; NUL seul = champ vidé ; NUL retiré d'« Autre »", () => {
+  assert.equal(parseFieldInput("financial_goals", { value: "😀".repeat(2000) }).ok, true);
+  assert.equal(parseFieldInput("financial_goals", { value: "😀".repeat(2001) }).ok, false);
+  assert.equal(parseFieldInput("legal_status", { value: "other", other: "😀".repeat(200) }).ok, true);
+  assert.equal(parseFieldInput("legal_status", { value: "other", other: "😀".repeat(201) }).ok, false);
+  assert.deepEqual(parseFieldInput("financial_goals", { value: "\u0000" }), { ok: true, patch: { financial_goals: null } });
+  assert.deepEqual(parseFieldInput("legal_status", { value: "other", other: "As\u0000so" }), { ok: true, patch: { legal_status: "other", legal_status_other: "Asso" } });
+});

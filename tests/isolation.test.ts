@@ -1403,11 +1403,22 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
   let a: Account;
   let b: Account;
 
+  // État de départ d'une ligne (champs, textes « Autre », dates de confirmation) ; le déclencheur gère les dates.
+  const INITIAL = {
+    legal_status: "micro_enterprise", legal_status_other: null, tax_regime: null, tax_regime_other: null, activity_category: "bnc",
+    service_nature: null, service_nature_other: null, activity_start_date: null, urssaf_frequency: null, urssaf_frequency_other: null,
+    vat_regime: null, vat_regime_other: null, acre: null, job_seeker: null, job_seeker_other: null,
+    financial_goals: null, reserve_rates: null, notification_prefs: null, alert_thresholds: [90, 100],
+    legal_status_confirmed_at: null, tax_regime_confirmed_at: null, activity_category_confirmed_at: null, service_nature_confirmed_at: null,
+    activity_start_date_confirmed_at: null, urssaf_frequency_confirmed_at: null, vat_regime_confirmed_at: null, acre_confirmed_at: null,
+    job_seeker_confirmed_at: null, financial_goals_confirmed_at: null, reserve_rates_confirmed_at: null, notification_prefs_confirmed_at: null,
+  };
+
   // La ligne du profil ne se supprime pas (aucune règle de suppression) : les essais remettent le champ touché à vide.
   const cleanup = async () => {
     for (const account of [a, b]) {
       if (!account) continue;
-      await account.client.from("professional_profile").update({ financial_goals: null, vat_regime: null, vat_regime_other: null, alert_thresholds: [90, 100] }).eq("owner_id", account.userId);
+      await account.client.from("professional_profile").update(INITIAL).eq("owner_id", account.userId);
     }
   };
 
@@ -1451,8 +1462,11 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
   });
 
   test("B ne crée pas de ligne au nom de A ; A ne déplace pas sa ligne chez B", async () => {
+    // Code exact : 42501 = refus de la RLS (une clé primaire déjà prise donnerait 23505 et masquerait un contrôle disparu).
     const ins = await b.client.from("professional_profile").insert({ owner_id: a.userId });
-    assert.ok(ins.error, "insertion au nom d'un autre refusée");
+    assert.equal(ins.error?.code, "42501", "insertion au nom d'un autre refusée par la RLS");
+    const ghost = await b.client.from("professional_profile").insert({ owner_id: crypto.randomUUID() });
+    assert.equal(ghost.error?.code, "42501", "insertion au nom d'un compte inconnu refusée par la RLS");
     const move = await a.client.from("professional_profile").update({ owner_id: b.userId }).eq("owner_id", a.userId).select("owner_id");
     assert.ifError(move.error); // acceptée mais sans effet : le déclencheur garde le propriétaire
     const mine = await a.client.from("professional_profile").select("owner_id");
@@ -1466,7 +1480,7 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
     const read = await anon.from("professional_profile").select("owner_id");
     assert.deepEqual(read.data ?? [], []);
     const ins = await anon.from("professional_profile").insert({});
-    assert.ok(ins.error);
+    assert.equal(ins.error?.code, "42501");
   });
 
   test("modifier une valeur confirmée la repasse en « Déclaré » ; la confirmer pose la date ; la vider efface la date", async () => {
@@ -1497,5 +1511,67 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
     assert.equal((await upd({ activity_start_date: "2099-01-01" })).error, null, "date future permise");
     await upd({ activity_start_date: null });
     assert.equal((await upd({ alert_thresholds: [] })).error, null, "aucun seuil permis");
+  });
+
+  // Pour chacun des 12 champs : valeur valide, une autre valeur valide, et ce que la base doit refuser.
+  const FIELDS: Record<string, [unknown, unknown]> = {
+    legal_status: ["company", "sole_proprietorship"], tax_regime: ["micro_bnc", "controlled_declaration"], activity_category: ["bic", "bnc"],
+    service_nature: ["services", "goods"], activity_start_date: ["2027-01-01", "2027-02-01"], urssaf_frequency: ["monthly", "quarterly"],
+    vat_regime: ["franchise", "normal"], acre: ["eligible", "not_eligible"], job_seeker: ["registered", "not_registered"],
+    financial_goals: ["a", "b"], reserve_rates: ["a", "b"], notification_prefs: ["a", "b"],
+  };
+
+  test("les 12 champs : changer la valeur repasse en « Déclaré », réenregistrer la même valeur garde « Confirmé », une date sans valeur est refusée", async () => {
+    const upd = (patch: Record<string, unknown>) => a.client.from("professional_profile").update(patch).eq("owner_id", a.userId).select("*").single();
+    for (const [field, [v1, v2]] of Object.entries(FIELDS)) {
+      const at = `${field}_confirmed_at`;
+      const set = await upd({ [field]: v1 });
+      assert.ifError(set.error);
+      assert.equal(set.data![at], null, `${field} : valeur posée = Déclaré`);
+      const conf = await upd({ [at]: new Date().toISOString() });
+      assert.ok(conf.data![at], `${field} : confirmé`);
+      const same = await upd({ [field]: v1 });
+      assert.ok(same.data![at], `${field} : même valeur réenregistrée, la confirmation survit`);
+      const change = await upd({ [field]: v2 });
+      assert.equal(change.data![at], null, `${field} : valeur changée = Déclaré`);
+      const orphan = await a.client.from("professional_profile").update({ [field]: null, [at]: new Date().toISOString() }).eq("owner_id", a.userId);
+      assert.equal(orphan.error?.code, "23514", `${field} : une date de confirmation sans valeur est refusée`);
+      const clear = await upd({ [field]: null });
+      assert.equal(clear.data![at], null);
+    }
+    await cleanup();
+  });
+
+  test("les 6 champs « Autre » : texte sans « Autre », « Autre » sans texte, texte vide ou trop long refusés ; changer le seul texte repasse en « Déclaré »", async () => {
+    const upd = (patch: Record<string, unknown>) => a.client.from("professional_profile").update(patch).eq("owner_id", a.userId).select("*").single();
+    for (const field of ["legal_status", "tax_regime", "service_nature", "urssaf_frequency", "vat_regime", "job_seeker"]) {
+      const other = `${field}_other`;
+      const at = `${field}_confirmed_at`;
+      assert.equal((await upd({ [field]: null, [other]: "x" })).error?.code, "23514", `${field} : texte sans valeur`);
+      assert.equal((await upd({ [other]: "x" })).error?.code, "23514", `${field} : texte sans « Autre »`);
+      assert.equal((await upd({ [field]: "other" })).error?.code, "23514", `${field} : « Autre » sans texte`);
+      assert.equal((await upd({ [field]: "other", [other]: "  " })).error?.code, "23514", `${field} : texte vide`);
+      assert.equal((await upd({ [field]: "other", [other]: "x".repeat(201) })).error?.code, "23514", `${field} : 201 caractères`);
+      assert.ifError((await upd({ [field]: "other", [other]: "x".repeat(200) })).error);
+      await upd({ [at]: new Date().toISOString() });
+      const textOnly = await upd({ [other]: "autre texte" });
+      assert.equal(textOnly.data![at], null, `${field} : seul le texte « Autre » change = Déclaré`);
+    }
+    await cleanup();
+  });
+
+  test("textes libres : 2 000 caractères au plus ; created_at conservé et updated_at avancé ; la fonction du déclencheur n'est pas appelable", async () => {
+    const upd = (patch: Record<string, unknown>) => a.client.from("professional_profile").update(patch).eq("owner_id", a.userId).select("*").single();
+    for (const field of ["financial_goals", "reserve_rates", "notification_prefs"]) {
+      assert.equal((await upd({ [field]: "x".repeat(2001) })).error?.code, "23514", field);
+      assert.equal((await upd({ [field]: "   " })).error?.code, "23514", `${field} : vide`);
+    }
+    const before = (await a.client.from("professional_profile").select("created_at, updated_at").single()).data!;
+    const after = await upd({ created_at: "2000-01-01T00:00:00Z", financial_goals: "essai" });
+    assert.equal(new Date(after.data!.created_at).getTime(), new Date(before.created_at).getTime(), "created_at réécrit sans effet");
+    assert.ok(new Date(after.data!.updated_at).getTime() > new Date(before.updated_at).getTime(), "updated_at avancé");
+    const rpc = await a.client.rpc("professional_profile_guard");
+    assert.ok(rpc.error, "la fonction du déclencheur n'est pas appelable par l'API");
+    await cleanup();
   });
 });
