@@ -189,3 +189,12 @@
 - `fold` (pliage des accents) est exporté de `lib/domain/clients.ts` ; sa place naturelle est `lib/domain/search.ts`. Il ne plie pas « œ », « ß », « ł » (pas de décomposition NFD) : sans importance en français courant.
 - Aucun test de composant pour la palette (ordre des groupes, masquage d'un groupe vide, lien, statut) : vérifié à la main dans Chrome ; le dépôt n'a pas de tests de composants.
 - Titres identiques : l'ordre est celui de la lecture (plus récent d'abord), non spécifié ni testé.
+
+## De la relecture de la 4.1a (18 octobre)
+- Pas de règle de suppression sur `professional_profile` : la purge du passage à l'outil pro devra passer par la cascade de suppression du compte ou par le SQL, et le test de cette cascade (compte jetable) n'existe pas.
+- `saveProfile` n'a pas de test unitaire : extraire une fonction pure `buildUpdate(target, intent, formData)` si l'action grossit (la validation d'un champ est déjà testée dans `profile.test.ts`).
+- Avant l'hydratation de la page, un envoi retombe en GET et met le texte saisi dans l'URL (formulaire sans `action`) ; faible, à traiter avec `method="post"` ou en n'activant les boutons qu'après hydratation.
+- La date de confirmation vient de l'horloge du serveur Next, pas de la base ; le propriétaire peut aussi poser lui-même une date (même future) en écrivant directement par l'API : sans effet entre comptes, mais « la base est le dernier juge » est relatif. Plafonner à `now()` dans le déclencheur si cela compte.
+- `missingFields` ne signale pas statut et catégorie préremplis (« Déclaré ») : les règles futures devront exiger l'état « Confirmé » ou lire `unconfirmedInputs` (AD-5), pas seulement l'absence de valeur.
+- La course entre deux onglets est couverte pour « Confirmer » (valeur vue envoyée et vérifiée), pas testée de bout en bout : vérifiée à la lecture seulement.
+- Catégorie (BNC / BIC) et ACRE n'ont pas d'option « Autre » (ACRE a « Je ne sais pas », qui compte comme « À confirmer ») : décision de l'auteur (18 octobre) : on laisse ainsi.

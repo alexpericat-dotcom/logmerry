@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   Receipt,
   Settings,
+  UserRound,
   Users,
   X,
   type LucideIcon,
@@ -38,6 +39,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   missions: Briefcase,
   factures: Receipt,
   echeances: CalendarClock,
+  profil: UserRound,
   parametres: Settings,
   realisations: ImageIcon,
   "a-faire": CheckSquare,
@@ -163,13 +165,18 @@ export function AppSidebar({
 
       <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-2">
         <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.map((item, index) => {
             const Icon = ICONS[item.icon];
+            const groupHeading =
+              item.group && item.group !== NAV_ITEMS[index - 1]?.group ? (
+                <p className={cn("px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground", labelClass)}>{item.group}</p>
+              ) : null;
             const base =
               "flex h-9 items-center gap-3 rounded-sm border px-2 text-sm max-md:h-11 dark:rounded-md dark:border-0 dark:border-l-[3px]";
             if (!item.available) {
               return (
                 <li key={item.href}>
+                {groupHeading}
                   <span
                     aria-disabled="true"
                     title={`${item.label} — bientôt`}
@@ -186,6 +193,7 @@ export function AppSidebar({
             const current = isCurrent(pathname, item.href);
             return (
               <li key={item.href}>
+                {groupHeading}
                 <Link
                   href={item.href}
                   title={item.label}

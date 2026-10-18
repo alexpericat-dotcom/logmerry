@@ -358,6 +358,15 @@ En tant que propriétaire, je veux renseigner mon profil professionnel avec l'é
 **Et** un champ à choix n'accepte que ses valeurs prévues (listes courtes sans règle fiscale, plus « Autre » avec un champ libre) ; les objectifs financiers et les taux de réserve sont des champs libres sans calcul au MVP ; une date inexistante est refusée avec une erreur en ligne.
 **Et** le test d'isolation couvre le profil (un autre compte ne le voit ni ne le modifie).
 
+**Décisions de l'auteur du 18 octobre 2026 (spec 4.1a) :**
+1. Barre latérale : groupe « Finances » créé dès cette story, avec Profil dedans ; Règles, Plafonds et Finances s'y ajoutent ensuite.
+2. Listes courtes (plus « Autre » avec champ libre) : statut juridique (micro-entreprise, entreprise individuelle, société EURL/SASU) ; régime fiscal (micro-BNC, déclaration contrôlée) ; catégorie (BNC, BIC) ; nature des prestations (prestation de services, vente de marchandises, mixte) ; fréquence Urssaf (mensuelle, trimestrielle) ; régime de TVA (franchise en base, réel simplifié, réel normal) ; ACRE (éligible, non éligible, je ne sais pas) ; situation France Travail (inscrit, non inscrit). Au départ : statut « micro-entreprise » et catégorie « BNC » en « Déclaré », tout le reste « À confirmer ».
+3. Seuils d'alerte cochés au départ : 90 % et 100 %.
+4. Cycle par champ : « Enregistrer » (Déclaré, ou À confirmer si vidé), « Confirmer » (seulement sur un champ Déclaré, pose la date du jour), modifier un champ Confirmé le repasse en Déclaré avec annonce vocale. Objectifs, taux de réserve et préférences de notification : champs libres, même cycle.
+5. Date de début d'activité : dates futures acceptées (début prévu), dates inexistantes refusées.
+6. Préférences de notification : champ libre, mention « pas encore utilisé » (aucun canal avant n8n).
+7. La ligne du profil est créée à la première ouverture de la page (insertion sans écrasement) ; sans ligne, tout est « À confirmer », y compris statut et catégorie.
+
 ### Story 4.1b : Règles réglementaires versionnées
 
 *Ancienne story 4.1 « Renseigner mes paramètres », élargie le 18 octobre 2026 (PRD FR-10, architecture AD-12).*

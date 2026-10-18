@@ -5,6 +5,7 @@ export type NavIcon =
   | "missions"
   | "factures"
   | "echeances"
+  | "profil"
   | "parametres"
   | "realisations"
   | "a-faire";
@@ -15,6 +16,8 @@ export type NavItem = {
   icon: NavIcon;
   /** false tant que la page n'existe pas : l'entrée est affichée, inactive. */
   available: boolean;
+  /** Titre de groupe affiché au-dessus de l'entrée (la première du groupe). */
+  group?: string;
 };
 
 export const NAV_ITEMS: NavItem[] = [
@@ -27,6 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Paramètres", href: "/parametres", icon: "parametres", available: true },
   { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: false },
+  { label: "Profil", href: "/profil", icon: "profil", available: true, group: "Finances" },
 ];
 
 export const SIDEBAR_COOKIE = "sidebar";
