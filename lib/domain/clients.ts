@@ -110,7 +110,7 @@ export function viewClients<T extends ClientRow>(all: T[], view: ClientView): { 
 }
 
 /** Minuscules sans accents : « École » et « ecole » se valent. */
-const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 export type SearchableContact = { client_id: string; name: string; job_title: string | null; email: string | null };
 

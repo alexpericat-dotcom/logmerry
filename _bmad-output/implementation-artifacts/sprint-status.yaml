@@ -57,8 +57,8 @@ development_status:
   3-5a-backlog-et-user-stories-d-une-mission: done
   3-5b-tâches-d-une-user-story: done
   3-5c-sprints: done
-  3-6-suivre-mes-devis: backlog
-  3-7-rechercher-aussi-clients-et-missions: backlog
+  3-6-suivre-mes-devis: done
+  3-7-rechercher-aussi-clients-et-missions: done
   epic-3-retrospective: optional
 
   epic-4: backlog
