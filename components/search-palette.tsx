@@ -268,17 +268,19 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
                       )}
                     </>
                   ) : item.kind === "mission" ? (
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-medium">
-                        {item.mission.title}
-                      </span>
-                      <MissionStatusBadge status={item.mission.status} />
-                      {item.mission.client && (
-                        <span className="shrink-0 truncate text-sm text-muted-foreground">
-                          {item.mission.client}
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate font-medium">
+                          {item.mission.title}
                         </span>
+                        <MissionStatusBadge status={item.mission.status} />
+                      </div>
+                      {item.mission.client && (
+                        <p className="truncate text-sm text-muted-foreground">
+                          {item.mission.client}
+                        </p>
                       )}
-                    </div>
+                    </>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="truncate font-medium">
