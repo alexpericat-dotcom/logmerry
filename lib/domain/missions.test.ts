@@ -120,6 +120,13 @@ test("recherche de missions : titre ou nom du client, casse et accents ignorés,
   assert.deepEqual(matchMissions(all, ""), []);
 });
 
+test("recherche de missions : accents ignorés dans le titre comme dans la saisie, espaces multiples du titre sans effet sur le rang", () => {
+  const all = [mk("1", "Étude de marché", "X"), mk("2", "Etude de site", "X"), mk("3", "Mon  étude", "X"), mk("4", "Site  web", "Y"), mk("5", "Mon site web", "Y")];
+  assert.deepEqual(matchMissions(all, "etude").map((m) => m.id), ["1", "2", "3"], "saisie sans accent, titres accentués ou non");
+  assert.deepEqual(matchMissions(all, "ÉTUDE").map((m) => m.id), ["1", "2", "3"], "saisie accentuée et en majuscules");
+  assert.deepEqual(matchMissions(all, "site web").map((m) => m.id), ["4", "5"], "« Site  web » (deux espaces) commence par la saisie : rang 0, avant « Mon site web »");
+});
+
 test("recherche de missions : titre qui commence, puis titre qui contient, puis nom du client ; alphabétique à égalité ; huit au plus", () => {
   const all = [mk("a", "Site de Zoé", "Zoé"), mk("b", "Audit", "Site Web SA"), mk("c", "Mon site", "Léa"), mk("d", "Site de Alice", "Alice")];
   assert.deepEqual(matchMissions(all, "site").map((m) => m.id), ["d", "a", "c", "b"]);

@@ -133,7 +133,7 @@ export function matchMissions<T extends { id: string; title: string; client: { n
   const has = (hay: string) => words.every((w) => hay.includes(w));
   const hits: { m: T; title: string; rank: number }[] = [];
   for (const m of all) {
-    const title = fold(m.title);
+    const title = fold(m.title).replace(/\s+/g, " ").trim(); // espaces multiples du titre : comme la saisie normalisée
     if (has(title)) hits.push({ m, title, rank: title.startsWith(needle) ? 0 : 1 });
     else if (has(`${title} ${fold(m.client?.name ?? "")}`)) hits.push({ m, title, rank: 2 });
   }

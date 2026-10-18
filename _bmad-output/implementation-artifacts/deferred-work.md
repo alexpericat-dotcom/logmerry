@@ -182,3 +182,10 @@
 - Date d'envoi dans le futur acceptée sans avertissement (pas de règle dans la spec).
 - `set_updated_at` reste exécutable par `anon` et `public` (antérieur à la 3.6, non exploitable : fonction de déclencheur) ; `quotes_guard` durci dans la migration 20261018100300.
 - Le cockpit (epic 5) devra filtrer `status = 'sent'` pour les règles 5 et 6 : un brouillon n'y compte pas.
+
+## De la relecture de la 3.7 (18 octobre)
+- La recherche ⌘K lit toutes les fiches, tous les contacts et toutes les missions à chaque frappe (après 200 ms) et le plafond de 1 000 lignes de PostgREST fait sortir sans erreur les plus anciennes au-delà : même limite que les fiches, notée `ponytail`. À traiter ensemble (recherche en base ou pagination) si un compte approche 1 000 lignes.
+- Une erreur de lecture des missions fait échouer toute la recherche (notes et fiches comprises) : tout ou rien, comme pour les fiches et les contacts. Un échec partiel avec message serait à décider pour les trois sources à la fois.
+- `fold` (pliage des accents) est exporté de `lib/domain/clients.ts` ; sa place naturelle est `lib/domain/search.ts`. Il ne plie pas « œ », « ß », « ł » (pas de décomposition NFD) : sans importance en français courant.
+- Aucun test de composant pour la palette (ordre des groupes, masquage d'un groupe vide, lien, statut) : vérifié à la main dans Chrome ; le dépôt n'a pas de tests de composants.
+- Titres identiques : l'ordre est celui de la lecture (plus récent d'abord), non spécifié ni testé.
