@@ -28,22 +28,25 @@ export function RuleForm({ ruleKey, initialParams, hasVersions }: { ruleKey: str
     setSeen(state);
     if (state.saved) setOpen(false);
   }
+  // Les erreurs et le message d'une réponse déjà vue à l'ouverture ne reviennent pas quand on rouvre le formulaire.
+  const [dismissed, setDismissed] = useState<RuleFormState | null>(null);
+  const current = state === dismissed ? ({} as RuleFormState) : state;
 
   if (!open)
     return (
       <div className="flex flex-col gap-1">
         <div>
-          <Button size="sm" variant="outline" onClick={() => { setParams(initialParams); setOpen(true); }}>
+          <Button size="sm" variant="outline" onClick={() => { setParams(initialParams); setDismissed(state); setOpen(true); }}>
             {hasVersions ? "Nouvelle version" : "Saisir la règle"}
           </Button>
         </div>
         <p role="status" className="text-sm text-muted-foreground">
-          {state.saved ? "Règle enregistrée (à vérifier)." : ""}
+          {current.saved ? "Règle enregistrée (à vérifier)." : ""}
         </p>
       </div>
     );
 
-  const e = state.errors ?? {};
+  const e = current.errors ?? {};
   const id = (n: string) => `rf-${ruleKey}-${n}`;
   const field = (name: string, error?: string) => ({ id: id(name), name, "aria-invalid": error ? (true as const) : undefined, "aria-describedby": error ? `${id(name)}-error` : undefined });
   const err = (name: string, error?: string) =>
@@ -135,9 +138,9 @@ export function RuleForm({ ruleKey, initialParams, hasVersions }: { ruleKey: str
           {err("description", e.description)}
         </div>
       </div>
-      {state.message && (
+      {current.message && (
         <p role="alert" className="text-sm text-destructive">
-          {state.message}
+          {current.message}
         </p>
       )}
       <div className="flex items-center gap-3">

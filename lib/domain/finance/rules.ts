@@ -31,6 +31,9 @@ export function displayState(rule: RuleRow, asOf: string): RuleDisplayState {
   return rule.status;
 }
 
+/** Une règle (hors « à vérifier ») en vigueur dont la date de revérification est dépassée n'est plus utilisable, « essai » comprise. */
+export const isStale = (rule: RuleRow, asOf: string): boolean => rule.status !== "a_verifier" && rule.effective_to === null && rule.revalidate_after < asOf;
+
 export const isInForce = (rule: RuleRow, asOf: string): boolean => rule.effective_from <= asOf && (rule.effective_to === null || asOf < rule.effective_to);
 
 export type RuleUsability =
@@ -44,10 +47,9 @@ export type RuleUsability =
 export function usableRule(rules: RuleRow[], key: string, category: ActivityCategory, asOf: string): RuleUsability {
   const rule = rules.find((r) => r.rule_key === key && r.activity_category === category && isInForce(r, asOf));
   if (!rule) return { status: "missing_parameter", reason: "absente" };
-  const state = displayState(rule, asOf);
-  if (state === "a_verifier") return { status: "missing_parameter", reason: "non_verifiee" };
-  if (state === "perimee") return { status: "missing_parameter", reason: "perimee" };
-  return { status: "ok", rule, demo: state === "essai" };
+  if (rule.status === "a_verifier") return { status: "missing_parameter", reason: "non_verifiee" };
+  if (isStale(rule, asOf)) return { status: "missing_parameter", reason: "perimee" };
+  return { status: "ok", rule, demo: rule.status === "essai" };
 }
 
 export type RuleInput = {
@@ -73,10 +75,27 @@ export type RuleValues = {
 };
 
 const stripNul = (s: string) => s.replaceAll("\u0000", "");
+
+/** Au plus cinq ans entre la vérification et la revérification : sans borne, une date lointaine rendrait une règle jamais périmée. */
+export const REVALIDATE_MAX_YEARS = 5;
+
+/** Dates de vérification : réelles, pas dans le futur, revérification ensuite et au plus cinq ans plus tard. Rend une erreur par champ. */
+export function validateVerification(verifiedRaw: string, revalidateRaw: string, today: string): { verified_on?: string; revalidate_after?: string } {
+  const errors: { verified_on?: string; revalidate_after?: string } = {};
+  const verified = verifiedRaw.trim();
+  const revalidate = revalidateRaw.trim();
+  if (!isDay(verified)) errors.verified_on = "Saisis la date à laquelle tu as vérifié la source.";
+  else if (verified > today) errors.verified_on = "La date de vérification ne peut pas être dans le futur.";
+  if (!isDay(revalidate)) errors.revalidate_after = "Saisis la date de revérification.";
+  else if (isDay(verified) && revalidate < verified) errors.revalidate_after = "La revérification ne peut pas précéder la vérification.";
+  else if (isDay(verified) && revalidate > `${Number(verified.slice(0, 4)) + REVALIDATE_MAX_YEARS}${verified.slice(4)}`) errors.revalidate_after = `La revérification doit tomber au plus ${REVALIDATE_MAX_YEARS} ans après la vérification.`;
+  return errors;
+}
+
 const length = (s: string) => [...s].length;
 
 /** Valide la saisie d'une règle (nouvelle règle ou nouvelle version). Aucune valeur n'est préremplie ni devinée. */
-export function validateRuleInput(input: RuleInput): { ok: true; value: RuleValues } | { ok: false; errors: RuleErrors } {
+export function validateRuleInput(input: RuleInput, today: string): { ok: true; value: RuleValues } | { ok: false; errors: RuleErrors } {
   const errors: RuleErrors = {};
   if (!ruleKeyDef(input.rule_key)) errors.rule_key = "Règle inconnue.";
   if (input.activity_category !== "bnc" && input.activity_category !== "bic") errors.activity_category = "Choisis une catégorie d'activité.";
@@ -87,10 +106,8 @@ export function validateRuleInput(input: RuleInput): { ok: true; value: RuleValu
   else if (length(source) > 500) errors.source = "La source doit faire 500 caractères au plus.";
   else if (source === "DEMO") errors.source = "« DEMO » est réservée aux règles d'essai du compte de démonstration.";
   const verified = input.verified_on.trim();
-  if (!isDay(verified)) errors.verified_on = "Saisis la date à laquelle tu as vérifié la source.";
   const revalidate = input.revalidate_after.trim();
-  if (!isDay(revalidate)) errors.revalidate_after = "Saisis la date de revérification.";
-  else if (isDay(verified) && revalidate < verified) errors.revalidate_after = "La revérification ne peut pas précéder la vérification.";
+  Object.assign(errors, validateVerification(verified, revalidate, today));
   const description = stripNul(input.description).trim();
   if (description && length(description) > 500) errors.description = "La description doit faire 500 caractères au plus.";
   const params = parseParams(input.rule_key, input.params);
@@ -113,6 +130,7 @@ export function validateRuleInput(input: RuleInput): { ok: true; value: RuleValu
 
 /** Actions permises sur une version, selon son statut (la base les impose aussi). */
 export const canVerify = (r: RuleRow): boolean => r.status === "a_verifier" && isOfficialLink(r.source);
-export const canUnverify = (r: RuleRow): boolean => r.status === "verifiee";
+// Une version close et vérifiée est de l'histoire : elle ne repasse pas « à vérifier » (la base le refuse aussi).
+export const canUnverify = (r: RuleRow): boolean => r.status === "verifiee" && r.effective_to === null;
 export const canRevalidate = (r: RuleRow): boolean => r.status === "verifiee";
 export const canDeleteRule = (r: RuleRow): boolean => r.status === "a_verifier";

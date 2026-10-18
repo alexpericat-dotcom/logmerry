@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { isDay } from "@/lib/domain/missions";
 import { isUuid } from "@/lib/domain/notes";
 import { RULE_KEYS } from "@/lib/domain/finance/rule-keys";
-import { validateRuleInput, type RuleErrors } from "@/lib/domain/finance/rules";
+import { validateRuleInput, validateVerification, type RuleErrors } from "@/lib/domain/finance/rules";
+import { todayParis } from "@/lib/format";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type RuleFormState = { errors?: RuleErrors; message?: string; saved?: boolean };
@@ -30,7 +30,7 @@ export async function createRule(ruleKey: string, _prev: RuleFormState, formData
     revalidate_after: text(formData, "revalidate_after"),
     description: text(formData, "description"),
     params,
-  });
+  }, todayParis());
   if (!checked.ok) return { errors: checked.errors };
   const v = checked.value;
   const result = await withSession(async (supabase) => {
@@ -59,17 +59,18 @@ export async function createRule(ruleKey: string, _prev: RuleFormState, formData
 type Intent = "verify" | "unverify" | "revalidate" | "delete";
 
 /** Changements d'une version existante : vérifier (lien https exigé par la base), repasser à vérifier, revérifier (nouvelles dates), supprimer (« à vérifier » seulement). */
-export async function updateRule(id: string, intent: Intent, _prev: RuleActionState, formData: FormData): Promise<RuleActionState> {
+export async function updateRule(id: string, _prev: RuleActionState, formData: FormData): Promise<RuleActionState> {
   if (!isUuid(id)) return { message: "Cette règle n'existe plus." };
+  const intent = text(formData, "intent") as Intent; // le bouton cliqué (submitter) donne l'intention
   let patch: Record<string, string> | null = null;
   if (intent === "verify") patch = { status: "verifiee" };
   else if (intent === "unverify") patch = { status: "a_verifier" };
   else if (intent === "revalidate") {
     const verified = text(formData, "verified_on").trim();
     const next = text(formData, "revalidate_after").trim();
-    if (!isDay(verified)) return { message: "Saisis la date de vérification." };
-    if (!isDay(next)) return { message: "Saisis la date de revérification." };
-    if (next < verified) return { message: "La revérification ne peut pas précéder la vérification." };
+    const errors = validateVerification(verified, next, todayParis());
+    const first = errors.verified_on ?? errors.revalidate_after;
+    if (first) return { message: first };
     patch = { verified_on: verified, revalidate_after: next };
   } else if (intent !== "delete") return { message: "Action inconnue." };
 

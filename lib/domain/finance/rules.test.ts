@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { describeParams, parseParams, paramsToForm, RULE_KEYS, visibleFields, ruleKeyDef } from "./rule-keys.ts";
-import { canDeleteRule, canVerify, displayState, isOfficialLink, usableRule, validateRuleInput, type RuleRow } from "./rules.ts";
+import { canDeleteRule, canUnverify, canVerify, displayState, isOfficialLink, isStale, usableRule, validateRuleInput, validateVerification, type RuleRow } from "./rules.ts";
 
 // FICTIF : valeurs inventées pour vérifier la FORMULE et la validation, jamais des valeurs réglementaires.
 const rule = (over: Partial<RuleRow> = {}): RuleRow => ({
@@ -95,15 +95,65 @@ test("liens officiels : https seulement, sans espace", () => {
   assert.equal(canDeleteRule(rule()), false);
 });
 
+const TODAY = "2026-10-18";
+
 test("validateRuleInput : tout est obligatoire, DEMO refusée, revérification pas avant la vérification", () => {
   const base = { rule_key: "acre_duration", activity_category: "bnc", effective_from: "2026-01-01", source: "https://example.org", verified_on: "2026-10-01", revalidate_after: "2027-10-01", description: "", params: { months: "6" } };
-  assert.ok(validateRuleInput(base).ok);
-  const bad = validateRuleInput({ ...base, source: "", effective_from: "2026-02-30", verified_on: "", activity_category: "x", params: {} });
+  assert.ok(validateRuleInput(base, TODAY).ok);
+  const bad = validateRuleInput({ ...base, source: "", effective_from: "2026-02-30", verified_on: "", activity_category: "x", params: {} }, TODAY);
   assert.ok(!bad.ok && ["source", "effective_from", "verified_on", "activity_category", "param:months"].every((k) => k in bad.errors));
-  assert.ok(!validateRuleInput({ ...base, source: "DEMO" }).ok);
-  assert.ok(!validateRuleInput({ ...base, revalidate_after: "2026-09-30" }).ok);
-  assert.ok(validateRuleInput({ ...base, revalidate_after: "2026-10-01" }).ok);
-  assert.ok(!validateRuleInput({ ...base, rule_key: "zzz" }).ok);
-  assert.ok(!validateRuleInput({ ...base, source: "x".repeat(501) }).ok);
-  assert.ok(!validateRuleInput({ ...base, description: "x".repeat(501) }).ok);
+  assert.ok(!validateRuleInput({ ...base, source: "DEMO" }, TODAY).ok);
+  assert.ok(!validateRuleInput({ ...base, revalidate_after: "2026-09-30" }, TODAY).ok);
+  assert.ok(validateRuleInput({ ...base, revalidate_after: "2026-10-01" }, TODAY).ok);
+  assert.ok(!validateRuleInput({ ...base, rule_key: "zzz" }, TODAY).ok);
+  assert.ok(!validateRuleInput({ ...base, source: "x".repeat(501) }, TODAY).ok);
+  assert.ok(!validateRuleInput({ ...base, description: "x".repeat(501) }, TODAY).ok);
+});
+
+test("dates de vérification : pas dans le futur, revérification ensuite et au plus 5 ans plus tard (bornes incluses)", () => {
+  assert.deepEqual(validateVerification("2026-10-18", "2031-10-18", TODAY), {});
+  assert.ok(validateVerification("2026-10-19", "2027-01-01", TODAY).verified_on);
+  assert.ok(validateVerification("2026-10-18", "2031-10-19", TODAY).revalidate_after);
+  assert.ok(validateVerification("2026-10-18", "9999-12-31", TODAY).revalidate_after);
+  assert.ok(validateVerification("2026-10-18", "2026-10-17", TODAY).revalidate_after);
+  assert.deepEqual(validateVerification("2026-10-18", "2026-10-18", TODAY), {});
+  assert.ok(validateVerification("", "", TODAY).verified_on && validateVerification("", "", TODAY).revalidate_after);
+  assert.ok(!validateRuleInput({ rule_key: "acre_duration", activity_category: "bnc", effective_from: "2026-01-01", source: "https://e.org", verified_on: "2026-10-19", revalidate_after: "2027-01-01", description: "", params: { months: "6" } }, TODAY).ok);
+  assert.ok(validateRuleInput({ rule_key: "acre_duration", activity_category: "bnc", effective_from: "2026-01-01", source: "x".repeat(500), verified_on: "2026-10-01", revalidate_after: "2027-01-01", description: "x".repeat(500), params: { months: "6" } }, TODAY).ok, "500 caractères acceptés");
+});
+
+test("bornes de usableRule : le jour d'effet est inclus, le jour de fin est exclu ; la raison est précise", () => {
+  const v1 = rule({ id: "v1", effective_to: "2026-07-01", params: { months: 1 } });
+  const v2 = rule({ id: "v2", effective_from: "2026-07-01", params: { months: 2 } });
+  const first = usableRule([v1, v2], "acre_duration", "bnc", "2026-07-01");
+  assert.ok(first.status === "ok" && first.rule.id === "v2", "le 1er juillet, la version 2 s'applique");
+  const last = usableRule([v1, v2], "acre_duration", "bnc", "2026-06-30");
+  assert.ok(last.status === "ok" && last.rule.id === "v1", "la veille, la version 1");
+  const pending = usableRule([v1, rule({ id: "v2", effective_from: "2026-07-01", status: "a_verifier" })], "acre_duration", "bnc", "2026-07-01");
+  assert.deepEqual(pending, { status: "missing_parameter", reason: "non_verifiee" });
+  // trou entre deux versions : absente
+  const gap = usableRule([rule({ id: "v1", effective_to: "2026-07-01" }), rule({ id: "v3", effective_from: "2026-09-01" })], "acre_duration", "bnc", "2026-08-01");
+  assert.deepEqual(gap, { status: "missing_parameter", reason: "absente" });
+});
+
+test("une règle d'essai périmée n'est plus utilisable ; une règle « à vérifier » n'est jamais « périmée » mais « non vérifiée »", () => {
+  const demo = rule({ status: "essai", source: "DEMO", revalidate_after: "2026-10-17" });
+  assert.equal(isStale(demo, "2026-10-18"), true);
+  assert.deepEqual(usableRule([demo], "acre_duration", "bnc", "2026-10-18"), { status: "missing_parameter", reason: "perimee" });
+  assert.equal(isStale(rule({ status: "a_verifier", revalidate_after: "2020-01-01" }), "2026-10-18"), false);
+  assert.equal(isStale(rule({ effective_to: "2026-07-01", revalidate_after: "2020-01-01" }), "2026-10-18"), false, "une version close n'est jamais périmée");
+});
+
+test("une version close et vérifiée ne repasse pas « à vérifier »", () => {
+  assert.equal(canUnverify(rule()), true);
+  assert.equal(canUnverify(rule({ effective_to: "2026-07-01" })), false);
+  assert.equal(canUnverify(rule({ status: "a_verifier" })), false);
+});
+
+test("valeurs nettoyées avant de décider des champs visibles : « other » avec espace ou NUL reste « other »", () => {
+  const base = { amount_cents: "100", revenue_category: "x", tax_basis: "excl_tax" };
+  for (const period of [" other", "other\u0000", "other "]) {
+    const r = parseParams("ceiling_turnover_micro", { ...base, period });
+    assert.ok(!r.ok && r.errors.period_other, JSON.stringify(period));
+  }
 });

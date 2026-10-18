@@ -6,7 +6,7 @@ import { RuleForm } from "@/components/rule-form";
 import { RuleStatusBadge } from "@/components/rule-status";
 import { listRules } from "@/lib/db/rules";
 import { describeParams, paramsToForm, RULE_KEYS } from "@/lib/domain/finance/rule-keys";
-import { ACTIVITY_CATEGORY_LABELS, canDeleteRule, canRevalidate, canUnverify, canVerify, displayState, isOfficialLink, type RuleRow } from "@/lib/domain/finance/rules";
+import { ACTIVITY_CATEGORY_LABELS, canDeleteRule, canRevalidate, canUnverify, canVerify, displayState, isOfficialLink, isStale, type RuleRow } from "@/lib/domain/finance/rules";
 import { formatDate, todayParis } from "@/lib/format";
 
 export const metadata = { title: "Règles · LogMerry" };
@@ -39,7 +39,7 @@ function Version({ rule, asOf }: { rule: RuleRow; asOf: string }) {
           <span className="break-all">{rule.source}</span>
         )}
         . {state === "verifiee" || state === "perimee" ? "Vérifiée" : "Source consultée"} le {formatDate(rule.verified_on)}, à revérifier avant le {formatDate(rule.revalidate_after)}
-        {state === "perimee" && " : date dépassée, cette règle n'est plus utilisée dans les calculs"}.
+        {isStale(rule, asOf) && " : date dépassée, cette règle n'est plus utilisée dans les calculs"}.
       </p>
       <RuleActions
         id={rule.id}
@@ -60,7 +60,8 @@ async function RulesList() {
     <div className="flex max-w-3xl flex-col gap-6">
       {RULE_KEYS.map((def) => {
         const versions = rules.filter((r) => r.rule_key === def.key); // la plus récente d'abord
-        const latest = versions[0];
+        // Les paramètres ne sont repris que s'ils viennent d'une seule catégorie d'activité : sinon on ne devine pas laquelle.
+        const latest = new Set(versions.map((v) => v.activity_category)).size === 1 ? versions[0] : undefined;
         return (
           <section key={def.key} aria-labelledby={`rk-${def.key}`} className="flex flex-col gap-3">
             <h2 id={`rk-${def.key}`} className="text-xl font-semibold">

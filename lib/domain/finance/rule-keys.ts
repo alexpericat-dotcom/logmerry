@@ -68,8 +68,11 @@ export function parseParams(key: string, raw: Record<string, string>): { ok: tru
   if (!def) return { ok: false, errors: { _: "Règle inconnue." } };
   const params: Record<string, string | number> = {};
   const errors: Record<string, string> = {};
-  for (const f of visibleFields(def, raw)) {
-    const value = stripNul(raw[f.name] ?? "").trim();
+  // Les valeurs sont nettoyées AVANT de décider quels champs sont visibles (« other » avec une espace ou un NUL reste « other »).
+  const clean: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) clean[k] = stripNul(v ?? "").trim();
+  for (const f of visibleFields(def, clean)) {
+    const value = clean[f.name] ?? "";
     if (!value) {
       errors[f.name] = "Obligatoire.";
       continue;
