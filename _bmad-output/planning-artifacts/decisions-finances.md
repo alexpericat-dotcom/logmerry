@@ -20,6 +20,8 @@ Journal de travail du contrôle de préparation du 18 octobre 2026. Chaque déci
 14. **Montants :** factures et encaissements enregistrent le hors taxe et la taxe (le toutes taxes comprises s'en déduit) ; chaque règle de plafond choisit sa base.
 15. **Cockpit et sprints :** trois tâches de sprint au plus, puis une ligne « N autres tâches dans ton sprint » qui renvoie à la mission.
 16. **Architecture :** une seule table de règles versionnées, créée directement (la table `parameters` n'existe pas encore) ; une seule page « Règles ».
+17. **Mission créée par un devis accepté (18 octobre, 3.6) :** état « à planifier » (nouvelle valeur de l'énumération des missions), que l'auteur passe à « en cours » ; la règle 6 compte « à planifier » et « en cours ».
+18. **Statuts d'un devis (18 octobre, 3.6) :** brouillon (défaut, hors cockpit), envoyé (date d'envoi obligatoire), accepté (seulement depuis envoyé), refusé (depuis envoyé seulement). Un brouillon se supprime, il ne se refuse pas. Un devis envoyé, refusé ou accepté ne se supprime jamais ; envoyé reste modifiable, refusé et accepté sont figés et définitifs (nouveau devis si le client revient).
 
 ## Ce qui n'est plus une question maintenant
 - Un ou deux plafonds : plusieurs, selon les règles (décision 4).
