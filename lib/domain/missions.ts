@@ -1,3 +1,4 @@
+import { fold } from "./clients.ts";
 import { isUuid } from "./notes.ts";
 
 export const MISSION_TITLE_MAX = 200;
@@ -119,3 +120,25 @@ export const missionsRefusal = (n: number) =>
     : n > 1
       ? `Cette fiche a ${n} missions : supprime-les ou garde la fiche.`
       : "Cette fiche a des missions : supprime-les ou garde la fiche.";
+
+/**
+ * Recherche de missions pour ⌘K : tous les mots saisis se retrouvent dans le titre, ou dans le titre et le nom du client réunis (casse et accents ignorés).
+ * Titre qui commence par la saisie, puis titre qui la contient, puis titre et client ensemble ; ordre alphabétique à égalité ; `limit` au plus.
+ * ponytail : sur la liste lue d'un coup (quelques dizaines de missions) ; une colonne indexée au-delà de 1 000.
+ */
+export function matchMissions<T extends { id: string; title: string; client: { name: string } | null }>(all: T[], query: string, limit = 8): T[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const needle = words.join(" ");
+  const has = (hay: string) => words.every((w) => hay.includes(w));
+  const hits: { m: T; title: string; rank: number }[] = [];
+  for (const m of all) {
+    const title = fold(m.title);
+    if (has(title)) hits.push({ m, title, rank: title.startsWith(needle) ? 0 : 1 });
+    else if (has(`${title} ${fold(m.client?.name ?? "")}`)) hits.push({ m, title, rank: 2 });
+  }
+  return hits
+    .sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title, "fr"))
+    .slice(0, limit)
+    .map(({ m }) => m);
+}

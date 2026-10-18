@@ -321,13 +321,20 @@ En tant que propriétaire, je veux enregistrer un devis et son statut, afin de s
 
 ### Story 3.7 : Rechercher aussi clients et missions
 
-En tant que propriétaire, je veux que ⌘K trouve aussi mes clients et missions, afin d'avoir une seule recherche.
+*Précisée le 18 octobre 2026 : ⌘K cherche déjà les fiches (nom de la fiche ou d'un de ses contacts, stories 3.1 et 3.2) ; il reste à ajouter les missions.*
+
+En tant que propriétaire, je veux que ⌘K trouve aussi mes missions, afin d'avoir une seule recherche pour mes notes, mes fiches et mes missions.
 
 **Critères d'acceptation :**
 
-**Étant donné** des clients et des missions, **quand** je cherche un mot dans ⌘K, **alors** les résultats sont groupés (Notes, Clients, Missions).
-**Et** Entrée sur un résultat ouvre la bonne page.
-**Et** aucun résultat d'un autre compte n'apparaît.
+**Étant donné** des missions, **quand** je cherche un mot dans ⌘K, **alors** les résultats sont groupés dans l'ordre Notes, Clients, Missions, et le groupe Missions n'apparaît que s'il a des résultats.
+**Et** une mission est trouvée par son titre **ou** par le nom de son client ; la recherche ignore la casse et les accents, et tous les mots saisis doivent se retrouver dans le titre, ou dans le titre et le nom du client réunis (« dupont atelier » trouve l'atelier de Dupont).
+**Et** les résultats « titre » passent avant ceux « nom du client » (titre qui commence par la saisie, puis titre qui la contient, puis titre et client ensemble), à égalité par ordre alphabétique ; huit missions au plus.
+**Et** chaque ligne montre le titre, le statut de la mission (À planifier, En cours, Terminée, Annulée, en texte et en icône) et le nom du client.
+**Et** toutes les missions sont cherchables, quel que soit leur statut.
+**Et** Entrée ou un clic sur une mission ouvre `/missions/[id]` ; la navigation au clavier (flèches, Entrée) et l'annonce « Aucun résultat » restent celles de la palette.
+**Et** aucun résultat d'un autre compte n'apparaît (la lecture passe par la RLS ; le test d'isolation couvre la recherche de missions).
+**Et** la règle de correspondance est une fonction pure testée (casse, accents, plusieurs mots, nom du client, ordre, limite de huit, saisie vide).
 
 ---
 

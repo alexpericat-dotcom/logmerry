@@ -7,10 +7,12 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   searchNotes,
   type ClientHit,
+  type MissionHit,
   type SearchResult,
 } from "@/app/(app)/notes/search-actions";
 import { useAssistant } from "@/components/assistant-provider";
 import { ClientStatusBadge } from "@/components/client-status";
+import { MissionStatusBadge } from "@/components/mission-status";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CLIENT_ORIGIN_LABELS } from "@/lib/domain/clients";
@@ -21,10 +23,13 @@ import { cn } from "@/lib/utils";
 
 const DELAY_MS = 200;
 
-/** Une ligne de résultat : une note ou une fiche ; l'ordre de la liste est celui de la navigation au clavier. */
+/** Une ligne de résultat : une note, une fiche ou une mission ; l'ordre de la liste est celui de la navigation au clavier. */
 type Item =
   | { kind: "note"; id: string; note: SearchResult }
-  | { kind: "client"; id: string; client: ClientHit };
+  | { kind: "client"; id: string; client: ClientHit }
+  | { kind: "mission"; id: string; mission: MissionHit };
+const ROUTES = { note: "notes", client: "clients", mission: "missions" } as const;
+const GROUPS = { note: "Notes", client: "Clients", mission: "Missions" } as const;
 const optionId = (item: Item) => `search-${item.kind}-${item.id}`;
 
 /** Bouton « Rechercher » + palette ⌘K / Ctrl+K (<dialog> natif : piège de focus, Échap et retour du focus). */
@@ -36,6 +41,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [clients, setClients] = useState<ClientHit[]>([]);
+  const [missions, setMissions] = useState<MissionHit[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [answered, setAnswered] = useState(""); // requête à laquelle correspondent les résultats
   const [active, setActive] = useState(0);
@@ -70,12 +76,14 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
         state = {
           results: [],
           clients: [],
+          missions: [],
           message: "Recherche impossible pour le moment. Réessaie.",
         };
       }
       if (id !== latest.current) return; // réponse périmée
       setResults(state.results);
       setClients(state.clients);
+      setMissions(state.missions);
       setMessage(state.message ?? null);
       setActive(0);
       setAnswered(q);
@@ -99,9 +107,14 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
               id: client.id,
               client,
             })),
+            ...missions.map((mission): Item => ({
+              kind: "mission",
+              id: mission.id,
+              mission,
+            })),
           ]
         : [],
-    [done, results, clients],
+    [done, results, clients, missions],
   );
 
   // Entrée « Demander à l'assistant » en tête dès qu'une requête est saisie ; les résultats suivent.
@@ -124,9 +137,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   const choose = (item: Item) => {
     dialog.current?.close();
-    router.push(
-      item.kind === "note" ? `/notes/${item.id}` : `/clients/${item.id}`,
-    );
+    router.push(`/${ROUTES[item.kind]}/${item.id}`);
   };
 
   const askAssistant = () => {
@@ -164,7 +175,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
       <dialog
         ref={dialog}
-        aria-label="Rechercher dans mes notes et mes clients"
+        aria-label="Rechercher dans mes notes, mes clients et mes missions"
         onClose={() => {
           setQuery("");
           setAnswered("");
@@ -186,8 +197,8 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           aria-expanded={total > 0}
           aria-controls="search-results"
           aria-activedescendant={activeId}
-          aria-label="Rechercher dans mes notes et mes clients"
-          placeholder="Rechercher une note, un client, un prospect…"
+          aria-label="Rechercher dans mes notes, mes clients et mes missions"
+          placeholder="Rechercher une note, un client, une mission…"
           maxLength={SEARCH_MAX}
           autoComplete="off"
           value={query}
@@ -217,7 +228,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           )}
           {shown.map((item, i) => {
             const index = hasAssistant ? i + 1 : i;
-            const group = item.kind === "note" ? "Notes" : "Clients";
+            const group = GROUPS[item.kind];
             const firstOfGroup = i === 0 || shown[i - 1].kind !== item.kind;
             return (
               <Fragment key={optionId(item)}>
@@ -256,6 +267,18 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
                         </p>
                       )}
                     </>
+                  ) : item.kind === "mission" ? (
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-medium">
+                        {item.mission.title}
+                      </span>
+                      <MissionStatusBadge status={item.mission.status} />
+                      {item.mission.client && (
+                        <span className="shrink-0 truncate text-sm text-muted-foreground">
+                          {item.mission.client}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="truncate font-medium">

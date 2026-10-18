@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { countLabel, missionsHref, missionsRefusal, nextDir, parseMissionView, validateMissionInput, viewMissions, type MissionRow } from "./missions.ts";
+import { matchMissions, countLabel, missionsHref, missionsRefusal, nextDir, parseMissionView, validateMissionInput, viewMissions, type MissionRow } from "./missions.ts";
 
 const CLIENT = "11111111-2222-3333-4444-555555555555";
 const ok = { client_id: CLIENT, title: "Audit", status: "in_progress", start_date: "", end_date: "" };
@@ -104,4 +104,31 @@ test("tris par fin, client et statut ; départage par date de création ; accent
   assert.equal(ids({ statut: null, tri: "statut", ordre: "asc" }), "bca"); // Annulée (b) < En cours (c) < Terminée (a)
   assert.equal(ids({ statut: null, tri: "client", ordre: "asc" }), "cab"); // « Étoile » = « etoile » (égalité) : la plus récente (c) d'abord
   assert.equal(ids({ statut: null, tri: "client", ordre: "desc" }), "bca");
+});
+
+const mk = (id: string, title: string, client: string | null) => ({ id, title, client: client === null ? null : { name: client } });
+
+test("recherche de missions : titre ou nom du client, casse et accents ignorés, tous les mots requis", () => {
+  const all = [mk("1", "Refonte du site", "Société Étoile"), mk("2", "Atelier n8n", "Dupont"), mk("3", "Devis du 18/10/2026 — Dupont", "Dupont")];
+  assert.deepEqual(matchMissions(all, "REFONTE").map((m) => m.id), ["1"]);
+  assert.deepEqual(matchMissions(all, "etoile").map((m) => m.id), ["1"], "nom du client, sans accent");
+  assert.deepEqual(matchMissions(all, "dupont atelier").map((m) => m.id), ["2"], "un mot dans le titre, l'autre dans le nom du client");
+  assert.deepEqual(matchMissions(all, "refonte etoile").map((m) => m.id), ["1"]);
+  assert.deepEqual(matchMissions(all, "refonte zzz"), [], "un mot absent exclut");
+  assert.deepEqual(matchMissions(all, "dupont refonte"), [], "mots de deux missions différentes : aucune ne les a tous");
+  assert.deepEqual(matchMissions(all, "   "), []);
+  assert.deepEqual(matchMissions(all, ""), []);
+});
+
+test("recherche de missions : titre qui commence, puis titre qui contient, puis nom du client ; alphabétique à égalité ; huit au plus", () => {
+  const all = [mk("a", "Site de Zoé", "Zoé"), mk("b", "Audit", "Site Web SA"), mk("c", "Mon site", "Léa"), mk("d", "Site de Alice", "Alice")];
+  assert.deepEqual(matchMissions(all, "site").map((m) => m.id), ["d", "a", "c", "b"]);
+  const many = Array.from({ length: 12 }, (_, i) => mk(String(i), `Mission ${String(i).padStart(2, "0")}`, "X"));
+  assert.equal(matchMissions(many, "mission").length, 8);
+  assert.deepEqual(matchMissions(many, "mission", 3).map((m) => m.id), ["0", "1", "2"]);
+});
+
+test("recherche de missions : une mission sans client lisible se trouve par son titre", () => {
+  assert.deepEqual(matchMissions([mk("1", "Orpheline", null)], "orph").map((m) => m.id), ["1"]);
+  assert.deepEqual(matchMissions([mk("1", "Orpheline", null)], "x"), []);
 });

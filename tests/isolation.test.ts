@@ -1360,3 +1360,41 @@ describe("isolation des devis entre deux comptes fictifs", () => {
     assert.equal(del.data?.length, 1, "un brouillon se supprime");
   });
 });
+
+describe("isolation de la recherche de missions (⌘K) entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    for (const [account, who] of [[a, "A"], [b, "B"]] as const) {
+      const f = await account.client.from("clients").insert({ name: `${PREFIX} fiche recherche ${who}`, origin: "demo" }).select("id").single();
+      assert.ifError(f.error);
+      const m = await account.client.from("missions").insert({ client_id: f.data!.id, title: `${PREFIX} mission recherche ${who}` }).select("id").single();
+      assert.ifError(m.error);
+    }
+  });
+
+  after(cleanup);
+
+  test("la lecture qui alimente la recherche (missions et nom du client) ne renvoie que mes missions", async () => {
+    const select = "id, title, status, client:clients(name)";
+    const mineA = await a.client.from("missions").select(select).like("title", `${PREFIX} mission recherche%`);
+    assert.ifError(mineA.error);
+    assert.deepEqual((mineA.data as unknown as { title: string }[]).map((m) => m.title), [`${PREFIX} mission recherche A`]);
+    const mineB = await b.client.from("missions").select(select).like("title", `${PREFIX} mission recherche%`);
+    assert.deepEqual((mineB.data as unknown as { title: string }[]).map((m) => m.title), [`${PREFIX} mission recherche B`]);
+    const embedded = (mineA.data as unknown as { client: { name: string } | null }[])[0].client;
+    assert.equal(embedded?.name, `${PREFIX} fiche recherche A`, "le nom du client lié est lisible pour son propriétaire");
+  });
+});
