@@ -197,4 +197,4 @@
 - La date de confirmation vient de l'horloge du serveur Next, pas de la base ; le propriétaire peut aussi poser lui-même une date (même future) en écrivant directement par l'API : sans effet entre comptes, mais « la base est le dernier juge » est relatif. Plafonner à `now()` dans le déclencheur si cela compte.
 - `missingFields` ne signale pas statut et catégorie préremplis (« Déclaré ») : les règles futures devront exiger l'état « Confirmé » ou lire `unconfirmedInputs` (AD-5), pas seulement l'absence de valeur.
 - La course entre deux onglets est couverte pour « Confirmer » (valeur vue envoyée et vérifiée), pas testée de bout en bout : vérifiée à la lecture seulement.
-- Catégorie (BNC / BIC) et ACRE n'ont pas d'option « Autre » (ACRE a « Je ne sais pas », qui compte comme « À confirmer ») : à trancher avec l'auteur.
+- Catégorie (BNC / BIC) et ACRE n'ont pas d'option « Autre » (ACRE a « Je ne sais pas », qui compte comme « À confirmer ») : décision de l'auteur (18 octobre) : on laisse ainsi.
