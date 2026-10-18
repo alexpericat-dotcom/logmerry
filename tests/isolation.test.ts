@@ -1339,20 +1339,23 @@ describe("isolation des devis entre deux comptes fictifs", () => {
   test("sans connexion : rien de visible ni de créable, accept_quote refusée", async () => {
     const anon = newClient();
     const read = await anon.from("quotes").select("id");
-    assert.deepEqual(read.data ?? [], []);
+    assert.ifError(read.error);
+    assert.deepEqual(read.data, []);
     const write = await anon.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100 });
-    assert.ok(write.error);
+    assert.equal(write.error?.code, "42501");
     const accept = await anon.rpc("accept_quote", { p_quote_id: quoteA.id });
-    assert.ok(accept.error);
+    assert.equal(accept.error?.code, "42501");
   });
 
-  test("la base refuse un montant nul, une taxe négative, un devis envoyé sans date ; seul un brouillon se supprime", async () => {
+  test("la base refuse un montant nul, une taxe négative, un devis créé « envoyé », « accepté » ou « refusé » ; un brouillon se supprime", async () => {
     const zero = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 0 });
     assert.equal(zero.error?.code, "23514");
     const tax = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100, tax_cents: -1 });
     assert.equal(tax.error?.code, "23514");
-    const nodate = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100, status: "sent" });
-    assert.equal(nodate.error?.code, "23514");
+    for (const status of ["sent", "accepted", "refused"]) {
+      const direct = await a.client.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100, status, sent_on: "2026-10-19" });
+      assert.equal(direct.error?.code, "42501", `création directe « ${status} » refusée`);
+    }
     const del = await a.client.from("quotes").delete().eq("id", quoteA.id).select("id");
     assert.equal(del.data?.length, 1, "un brouillon se supprime");
   });

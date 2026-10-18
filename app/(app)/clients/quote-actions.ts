@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isUuid } from "@/lib/domain/notes";
+import { isDay } from "@/lib/domain/missions";
 import { validateQuoteInput, type QuoteErrors } from "@/lib/domain/quotes";
 import { withSession } from "@/lib/supabase/with-session";
 
@@ -92,9 +93,10 @@ async function transition(id: string, from: "draft" | "sent", patch: Record<stri
 
 /** Brouillon -> envoyé, avec la date d'envoi (obligatoire). */
 export async function sendQuote(id: string, sentOn: string): Promise<QuoteActionState> {
-  const date = validateQuoteInput({ amount_ht: "1", tax: "", sent_on: sentOn, mission_id: "" }, true);
-  if (!date.ok) return { message: date.errors.sent_on ?? "Saisis la date d'envoi." };
-  return transition(id, "draft", { status: "sent", sent_on: date.value.sent_on }, "Ce devis n'est plus un brouillon. Recharge la page.");
+  const day = sentOn.trim();
+  if (!day) return { message: "Saisis la date d'envoi." };
+  if (!isDay(day)) return { message: "Saisis une date d'envoi valide." };
+  return transition(id, "draft", { status: "sent", sent_on: day }, "Ce devis n'est plus un brouillon. Recharge la page.");
 }
 
 /** Envoyé -> refusé (définitif). Un brouillon ne se refuse pas : il se supprime. */
@@ -107,7 +109,8 @@ export async function acceptQuote(id: string): Promise<QuoteActionState> {
   const result = await withSession(async (supabase) => {
     if (!isUuid(id)) return { kind: "gone" as const };
     const { data, error } = await supabase.rpc("accept_quote", { p_quote_id: id });
-    if (error) return { kind: error.code === "P0002" ? ("gone" as const) : error.code === "23514" ? ("lost" as const) : ("error" as const) };
+    // Les messages sont ceux de la fonction : un autre 23514 (contrainte d'une écriture) n'est pas « le devis a changé d'état ».
+    if (error) return { kind: error.code === "P0002" ? ("gone" as const) : error.code === "23514" && /quote not sent|quote frozen/.test(error.message) ? ("lost" as const) : ("error" as const) };
     const { data: row } = await supabase.from("quotes").select("client_id").eq("id", id).maybeSingle<{ client_id: string }>();
     return { kind: "saved" as const, missionId: data as string | null, clientId: row?.client_id ?? null };
   });

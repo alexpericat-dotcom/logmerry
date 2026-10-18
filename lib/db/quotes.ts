@@ -23,3 +23,19 @@ export async function listQuotesForClient(clientId: string): Promise<QuoteRecord
   if (error) throw new Error("Impossible de charger les devis de la fiche.");
   return data as QuoteRecord[];
 }
+
+/** Nombre de devis d'une de mes fiches (la RLS limite aux miens). */
+export async function countQuotesForClient(clientId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase.from("quotes").select("id", { count: "exact", head: true }).eq("client_id", clientId);
+  if (error) throw new Error("Impossible de compter les devis de la fiche.");
+  return count ?? 0;
+}
+
+/** Nombre de devis liés à une de mes missions. */
+export async function countQuotesForMission(missionId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase.from("quotes").select("id", { count: "exact", head: true }).eq("mission_id", missionId);
+  if (error) throw new Error("Impossible de compter les devis de la mission.");
+  return count ?? 0;
+}

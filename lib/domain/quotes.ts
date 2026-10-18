@@ -68,3 +68,11 @@ export const formatCents = (cents: number): string => new Intl.NumberFormat("fr-
 
 /** Centimes → texte de saisie « 1250,50 » pour préremplir un champ. */
 export const centsToInput = (cents: number): string => `${Math.floor(cents / 100)},${String(cents % 100).padStart(2, "0")}`;
+
+/** Refus de supprimer une fiche qui a des devis (un devis envoyé, refusé ou accepté se garde ; un brouillon se supprime d'abord). */
+export const quotesRefusal = (n: number) =>
+  n === 1
+    ? "Cette fiche a 1 devis : un devis envoyé, refusé ou accepté se garde, donc la fiche aussi (un brouillon se supprime d'abord)."
+    : `Cette fiche a ${n} devis : un devis envoyé, refusé ou accepté se garde, donc la fiche aussi (un brouillon se supprime d'abord).`;
+
+export const MISSION_QUOTE_REFUSAL = "Cette mission est liée à un devis : le devis se garde, donc la mission aussi.";

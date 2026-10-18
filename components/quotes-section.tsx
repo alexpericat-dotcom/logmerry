@@ -2,7 +2,7 @@
 
 import { CircleCheck, FileText, Send, X } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 
 import {
   acceptQuote,
@@ -158,17 +158,41 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
   const mission = missions.find((m) => m.id === quote.mission_id);
   const s = quote.status;
 
-  const run = (fn: () => Promise<QuoteActionState>) =>
+  const [announce, setAnnounce] = useState("");
+  const run = (fn: () => Promise<QuoteActionState>, done: string) =>
     start(async () => {
-      const r = await fn();
-      setMessage(r.message);
-      if (!r.message) setMode("view");
+      try {
+        const r = await fn();
+        setMessage(r.message);
+        setAnnounce(r.message ? "" : done);
+        if (!r.message) setMode("view");
+      } catch {
+        setMessage("Opération impossible pour le moment. Rien n'a été modifié. Réessaie.");
+      }
     });
   const back = () => {
     setMode("view");
     setMessage(undefined);
   };
-  const confirmClass = "flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3";
+
+  // Le focus suit le panneau : sur son premier contrôle à l'ouverture, sur la rangée d'actions à la fermeture (le bouton cliqué a disparu).
+  const panelRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    const open = mode !== "view" && mode !== "edit";
+    // Date d'envoi : le champ ; confirmation : « Annuler » (dernier bouton), le choix sûr.
+    if (open) (panelRef.current?.querySelector<HTMLElement>("input") ?? [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1))?.focus();
+    else if (wasOpen.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
+    wasOpen.current = open;
+  }, [mode]);
+  const dangerClass = "flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3";
+  const neutralClass = "flex max-w-2xl flex-col gap-3 rounded-md border border-input p-3";
+  const close = (ev: React.KeyboardEvent) => {
+    if (ev.key !== "Escape" || pending) return;
+    ev.preventDefault();
+    back();
+  };
   const buttons = (label: string, go: () => void, variant: "default" | "destructive" = "destructive") => (
     <div className="flex gap-3">
       <Button type="button" size="sm" variant={variant} disabled={pending} onClick={go}>
@@ -217,7 +241,7 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
       )}
 
       {mode === "view" && (
-        <div className="flex flex-wrap gap-2">
+        <div ref={actionsRef} className="flex flex-wrap gap-2">
           {canSendQuote(s) && (
             <Button type="button" size="sm" variant="outline" onClick={() => setMode("send")}>
               Marquer envoyé
@@ -247,12 +271,12 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
       )}
 
       {mode === "send" && (
-        <div className="flex flex-wrap items-end gap-3" onKeyDown={(ev) => ev.key === "Escape" && !pending && (ev.preventDefault(), back())}>
+        <div ref={panelRef} className="flex flex-wrap items-end gap-3" onKeyDown={close}>
           <div className="grid gap-2">
             <Label htmlFor={`send-${quote.id}`}>Date d&apos;envoi</Label>
             <Input id={`send-${quote.id}`} type="date" value={sendDate} onChange={(ev) => setSendDate(ev.target.value)} />
           </div>
-          <Button type="button" size="sm" disabled={pending} onClick={() => run(() => sendQuote(quote.id, sendDate))}>
+          <Button type="button" size="sm" disabled={pending} onClick={() => run(() => sendQuote(quote.id, sendDate), "Devis marqué comme envoyé.")}>
             {pending ? "…" : "Marquer envoyé"}
           </Button>
           <Button type="button" size="sm" variant="outline" disabled={pending} onClick={back}>
@@ -261,7 +285,7 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
         </div>
       )}
       {mode === "accept" && (
-        <div role="group" aria-label="Confirmer l'acceptation" className={confirmClass.replace("border-destructive", "border-input")}>
+        <div ref={panelRef} role="group" aria-label="Confirmer l'acceptation" className={neutralClass} onKeyDown={close}>
           <p className="font-semibold">Marquer ce devis comme accepté ?</p>
           <p className="text-sm text-muted-foreground">
             {quote.mission_id
@@ -270,21 +294,21 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
                 ? "Le devis sera figé, cette fiche deviendra un client et une mission « à planifier » sera créée."
                 : "Le devis sera figé et une mission « à planifier » sera créée."}
           </p>
-          {buttons("Oui, accepté", () => run(() => acceptQuote(quote.id)), "default")}
+          {buttons("Oui, accepté", () => run(() => acceptQuote(quote.id), "Devis accepté. Une mission à planifier est liée."), "default")}
         </div>
       )}
       {mode === "refuse" && (
-        <div role="group" aria-label="Confirmer le refus" className={confirmClass}>
+        <div ref={panelRef} role="group" aria-label="Confirmer le refus" className={dangerClass} onKeyDown={close}>
           <p className="font-semibold">Marquer ce devis comme refusé ?</p>
           <p className="text-sm text-muted-foreground">C&apos;est définitif : si le client revient, tu créeras un nouveau devis.</p>
-          {buttons("Oui, refusé", () => run(() => refuseQuote(quote.id)))}
+          {buttons("Oui, refusé", () => run(() => refuseQuote(quote.id), "Devis marqué comme refusé."))}
         </div>
       )}
       {mode === "delete" && (
-        <div role="group" aria-label="Confirmer la suppression" className={confirmClass}>
+        <div ref={panelRef} role="group" aria-label="Confirmer la suppression" className={dangerClass} onKeyDown={close}>
           <p className="font-semibold">Supprimer ce brouillon ?</p>
           <p className="text-sm text-muted-foreground">Cette action est définitive.</p>
-          {buttons("Oui, supprimer", () => run(() => deleteQuote(quote.id)))}
+          {buttons("Oui, supprimer", () => run(() => deleteQuote(quote.id), "Brouillon supprimé."))}
         </div>
       )}
       {message && (
@@ -292,6 +316,9 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
           {message}
         </p>
       )}
+      <span role="status" className="sr-only">
+        {announce}
+      </span>
     </li>
   );
 }

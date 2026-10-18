@@ -34,7 +34,7 @@ declare
   ma uuid := gen_random_uuid(); ma2 uuid := gen_random_uuid();
   q1 uuid := gen_random_uuid(); q2 uuid := gen_random_uuid(); q3 uuid := gen_random_uuid();
   q4 uuid := gen_random_uuid(); q5 uuid := gen_random_uuid(); q6 uuid := gen_random_uuid();
-  m1 uuid; r text;
+  m1 uuid; m2 uuid; q7 uuid := gen_random_uuid(); cl uuid := gen_random_uuid(); r text;
 begin
   select id into ua from auth.users where email like '%@example.com' order by email limit 1;
   select id into ub from auth.users where email like '%@example.com' order by email desc limit 1;
@@ -50,7 +50,12 @@ begin
   perform pg_temp.chk('défauts : brouillon, propriétaire A, taxe inconnue', (select status || '/' || (owner_id = ua) || '/' || coalesce(tax_cents::text, 'null') from public.quotes where id = q1), 'draft/true/null');
   perform pg_temp.chk('montant 0 refusé', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents) values (%L, 0)', ca)), '23514');
   perform pg_temp.chk('taxe négative refusée', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, tax_cents) values (%L, 100, -1)', ca)), '23514');
-  perform pg_temp.chk('envoyé sans date refusé', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, status) values (%L, 100, ''sent'')', ca)), '23514');
+  -- Un devis naît brouillon (règle d'insertion, migration 20261018100300) : aucun autre statut à l'insertion.
+  perform pg_temp.chk('insertion directe « accepté » refusée', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, status, sent_on) values (%L, 100, ''accepted'', ''2026-10-19'')', ca)), '42501');
+  perform pg_temp.chk('insertion directe « refusé » refusée', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, status, sent_on) values (%L, 100, ''refused'', ''2026-10-19'')', ca)), '42501');
+  perform pg_temp.chk('insertion directe « envoyé » refusée', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, status, sent_on) values (%L, 100, ''sent'', ''2026-10-19'')', ca)), '42501');
+  perform pg_temp.chk('un brouillon peut garder une date d''envoi saisie', pg_temp.act(ua, format('insert into public.quotes (client_id, amount_ht_cents, sent_on) values (%L, 100, ''2026-10-19'')', ca)), 'ok:1');
+  perform pg_temp.chk('brouillon : la date d''envoi s''efface', pg_temp.act(ua, format('update public.quotes set sent_on = null where client_id = %L and status = ''draft'' and sent_on is not null', ca)), 'ok:1'); -- brouillon : la date est facultative
   perform pg_temp.chk('propriétaire forgé refusé', pg_temp.act(ua, format('insert into public.quotes (owner_id, client_id, amount_ht_cents) values (%L, %L, 100)', ub, ca)), '42501');
   perform pg_temp.chk('mission d''un autre client refusée', pg_temp.act(ua, format('insert into public.quotes (client_id, mission_id, amount_ht_cents) values (%L, %L, 100)', ca, ma2)), '42501');
 
@@ -77,6 +82,13 @@ begin
   perform pg_temp.chk('mission inchangée après 2e acceptation', (select (mission_id = m1)::text from public.quotes where id = q1), 'true');
   perform pg_temp.chk('accepté : modification refusée', pg_temp.act(ua, format('update public.quotes set amount_ht_cents = 1 where id = %L', q1)), '23514');
   perform pg_temp.chk('accepté : suppression sans effet', pg_temp.act(ua, format('delete from public.quotes where id = %L', q1)), 'ok:0');
+
+  -- Titre de la mission créée : un nom de fiche de 200 caractères avec accents et guillemets tient dans la limite de 200
+  insert into public.clients (id, owner_id, name, status, origin) values (cl, ua, repeat('É"l''', 50), 'prospect', 'demo');
+  insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q7, ua, cl, 100, 'sent', '2026-10-23');
+  perform pg_temp.chk('accept_quote avec un nom de fiche de 200 caractères', pg_temp.act(ua, format('select public.accept_quote(%L)', q7)), 'ok:1');
+  select mission_id into m2 from public.quotes where id = q7;
+  perform pg_temp.chk('titre de mission borné à 200 et préfixé', (select (char_length(title) <= 200 and title like 'Devis du 23/10/2026 — É"l''%')::text from public.missions where id = m2), 'true');
 
   -- Refus
   insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q3, ua, ca, 7000, 'sent', '2026-10-20');

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { withSession } from "@/lib/supabase/with-session";
 import { validateClientInput, type ClientErrors, type ClientValues } from "@/lib/domain/clients";
 import { missionsRefusal } from "@/lib/domain/missions";
+import { quotesRefusal } from "@/lib/domain/quotes";
 import { isUuid } from "@/lib/domain/notes";
 
 export type ClientFormState = {
@@ -72,15 +73,20 @@ export async function updateClientRecord(id: string, _prev: ClientFormState, for
 
 export async function deleteClientRecord(id: string): Promise<DeleteClientState> {
   let missions = 0;
-  const result = await withSession(async (supabase): Promise<WriteOutcome | "has-missions"> => {
+  let quotes = 0;
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "has-missions" | "has-quotes"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id");
-    // 23503 : la base refuse (clé étrangère `on delete restrict`) tant que la fiche a des missions.
+    // 23503 : la base refuse (clés étrangères sans cascade) tant que la fiche a des missions ou des devis.
     if (error?.code === "23503") {
-      const { count } = await supabase.from("missions").select("id", { count: "exact", head: true }).eq("client_id", id);
-      missions = count ?? 0;
+      const [m, q] = await Promise.all([
+        supabase.from("missions").select("id", { count: "exact", head: true }).eq("client_id", id),
+        supabase.from("quotes").select("id", { count: "exact", head: true }).eq("client_id", id),
+      ]);
+      missions = m.count ?? 0;
+      quotes = q.count ?? 0;
       // Un autre motif de clé étrangère, ou un compte illisible : pas de faux « a des missions ».
-      return missions > 0 ? "has-missions" : "error";
+      return missions > 0 ? "has-missions" : quotes > 0 ? "has-quotes" : "error";
     }
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
@@ -89,6 +95,7 @@ export async function deleteClientRecord(id: string): Promise<DeleteClientState>
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La fiche est conservée. Réessaie." };
   if (result.value === "has-missions") return { message: missionsRefusal(missions) };
+  if (result.value === "has-quotes") return { message: quotesRefusal(quotes) };
   if (result.value === "not-found") return { message: NOT_FOUND };
 
   revalidatePath("/clients");

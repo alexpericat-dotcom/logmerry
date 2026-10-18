@@ -6,8 +6,9 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { deleteClientRecord, type DeleteClientState } from "@/app/(app)/clients/actions";
 import { Button } from "@/components/ui/button";
 import { missionsRefusal } from "@/lib/domain/missions";
+import { quotesRefusal } from "@/lib/domain/quotes";
 
-export function DeleteClient({ id, noteCount = 0, missionCount = 0 }: { id: string; noteCount?: number; missionCount?: number }) {
+export function DeleteClient({ id, noteCount = 0, missionCount = 0, quoteCount = 0 }: { id: string; noteCount?: number; missionCount?: number; quoteCount?: number }) {
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<DeleteClientState>(() => deleteClientRecord(id), {});
   const askRef = useRef<HTMLButtonElement>(null);
@@ -28,12 +29,12 @@ export function DeleteClient({ id, noteCount = 0, missionCount = 0 }: { id: stri
   );
 
   // Une fiche qui a des missions ne se supprime pas : on l'explique avant même de proposer le bouton (la base refuse aussi).
-  if (missionCount > 0) {
+  if (missionCount > 0 || quoteCount > 0) {
     return (
       <p role="note" className="max-w-2xl rounded-md border p-3 text-sm text-muted-foreground">
-        {missionsRefusal(missionCount)}{" "}
+        {missionCount > 0 ? missionsRefusal(missionCount) : quotesRefusal(quoteCount)}{" "}
         <Link href={`/clients/${id}`} className="text-primary underline underline-offset-4">
-          Voir ses missions
+          {missionCount > 0 ? "Voir ses missions" : "Voir ses devis"}
         </Link>
         .
       </p>
