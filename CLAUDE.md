@@ -27,6 +27,7 @@ Outil de pilotage de ma future activité de conseil No-Code/IA : prospects, clie
 - Propositions de l'IA (stories, tâches, prompts) : éphémères tant que le propriétaire ne les garde pas ; texte fourni traité comme donnée ; un chiffre absent des sources fait écarter la proposition ; seules les notes liées à la fiche du client de la mission peuvent être envoyées.
 - Aucune clé secrète (service role) côté client, dans le code ou dans un commit. `.env.local` est ignoré par git.
 - Le schéma évolue par migrations versionnées dans `supabase/migrations/`, pas par du SQL non tracé. Montrer le SQL avant de l'appliquer.
+- Après chaque migration, régénérer `lib/supabase/database.types.ts` (outil `generate_typescript_types` du MCP Supabase, lecture seule) : les clients sont typés par ce fichier, un schéma qui diverge du fichier n'est plus vérifié par `tsc`.
 - MCP Supabase : tant que la base ne contient que des données fictives, lecture seule hors modification du schéma, approbation manuelle des appels. Avant la première vraie donnée client (passage à l'outil pro), débrancher le MCP ou réécrire cette règle.
 - La dimension des vecteurs dépend du modèle d'embeddings : toute modification impose une réindexation.
 - Données de démo fictives ou anonymisées, clairement étiquetées. Pas de vraies données clients pendant le Workshop 8. Au passage à l'outil pro : purge de la base (embeddings et historique de chat inclus), seul le portfolio est conservé, puis saisie des vraies données. Démo et réel sont isolés par la RLS (`owner_id`), sans colonne « fictif ».
