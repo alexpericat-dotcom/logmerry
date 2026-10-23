@@ -408,6 +408,14 @@ En tant que propriétaire, je veux enregistrer mes factures (hors taxe, taxe, da
 **Et** ce n'est pas une facture légale : un texte le rappelle.
 **Et** le test d'isolation couvre `invoices` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma mission ou à mon devis).
 
+**Décisions de l'auteur du 23 octobre 2026 (spec 4.2) :**
+1. Page **Factures** dans la barre latérale, groupe « Finances », avant Règles et Profil (liste complète, filtres, « Nouvelle facture »). La fiche d'une mission affiche ses factures et permet aussi d'en créer (mission préremplie).
+2. Une facture est **toujours modifiable** (montants, échéance, mission, devis lié). Elle est supprimable **tant qu'aucun encaissement n'y est rattaché** (clé étrangère `restrict` posée par la 4.3, message qui dit pourquoi). Pas de script SQL de cycle de vie à part : l'isolation suffit.
+3. Devis lié (facultatif) : l'écran propose les **devis acceptés du même client que la mission** ; la base contrôle seulement le compte (pas la cohérence client/mission).
+4. Champs : mission, hors taxe, échéance (obligatoires) ; taxe, devis lié ; sous « Plus de champs » : **référence** (texte libre, 60 caractères), **date d'émission**, **remarque** (500 caractères).
+5. Validation : hors taxe strictement positif (pas d'avoir) ; taxe zéro ou plus, ou vide (inconnue, jamais 0) ; montants plafonnés à 1 000 000 € (garde-fou de saisie) ; échéance possible dans le passé ; échéance non antérieure à l'émission si elle est saisie ; émission jamais dans le futur ; JJ/MM/AAAA et virgule, comme les devis.
+6. Liste triée par **échéance croissante** ; pastilles **Toutes / Non payées / Échues** ; échue = pas totalement payée et échéance strictement avant aujourd'hui (jour de Paris) ; « Non payées » comprend les partiellement payées ; ligne : référence (ou mission), client, hors taxe, toutes taxes comprises ou « taxe à confirmer », échéance avec « en retard de N jours », statut en texte et icône.
+
 ### Story 4.3 : Enregistrer un encaissement
 
 *Modifiée le 18 octobre 2026 (hors taxe et taxe, statut de la facture calculé sur le toutes taxes comprises : PRD FR-9, architecture AD-8).*
