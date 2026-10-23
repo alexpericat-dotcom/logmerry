@@ -1,14 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { DEADLINE_CATEGORIES, DEADLINE_CATEGORY_LABELS, daysUntil, deadlineWhen, groupDeadlines, validateDeadlineInput } from "./deadlines.ts";
+import { DEADLINE_CATEGORIES, DEADLINE_CATEGORY_LABELS, daysUntil, deadlineWhen, groupDeadlines, validateDeadlineInput as validate, type DeadlineInput } from "./deadlines.ts";
 
 const TODAY = "2026-10-23";
-const ok = { title: "Déclaration Urssaf du trimestre", due_on: "2026-10-31", category: "urssaf", source: "https://www.urssaf.fr/exemple", note: "" };
+const ok: DeadlineInput = { title: "Déclaration Urssaf du trimestre", due_on: "2026-10-31", category: "urssaf", source: "https://www.urssaf.fr/exemple", note: "", priority: "", recurrence: "" };
+const validateDeadlineInput = (input: DeadlineInput) => validate(input, TODAY);
 const keys = (r: ReturnType<typeof validateDeadlineInput>) => (r.ok ? [] : Object.keys(r.errors));
 
 test("échéance valide : champs nettoyés, remarque vide = absente", () => {
-  assert.deepEqual(validateDeadlineInput(ok), { ok: true, value: { title: "Déclaration Urssaf du trimestre", due_on: "2026-10-31", category: "urssaf", source: "https://www.urssaf.fr/exemple", note: null } });
+  assert.deepEqual(validateDeadlineInput(ok), { ok: true, value: { title: "Déclaration Urssaf du trimestre", due_on: "2026-10-31", category: "urssaf", source: "https://www.urssaf.fr/exemple", note: null, priority: "normal", recurrence: null } });
   const r = validateDeadlineInput({ ...ok, title: "  CFE  ", source: "  https://impots.gouv.fr/cfe  ", note: "  à payer avant  " });
   assert.deepEqual(r.ok && [r.value.title, r.value.source, r.value.note], ["CFE", "https://impots.gouv.fr/cfe", "à payer avant"]);
 });
@@ -62,7 +63,7 @@ test("remarque : 500 caractères en points de code, NUL retiré, vide = absente"
 });
 
 test("plusieurs erreurs à la fois : chaque champ sur sa clé", () => {
-  assert.deepEqual(keys(validateDeadlineInput({ title: "", due_on: "", category: "", source: "", note: "" })).sort(), ["category", "due_on", "source", "title"]);
+  assert.deepEqual(keys(validateDeadlineInput({ title: "", due_on: "", category: "", source: "", note: "", priority: "", recurrence: "" })).sort(), ["category", "due_on", "source", "title"]);
 });
 
 test("délai : jours de retard, aujourd'hui, dans N jours, singulier et pluriel, fin d'année et bissextile", () => {
@@ -117,4 +118,113 @@ test("une échéance faite puis rouverte revient dans sa section d'origine", () 
   const late = row("a", "2026-10-01");
   assert.deepEqual(groupDeadlines([{ ...late, done_at: "2026-10-22T08:00:00Z" }], TODAY).done.map((r) => r.id), ["a"]);
   assert.deepEqual(groupDeadlines([late], TODAY).overdue.map((r) => r.id), ["a"], "rouverte : de nouveau en retard");
+});
+
+// ---- Story 5.1b ----------------------------------------------------------------------------------------------------------------
+
+import { addMonths, inView, invoiceLines, missingOccurrences, parseDeadlineView, seriesDates, toConfirmLines, type SeriesRow } from "./deadlines.ts";
+
+test("priorité : « normale » si vide, sinon une des trois ; récurrence : vide ou une des trois", () => {
+  const r = validateDeadlineInput({ ...ok, priority: "high", recurrence: "quarterly" });
+  assert.deepEqual(r.ok && [r.value.priority, r.value.recurrence], ["high", "quarterly"]);
+  assert.deepEqual(keys(validateDeadlineInput({ ...ok, priority: "urgent" })), ["priority"]);
+  assert.deepEqual(keys(validateDeadlineInput({ ...ok, recurrence: "weekly" })), ["recurrence"]);
+});
+
+test("récurrence : la première date ne dépasse pas un an dans le futur (sinon aucune occurrence ne serait créée)", () => {
+  assert.equal(validateDeadlineInput({ ...ok, due_on: "2027-10-23", recurrence: "yearly" }).ok, true);
+  assert.deepEqual(keys(validateDeadlineInput({ ...ok, due_on: "2027-10-24", recurrence: "yearly" })), ["due_on"]);
+  assert.equal(validateDeadlineInput({ ...ok, due_on: "2030-01-01" }).ok, true, "sans récurrence : permis");
+});
+
+test("récurrence : la première date ne remonte pas à plus d'un an ; sans récurrence le passé reste permis", () => {
+  assert.equal(validateDeadlineInput({ ...ok, due_on: "2025-10-23", recurrence: "monthly" }).ok, true);
+  assert.deepEqual(keys(validateDeadlineInput({ ...ok, due_on: "2025-10-22", recurrence: "monthly" })), ["due_on"]);
+  assert.equal(validateDeadlineInput({ ...ok, due_on: "2020-01-01" }).ok, true);
+});
+
+test("addMonths : fin de mois ramenée au dernier jour, année bissextile, passage d'année", () => {
+  assert.equal(addMonths("2026-01-31", 1), "2026-02-28");
+  assert.equal(addMonths("2028-01-31", 1), "2028-02-29");
+  assert.equal(addMonths("2026-11-15", 3), "2027-02-15");
+  assert.equal(addMonths("2026-10-23", -12), "2025-10-23");
+  assert.equal(addMonths("2026-01-01", 12), "2027-01-01");
+});
+
+test("série mensuelle du 31 janvier : jour visé 31, pas de dérive (28 févr., 31 mars, 30 avr.)", () => {
+  const d = seriesDates("2026-01-31", "monthly", 31, "2026-05-31");
+  assert.deepEqual(d, ["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30", "2026-05-31"]);
+});
+
+test("série trimestrielle et annuelle", () => {
+  assert.deepEqual(seriesDates("2026-10-31", "quarterly", 31, "2027-10-31"), ["2026-10-31", "2027-01-31", "2027-04-30", "2027-07-31", "2027-10-31"]);
+  assert.deepEqual(seriesDates("2028-02-29", "yearly", 29, "2030-12-31"), ["2028-02-29", "2029-02-28", "2030-02-28"]);
+});
+
+const srow = (due_on: string, extra: Partial<SeriesRow> = {}): SeriesRow => ({
+  series_id: "s1", recurrence: "monthly", series_day: 15, due_on, title: "Urssaf", category: "urssaf", source: "https://x.fr/a", note: null, priority: "normal", ...extra,
+});
+
+test("complétion : les occurrences manquantes jusqu'à +12 mois, une seule fois, copiées de la dernière", () => {
+  const rows = [srow("2026-10-15"), srow("2026-11-15", { title: "Urssaf (modifié)", priority: "high" })];
+  const added = missingOccurrences(rows, "2026-10-23");
+  assert.equal(added.length, 11, "du 15/12/2026 au 15/10/2027");
+  assert.equal(added[0].due_on, "2026-12-15");
+  assert.equal(added.at(-1)?.due_on, "2027-10-15");
+  assert.ok(added.every((a) => a.title === "Urssaf (modifié)" && a.priority === "high" && a.series_id === "s1"));
+  // Rejouer avec les lignes ajoutées ne crée plus rien.
+  assert.equal(missingOccurrences([...rows, ...added.map((a) => srow(a.due_on))], "2026-10-23").length, 0);
+});
+
+test("complétion : une série supprimée (récurrence nulle) et une échéance isolée ne génèrent rien", () => {
+  assert.equal(missingOccurrences([srow("2026-10-15", { recurrence: null, series_day: null })], "2026-10-23").length, 0);
+  assert.equal(missingOccurrences([srow("2026-10-15", { series_id: null })], "2026-10-23").length, 0);
+});
+
+test("vues : aujourd'hui, semaine (jusqu'au dimanche), mois, retard ; les faites seulement dans « Toutes »", () => {
+  const t = "2026-10-23"; // vendredi
+  const todo = (due_on: string) => ({ due_on, done: false });
+  assert.equal(inView("aujourd-hui", todo(t), t), true);
+  assert.equal(inView("aujourd-hui", todo("2026-10-24"), t), false);
+  assert.equal(inView("semaine", todo("2026-10-25"), t), true, "dimanche");
+  assert.equal(inView("semaine", todo("2026-10-26"), t), false, "lundi suivant");
+  assert.equal(inView("semaine", todo("2026-10-22"), t), false, "hier : en retard");
+  assert.equal(inView("mois", todo("2026-10-31"), t), true);
+  assert.equal(inView("mois", todo("2026-11-01"), t), false);
+  assert.equal(inView("retard", todo("2026-10-22"), t), true);
+  assert.equal(inView("retard", todo(t), t), false);
+  assert.equal(inView("retard", { due_on: "2026-10-01", done: true }, t), false);
+  assert.equal(inView("toutes", { due_on: "2026-10-01", done: true }, t), true);
+  assert.equal(inView("semaine", todo("2026-10-25"), "2026-10-25"), true, "un dimanche : la semaine finit aujourd'hui");
+  assert.equal(parseDeadlineView("semaine"), "semaine");
+  assert.equal(parseDeadlineView("n'importe quoi"), "toutes");
+  assert.equal(parseDeadlineView(undefined), "toutes");
+});
+
+test("lignes de factures : à émettre (sans émission), à relancer (émise, non soldée, échue), rien si payée", () => {
+  const inv = (id: string, extra: object) => ({ id, reference: null, issued_on: "2026-10-01", due_on: "2026-10-30", status: "unpaid" as const, mission: { title: "Mission A" }, ...extra });
+  const lines = invoiceLines(
+    [
+      inv("a", { issued_on: null }),
+      inv("b", { due_on: "2026-10-20", status: "partial" }),
+      inv("c", { due_on: "2026-10-20", status: "paid" }),
+      inv("d", {}),
+      inv("e", { issued_on: null, status: "paid" }),
+    ],
+    TODAY,
+  );
+  assert.deepEqual(lines.map((l) => [l.kind, l.due_on]), [["invoice_issue", "2026-10-30"], ["invoice_chase", "2026-10-20"]]);
+  assert.equal(lines[1].detail, "en retard de 3 jours");
+});
+
+test("« À confirmer » : sans date, avec la raison ; masquée par une échéance saisie ; omise selon le profil", () => {
+  const none = toConfirmLines(null, []);
+  assert.deepEqual(none.map((l) => l.key), ["confirm-urssaf", "confirm-france_travail", "confirm-vat", "confirm-cfe"]);
+  assert.ok(none.every((l) => l.due_on === null));
+  assert.match(none[0].detail, /profil/);
+  assert.match(none[3].detail, /Aucune règle de calendrier vérifiée/);
+  const profile = { alert_thresholds: [90], urssaf_frequency: "quarterly", urssaf_frequency_confirmed_at: "2026-10-01T00:00:00Z", job_seeker: "not_registered", vat_regime: "franchise" };
+  const some = toConfirmLines(profile, [{ category: "cfe" }]);
+  assert.deepEqual(some.map((l) => l.key), ["confirm-urssaf"], "France Travail et TVA omises, CFE saisie");
+  assert.match(some[0].detail, /Aucune règle de calendrier vérifiée/, "profil renseigné : la règle manque, pas le profil");
 });

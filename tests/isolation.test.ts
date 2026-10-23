@@ -2208,3 +2208,95 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     await refusedUpdate({ category: "autre" }, "22P02", "catégorie inconnue");
   });
 });
+
+describe("isolation des occurrences d'une série d'échéances entre deux comptes fictifs (story 5.1b)", () => {
+  let a: Account;
+  let b: Account;
+  let seriesId: string;
+  let occ: { id: string; due_on: string }[];
+
+  const base = (due_on: string) => ({
+    title: `${PREFIX} série`,
+    due_on,
+    category: "urssaf" as const,
+    source: "https://www.urssaf.fr/exemple",
+    recurrence: "monthly" as const,
+    series_id: seriesId,
+    series_day: 15,
+  });
+  const cleanup = async () => {
+    for (const account of [a, b]) if (account) await account.client.from("deadlines").delete().like("title", `${PREFIX}%`);
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    seriesId = crypto.randomUUID();
+    await cleanup();
+    const r = await a.client.from("deadlines").insert(["2026-11-15", "2026-12-15", "2027-01-15"].map(base)).select("id, due_on").order("due_on");
+    assert.ifError(r.error);
+    occ = r.data!;
+  });
+
+  after(cleanup);
+
+  test("B ne voit aucune occurrence de A, ne la coche pas, ne la modifie pas", async () => {
+    const seen = await b.client.from("deadlines").select("id").eq("series_id", seriesId);
+    assert.deepEqual(seen.data, []);
+    const done = await b.client.from("deadlines").update({ done_at: new Date().toISOString() }).eq("id", occ[0].id).select("id");
+    assert.deepEqual(done.data, []);
+    const upd = await b.client.from("deadlines").update({ priority: "high" }).eq("series_id", seriesId).select("id");
+    assert.deepEqual(upd.data, []);
+  });
+
+  test("cocher une occurrence (la vraie requête) ne touche que cette ligne", async () => {
+    assert.equal(await setDeadlineDone(a.client, occ[0].id, true), "saved");
+    const rows = await a.client.from("deadlines").select("id, done_at").eq("series_id", seriesId).order("due_on");
+    assert.deepEqual(rows.data!.map((r) => r.done_at !== null), [true, false, false]);
+    assert.equal(await setDeadlineDone(b.client, occ[1].id, true), "gone", "B ne coche pas l'occurrence de A");
+  });
+
+  test("la base refuse deux occurrences à la même date, une récurrence sans jour visé et un jour visé sans récurrence", async () => {
+    const dup = await a.client.from("deadlines").insert(base("2026-12-15"));
+    assert.equal(dup.error?.code, "23505");
+    const noDay = await a.client.from("deadlines").insert({ ...base("2027-02-15"), series_day: null });
+    assert.equal(noDay.error?.code, "23514");
+    const noRec = await a.client.from("deadlines").insert({ ...base("2027-02-15"), recurrence: null });
+    assert.equal(noRec.error?.code, "23514");
+    const noSeries = await a.client.from("deadlines").insert({ ...base("2027-02-15"), series_id: null });
+    assert.equal(noSeries.error?.code, "23514");
+  });
+
+  test("B ne supprime pas la série de A par la fonction ; A la supprime : les occurrences à faire partent, la faite reste sans récurrence", async () => {
+    const byB = await b.client.rpc("delete_deadline_series", { p_series_id: seriesId });
+    assert.ifError(byB.error);
+    const intact = await a.client.from("deadlines").select("id").eq("series_id", seriesId);
+    assert.equal(intact.data!.length, 3, "la RLS rend la série invisible à B");
+    const byA = await a.client.rpc("delete_deadline_series", { p_series_id: seriesId });
+    assert.ifError(byA.error);
+    const left = await a.client.from("deadlines").select("id, recurrence, series_day, done_at").eq("series_id", seriesId);
+    assert.equal(left.data!.length, 1);
+    assert.equal(left.data![0].id, occ[0].id);
+    assert.equal(left.data![0].recurrence, null);
+    assert.equal(left.data![0].series_day, null);
+    assert.notEqual(left.data![0].done_at, null);
+  });
+
+  test("complétion à la lecture (la vraie écriture) : idempotente, jamais de doublon ; B ne touche pas la série de A", async () => {
+    const fresh = crypto.randomUUID();
+    const rows = ["2027-03-15", "2027-04-15"].map((due_on) => ({ ...base(due_on), series_id: fresh }));
+    const write = (c: Account) => c.client.from("deadlines").upsert(rows, { onConflict: "series_id,due_on", ignoreDuplicates: true });
+    assert.ifError((await write(a)).error);
+    assert.ifError((await write(a)).error); // deuxième lecture : aucune erreur
+    const count = await a.client.from("deadlines").select("id").eq("series_id", fresh);
+    assert.equal(count.data!.length, 2, "pas de doublon");
+    const other = await b.client.from("deadlines").select("id").eq("series_id", fresh);
+    assert.deepEqual(other.data, []);
+  });
+
+  test("sans connexion : la fonction de suppression de série est refusée", async () => {
+    const anon = newClient();
+    const r = await anon.rpc("delete_deadline_series", { p_series_id: seriesId });
+    assert.ok(r.error, "refusée");
+  });
+});
