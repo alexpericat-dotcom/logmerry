@@ -33,7 +33,7 @@ export async function generateMissionPrompt(missionId: string, options: { level:
     const status = parseMissionStatus(found.data.status);
     if (!status) throw new Error("statut de mission inconnu");
     // Le nom de la fiche est lu pour pouvoir le retirer PARTOUT (l'utilisateur l'écrit aussi dans ses stories) quand il a coché « sans le nom du client ».
-    const knownClient = clientNameOf((found.data as unknown as { client?: unknown }).client);
+    const knownClient = clientNameOf(found.data.client);
     const clientName = includeClient ? knownClient : null;
 
     let stories: StoryForContext[] = [];

@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/domain/notes";
 import { RULE_KEYS } from "@/lib/domain/finance/rule-keys";
 import { validateRuleInput, validateVerification, type RuleErrors } from "@/lib/domain/finance/rules";
 import { todayParis } from "@/lib/format";
+import type { TablesUpdate } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type RuleFormState = { errors?: RuleErrors; message?: string; saved?: boolean };
@@ -42,7 +43,7 @@ export async function createRule(ruleKey: string, _prev: RuleFormState, formData
       p_source: v.source,
       p_verified_on: v.verified_on,
       p_revalidate_after: v.revalidate_after,
-      p_description: v.description,
+      p_description: v.description ?? undefined,
       p_status: "a_verifier",
     });
     if (error) console.error("Règles : création refusée", error.code); // ni valeur ni source dans le journal
@@ -62,7 +63,7 @@ type Intent = "verify" | "unverify" | "revalidate" | "delete";
 export async function updateRule(id: string, _prev: RuleActionState, formData: FormData): Promise<RuleActionState> {
   if (!isUuid(id)) return { message: "Cette règle n'existe plus." };
   const intent = text(formData, "intent") as Intent; // le bouton cliqué (submitter) donne l'intention
-  let patch: Record<string, string> | null = null;
+  let patch: TablesUpdate<"regulatory_rules"> | null = null;
   if (intent === "verify") patch = { status: "verifiee" };
   else if (intent === "unverify") patch = { status: "a_verifier" };
   else if (intent === "revalidate") {

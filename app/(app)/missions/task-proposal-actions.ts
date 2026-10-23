@@ -36,7 +36,7 @@ export async function proposeTasks(storyId: string, hint: string): Promise<TaskP
     if (found.error) throw new Error(`story ${found.error.code ?? ""}`.trim());
     if (!found.data) return { ok: false, error: STORY_GONE };
     const story = found.data;
-    const mission = story.mission as unknown as { title: string; client_id: string; client: { name: string } | null } | null;
+    const mission = story.mission;
     if (!mission) return { ok: false, error: STORY_GONE };
 
     const tasks = await supabase.from("tasks").select("title").eq("story_id", storyId).order("position", { ascending: true });

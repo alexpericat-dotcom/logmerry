@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -9,6 +8,7 @@ import { isUuid } from "@/lib/domain/notes";
 import { validateTaskBatch, validateTaskTitle } from "@/lib/domain/tasks";
 import { nextPosition, parseReorderIds } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
+import type { Db } from "@/lib/supabase/server";
 
 /** `gone` : la tâche ou sa story n'existe plus (supprimée ailleurs) ; l'écran se recharge. `error` : erreur de champ (titre). */
 export type TaskActionState = { ok?: boolean; error?: string; message?: string; gone?: boolean };
@@ -20,7 +20,7 @@ const STORY_GONE = "Cette user story n'existe plus.";
 type Outcome = "saved" | "not-found" | "error" | "invalid";
 
 /** Seule la page de la mission affiche les tâches. */
-async function refresh(supabase: SupabaseClient, storyId: string) {
+async function refresh(supabase: Db, storyId: string) {
   try {
     const { data } = await supabase.from("user_stories").select("mission_id").eq("id", storyId).maybeSingle();
     if (data?.mission_id) revalidatePath(`/missions/${data.mission_id}`);
@@ -30,7 +30,7 @@ async function refresh(supabase: SupabaseClient, storyId: string) {
 }
 
 /** Exécute `write` sous session et traduit son issue en état d'action. */
-async function run(write: (supabase: SupabaseClient) => Promise<{ outcome: Outcome; storyId?: string; error?: string }>, gone: string, failed: string): Promise<TaskActionState> {
+async function run(write: (supabase: Db) => Promise<{ outcome: Outcome; storyId?: string; error?: string }>, gone: string, failed: string): Promise<TaskActionState> {
   const result = await withSession(async (supabase) => {
     const written = await write(supabase);
     if (written.outcome === "saved" && written.storyId) await refresh(supabase, written.storyId);

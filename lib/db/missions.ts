@@ -23,7 +23,7 @@ export async function listAllMissions(): Promise<MissionRecord[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("missions").select(COLUMNS).order("created_at", { ascending: false });
   if (error) throw new Error("Impossible de charger les missions.");
-  return data as unknown as MissionRecord[];
+  return data;
 }
 
 /** Les missions d'une de mes fiches, de la plus récente à la plus ancienne. */
@@ -31,7 +31,7 @@ export async function listMissionsForClient(clientId: string): Promise<MissionRe
   const supabase = await createClient();
   const { data, error } = await supabase.from("missions").select(COLUMNS).eq("client_id", clientId).order("created_at", { ascending: false });
   if (error) throw new Error("Impossible de charger les missions de la fiche.");
-  return data as unknown as MissionRecord[];
+  return data;
 }
 
 /** Une de mes missions, ou null si l'identifiant est inconnu ou appartient à un autre compte. */
@@ -39,7 +39,7 @@ export async function getMission(id: string): Promise<MissionRecord | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("missions").select(COLUMNS).eq("id", id).maybeSingle();
   if (error) throw new Error("Impossible de charger la mission.");
-  return data as unknown as MissionRecord | null;
+  return data;
 }
 
 /** Combien de missions a une de mes fiches (la suppression de la fiche est refusée tant qu'il y en a). */

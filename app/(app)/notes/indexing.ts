@@ -1,12 +1,12 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { EMBEDDING_MODEL, embedTexts } from "@/lib/ai/embeddings";
 import { indexNoteWith } from "@/lib/domain/index-note";
+import type { Db } from "@/lib/supabase/server";
 
 /** Indexe une note avec Mistral et la base de l'utilisateur (RLS) ; ne lève jamais. */
-export function indexNote(supabase: SupabaseClient, id: string, note: { title: string; body: string }) {
+export function indexNote(supabase: Db, id: string, note: { title: string; body: string }) {
   const check = ({ error }: { error: unknown }, what: string) => {
     if (error) throw new Error(what);
   };

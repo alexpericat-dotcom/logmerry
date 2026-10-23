@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -11,6 +10,7 @@ import { validateTaskTitle } from "@/lib/domain/tasks";
 import { acceptsStories } from "@/lib/domain/sprints";
 import { nextPosition, parseReorderIds, parseStoryStatus, validateStoryInput, type StoryErrors, type StoryValues } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
+import type { Db } from "@/lib/supabase/server";
 
 export type StoryFormValues = { title: string; role: string; benefit: string; acceptance_criteria: string; points: string; status: string };
 /** `gone` : la story ou la mission n'existe plus (supprimée ailleurs) ; l'écran se recharge pour la retirer de la liste. */
@@ -34,7 +34,7 @@ const readValues = (formData: FormData): StoryFormValues => ({
 type Outcome = "saved" | "not-found" | "error";
 
 /** Les pages qui affichent le backlog ou son avancement : la mission, la liste des missions et la fiche du client. */
-async function refresh(supabase: SupabaseClient, missionId: string) {
+async function refresh(supabase: Db, missionId: string) {
   revalidatePath(`/missions/${missionId}`);
   revalidatePath("/missions");
   try {
@@ -48,7 +48,7 @@ async function refresh(supabase: SupabaseClient, missionId: string) {
 /** Session, validation, écriture d'une user story ; `write` dit si la base a enregistré ou si la mission ou la story a disparu. */
 async function save(
   values: StoryFormValues,
-  write: (supabase: SupabaseClient, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string; failMessage?: string; notice?: string }>,
+  write: (supabase: Db, value: StoryValues) => Promise<{ outcome: Outcome; missionId?: string; gone?: string; failMessage?: string; notice?: string }>,
 ): Promise<StoryFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateStoryInput(values);
@@ -69,7 +69,7 @@ async function save(
 
 /** Insère une user story à la dernière place du backlog d'une de mes missions (la RLS refuse une mission qui n'est pas à moi) ; renvoie son identifiant. */
 async function insertStory(
-  supabase: SupabaseClient,
+  supabase: Db,
   missionId: string,
   value: StoryValues,
   source: string | null,
@@ -125,9 +125,10 @@ export async function addStoryWithTasks(missionId: string, taskTitles: string[],
     const story = await insertStory(supabase, missionId, value, source);
     if (story.outcome !== "saved" || !story.id || titles.length === 0) return story;
     // Une exception (et non seulement une erreur renvoyée) pendant les tâches suit le même chemin : la story vient d'être créée, il faut la retirer ou le dire.
+    const storyId = story.id;
     let tasksSaved = false;
     try {
-      tasksSaved = !(await supabase.from("tasks").insert(titles.map((title, position) => ({ story_id: story.id, title, position })))).error;
+      tasksSaved = !(await supabase.from("tasks").insert(titles.map((title, position) => ({ story_id: storyId, title, position })))).error;
     } catch {
       tasksSaved = false;
     }
@@ -210,7 +211,7 @@ export async function deleteStory(id: string): Promise<StoryActionState> {
 type Placed = "saved" | "story-gone" | "sprint-gone" | "closed" | "source-closed" | "error";
 
 /** Place une story à la dernière place de la liste d'arrivée (un sprint non clos de la même mission, ou le backlog si `sprintId` est nul). */
-async function place(supabase: SupabaseClient, storyId: string, sprintId: string | null, expectedMissionId?: string): Promise<Placed> {
+async function place(supabase: Db, storyId: string, sprintId: string | null, expectedMissionId?: string): Promise<Placed> {
   if (!isUuid(storyId) || (sprintId !== null && !isUuid(String(sprintId)))) return "story-gone";
   const story = await supabase.from("user_stories").select("mission_id, sprint:sprints(status)").eq("id", storyId).maybeSingle();
   if (story.error) return "error";
@@ -218,7 +219,7 @@ async function place(supabase: SupabaseClient, storyId: string, sprintId: string
   const missionId = story.data.mission_id as string;
   if (expectedMissionId !== undefined && expectedMissionId !== missionId) return "story-gone";
   // Le contenu d'un sprint clos est figé : la story n'en sort plus (l'écran le sait déjà, le serveur le garantit aussi).
-  const from = story.data.sprint as unknown as { status: string } | null;
+  const from = story.data.sprint;
   if (from?.status === "closed") return "source-closed";
   if (sprintId !== null) {
     const sprint = await supabase.from("sprints").select("status, mission_id").eq("id", sprintId).maybeSingle();

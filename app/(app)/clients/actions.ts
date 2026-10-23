@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -9,6 +8,7 @@ import { validateClientInput, type ClientErrors, type ClientValues } from "@/lib
 import { missionsRefusal } from "@/lib/domain/missions";
 import { quotesRefusal } from "@/lib/domain/quotes";
 import { isUuid } from "@/lib/domain/notes";
+import type { Db } from "@/lib/supabase/server";
 
 export type ClientFormState = {
   errors?: ClientErrors;
@@ -32,7 +32,7 @@ type WriteOutcome = "saved" | "not-found" | "error";
 /** Session, validation, écriture ; `write` dit si la base a enregistré, si la fiche n'existe plus ou si elle a échoué. */
 async function save(
   values: { name: string; status: string; origin: string },
-  write: (supabase: SupabaseClient, value: ClientValues) => Promise<WriteOutcome>,
+  write: (supabase: Db, value: ClientValues) => Promise<WriteOutcome>,
   /** Page où revenir après l'enregistrement : la liste après une création, la fiche après une modification. */
   target = "/clients",
 ): Promise<ClientFormState> {

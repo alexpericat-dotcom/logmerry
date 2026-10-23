@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -14,6 +13,7 @@ import {
 import { validateLink, type LinkErrors, type NoteLink } from "@/lib/domain/note-link";
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { createClient } from "@/lib/supabase/server";
+import type { Db } from "@/lib/supabase/server";
 
 export type NoteFormValues = {
   title: string;
@@ -42,7 +42,7 @@ type Session<T> =
   | { status: "ok"; value: T };
 
 /** Exécute `run` avec un client authentifié ; sans session, `run` n'est jamais appelé. */
-async function withSession<T>(run: (supabase: SupabaseClient) => Promise<T>): Promise<Session<T>> {
+async function withSession<T>(run: (supabase: Db) => Promise<T>): Promise<Session<T>> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.getClaims();
@@ -65,7 +65,7 @@ function readValues(formData: FormData) {
 }
 
 /** Fiche à lier : null (aucune), son identifiant (existante, ou créée à l'instant comme prospect), ou "gone" / "error". */
-async function resolveLink(supabase: SupabaseClient, link: NoteLink): Promise<string | null | "gone" | "error"> {
+async function resolveLink(supabase: Db, link: NoteLink): Promise<string | null | "gone" | "error"> {
   if (link.kind === "none") return null;
   if (link.kind === "existing") {
     const { data, error } = await supabase.from("clients").select("id").eq("id", link.id).maybeSingle();
@@ -88,7 +88,7 @@ type WriteResult = { outcome: WriteOutcome; id?: string };
 /** Session, validation, écriture. `write` dit si la base a enregistré, si la note n'existe plus ou si elle a échoué. */
 async function save(
   values: NoteFormValues,
-  write: (supabase: SupabaseClient, value: NoteValues, clientId: string | null) => Promise<WriteResult>,
+  write: (supabase: Db, value: NoteValues, clientId: string | null) => Promise<WriteResult>,
 ): Promise<NoteFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateNoteInput(values);

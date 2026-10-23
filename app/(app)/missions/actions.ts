@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -8,6 +7,7 @@ import { validateMissionInput, type MissionErrors, type MissionValues } from "@/
 import { isUuid } from "@/lib/domain/notes";
 import { MISSION_QUOTE_REFUSAL } from "@/lib/domain/quotes";
 import { withSession } from "@/lib/supabase/with-session";
+import type { Db } from "@/lib/supabase/server";
 
 export type MissionFormValues = { client_id: string; title: string; status: string; start_date: string; end_date: string };
 export type MissionFormState = { errors?: MissionErrors; message?: string; values?: MissionFormValues };
@@ -35,8 +35,8 @@ type SaveResult = { errors: MissionErrors } | Written;
  */
 async function save(
   values: MissionFormValues,
-  write: (supabase: SupabaseClient, value: MissionValues) => Promise<Written>,
-  clientOf?: (supabase: SupabaseClient) => Promise<string | null>,
+  write: (supabase: Db, value: MissionValues) => Promise<Written>,
+  clientOf?: (supabase: Db) => Promise<string | null>,
 ): Promise<MissionFormState> {
   const result = await withSession(async (supabase): Promise<SaveResult> => {
     let form = values;

@@ -1,33 +1,33 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Source } from "@/lib/domain/chat-flow";
-import { toHistory, type HistoryMessage, type MessageRow } from "@/lib/domain/history";
+import { toHistory, type HistoryMessage } from "@/lib/domain/history";
+import type { Db } from "@/lib/supabase/server";
 
 const HISTORY_MAX = 100;
 const CONTENT_MAX = 20_000; // limite de la base : au-delà, tout l'échange serait refusé
 
 /** Mes 100 derniers messages avec leurs citations (titre et texte relus en base, sous RLS), du plus ancien au plus récent. */
-export async function listHistory(supabase: SupabaseClient): Promise<HistoryMessage[]> {
+export async function listHistory(supabase: Db): Promise<HistoryMessage[]> {
   const { data, error } = await supabase
     .from("messages")
     .select("id, role, content, created_at, message_citations(id, position, note_id, chunk_id, notes(title), note_chunks(content))")
     .order("created_at", { ascending: false })
     .limit(HISTORY_MAX);
   if (error) throw new Error(`historique ${error.code ?? ""}`.trim());
-  return toHistory(data as unknown as MessageRow[]);
+  return toHistory(data);
 }
 
 /** Supprime tout MON historique (la RLS limite la suppression à mes lignes ; les citations suivent en cascade). Rend le nombre de messages supprimés. */
-export async function clearHistory(supabase: SupabaseClient): Promise<number> {
+export async function clearHistory(supabase: Db): Promise<number> {
   const { data, error } = await supabase.from("messages").delete().not("id", "is", null).select("id");
   if (error) throw new Error(`purge ${error.code ?? ""}`.trim());
   return data.length;
 }
 
 /** Enregistre un échange vérifié : ma question, la réponse et ses citations (références, jamais une copie du texte). Rend les identifiants des messages enregistrés. Lève une erreur sans contenu en cas d'échec. */
-export async function saveExchange(supabase: SupabaseClient, question: string, answer: string, sources: Source[]): Promise<string[]> {
+export async function saveExchange(supabase: Db, question: string, answer: string, sources: Source[]): Promise<string[]> {
   // Une seule insertion pour les deux messages ; horodatages explicites pour garder l'ordre question puis réponse.
   const now = Date.now();
   const inserted = await supabase
