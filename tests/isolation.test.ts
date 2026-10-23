@@ -2048,7 +2048,11 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
 
   const base = () => ({ title: `${PREFIX} échéance`, due_on: "2026-11-30", category: "urssaf", source: "https://www.urssaf.fr/exemple" });
   const cleanup = async () => {
-    for (const account of [a, b]) if (account) await account.client.from("deadlines").delete().like("title", `${PREFIX}%`);
+    for (const account of [a, b]) {
+      if (!account) continue;
+      await account.client.from("deadlines").delete().like("title", `${PREFIX}%`);
+      await account.client.from("deadlines").delete().like("title", "😀%"); // restes d'un ancien test dont le titre n'avait pas le préfixe
+    }
   };
 
   before(async () => {
@@ -2112,10 +2116,12 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     await refused({ source: null }, "23502", "source obligatoire");
     await refused({ category: "autre" }, "22P02", "catégorie hors énumération");
     // Les émojis comptent un caractère chacun pour la base (char_length) : 200 acceptés, 201 refusés.
-    const emoji200 = await a.client.from("deadlines").insert({ ...base(), title: "😀".repeat(200) }).select("title").single();
+    // Le titre garde le préfixe de test : le nettoyage supprime par ce préfixe (sans lui, chaque passage laissait une ligne dans le compte).
+    const emojiTitle = (n: number) => `${PREFIX} ${"😀".repeat(n - PREFIX.length - 1)}`;
+    const emoji200 = await a.client.from("deadlines").insert({ ...base(), title: emojiTitle(200) }).select("title").single();
     assert.ifError(emoji200.error);
     assert.equal(Array.from(emoji200.data!.title).length, 200);
-    await refused({ title: "😀".repeat(201) }, "23514", "201 émojis");
+    await refused({ title: emojiTitle(201) }, "23514", "201 caractères dont des émojis");
     const edge = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} ${"t".repeat(200 - PREFIX.length - 1)}`, source: `https://x.fr/${"a".repeat(1987)}`, note: "n".repeat(500), due_on: "2020-01-01" }).select("id").single();
     assert.ifError(edge.error);
   });

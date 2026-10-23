@@ -3,7 +3,7 @@
 import { CalendarCheck, CircleDashed, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline } from "@/app/(app)/calendrier/actions";
+import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { DeadlineForm } from "@/components/deadline-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,11 +26,17 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
     setMode("view");
     setMessage(undefined);
   }, []);
-  // Stable : le formulaire relance son effet si cette fonction change, ce qui annoncerait deux fois.
-  const saved = useCallback(() => {
-    back();
-    onChanged(`Échéance ${deadline.title} enregistrée.`, sectionId); // la ligne a pu changer de section : on annonce et on rend le focus
-  }, [back, onChanged, deadline.title, sectionId]);
+  // L'enregistrement est annoncé ICI, juste après la réponse du serveur, et non par le formulaire : si la ligne change de section (nouvelle date),
+  // la ligne et son formulaire disparaissent avant que celui-ci puisse prévenir. Le titre de section, lui, est toujours là pour recevoir le focus.
+  const update = useCallback(
+    async (prev: DeadlineFormState, formData: FormData) => {
+      const result = await updateDeadline(deadline.id, prev, formData);
+      if (result.saved) onChanged(`Échéance ${String(formData.get("title") ?? deadline.title).trim()} enregistrée.`, sectionId);
+      return result;
+    },
+    [deadline.id, deadline.title, onChanged, sectionId],
+  );
+
   // Le focus suit le panneau : sur « Annuler » (le choix sûr) à l'ouverture, sur la rangée d'actions à la fermeture.
   useEffect(() => {
     if (mode === "delete") [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1)?.focus();
@@ -55,10 +61,10 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
       <li>
         <DeadlineForm
           idPrefix={`edit-${deadline.id}`}
-          action={updateDeadline.bind(null, deadline.id)}
+          action={update}
           initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "" }}
           submitLabel="Enregistrer"
-          onDone={saved}
+          onDone={back}
           onCancel={back}
         />
       </li>

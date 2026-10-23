@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { createDeadline } from "@/app/(app)/calendrier/actions";
+import { createDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { DeadlineForm } from "@/components/deadline-form";
 import { DeadlineRow } from "@/components/deadline-row";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,19 @@ const empty = { title: "", due_on: "", category: "", source: "", note: "" };
 export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord[]; today: string }) {
   const [creating, setCreating] = useState(false);
   const [announce, setAnnounce] = useState("");
+  const newRef = useRef<HTMLButtonElement>(null);
+  const wasCreating = useRef(false);
   const done = useCallback(() => setCreating(false), []);
+  // Le formulaire se ferme (créé ou annulé) : le focus revient sur « Nouvelle échéance » (le bouton cliqué avait disparu), sans défilement.
+  useEffect(() => {
+    if (!creating && wasCreating.current) newRef.current?.focus({ preventScroll: true });
+    wasCreating.current = creating;
+  }, [creating]);
+  const create = useCallback(async (prev: DeadlineFormState, formData: FormData) => {
+    const result = await createDeadline(prev, formData);
+    if (result.saved) setAnnounce(`Échéance ${String(formData.get("title") ?? "").trim()} créée.`);
+    return result;
+  }, []);
   // Une ligne marquée faite, rouverte, déplacée ou supprimée disparaît de sa section : on annonce, puis on met le focus sur le titre de cette
   // section, SANS défilement (la page ne bouge pas, on enchaîne sur la ligne suivante). Les titres sont toujours présents, même sections vides.
   const changed = useCallback((message: string, sectionId: string) => {
@@ -50,9 +62,9 @@ export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord
         {announce}
       </p>
       {creating ? (
-        <DeadlineForm idPrefix="new" action={createDeadline} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} />
+        <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} />
       ) : (
-        <Button type="button" size="sm" className="self-start" onClick={() => setCreating(true)}>
+        <Button ref={newRef} type="button" size="sm" className="self-start" onClick={() => setCreating(true)}>
           Nouvelle échéance
         </Button>
       )}
