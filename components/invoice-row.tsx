@@ -13,7 +13,21 @@ import { daysLate, isOverdue } from "@/lib/domain/invoices";
 import { centsToInput, formatCents, totalCents } from "@/lib/domain/quotes";
 import { formatDate } from "@/lib/format";
 
-export function InvoiceRow({ invoice, missions, quotes, today }: { invoice: InvoiceRecord; missions: MissionChoice[]; quotes: QuoteChoice[]; today: string }) {
+export function InvoiceRow({
+  invoice,
+  missions,
+  quotes,
+  today,
+  lockedMissionId,
+  onDeleted,
+}: {
+  invoice: InvoiceRecord;
+  missions: MissionChoice[];
+  quotes: QuoteChoice[];
+  today: string;
+  lockedMissionId?: string;
+  onDeleted: (title: string) => void;
+}) {
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
@@ -30,7 +44,8 @@ export function InvoiceRow({ invoice, missions, quotes, today }: { invoice: Invo
     start(async () => {
       try {
         const r = await deleteInvoice(invoice.id);
-        setMessage(r.message); // sans message, la ligne disparaît avec la page rechargée
+        setMessage(r.message);
+        if (!r.message) onDeleted(title); // la ligne disparaît avec la page rechargée : c'est le panneau qui annonce et rend le focus
       } catch {
         setMessage("Opération impossible pour le moment. Rien n'a été modifié. Réessaie.");
       }
@@ -65,6 +80,7 @@ export function InvoiceRow({ invoice, missions, quotes, today }: { invoice: Invo
           }}
           missions={missions}
           quotes={quotes}
+          lockedMissionId={lockedMissionId}
           submitLabel="Enregistrer"
           onDone={back}
           onCancel={back}

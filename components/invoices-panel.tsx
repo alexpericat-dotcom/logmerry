@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { createInvoice } from "@/app/(app)/factures/actions";
 import { InvoiceForm, type MissionChoice, type QuoteChoice } from "@/components/invoice-form";
@@ -26,10 +26,22 @@ export function InvoicesPanel({
   emptyText: string;
 }) {
   const [creating, setCreating] = useState(false);
+  const [announce, setAnnounce] = useState("");
+  const newRef = useRef<HTMLButtonElement>(null);
+  // Une ligne supprimée emporte son focus : on l'annonce et on le rend au bouton « Nouvelle facture ».
+  const deleted = useCallback((title: string) => {
+    setAnnounce(`Facture ${title} supprimée.`);
+    // Sans défilement automatique : le navigateur alignerait le bouton tout en haut, sous l'en-tête fixe, où il ne reçoit plus les clics.
+    newRef.current?.focus({ preventScroll: true });
+    newRef.current?.scrollIntoView({ block: "center" });
+  }, []);
   const done = useCallback(() => setCreating(false), []);
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">{INVOICE_NOT_LEGAL}</p>
+      <p role="status" className="sr-only">
+        {announce}
+      </p>
       {creating ? (
         <InvoiceForm
           idPrefix={`new-${missionId || "all"}`}
@@ -37,12 +49,13 @@ export function InvoicesPanel({
           initial={{ mission_id: missionId, quote_id: "", amount_ht: "", tax: "", due_on: "", issued_on: "", reference: "", note: "" }}
           missions={missions}
           quotes={quotes}
+          lockedMissionId={missionId || undefined}
           submitLabel="Créer la facture"
           onDone={done}
           onCancel={done}
         />
       ) : (
-        <Button type="button" size="sm" className="self-start" disabled={missions.length === 0} onClick={() => setCreating(true)}>
+        <Button ref={newRef} type="button" size="sm" className="self-start" disabled={missions.length === 0} onClick={() => setCreating(true)}>
           Nouvelle facture
         </Button>
       )}
@@ -52,7 +65,7 @@ export function InvoicesPanel({
       ) : (
         <ul className="flex flex-col gap-2">
           {invoices.map((i) => (
-            <InvoiceRow key={i.id} invoice={i} missions={missions} quotes={quotes} today={today} />
+            <InvoiceRow key={i.id} invoice={i} missions={missions} quotes={quotes} today={today} lockedMissionId={missionId || undefined} onDeleted={deleted} />
           ))}
         </ul>
       )}

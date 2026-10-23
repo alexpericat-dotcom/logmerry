@@ -22,6 +22,7 @@ export type InvoiceErrors = Partial<Record<keyof InvoiceInput, string>>;
 
 /** La base compte en points de code (`char_length`), pas en unités UTF-16. */
 const length = (s: string) => Array.from(s).length;
+const stripNul = (s: string) => s.replaceAll("\u0000", ""); // Postgres refuse NUL (22021) : on le retire avant de valider
 
 /**
  * Valide une facture (décisions 4 et 5 de la spec 4.2). Mission, hors taxe strictement positif et échéance obligatoires ;
@@ -36,8 +37,8 @@ export function validateInvoiceInput(input: InvoiceInput, today: string): { ok: 
   const tax = input.tax.trim();
   const due = input.due_on.trim();
   const issued = input.issued_on.trim();
-  const reference = input.reference.trim();
-  const note = input.note.trim();
+  const reference = stripNul(input.reference).trim();
+  const note = stripNul(input.note).trim();
 
   if (!isUuid(mission)) errors.mission_id = "Choisis une mission de la liste.";
   if (quote && !isUuid(quote)) errors.quote_id = "Choisis un devis de la liste.";
@@ -101,5 +102,8 @@ export const linkableQuotes = <T extends { client_id: string; status: string }>(
 /** Refus de supprimer une mission qui a des factures (une facture se garde, donc la mission aussi). */
 export const invoicesRefusal = (n: number) =>
   `Cette mission a ${n} facture${n > 1 ? "s" : ""} : une facture se garde tant qu'elle existe, donc la mission aussi (supprime d'abord la facture).`;
+
+/** Un devis lié à une facture ne se supprime pas (clé étrangère sans cascade). */
+export const QUOTE_INVOICE_REFUSAL = "Ce devis est lié à une facture : supprime d'abord la facture.";
 
 export const INVOICE_NOT_LEGAL = "Ce suivi n'est pas une facture légale : émets tes factures dans ton outil de facturation.";

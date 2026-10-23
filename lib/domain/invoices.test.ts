@@ -58,6 +58,15 @@ test("référence (60) et remarque (500) : comptées en points de code, nettoyé
   assert.deepEqual(r.ok && [r.value.reference, r.value.note], ["F-2026-01", null]);
 });
 
+test("référence et remarque : un caractère NUL est retiré (la base le refuse) ; montant : espaces insécables acceptés, séparateurs doublés refusés", () => {
+  const r = validateInvoiceInput({ ...ok, reference: "F\u00001", note: "\u0000" }, TODAY);
+  assert.deepEqual(r.ok && [r.value.reference, r.value.note], ["F1", null], "NUL retiré, remarque devenue vide = absente");
+  const nbsp = validateInvoiceInput({ ...ok, amount_ht: "1\u00a0250,50", tax: "1\u202f250" }, TODAY);
+  assert.deepEqual(nbsp.ok && [nbsp.value.amount_ht_cents, nbsp.value.tax_cents], [125050, 125000]);
+  for (const bad of ["1,2,3", "1.250,50", "1,234", "9999999999999"]) assert.deepEqual(keys(validateInvoiceInput({ ...ok, amount_ht: bad }, TODAY)), ["amount_ht"], bad);
+  assert.deepEqual(keys(validateInvoiceInput({ ...ok, due_on: "1899-12-31" }, TODAY)), ["due_on"], "année avant 1900 refusée");
+});
+
 test("échue : strictement avant aujourd'hui ; jours de retard", () => {
   assert.equal(isOverdue("2026-10-22", TODAY), true);
   assert.equal(isOverdue(TODAY, TODAY), false, "le jour même, pas encore échue");
@@ -79,6 +88,11 @@ test("liste : tri par échéance croissante et départage stable ; filtre Échue
   assert.deepEqual(viewInvoices(rows, "toutes", TODAY).map((r) => r.id), ["a", "b", "d", "c"]);
   assert.deepEqual(viewInvoices(rows, "echues", TODAY).map((r) => r.id), ["a", "b"], "d est due aujourd'hui : pas échue");
   assert.deepEqual(viewInvoices(rows, "non-payees", TODAY).length, 4, "sans encaissement, tout est non payé");
+  const ties = [
+    { id: "z", due_on: TODAY, created_at: "2026-10-03" },
+    { id: "y", due_on: TODAY, created_at: "2026-10-03" },
+  ];
+  assert.deepEqual(viewInvoices(ties, "toutes", TODAY).map((r) => r.id), ["y", "z"], "à échéance et création égales : départage par identifiant");
   assert.equal(rows[0].id, "c", "l'entrée n'est pas modifiée");
   assert.equal(parseInvoiceFilter("echues"), "echues");
   for (const bad of ["x", undefined, ["echues"], ""]) assert.equal(parseInvoiceFilter(bad as string), "toutes");

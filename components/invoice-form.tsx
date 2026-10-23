@@ -24,6 +24,7 @@ export function InvoiceForm({
   initial,
   missions,
   quotes,
+  lockedMissionId,
   submitLabel,
   onDone,
   onCancel,
@@ -33,6 +34,8 @@ export function InvoiceForm({
   initial: InvoiceInput;
   missions: MissionChoice[];
   quotes: QuoteChoice[];
+  /** Sur la fiche d'une mission : la facture reste sur cette mission (sinon elle disparaîtrait de la page). */
+  lockedMissionId?: string;
   submitLabel: string;
   onDone: () => void;
   onCancel: () => void;
@@ -78,8 +81,11 @@ export function InvoiceForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("mission_id")}>Mission (obligatoire)</Label>
+          {lockedMissionId && <input type="hidden" name="mission_id" value={lockedMissionId} />}
           <select
             {...field("mission_id")}
+            name={lockedMissionId ? undefined : "mission_id"} // un menu désactivé n'est pas envoyé : le champ caché porte la valeur
+            disabled={!!lockedMissionId}
             value={missionId}
             aria-required="true"
             onChange={(ev) => {

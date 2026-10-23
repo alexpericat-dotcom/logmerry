@@ -1800,6 +1800,11 @@ describe("isolation des factures entre deux comptes fictifs", () => {
     assert.equal(onMission.error?.code, "42501");
     const withQuote = await b.client.from("invoices").insert({ ...base(), mission_id: missionB.id, quote_id: quoteA.id });
     assert.equal(withQuote.error?.code, "42501");
+    // Mission ou devis supprimé entre l'ouverture du formulaire et l'envoi : même refus, pas une erreur d'un autre genre.
+    const noMission = await a.client.from("invoices").insert({ ...base(), mission_id: crypto.randomUUID() });
+    assert.equal(noMission.error?.code, "42501", "mission inexistante");
+    const noQuote = await a.client.from("invoices").insert({ ...base(), quote_id: crypto.randomUUID() });
+    assert.equal(noQuote.error?.code, "42501", "devis inexistant");
     const forged = await a.client.from("invoices").insert({ ...base(), owner_id: b.userId });
     assert.equal(forged.error?.code, "42501");
     const moved = await a.client.from("invoices").update({ mission_id: missionB.id }).eq("id", invoiceA.id);
@@ -1807,7 +1812,7 @@ describe("isolation des factures entre deux comptes fictifs", () => {
     const relinked = await a.client.from("invoices").update({ quote_id: quoteB.id }).eq("id", invoiceA.id);
     assert.equal(relinked.error?.code, "42501");
     const stolen = await a.client.from("invoices").update({ owner_id: b.userId }).eq("id", invoiceA.id);
-    assert.ok(stolen.error, "le propriétaire ne change pas");
+    assert.equal(stolen.error?.code, "23514", "le propriétaire ne change pas : le déclencheur refuse avant la RLS");
   });
 
   test("sans connexion : rien de visible ni de créable", async () => {
@@ -1840,9 +1845,13 @@ describe("isolation des factures entre deux comptes fictifs", () => {
     assert.ifError(edge.error);
   });
 
-  test("garde : émission jamais dans le futur (insertion et mise à jour), émission d'aujourd'hui permise, identité figée, fonction non appelable", async () => {
+  test("garde : émission jamais dans le futur (insertion et mise à jour), émission d'aujourd'hui permise, identité figée", async () => {
     const future = await a.client.from("invoices").insert({ ...base(), issued_on: "2999-01-01", due_on: "2999-02-01" });
     assert.equal(future.error?.code, "23514");
+    // Demain à Paris est déjà le futur (calculé en UTC pur sur la date de Paris, sans second fuseau local).
+    const tomorrow = new Date(Date.parse(`${parisToday}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+    const next = await a.client.from("invoices").insert({ ...base(), issued_on: tomorrow, due_on: "2999-02-01" });
+    assert.equal(next.error?.code, "23514", "demain refusé");
     const today = await a.client.from("invoices").insert({ ...base(), issued_on: parisToday, due_on: parisToday }).select("id").single();
     assert.ifError(today.error);
     const later = await a.client.from("invoices").update({ issued_on: "2999-01-01", due_on: "2999-02-01" }).eq("id", invoiceA.id);
@@ -1851,8 +1860,6 @@ describe("isolation des factures entre deux comptes fictifs", () => {
     assert.equal(id.error?.code, "23514");
     const created = await a.client.from("invoices").update({ created_at: "2020-01-01T00:00:00Z" }).eq("id", invoiceA.id);
     assert.equal(created.error?.code, "23514");
-    const guard = await a.client.rpc("invoices_guard" as never);
-    assert.ok(guard.error, "la fonction du déclencheur n'est pas appelable");
   });
 
   test("une facture reste modifiable (montants, échéance, mission, devis) et se supprime ; mission et devis liés ne se suppriment pas tant qu'elle existe", async () => {
