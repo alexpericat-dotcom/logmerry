@@ -432,6 +432,13 @@ En tant que propriétaire, je veux enregistrer un encaissement sur une facture (
 **Et** les montants s'affichent en euros avec deux décimales (stockés en centimes).
 **Et** le test d'isolation couvre `payments` (un autre compte ne les voit ni ne les modifie, ni ne les rattache à ma facture).
 
+**Décisions de l'auteur du 23 octobre 2026 (spec 4.3) :**
+1. **Plusieurs encaissements par facture** (acomptes). Le statut se déduit du total encaissé.
+2. Validation : date jamais dans le futur (jour de Paris), possible avant l'émission ou l'échéance de la facture ; hors taxe strictement positif ; taxe zéro ou plus, ou vide (inconnue, jamais 0) ; montants plafonnés à 1 000 000 € ; pas de remboursement négatif ; remarque facultative de 500 caractères ; saisie comme les factures (virgule, dates natives).
+3. Un encaissement est **toujours modifiable et supprimable** (confirmation avant suppression) ; le statut de la facture se recalcule. Pas de gel par mois.
+4. **Pas de page Encaissements** : tout se passe dans la ligne de chaque facture (page Factures et fiche de mission) : bouton « Ajouter un encaissement », liste (date, hors taxe, taxe ou « taxe inconnue », remarque, Modifier, Supprimer), résumé « Encaissé X sur Y · reste Z », statut en texte et icône (Non payée, Partiellement payée, Payée), « trop-perçu de N € » en ligne sans bloquer, **avec un avertissement dans le formulaire avant l'enregistrement** (décision d'Alex du 23 octobre, après la relecture) : « cet encaissement fait dépasser la facture de N € », calculé pendant la saisie avec les autres encaissements, sans jamais bloquer. « Non payées » comprend les partiellement payées et exclut les payées ; « Échues » exclut les payées.
+5. **Taxe de la facture connue, taxe d'un encaissement vide** : la taxe vide compte pour zéro dans le total (« Partiellement payée » tant qu'elle manque), avec la mention « taxe de l'encaissement à confirmer » ; le statut passe à « Payée » dès qu'elle est saisie. Rien n'est réparti ni inventé. **Taxe de la facture inconnue** : le statut se calcule sur le hors taxe, avec « taxe à confirmer ».
+
 ### Story 4.4 : Suivre mes plafonds
 
 *Ancienne story « Voir ma position par rapport au plafond », élargie le 18 octobre 2026 (plusieurs plafonds, alertes visibles : PRD FR-11, architecture AD-12).*

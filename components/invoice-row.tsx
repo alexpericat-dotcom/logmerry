@@ -1,17 +1,25 @@
 "use client";
 
-import { AlertTriangle, CircleDashed } from "lucide-react";
+import { AlertTriangle, CircleCheck, CircleDashed, CircleDot } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteInvoice, updateInvoice } from "@/app/(app)/factures/actions";
 import { InvoiceForm, type MissionChoice, type QuoteChoice } from "@/components/invoice-form";
+import { InvoicePayments } from "@/components/invoice-payments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { InvoiceRecord } from "@/lib/db/invoices";
 import { daysLate, isOverdue } from "@/lib/domain/invoices";
+import { INVOICE_STATUS_LABELS, invoiceBalance, type InvoiceStatus } from "@/lib/domain/payments";
 import { centsToInput, formatCents, totalCents } from "@/lib/domain/quotes";
 import { formatDate } from "@/lib/format";
+
+const STATUS_BADGE = {
+  unpaid: { icon: CircleDashed, variant: "outline" },
+  partial: { icon: CircleDot, variant: "secondary" },
+  paid: { icon: CircleCheck, variant: "success" },
+} as const satisfies Record<InvoiceStatus, { icon: unknown; variant: "outline" | "secondary" | "success" }>;
 
 export function InvoiceRow({
   invoice,
@@ -32,7 +40,9 @@ export function InvoiceRow({
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
   const total = totalCents(invoice);
-  const late = isOverdue(invoice.due_on, today);
+  const balance = invoiceBalance(invoice, invoice.payments);
+  const late = isOverdue(invoice.due_on, today, balance.status);
+  const StatusIcon = STATUS_BADGE[balance.status].icon;
   const days = daysLate(invoice.due_on, today);
   const title = invoice.reference ?? invoice.mission?.title ?? "Facture";
 
@@ -93,9 +103,9 @@ export function InvoiceRow({
     <li className="flex flex-col gap-2 rounded-md border bg-card p-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-semibold">{title}</span>
-        <Badge variant="outline">
-          <CircleDashed size={11} aria-hidden="true" />
-          Non payée
+        <Badge variant={STATUS_BADGE[balance.status].variant}>
+          <StatusIcon size={11} aria-hidden="true" />
+          {INVOICE_STATUS_LABELS[balance.status]}
         </Badge>
         {late && (
           <Badge variant="warning">
@@ -137,6 +147,7 @@ export function InvoiceRow({
         </p>
       )}
       {invoice.note && <p className="whitespace-pre-line text-sm text-muted-foreground">{invoice.note}</p>}
+      <InvoicePayments invoiceId={invoice.id} invoice={invoice} payments={invoice.payments} balance={balance} />
 
       {mode === "view" && (
         <div ref={actionsRef} className="flex flex-wrap gap-2">

@@ -354,6 +354,50 @@ export type Database = {
           },
         ];
       };
+      payments: {
+        Row: {
+          amount_ht_cents: number
+          created_at: string
+          id: string
+          invoice_id: string
+          note: string | null
+          owner_id: string
+          received_on: string
+          tax_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_ht_cents: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          note?: string | null
+          owner_id?: string
+          received_on: string
+          tax_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_ht_cents?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          note?: string | null
+          owner_id?: string
+          received_on?: string
+          tax_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_profile: {
         Row: {
           acre: Database["public"]["Enums"]["pp_acre"] | null;

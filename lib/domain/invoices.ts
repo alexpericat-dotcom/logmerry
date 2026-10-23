@@ -1,5 +1,6 @@
 import { isDay } from "./missions.ts";
 import { isUuid } from "./notes.ts";
+import type { InvoiceStatus } from "./payments.ts";
 import { parseAmountToCents } from "./quotes.ts";
 
 /** 1 000 000 € : garde-fou de saisie, pas une règle métier (la base le fait respecter aussi). */
@@ -69,11 +70,8 @@ export function validateInvoiceInput(input: InvoiceInput, today: string): { ok: 
 
 const dayNumber = (day: string) => Date.parse(`${day}T00:00:00Z`) / 86_400_000;
 
-/**
- * Échue : l'échéance est strictement avant aujourd'hui (le jour même, elle ne l'est pas encore).
- * Story 4.3 : « pas totalement payée » s'ajoutera ici quand les encaissements existeront ; jusque-là toute facture est non payée.
- */
-export const isOverdue = (due_on: string, today: string) => due_on < today;
+/** Échue : pas totalement payée et échéance strictement avant aujourd'hui (le jour même, elle ne l'est pas encore). */
+export const isOverdue = (due_on: string, today: string, status: InvoiceStatus) => status !== "paid" && due_on < today;
 
 /** Jours de retard (0 si pas échue). */
 export const daysLate = (due_on: string, today: string) => Math.max(0, Math.round(dayNumber(today) - dayNumber(due_on)));
@@ -84,14 +82,14 @@ export const INVOICE_FILTER_LABELS: Record<InvoiceFilter, string> = { toutes: "T
 
 export const parseInvoiceFilter = (value: string | string[] | undefined): InvoiceFilter => INVOICE_FILTERS.find((f) => f === value) ?? "toutes";
 
-type Row = { id: string; due_on: string; created_at: string };
+type Row = { id: string; due_on: string; created_at: string; status: InvoiceStatus };
 
 /**
  * Filtre puis trie par échéance croissante (les plus anciennes échues en tête), départage stable par création puis identifiant.
- * Story 4.3 : « non payées » comprendra les partiellement payées, et exclura les payées.
+ * « Non payées » comprend les partiellement payées et exclut les payées ; « Échues » exclut aussi les payées.
  */
 export function viewInvoices<T extends Row>(all: T[], filter: InvoiceFilter, today: string): T[] {
-  const kept = filter === "echues" ? all.filter((i) => isOverdue(i.due_on, today)) : all;
+  const kept = filter === "echues" ? all.filter((i) => isOverdue(i.due_on, today, i.status)) : filter === "non-payees" ? all.filter((i) => i.status !== "paid") : all;
   return [...kept].sort((a, b) => a.due_on.localeCompare(b.due_on) || a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
 }
 
