@@ -15,6 +15,7 @@ import { after, before, describe, test } from "node:test";
 import { createClient } from "@supabase/supabase-js";
 
 import { setDeadlineDone } from "../lib/db/deadline-state.ts";
+import { listInvoiceTaskChecks, setInvoiceTaskChecked } from "../lib/db/task-checks.ts";
 import { toHistory, type MessageRow } from "../lib/domain/history.ts";
 
 function env(name: string): string {
@@ -2298,5 +2299,62 @@ describe("isolation des occurrences d'une série d'échéances entre deux compte
     const anon = newClient();
     const r = await anon.rpc("delete_deadline_series", { p_series_id: seriesId });
     assert.ok(r.error, "refusée");
+  });
+});
+
+describe("isolation des coches de tâches (task_checks) entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  const DAY = "2026-10-23";
+  const SOURCE = "00000000-0000-4000-8000-000000000052";
+
+  const cleanup = async () => {
+    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().eq("source_id", SOURCE);
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+  });
+
+  after(cleanup);
+
+  test("A coche (idempotent), propriétaire posé par la base ; B ne voit rien de A", async () => {
+    assert.equal(await setInvoiceTaskChecked(a.client, SOURCE, DAY, true), "saved");
+    assert.equal(await setInvoiceTaskChecked(a.client, SOURCE, DAY, true), "saved");
+    const own = await a.client.from("task_checks").select("owner_id, rule_no").eq("source_id", SOURCE);
+    assert.deepEqual(own.data, [{ owner_id: a.userId, rule_no: 2 }], "une seule ligne malgré deux coches");
+    const seen = await b.client.from("task_checks").select("id").eq("source_id", SOURCE);
+    assert.deepEqual(seen.data, []);
+  });
+
+  test("B ne décoche pas la coche de A ; A ne forge pas le propriétaire ; sans connexion : rien", async () => {
+    await setInvoiceTaskChecked(b.client, SOURCE, DAY, false);
+    const still = await a.client.from("task_checks").select("id").eq("source_id", SOURCE);
+    assert.equal(still.data?.length, 1);
+    const forged = await a.client.from("task_checks").insert({ rule_no: 2, source_id: SOURCE, period_start: "2026-10-24", owner_id: b.userId });
+    assert.equal(forged.error?.code, "42501");
+    const anon = newClient();
+    assert.deepEqual((await anon.from("task_checks").select("id")).data, []);
+    assert.equal((await anon.from("task_checks").insert({ rule_no: 2, source_id: SOURCE, period_start: DAY })).error?.code, "42501");
+  });
+
+  test("la lecture du jour ne voit ni la veille ni une autre règle", async () => {
+    await a.client.from("task_checks").delete().eq("source_id", SOURCE); // repart de zéro : les tests précédents ont laissé la coche du jour
+    await setInvoiceTaskChecked(a.client, SOURCE, "2026-10-22", true);
+    assert.equal((await listInvoiceTaskChecks(a.client, DAY)).has(SOURCE), false, "coche de la veille : la tâche revient");
+    assert.equal((await listInvoiceTaskChecks(a.client, "2026-10-22")).has(SOURCE), true);
+    await a.client.from("task_checks").delete().eq("source_id", SOURCE);
+    assert.ifError((await a.client.from("task_checks").insert({ rule_no: 3, source_id: SOURCE, period_start: DAY })).error);
+    assert.equal((await listInvoiceTaskChecks(a.client, DAY)).has(SOURCE), false, "coche d'une autre règle ignorée");
+    await a.client.from("task_checks").delete().eq("source_id", SOURCE);
+  });
+
+  test("A décoche ; une règle hors 1 à 7 est refusée par la base", async () => {
+    assert.equal(await setInvoiceTaskChecked(a.client, SOURCE, DAY, false), "saved");
+    assert.deepEqual((await a.client.from("task_checks").select("id").eq("source_id", SOURCE)).data, []);
+    const bad = await a.client.from("task_checks").insert({ rule_no: 8, source_id: SOURCE, period_start: DAY });
+    assert.equal(bad.error?.code, "23514");
   });
 });

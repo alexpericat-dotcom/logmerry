@@ -723,6 +723,33 @@ export type Database = {
           },
         ];
       };
+      task_checks: {
+        Row: {
+          checked_at: string;
+          id: string;
+          owner_id: string;
+          period_start: string;
+          rule_no: number;
+          source_id: string;
+        };
+        Insert: {
+          checked_at?: string;
+          id?: string;
+          owner_id?: string;
+          period_start: string;
+          rule_no: number;
+          source_id: string;
+        };
+        Update: {
+          checked_at?: string;
+          id?: string;
+          owner_id?: string;
+          period_start?: string;
+          rule_no?: number;
+          source_id?: string;
+        };
+        Relationships: [];
+      };
       tasks: {
         Row: {
           created_at: string;
