@@ -7,9 +7,12 @@ import { CalendarLineRow } from "@/components/calendar-line-row";
 import { DeadlineForm } from "@/components/deadline-form";
 import { DeadlineRow } from "@/components/deadline-row";
 import { FilterChips } from "@/components/filter-chips";
+import { PageBanner } from "@/components/page-banner";
 import { Button } from "@/components/ui/button";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
 import { DEADLINE_VIEWS, DEADLINE_VIEW_LABELS, groupDeadlines, inView, type CalendarLine, type DeadlineView } from "@/lib/domain/deadlines";
+
+export const CALENDAR_DESCRIPTION = "Tes obligations administratives, chacune avec sa date et son lien officiel. Ce n'est pas un agenda : pas de rendez-vous, seulement ce que tu dois faire avant une date.";
 
 const empty = { title: "", due_on: "", category: "", source: "", note: "", priority: "normal", recurrence: "" };
 
@@ -69,37 +72,44 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
   const chips = DEADLINE_VIEWS.map((v) => ({ label: DEADLINE_VIEW_LABELS[v], href: v === "toutes" ? "/calendrier" : `/calendrier?vue=${v}`, active: v === view }));
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
-      <p className="text-sm font-semibold">
-        {overdueCount === 0 ? "Rien en retard." : `${overdueCount} élément${overdueCount > 1 ? "s" : ""} en retard (échéances et factures).`}
-      </p>
-      <p role="status" className="sr-only">
-        {announce}
-      </p>
-      <FilterChips label="Choisir une vue du calendrier" items={chips} />
-      {creating ? (
-        <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />
-      ) : (
-        <Button ref={newRef} type="button" size="sm" className="self-start" onClick={() => setCreating(true)}>
-          Nouvelle échéance
-        </Button>
-      )}
-      {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
-      {view !== "retard" && section("deadlines-upcoming", "À venir", upcoming, datedLines.filter((l) => (l.due_on as string) >= today), deadlines.length === 0 && lines.length === 0 ? "Aucune échéance pour l'instant." : "Rien à venir.")}
-      {view === "toutes" && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
-      {view === "toutes" && undatedLines.length > 0 && (
-        <section aria-labelledby="deadlines-confirm" className="flex flex-col gap-2">
-          <h2 id="deadlines-confirm" className="text-lg font-semibold">
-            À confirmer <span className="text-sm font-normal text-muted-foreground">({undatedLines.length})</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">Obligations attendues d&apos;après ton profil, sans date : rien n&apos;est estimé. Saisis l&apos;échéance avec sa source officielle.</p>
-          <ul className="flex flex-col gap-2">
-            {undatedLines.map((l) => (
-              <CalendarLineRow key={l.key} line={l} />
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
+    <>
+      <PageBanner
+        title="Calendrier"
+        className="self-stretch"
+        description={CALENDAR_DESCRIPTION}
+        actions={
+          <Button ref={newRef} type="button" size="lg" className="shrink-0" onClick={() => setCreating(true)}>
+            Nouvelle échéance
+          </Button>
+        }
+      >
+        <FilterChips label="Choisir une vue du calendrier" items={chips} />
+      </PageBanner>
+      <div className="flex max-w-3xl flex-col gap-6">
+        <p className="text-sm font-semibold">
+          {overdueCount === 0 ? "Rien en retard." : `${overdueCount} élément${overdueCount > 1 ? "s" : ""} en retard (échéances et factures).`}
+        </p>
+        <p role="status" className="sr-only">
+          {announce}
+        </p>
+        {creating && <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />}
+        {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
+        {view !== "retard" && section("deadlines-upcoming", "À venir", upcoming, datedLines.filter((l) => (l.due_on as string) >= today), deadlines.length === 0 && lines.length === 0 ? "Aucune échéance pour l'instant." : "Rien à venir.")}
+        {view === "toutes" && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
+        {view === "toutes" && undatedLines.length > 0 && (
+          <section aria-labelledby="deadlines-confirm" className="flex flex-col gap-2">
+            <h2 id="deadlines-confirm" className="text-lg font-semibold">
+              À confirmer <span className="text-sm font-normal text-muted-foreground">({undatedLines.length})</span>
+            </h2>
+            <p className="text-sm text-muted-foreground">Obligations attendues d&apos;après ton profil, sans date : rien n&apos;est estimé. Saisis l&apos;échéance avec sa source officielle.</p>
+            <ul className="flex flex-col gap-2">
+              {undatedLines.map((l) => (
+                <CalendarLineRow key={l.key} line={l} />
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    </>
   );
 }

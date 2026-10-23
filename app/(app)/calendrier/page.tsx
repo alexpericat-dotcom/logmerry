@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { DeadlinesPanel } from "@/components/deadlines-panel";
+import { CALENDAR_DESCRIPTION, DeadlinesPanel } from "@/components/deadlines-panel";
 import { PageBanner } from "@/components/page-banner";
 import { completeDeadlineSeries, listDeadlines } from "@/lib/db/deadlines";
 import { listInvoices } from "@/lib/db/invoices";
@@ -32,8 +32,7 @@ async function Deadlines({ searchParams }: { searchParams: SearchParams }) {
 export default function CalendrierPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner title="Calendrier" description="Tes obligations administratives, chacune avec sa date et son lien officiel. Ce n'est pas un agenda : pas de rendez-vous, seulement ce que tu dois faire avant une date." />
-      <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
+      <Suspense fallback={<PageBanner title="Calendrier" className="self-stretch" description={CALENDAR_DESCRIPTION} />}>
         <Deadlines searchParams={searchParams} />
       </Suspense>
     </div>
