@@ -4,6 +4,7 @@ export type NavIcon =
   | "clients"
   | "missions"
   | "factures"
+  | "plafonds"
   | "echeances"
   | "profil"
   | "regles"
@@ -31,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: false },
   { label: "Factures", href: "/factures", icon: "factures", available: true, group: "Finances" },
+  { label: "Plafonds", href: "/plafonds", icon: "plafonds", available: true, group: "Finances" },
   { label: "Profil", href: "/profil", icon: "profil", available: true, group: "Finances" },
   { label: "Règles", href: "/regles", icon: "regles", available: true, group: "Finances" },
 ];

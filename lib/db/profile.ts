@@ -17,3 +17,11 @@ export async function getOrCreateProfile(): Promise<ProfileRow> {
   if (second.error || !second.data) throw new Error("Impossible de charger le profil.");
   return second.data;
 }
+
+/** Ma ligne de profil, ou null si elle n'existe pas encore : lecture seule (la page Plafonds n'écrit rien). */
+export async function getProfile(): Promise<ProfileRow | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("professional_profile").select("*").maybeSingle<ProfileRow>();
+  if (error) throw new Error("Impossible de charger le profil.");
+  return data;
+}

@@ -10,7 +10,8 @@
     "test:leak": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs --test-concurrency=1 --test tests/leak-search.test.ts tests/leak-assistant.test.ts tests/purge.test.ts",
     "test:rag": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/rag-run.ts",
     "test:leak:assistant": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs --test tests/leak-assistant.test.ts",
-    "test:proposals": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/proposals-run.ts"
+    "test:proposals": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/proposals-run.ts",
+    "seed:demo": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
