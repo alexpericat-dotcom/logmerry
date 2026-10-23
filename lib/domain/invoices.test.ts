@@ -67,10 +67,12 @@ test("référence et remarque : un caractère NUL est retiré (la base le refuse
   assert.deepEqual(keys(validateInvoiceInput({ ...ok, due_on: "1899-12-31" }, TODAY)), ["due_on"], "année avant 1900 refusée");
 });
 
-test("échue : strictement avant aujourd'hui ; jours de retard", () => {
-  assert.equal(isOverdue("2026-10-22", TODAY), true);
-  assert.equal(isOverdue(TODAY, TODAY), false, "le jour même, pas encore échue");
-  assert.equal(isOverdue("2026-10-24", TODAY), false);
+test("échue : strictement avant aujourd'hui et pas totalement payée ; jours de retard", () => {
+  assert.equal(isOverdue("2026-10-22", TODAY, "unpaid"), true);
+  assert.equal(isOverdue("2026-10-22", TODAY, "partial"), true, "partiellement payée et en retard : échue");
+  assert.equal(isOverdue("2026-10-22", TODAY, "paid"), false, "payée : jamais échue");
+  assert.equal(isOverdue(TODAY, TODAY, "unpaid"), false, "le jour même, pas encore échue");
+  assert.equal(isOverdue("2026-10-24", TODAY, "unpaid"), false);
   assert.equal(daysLate("2026-10-22", TODAY), 1);
   assert.equal(daysLate("2026-09-30", TODAY), 23);
   assert.equal(daysLate(TODAY, TODAY), 0);
@@ -80,17 +82,18 @@ test("échue : strictement avant aujourd'hui ; jours de retard", () => {
 
 test("liste : tri par échéance croissante et départage stable ; filtre Échues ; filtre inconnu = Toutes", () => {
   const rows = [
-    { id: "c", due_on: "2026-11-01", created_at: "2026-10-01" },
-    { id: "b", due_on: "2026-10-01", created_at: "2026-10-02" },
-    { id: "a", due_on: "2026-10-01", created_at: "2026-10-01" },
-    { id: "d", due_on: TODAY, created_at: "2026-10-03" },
+    { id: "c", due_on: "2026-11-01", created_at: "2026-10-01", status: "unpaid" as const },
+    { id: "b", due_on: "2026-10-01", created_at: "2026-10-02", status: "partial" as const },
+    { id: "a", due_on: "2026-10-01", created_at: "2026-10-01", status: "unpaid" as const },
+    { id: "d", due_on: TODAY, created_at: "2026-10-03", status: "unpaid" as const },
+    { id: "e", due_on: "2026-09-01", created_at: "2026-10-04", status: "paid" as const },
   ];
-  assert.deepEqual(viewInvoices(rows, "toutes", TODAY).map((r) => r.id), ["a", "b", "d", "c"]);
-  assert.deepEqual(viewInvoices(rows, "echues", TODAY).map((r) => r.id), ["a", "b"], "d est due aujourd'hui : pas échue");
-  assert.deepEqual(viewInvoices(rows, "non-payees", TODAY).length, 4, "sans encaissement, tout est non payé");
+  assert.deepEqual(viewInvoices(rows, "toutes", TODAY).map((r) => r.id), ["e", "a", "b", "d", "c"]);
+  assert.deepEqual(viewInvoices(rows, "echues", TODAY).map((r) => r.id), ["a", "b"], "d est due aujourd'hui : pas échue ; e est payée : jamais échue");
+  assert.deepEqual(viewInvoices(rows, "non-payees", TODAY).map((r) => r.id), ["a", "b", "d", "c"], "les partiellement payées restent, les payées sortent");
   const ties = [
-    { id: "z", due_on: TODAY, created_at: "2026-10-03" },
-    { id: "y", due_on: TODAY, created_at: "2026-10-03" },
+    { id: "z", due_on: TODAY, created_at: "2026-10-03", status: "unpaid" as const },
+    { id: "y", due_on: TODAY, created_at: "2026-10-03", status: "unpaid" as const },
   ];
   assert.deepEqual(viewInvoices(ties, "toutes", TODAY).map((r) => r.id), ["y", "z"], "à échéance et création égales : départage par identifiant");
   assert.equal(rows[0].id, "c", "l'entrée n'est pas modifiée");

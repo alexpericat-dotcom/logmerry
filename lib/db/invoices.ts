@@ -2,6 +2,8 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
+export type PaymentRecord = { id: string; amount_ht_cents: number; tax_cents: number | null; received_on: string; note: string | null; created_at: string };
+
 export type InvoiceRecord = {
   id: string;
   mission_id: string;
@@ -13,11 +15,13 @@ export type InvoiceRecord = {
   reference: string | null;
   note: string | null;
   created_at: string;
+  /** Encaissements de la facture (le statut s'en déduit : `invoiceBalance`). */
+  payments: PaymentRecord[];
   /** Mission liée (titre) et son client (nom), pour la liste. */
   mission: { title: string; client_id: string; client: { name: string } | null } | null;
 };
 
-const COLUMNS = "id, mission_id, quote_id, amount_ht_cents, tax_cents, due_on, issued_on, reference, note, created_at, mission:missions(title, client_id, client:clients(name))";
+const COLUMNS = "id, mission_id, quote_id, amount_ht_cents, tax_cents, due_on, issued_on, reference, note, created_at, payments(id, amount_ht_cents, tax_cents, received_on, note, created_at), mission:missions(title, client_id, client:clients(name))";
 
 /** Toutes mes factures (la RLS limite aux miennes) ; le filtre et le tri sont dans `viewInvoices`. */
 export async function listInvoices(): Promise<InvoiceRecord[]> {

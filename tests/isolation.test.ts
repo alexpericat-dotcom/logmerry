@@ -1876,3 +1876,150 @@ describe("isolation des factures entre deux comptes fictifs", () => {
     assert.equal(quoteAfter.data?.length, 1, "le devis (brouillon) se supprime une fois la facture partie");
   });
 });
+
+describe("isolation des encaissements entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let invoiceA: { id: string };
+  let invoiceB: { id: string };
+  let paymentA: { id: string };
+
+  const parisToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const base = () => ({ invoice_id: invoiceA.id, amount_ht_cents: 10000, received_on: parisToday });
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      // Les encaissements d'abord (pas de cascade vers la facture), puis les factures, les devis, les missions, les fiches.
+      const ms = await account.client.from("missions").select("id").like("title", `${PREFIX}%`);
+      const mids = (ms.data ?? []).map((m) => m.id);
+      if (mids.length) {
+        const inv = await account.client.from("invoices").select("id").in("mission_id", mids);
+        const iids = (inv.data ?? []).map((i) => i.id);
+        if (iids.length) {
+          await account.client.from("payments").delete().in("invoice_id", iids);
+          await account.client.from("invoices").delete().in("id", iids);
+        }
+      }
+      const cl = await account.client.from("clients").select("id").like("name", `${PREFIX}%`);
+      const cids = (cl.data ?? []).map((c) => c.id);
+      if (cids.length) await account.client.from("quotes").delete().in("client_id", cids);
+      await account.client.from("missions").delete().like("title", `${PREFIX}%`);
+      await account.client.from("clients").delete().like("name", `${PREFIX}%`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const mk = async (account: Account, who: string) => {
+      const f = await account.client.from("clients").insert({ name: `${PREFIX} fiche encaissement ${who}`, origin: "demo" }).select("id").single();
+      assert.ifError(f.error);
+      const m = await account.client.from("missions").insert({ client_id: f.data!.id, title: `${PREFIX} mission encaissement ${who}` }).select("id").single();
+      assert.ifError(m.error);
+      const i = await account.client.from("invoices").insert({ mission_id: m.data!.id, amount_ht_cents: 100000, tax_cents: 20000, due_on: "2026-11-30" }).select("id").single();
+      assert.ifError(i.error);
+      return i.data!;
+    };
+    invoiceA = await mk(a, "A");
+    invoiceB = await mk(b, "B");
+    const p = await a.client.from("payments").insert(base()).select("id").single();
+    assert.ifError(p.error);
+    paymentA = p.data!;
+  });
+
+  after(cleanup);
+
+  test("propriétaire posé par la base, taxe inconnue = null (jamais 0) ; B ne voit rien de A", async () => {
+    const own = await a.client.from("payments").select("owner_id, tax_cents, note").eq("id", paymentA.id).single();
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.tax_cents, null);
+    assert.equal(own.data!.note, null);
+    const seen = await b.client.from("payments").select("id").eq("id", paymentA.id);
+    assert.deepEqual(seen.data, []);
+    const zero = await a.client.from("payments").insert({ ...base(), tax_cents: 0 }).select("tax_cents").single();
+    assert.equal(zero.data!.tax_cents, 0, "0 saisi reste 0");
+  });
+
+  test("B ne modifie ni ne supprime l'encaissement de A", async () => {
+    const upd = await b.client.from("payments").update({ amount_ht_cents: 1 }).eq("id", paymentA.id).select("id");
+    assert.deepEqual(upd.data, []);
+    const del = await b.client.from("payments").delete().eq("id", paymentA.id).select("id");
+    assert.deepEqual(del.data, []);
+    const still = await a.client.from("payments").select("amount_ht_cents").eq("id", paymentA.id).single();
+    assert.equal(still.data!.amount_ht_cents, 10000);
+  });
+
+  test("B ne rattache pas d'encaissement à la facture de A, ni à une facture inexistante ; A ne forge pas le propriétaire ni ne déplace son encaissement", async () => {
+    const onInvoice = await b.client.from("payments").insert(base());
+    assert.equal(onInvoice.error?.code, "42501");
+    const gone = await a.client.from("payments").insert({ ...base(), invoice_id: crypto.randomUUID() });
+    assert.equal(gone.error?.code, "42501", "facture inexistante");
+    const forged = await a.client.from("payments").insert({ ...base(), owner_id: b.userId });
+    assert.equal(forged.error?.code, "42501");
+    const moved = await a.client.from("payments").update({ invoice_id: invoiceB.id }).eq("id", paymentA.id);
+    assert.equal(moved.error?.code, "23514", "la facture est figée : le déclencheur refuse avant la RLS");
+    const stolen = await a.client.from("payments").update({ owner_id: b.userId }).eq("id", paymentA.id);
+    assert.equal(stolen.error?.code, "23514", "le propriétaire ne change pas");
+    const nullInvoice = await a.client.from("payments").insert({ ...base(), invoice_id: null });
+    assert.equal(nullInvoice.error?.code, "42501", "facture obligatoire (la RLS exige une facture à moi, avant la contrainte non nulle)");
+  });
+
+  test("sans connexion : rien de visible ni de créable", async () => {
+    const anon = newClient();
+    const read = await anon.from("payments").select("id");
+    assert.ifError(read.error);
+    assert.deepEqual(read.data, []);
+    const write = await anon.from("payments").insert(base());
+    assert.equal(write.error?.code, "42501");
+  });
+
+  test("la base refuse montants hors bornes, remarques vides ou trop longues, date absente", async () => {
+    const refused = async (patch: Record<string, unknown>, code: string, label: string) => {
+      const r = await a.client.from("payments").insert({ ...base(), ...patch });
+      assert.equal(r.error?.code, code, label);
+    };
+    await refused({ amount_ht_cents: 0 }, "23514", "hors taxe nul");
+    await refused({ amount_ht_cents: -1 }, "23514", "hors taxe négatif");
+    await refused({ amount_ht_cents: 100_000_001 }, "23514", "hors taxe au-delà de 1 000 000 €");
+    await refused({ tax_cents: -1 }, "23514", "taxe négative");
+    await refused({ tax_cents: 100_000_001 }, "23514", "taxe au-delà du garde-fou");
+    await refused({ note: "" }, "23514", "remarque vide");
+    await refused({ note: "n".repeat(501) }, "23514", "remarque de 501 caractères");
+    await refused({ received_on: null }, "23502", "date obligatoire");
+    const edge = await a.client.from("payments").insert({ ...base(), amount_ht_cents: 100_000_000, tax_cents: 100_000_000, note: "n".repeat(500) }).select("id").single();
+    assert.ifError(edge.error);
+  });
+
+  test("garde : date jamais dans le futur (insertion et mise à jour), aujourd'hui permis, identité figée", async () => {
+    const future = await a.client.from("payments").insert({ ...base(), received_on: "2999-01-01" });
+    assert.equal(future.error?.code, "23514");
+    const tomorrow = new Date(Date.parse(`${parisToday}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+    const next = await a.client.from("payments").insert({ ...base(), received_on: tomorrow });
+    assert.equal(next.error?.code, "23514", "demain refusé");
+    const later = await a.client.from("payments").update({ received_on: "2999-01-01" }).eq("id", paymentA.id);
+    assert.equal(later.error?.code, "23514");
+    const id = await a.client.from("payments").update({ id: crypto.randomUUID() }).eq("id", paymentA.id);
+    assert.equal(id.error?.code, "23514");
+    const created = await a.client.from("payments").update({ created_at: "2020-01-01T00:00:00Z" }).eq("id", paymentA.id);
+    assert.equal(created.error?.code, "23514");
+  });
+
+  test("plusieurs encaissements par facture ; modifiable et supprimable ; la facture ne se supprime pas tant qu'elle en a", async () => {
+    const second = await a.client.from("payments").insert({ ...base(), amount_ht_cents: 5000, tax_cents: 1000, note: "acompte" }).select("id").single();
+    assert.ifError(second.error);
+    const count = await a.client.from("payments").select("id", { count: "exact", head: true }).eq("invoice_id", invoiceA.id);
+    assert.ok((count.count ?? 0) >= 2, "plusieurs encaissements sur la même facture");
+    const upd = await a.client.from("payments").update({ amount_ht_cents: 7000, tax_cents: null, note: "corrigé" }).eq("id", second.data!.id).select("amount_ht_cents, tax_cents");
+    assert.ifError(upd.error);
+    assert.deepEqual(upd.data, [{ amount_ht_cents: 7000, tax_cents: null }]);
+    const blocked = await a.client.from("invoices").delete().eq("id", invoiceA.id).select("id");
+    assert.equal(blocked.error?.code, "23503", "facture avec encaissements");
+    const ids = (await a.client.from("payments").select("id").eq("invoice_id", invoiceA.id)).data!.map((p) => p.id);
+    const del = await a.client.from("payments").delete().in("id", ids).select("id");
+    assert.equal(del.data?.length, ids.length, "les encaissements se suppriment");
+    const free = await a.client.from("invoices").delete().eq("id", invoiceA.id).select("id");
+    assert.equal(free.data?.length, 1, "la facture se supprime une fois ses encaissements partis");
+  });
+});
