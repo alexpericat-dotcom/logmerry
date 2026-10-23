@@ -1,19 +1,22 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import type { PaymentFormState } from "@/app/(app)/factures/payment-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { PaymentInput } from "@/lib/domain/payments";
+import { overpaymentIfSaved, type InvoiceAmounts, type PaymentAmounts, type PaymentInput } from "@/lib/domain/payments";
+import { formatCents } from "@/lib/domain/quotes";
 import { submitWith } from "@/lib/submit-with";
 
 export function PaymentForm({
   idPrefix,
   action,
   initial,
+  invoice,
+  others,
   submitLabel,
   onDone,
   onCancel,
@@ -21,6 +24,9 @@ export function PaymentForm({
   idPrefix: string;
   action: (state: PaymentFormState, formData: FormData) => Promise<PaymentFormState>;
   initial: PaymentInput;
+  /** Montants de la facture et autres encaissements (sans celui qu'on modifie) : pour avertir d'un trop-perçu avant l'enregistrement. */
+  invoice: InvoiceAmounts;
+  others: PaymentAmounts[];
   submitLabel: string;
   onDone: () => void;
   onCancel: () => void;
@@ -30,6 +36,9 @@ export function PaymentForm({
     if (state.saved) onDone();
   }, [state.saved, onDone]);
   const values = state.values ?? initial;
+  // Champs non contrôlés (React 19 vide un formulaire après une action : le FormData part de onSubmit) ; on ne garde que de quoi calculer l'avertissement.
+  const [draft, setDraft] = useState({ amount_ht: values.amount_ht, tax: values.tax });
+  const over = overpaymentIfSaved(invoice, others, draft);
   const e = state.errors ?? {};
   const id = (name: string) => `${idPrefix}-${name}`;
   const field = (name: keyof PaymentInput) => ({
@@ -59,12 +68,12 @@ export function PaymentForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={id("amount_ht")}>Montant hors taxe encaissé, en € (obligatoire)</Label>
-          <Input {...field("amount_ht")} inputMode="decimal" defaultValue={values.amount_ht} aria-required="true" autoComplete="off" />
+          <Input {...field("amount_ht")} inputMode="decimal" defaultValue={values.amount_ht} aria-required="true" autoComplete="off" onChange={(ev) => setDraft((d) => ({ ...d, amount_ht: ev.target.value }))} />
           {errorLine("amount_ht")}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("tax")}>Taxe encaissée, en € (vide si inconnue)</Label>
-          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={e.tax ? `${id("tax")}-error` : id("tax-help")} autoComplete="off" />
+          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={e.tax ? `${id("tax")}-error` : id("tax-help")} autoComplete="off" onChange={(ev) => setDraft((d) => ({ ...d, tax: ev.target.value }))} />
           <p id={id("tax-help")} className="text-xs text-muted-foreground">
             Vide veut dire « inconnue », pas 0. Elle n&apos;est jamais répartie automatiquement.
           </p>
@@ -81,6 +90,9 @@ export function PaymentForm({
           {errorLine("note")}
         </div>
       </div>
+      <p role="status" className="text-sm font-semibold">
+        {over > 0 && `Attention : cet encaissement fait dépasser la facture de ${formatCents(over)} (trop-perçu). Tu peux l'enregistrer quand même.`}
+      </p>
       {e.invoice_id && (
         <p role="alert" className="text-sm text-destructive">
           {e.invoice_id}

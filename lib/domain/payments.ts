@@ -89,3 +89,18 @@ export function invoiceBalance(invoice: InvoiceAmounts, payments: PaymentAmounts
     paymentsMissingTax: basis === "ttc" ? payments.filter((p) => p.tax_cents === null).length : 0,
   };
 }
+
+/**
+ * Trop-perçu que ferait l'encaissement en cours de saisie (en centimes, 0 si aucun ou si le montant n'est pas encore valide).
+ * `others` : les autres encaissements de la facture (sans celui qu'on modifie). Avertissement seulement : rien ne bloque (un trop-perçu existe).
+ */
+export function overpaymentIfSaved(invoice: InvoiceAmounts, others: PaymentAmounts[], draft: { amount_ht: string; tax: string }): number {
+  const ht = parseAmountToCents(draft.amount_ht.trim());
+  if (ht === null || ht <= 0 || ht > PAYMENT_AMOUNT_MAX_CENTS) return 0;
+  const taxText = draft.tax.trim();
+  const tax = taxText ? parseAmountToCents(taxText) : null;
+  if (taxText && tax === null) return 0;
+  const before = invoiceBalance(invoice, others).overpaidCents;
+  const after = invoiceBalance(invoice, [...others, { amount_ht_cents: ht, tax_cents: tax }]).overpaidCents;
+  return after - before; // seulement ce que CET encaissement ajoute au dépassement
+}

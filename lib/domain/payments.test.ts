@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PAYMENT_AMOUNT_MAX_CENTS, invoiceBalance, validatePaymentInput } from "./payments.ts";
+import { PAYMENT_AMOUNT_MAX_CENTS, invoiceBalance, overpaymentIfSaved, validatePaymentInput } from "./payments.ts";
 
 const I = "3f2c1b4a-5d6e-4f70-8a9b-0c1d2e3f4a5b";
 const TODAY = "2026-10-23";
@@ -96,4 +96,18 @@ test("cas figé : 1 200 € saisis en hors taxe sur une facture de 1 000 € HT 
 test("trop-perçu : calculé, le statut reste payée", () => {
   const b = invoiceBalance(inv, [pay(100000, 20000), pay(5000, 0)]);
   assert.deepEqual([b.status, b.overpaidCents, b.remainingCents], ["paid", 5000, 0]);
+});
+
+test("avertissement avant enregistrement : trop-perçu que ferait l'encaissement saisi", () => {
+  const over = (others: ReturnType<typeof pay>[], amount_ht: string, tax: string) => overpaymentIfSaved(inv, others, { amount_ht, tax });
+  assert.equal(over([], "1000", "200"), 0, "pile le TTC : aucun dépassement");
+  assert.equal(over([], "1000", "200,01"), 1, "un centime de trop");
+  assert.equal(over([], "1000", ""), 0, "taxe vide = zéro : rien ne dépasse");
+  assert.equal(over([pay(100000, 20000)], "50", ""), 5000, "facture déjà soldée : tout l'encaissement dépasse");
+  assert.equal(over([pay(60000, 12000)], "400", "80"), 0, "acompte de 720 € puis solde exact de 480 €");
+  assert.equal(over([pay(60000, 12000)], "400", "80,50"), 50, "solde avec 50 centimes de trop");
+  assert.equal(over([pay(100000, 20000), pay(5000, 0)], "10", ""), 1000, "déjà en trop-perçu : seul l'ajout du nouvel encaissement compte");
+  for (const [ht, tax] of [["", ""], ["abc", ""], ["0", ""], ["-5", ""], ["10", "x"], ["1.250,50", ""], ["1000000,01", ""]]) assert.equal(over([], ht, tax), 0, `saisie incomplète ou invalide : ${ht}/${tax}`);
+  const unknownTax = overpaymentIfSaved({ amount_ht_cents: 100000, tax_cents: null }, [], { amount_ht: "1000,01", tax: "999" });
+  assert.equal(unknownTax, 1, "taxe de la facture inconnue : seul le hors taxe compte");
 });

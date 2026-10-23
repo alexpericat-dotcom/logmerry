@@ -6,13 +6,13 @@ import { createPayment, deletePayment, updatePayment } from "@/app/(app)/facture
 import { PaymentForm } from "@/components/payment-form";
 import { Button } from "@/components/ui/button";
 import type { PaymentRecord } from "@/lib/db/invoices";
-import type { InvoiceBalance } from "@/lib/domain/payments";
+import type { InvoiceAmounts, InvoiceBalance } from "@/lib/domain/payments";
 import { centsToInput, formatCents } from "@/lib/domain/quotes";
 import { formatDate } from "@/lib/format";
 
 const empty = { amount_ht: "", tax: "", received_on: "", note: "" };
 
-function PaymentRow({ invoiceId, payment, onDeleted }: { invoiceId: string; payment: PaymentRecord; onDeleted: () => void }) {
+function PaymentRow({ invoiceId, invoice, others, payment, onDeleted }: { invoiceId: string; invoice: InvoiceAmounts; others: PaymentRecord[]; payment: PaymentRecord; onDeleted: () => void }) {
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
@@ -49,6 +49,8 @@ function PaymentRow({ invoiceId, payment, onDeleted }: { invoiceId: string; paym
           idPrefix={`edit-${payment.id}`}
           action={updatePayment.bind(null, payment.id, invoiceId)}
           initial={{ invoice_id: invoiceId, amount_ht: centsToInput(payment.amount_ht_cents), tax: payment.tax_cents === null ? "" : centsToInput(payment.tax_cents), received_on: payment.received_on, note: payment.note ?? "" }}
+          invoice={invoice}
+          others={others}
           submitLabel="Enregistrer"
           onDone={back}
           onCancel={back}
@@ -111,7 +113,7 @@ function PaymentRow({ invoiceId, payment, onDeleted }: { invoiceId: string; paym
 }
 
 /** Résumé, liste et saisie des encaissements d'une facture (tout se passe dans sa ligne : décision 4). */
-export function InvoicePayments({ invoiceId, payments, balance }: { invoiceId: string; payments: PaymentRecord[]; balance: InvoiceBalance }) {
+export function InvoicePayments({ invoiceId, invoice, payments, balance }: { invoiceId: string; invoice: InvoiceAmounts; payments: PaymentRecord[]; balance: InvoiceBalance }) {
   const [adding, setAdding] = useState(false);
   const [announce, setAnnounce] = useState("");
   const addRef = useRef<HTMLButtonElement>(null);
@@ -143,12 +145,12 @@ export function InvoicePayments({ invoiceId, payments, balance }: { invoiceId: s
       {sorted.length > 0 && (
         <ul className="flex flex-col gap-2" aria-label="Encaissements de la facture">
           {sorted.map((p) => (
-            <PaymentRow key={p.id} invoiceId={invoiceId} payment={p} onDeleted={deleted} />
+            <PaymentRow key={p.id} invoiceId={invoiceId} invoice={invoice} others={payments.filter((o) => o.id !== p.id)} payment={p} onDeleted={deleted} />
           ))}
         </ul>
       )}
       {adding ? (
-        <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty }} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
+        <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty }} invoice={invoice} others={payments} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
       ) : (
         <Button ref={addRef} type="button" size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
           Ajouter un encaissement
