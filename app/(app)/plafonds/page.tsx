@@ -16,9 +16,9 @@ const NOTES: Record<string, string> = {
 };
 
 async function Ceilings() {
-  const asOf = todayParis();
   // Lecture seule : cette page n'écrit rien (ni profil créé, ni règle, ni encaissement).
   const [rules, profile, payments] = await Promise.all([listRules(), getProfile(), listPaymentsForCeilings()]);
+  const asOf = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const results = computeCeilings(rules, profile, payments, asOf);
   const active = profile?.alert_thresholds ?? [];
   return (
