@@ -86,6 +86,66 @@ export type Database = {
           },
         ];
       };
+      invoices: {
+        Row: {
+          amount_ht_cents: number
+          created_at: string
+          due_on: string
+          id: string
+          issued_on: string | null
+          mission_id: string
+          note: string | null
+          owner_id: string
+          quote_id: string | null
+          reference: string | null
+          tax_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_ht_cents: number
+          created_at?: string
+          due_on: string
+          id?: string
+          issued_on?: string | null
+          mission_id: string
+          note?: string | null
+          owner_id?: string
+          quote_id?: string | null
+          reference?: string | null
+          tax_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_ht_cents?: number
+          created_at?: string
+          due_on?: string
+          id?: string
+          issued_on?: string | null
+          mission_id?: string
+          note?: string | null
+          owner_id?: string
+          quote_id?: string | null
+          reference?: string | null
+          tax_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_citations: {
         Row: {
           chunk_id: string | null;

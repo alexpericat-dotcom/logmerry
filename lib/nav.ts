@@ -26,11 +26,11 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Notes", href: "/notes", icon: "notes", available: true },
   { label: "Clients", href: "/clients", icon: "clients", available: true },
   { label: "Missions", href: "/missions", icon: "missions", available: true },
-  { label: "Factures", href: "/factures", icon: "factures", available: false },
   { label: "Échéances", href: "/echeances", icon: "echeances", available: false },
   { label: "Paramètres", href: "/parametres", icon: "parametres", available: true },
   { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: false },
+  { label: "Factures", href: "/factures", icon: "factures", available: true, group: "Finances" },
   { label: "Profil", href: "/profil", icon: "profil", available: true, group: "Finances" },
   { label: "Règles", href: "/regles", icon: "regles", available: true, group: "Finances" },
 ];
