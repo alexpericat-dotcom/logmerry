@@ -95,6 +95,10 @@ export type Database = {
           id: string;
           note: string | null;
           owner_id: string;
+          priority: Database["public"]["Enums"]["deadline_priority"];
+          recurrence: Database["public"]["Enums"]["deadline_recurrence"] | null;
+          series_day: number | null;
+          series_id: string | null;
           source: string;
           title: string;
           updated_at: string;
@@ -107,6 +111,10 @@ export type Database = {
           id?: string;
           note?: string | null;
           owner_id?: string;
+          priority?: Database["public"]["Enums"]["deadline_priority"];
+          recurrence?: Database["public"]["Enums"]["deadline_recurrence"] | null;
+          series_day?: number | null;
+          series_id?: string | null;
           source: string;
           title: string;
           updated_at?: string;
@@ -119,6 +127,10 @@ export type Database = {
           id?: string;
           note?: string | null;
           owner_id?: string;
+          priority?: Database["public"]["Enums"]["deadline_priority"];
+          recurrence?: Database["public"]["Enums"]["deadline_recurrence"] | null;
+          series_day?: number | null;
+          series_id?: string | null;
           source?: string;
           title?: string;
           updated_at?: string;
@@ -845,6 +857,7 @@ export type Database = {
         };
         Returns: string;
       };
+      delete_deadline_series: { Args: { p_series_id: string }; Returns: undefined };
       immutable_unaccent: { Args: { "": string }; Returns: string };
       match_chunks: {
         Args: {
@@ -885,6 +898,8 @@ export type Database = {
       client_origin: "real_client" | "training" | "friend" | "demo";
       client_status: "prospect" | "client";
       deadline_category: "urssaf" | "france_travail" | "tax" | "vat" | "cfe" | "supporting_documents" | "renewals" | "custom";
+      deadline_priority: "low" | "normal" | "high";
+      deadline_recurrence: "monthly" | "quarterly" | "yearly";
       index_status: "pending" | "indexed" | "failed";
       message_role: "user" | "assistant";
       mission_status: "planned" | "in_progress" | "done" | "cancelled";

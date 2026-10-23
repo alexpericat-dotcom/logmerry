@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DEADLINE_CATEGORIES, DEADLINE_CATEGORY_LABELS, type DeadlineInput } from "@/lib/domain/deadlines";
+import { DEADLINE_CATEGORIES, DEADLINE_CATEGORY_LABELS, DEADLINE_PRIORITIES, DEADLINE_PRIORITY_LABELS, DEADLINE_RECURRENCES, DEADLINE_RECURRENCE_LABELS, type DeadlineInput } from "@/lib/domain/deadlines";
 import { submitWith } from "@/lib/submit-with";
 
 const selectClass =
@@ -20,6 +20,8 @@ export function DeadlineForm({
   submitLabel,
   onDone,
   onCancel,
+  series = false,
+  canRecur = false,
 }: {
   idPrefix: string;
   action: (state: DeadlineFormState, formData: FormData) => Promise<DeadlineFormState>;
@@ -27,6 +29,10 @@ export function DeadlineForm({
   submitLabel: string;
   onDone: () => void;
   onCancel: () => void;
+  /** Occurrence d'une série : sa date est figée (la grille la régénérerait) et sa récurrence ne change pas. */
+  series?: boolean;
+  /** Création : le choix de récurrence est proposé (il ne change plus ensuite). */
+  canRecur?: boolean;
 }) {
   const [state, formAction, pending] = useActionState<DeadlineFormState, FormData>(action, {});
   useEffect(() => {
@@ -34,8 +40,8 @@ export function DeadlineForm({
   }, [state.saved, onDone]);
   const values = state.values ?? initial;
   const e = state.errors ?? {};
-  const [more, setMore] = useState(!!values.note);
-  const showMore = more || !!e.note; // une erreur ne reste jamais cachée
+  const [more, setMore] = useState(!!values.note || !!values.recurrence);
+  const showMore = more || !!e.note || !!e.recurrence; // une erreur ne reste jamais cachée
   const id = (name: string) => `${idPrefix}-${name}`;
   const field = (name: keyof DeadlineInput) => ({
     id: id(name),
@@ -69,7 +75,12 @@ export function DeadlineForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("due_on")}>Date de l&apos;échéance (obligatoire)</Label>
-          <Input {...field("due_on")} type="date" defaultValue={values.due_on} aria-required="true" />
+          <Input {...field("due_on")} type="date" defaultValue={values.due_on} aria-required="true" readOnly={series} aria-describedby={[series && id("due_on-locked"), e.due_on && `${id("due_on")}-error`].filter(Boolean).join(" ") || undefined} />
+          {series && (
+            <p id={id("due_on-locked")} className="text-sm text-muted-foreground">
+              La date d&apos;une échéance récurrente ne se modifie pas.
+            </p>
+          )}
           {errorLine("due_on")}
         </div>
         <div className="grid gap-2">
@@ -83,6 +94,17 @@ export function DeadlineForm({
             ))}
           </select>
           {errorLine("category")}
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor={id("priority")}>Priorité</Label>
+          <select {...field("priority")} defaultValue={values.priority || "normal"} className={selectClass}>
+            {DEADLINE_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {DEADLINE_PRIORITY_LABELS[p]}
+              </option>
+            ))}
+          </select>
+          {errorLine("priority")}
         </div>
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("source")}>Source officielle : lien https:// (obligatoire)</Label>
@@ -98,6 +120,21 @@ export function DeadlineForm({
           <Label htmlFor={id("note")}>Remarque</Label>
           <Textarea {...field("note")} defaultValue={values.note} rows={3} />
           {errorLine("note")}
+          {canRecur && (
+            <>
+              <Label htmlFor={id("recurrence")}>Récurrence</Label>
+              <select {...field("recurrence")} defaultValue={values.recurrence} className={selectClass}>
+                <option value="">Aucune</option>
+                {DEADLINE_RECURRENCES.map((r) => (
+                  <option key={r} value={r}>
+                    {DEADLINE_RECURRENCE_LABELS[r]}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-muted-foreground">Une ligne par occurrence sur les 12 prochains mois ; chacune se coche seule.</p>
+              {errorLine("recurrence")}
+            </>
+          )}
         </div>
       </div>
       {state.message && (

@@ -8,7 +8,7 @@ import { DeadlineForm } from "@/components/deadline-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
-import { DEADLINE_CATEGORY_LABELS, deadlineWhen } from "@/lib/domain/deadlines";
+import { DEADLINE_CATEGORY_LABELS, DEADLINE_PRIORITY_LABELS, DEADLINE_RECURRENCE_LABELS, deadlineWhen } from "@/lib/domain/deadlines";
 import { isOfficialLink } from "@/lib/domain/finance/rules";
 import { formatDate, formatDateTime } from "@/lib/format";
 
@@ -62,7 +62,8 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
         <DeadlineForm
           idPrefix={`edit-${deadline.id}`}
           action={update}
-          initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "" }}
+          initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "", priority: deadline.priority, recurrence: "" }}
+          series={deadline.recurrence !== null}
           submitLabel="Enregistrer"
           onDone={back}
           onCancel={back}
@@ -76,6 +77,8 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
       <div className="flex flex-wrap items-center gap-2">
         <span className={done ? "font-semibold line-through" : "font-semibold"}>{deadline.title}</span>
         <Badge variant="outline">{DEADLINE_CATEGORY_LABELS[deadline.category]}</Badge>
+        {deadline.priority !== "normal" && <Badge variant={deadline.priority === "high" ? "warning" : "outline"}>Priorité {DEADLINE_PRIORITY_LABELS[deadline.priority].toLowerCase()}</Badge>}
+        {deadline.recurrence && <Badge variant="outline">{DEADLINE_RECURRENCE_LABELS[deadline.recurrence]}</Badge>}
         {done ? (
           <Badge variant="success">
             <CalendarCheck size={11} aria-hidden="true" />
@@ -140,8 +143,10 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
           }}
           className="flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3"
         >
-          <p className="font-semibold">Supprimer cette échéance ?</p>
-          <p className="text-sm text-muted-foreground">Cette action est définitive.</p>
+          <p className="font-semibold">{deadline.recurrence ? "Supprimer cette série d'échéances ?" : "Supprimer cette échéance ?"}</p>
+          <p className="text-sm text-muted-foreground">
+            {deadline.recurrence ? "Toute la série à faire sera supprimée ; les occurrences déjà faites sont conservées. Cette action est définitive." : "Cette action est définitive."}
+          </p>
           <div className="flex gap-3">
             <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={() => run(() => deleteDeadline(deadline.id), `Échéance ${deadline.title} supprimée.`)}>
               {pending ? "…" : "Supprimer"}
