@@ -19,6 +19,6 @@ export function formatDate(day: string): string {
 const parisDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" });
 
 /** Le jour de Paris, `YYYY-MM-DD` (les règles reçoivent leur date de référence en argument, elles ne lisent jamais l'horloge). */
-export function todayParis(): string {
-  return parisDay.format(new Date());
+export function todayParis(now: Date = new Date()): string {
+  return parisDay.format(now);
 }

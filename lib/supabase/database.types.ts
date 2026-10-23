@@ -86,6 +86,45 @@ export type Database = {
           },
         ];
       };
+      deadlines: {
+        Row: {
+          category: Database["public"]["Enums"]["deadline_category"];
+          created_at: string;
+          done_at: string | null;
+          due_on: string;
+          id: string;
+          note: string | null;
+          owner_id: string;
+          source: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          category: Database["public"]["Enums"]["deadline_category"];
+          created_at?: string;
+          done_at?: string | null;
+          due_on: string;
+          id?: string;
+          note?: string | null;
+          owner_id?: string;
+          source: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: Database["public"]["Enums"]["deadline_category"];
+          created_at?: string;
+          done_at?: string | null;
+          due_on?: string;
+          id?: string;
+          note?: string | null;
+          owner_id?: string;
+          source?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       invoices: {
         Row: {
           amount_ht_cents: number
@@ -845,6 +884,7 @@ export type Database = {
     Enums: {
       client_origin: "real_client" | "training" | "friend" | "demo";
       client_status: "prospect" | "client";
+      deadline_category: "urssaf" | "france_travail" | "tax" | "vat" | "cfe" | "supporting_documents" | "renewals" | "custom";
       index_status: "pending" | "indexed" | "failed";
       message_role: "user" | "assistant";
       mission_status: "planned" | "in_progress" | "done" | "cancelled";
