@@ -502,6 +502,12 @@ En tant que propriétaire, je veux enregistrer mes échéances administratives a
 **Et** la catégorie se choisit parmi celles du calendrier (Urssaf, France Travail, fiscale, TVA, CFE, justificatifs, renouvellements, personnalisée) ; la priorité et la récurrence arrivent avec la story 5.1b.
 **Et** le test d'isolation couvre `deadlines` (un autre compte ne les voit ni ne les modifie).
 
+**Décisions de l'auteur du 23 octobre 2026 (spec 5.1a) :**
+1. L'entrée « Échéances » de la barre latérale devient **« Calendrier »** (`/calendrier`), à la même place (groupe principal, entre Missions et Paramètres). Une seule page : formulaire « Nouvelle échéance », liste en trois sections. La 5.1b y ajoutera priorité, récurrence et vues.
+2. **Source = lien `https://` obligatoire** (2 000 caractères au plus) ; tout autre texte est refusé, comme pour les règles vérifiées.
+3. **« Faite »** par une seule action serveur, `markDeadlineDone` (réutilisée par le cockpit en 5.2), qui enregistre le moment de la coche ; **décocher possible** (« Rouvrir »). Une échéance est **toujours modifiable** (changer la date d'une échéance faite ne la rouvre pas) et **toujours supprimable** avec confirmation ; aucune dépendance, donc aucun cas de suppression refusée.
+4. Champs : titre (obligatoire, 200 caractères), date (obligatoire, **possible dans le passé**), catégorie (obligatoire : Urssaf, France Travail, fiscale, TVA, CFE, justificatifs, renouvellements, personnalisée), source, remarque facultative (500 caractères, sous « Plus de champs »). Trois sections : **En retard** (à faire, avant aujourd'hui en jour de Paris, la plus ancienne d'abord, « en retard de N jours »), **À venir** (à faire, aujourd'hui ou après, la plus proche d'abord, « dans N jours » ou « aujourd'hui »), **Faites** (les plus récemment faites d'abord, barrées, avec leur date de réalisation, hors « En retard »). Départage : date, création, identifiant.
+
 ### Story 5.1b : Calendrier administratif complet
 
 *Nouvelle story du 18 octobre 2026 (PRD FR-13, architecture AD-13). Première candidate à la coupe si le temps manque (PRD §7.3) : on coupe d'abord les catégories avancées et la récurrence, jamais le socle de règles ni les plafonds.*
