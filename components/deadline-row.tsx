@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarCheck, CircleDashed, TriangleAlert } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline } from "@/app/(app)/calendrier/actions";
 import { DeadlineForm } from "@/components/deadline-form";
@@ -12,7 +12,7 @@ import { DEADLINE_CATEGORY_LABELS, deadlineWhen } from "@/lib/domain/deadlines";
 import { isOfficialLink } from "@/lib/domain/finance/rules";
 import { formatDate, formatDateTime } from "@/lib/format";
 
-export function DeadlineRow({ deadline, today, onChanged }: { deadline: DeadlineRecord; today: string; onChanged: (message: string) => void }) {
+export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadline: DeadlineRecord; today: string; sectionId: string; onChanged: (message: string, sectionId: string) => void }) {
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
@@ -22,10 +22,15 @@ export function DeadlineRow({ deadline, today, onChanged }: { deadline: Deadline
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasDeleting = useRef(false);
 
-  const back = () => {
+  const back = useCallback(() => {
     setMode("view");
     setMessage(undefined);
-  };
+  }, []);
+  // Stable : le formulaire relance son effet si cette fonction change, ce qui annoncerait deux fois.
+  const saved = useCallback(() => {
+    back();
+    onChanged(`Échéance ${deadline.title} enregistrée.`, sectionId); // la ligne a pu changer de section : on annonce et on rend le focus
+  }, [back, onChanged, deadline.title, sectionId]);
   // Le focus suit le panneau : sur « Annuler » (le choix sûr) à l'ouverture, sur la rangée d'actions à la fermeture.
   useEffect(() => {
     if (mode === "delete") [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1)?.focus();
@@ -33,13 +38,13 @@ export function DeadlineRow({ deadline, today, onChanged }: { deadline: Deadline
     wasDeleting.current = mode === "delete";
   }, [mode]);
 
-  // Marquer faite, rouvrir et supprimer déplacent ou retirent la ligne : c'est le parent qui annonce et rend le focus.
+  // Marquer faite, rouvrir, modifier et supprimer déplacent ou retirent la ligne : c'est le parent qui annonce et rend le focus (sur le titre de la section).
   const run = (fn: () => Promise<{ message?: string }>, announce: string) =>
     start(async () => {
       try {
         const r = await fn();
         setMessage(r.message);
-        if (!r.message) onChanged(announce);
+        if (!r.message) onChanged(announce, sectionId);
       } catch {
         setMessage("Opération impossible pour le moment. Rien n'a été modifié. Réessaie.");
       }
@@ -53,7 +58,7 @@ export function DeadlineRow({ deadline, today, onChanged }: { deadline: Deadline
           action={updateDeadline.bind(null, deadline.id)}
           initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "" }}
           submitLabel="Enregistrer"
-          onDone={back}
+          onDone={saved}
           onCancel={back}
         />
       </li>

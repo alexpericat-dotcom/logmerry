@@ -14,6 +14,7 @@ import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { setDeadlineDone } from "../lib/db/deadline-state.ts";
 import { toHistory, type MessageRow } from "../lib/domain/history.ts";
 
 function env(name: string): string {
@@ -2101,7 +2102,7 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     };
     await refused({ title: "" }, "23514", "titre vide");
     await refused({ title: "t".repeat(201) }, "23514", "titre de 201 caractères");
-    for (const source of ["", "http://www.urssaf.fr", "urssaf.fr", "Courrier de l'Urssaf", "https://urssaf.fr/a b", "https://", "javascript:alert(1)", `https://x.fr/${"a".repeat(1988)}`]) {
+    for (const source of ["", "http://www.urssaf.fr", "urssaf.fr", "Courrier de l'Urssaf", "https://urssaf.fr/a b", "https://", "javascript:alert(1)", `https://x.fr/${"a".repeat(1988)}`, "HTTPS://X.FR", "https:// x", "https://x.fr/a\nb", "https://x.fr\t", "Courrier https://x.fr", "voir https://x.fr/a"]) {
       await refused({ source }, "23514", `source refusée : ${source.slice(0, 30)}`);
     }
     await refused({ note: "" }, "23514", "remarque vide");
@@ -2110,6 +2111,11 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     await refused({ category: null }, "23502", "catégorie obligatoire");
     await refused({ source: null }, "23502", "source obligatoire");
     await refused({ category: "autre" }, "22P02", "catégorie hors énumération");
+    // Les émojis comptent un caractère chacun pour la base (char_length) : 200 acceptés, 201 refusés.
+    const emoji200 = await a.client.from("deadlines").insert({ ...base(), title: "😀".repeat(200) }).select("title").single();
+    assert.ifError(emoji200.error);
+    assert.equal(Array.from(emoji200.data!.title).length, 200);
+    await refused({ title: "😀".repeat(201) }, "23514", "201 émojis");
     const edge = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} ${"t".repeat(200 - PREFIX.length - 1)}`, source: `https://x.fr/${"a".repeat(1987)}`, note: "n".repeat(500), due_on: "2020-01-01" }).select("id").single();
     assert.ifError(edge.error);
   });
@@ -2141,5 +2147,58 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     assert.deepEqual(reopened.data, [{ done_at: null }]);
     const del = await a.client.from("deadlines").delete().eq("id", deadlineA.id).select("id");
     assert.equal(del.data?.length, 1, "toujours supprimable");
+  });
+
+  test("setDeadlineDone (la vraie requête des actions) : idempotent et réversible ; « gone » pour une ligne disparue ou d'un autre compte", async () => {
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const row = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} faite` }).select("id").single();
+    assert.ifError(row.error);
+    const id = row.data!.id;
+    const read = async () => (await a.client.from("deadlines").select("done_at").eq("id", id).single()).data!.done_at;
+    assert.equal(await setDeadlineDone(a.client as never, id, true), "saved");
+    const first = await read();
+    assert.notEqual(first, null);
+    await wait(30);
+    assert.equal(await setDeadlineDone(a.client as never, id, true), "saved", "déjà faite : l'état voulu est atteint");
+    assert.equal(await read(), first, "la date de réalisation n'est jamais écrasée (double clic, deux onglets)");
+    assert.equal(await setDeadlineDone(b.client as never, id, true), "gone", "l'échéance de A est invisible pour B : jamais « saved »");
+    assert.equal(await setDeadlineDone(b.client as never, id, false), "gone");
+    assert.equal(await read(), first, "B n'a rien changé");
+    assert.equal(await setDeadlineDone(a.client as never, id, false), "saved");
+    assert.equal(await read(), null);
+    assert.equal(await setDeadlineDone(a.client as never, id, false), "saved", "rouvrir deux fois : sans effet, sans erreur");
+    assert.equal(await read(), null);
+    assert.ifError((await a.client.from("deadlines").delete().eq("id", id)).error);
+    assert.equal(await setDeadlineDone(a.client as never, id, true), "gone", "échéance supprimée entre l'ouverture et l'action");
+    assert.equal(await setDeadlineDone(a.client as never, id, false), "gone");
+  });
+
+  test("garde : tolérance d'une minute pour « faite » (+30 s accepté, +5 min refusé), y compris vers une valeur déjà posée ; une date très ancienne est acceptée", async () => {
+    const at = (ms: number) => new Date(Date.now() + ms).toISOString();
+    const soon = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} tolérance`, done_at: at(30_000) }).select("id").single();
+    assert.ifError(soon.error);
+    const tooLate = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} trop tard`, done_at: at(5 * 60_000) });
+    assert.equal(tooLate.error?.code, "23514", "+5 minutes refusé");
+    const shift = await a.client.from("deadlines").update({ done_at: at(5 * 60_000) }).eq("id", soon.data!.id);
+    assert.equal(shift.error?.code, "23514", "changer une date déjà posée vers le futur lointain");
+    const old = await a.client.from("deadlines").update({ done_at: "2020-01-01T00:00:00Z" }).eq("id", soon.data!.id).select("done_at");
+    assert.ifError(old.error);
+    assert.equal(old.data?.length, 1, "une obligation faite bien avant son enregistrement est plausible : acceptée");
+  });
+
+  test("les contraintes valent aussi à la mise à jour, pas seulement à l'insertion", async () => {
+    const row = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} contraintes` }).select("id").single();
+    assert.ifError(row.error);
+    const refusedUpdate = async (patch: Record<string, unknown>, code: string, label: string) => {
+      const r = await a.client.from("deadlines").update(patch).eq("id", row.data!.id);
+      assert.equal(r.error?.code, code, label);
+    };
+    await refusedUpdate({ title: "" }, "23514", "titre vide");
+    await refusedUpdate({ source: "http://urssaf.fr" }, "23514", "source en http");
+    await refusedUpdate({ source: "Courrier https://x.fr" }, "23514", "texte avant le lien");
+    await refusedUpdate({ note: "" }, "23514", "remarque vide");
+    await refusedUpdate({ due_on: null }, "23502", "date absente");
+    await refusedUpdate({ category: null }, "23502", "catégorie absente");
+    await refusedUpdate({ category: "autre" }, "22P02", "catégorie inconnue");
   });
 });

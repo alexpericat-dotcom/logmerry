@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { createDeadline } from "@/app/(app)/calendrier/actions";
 import { DeadlineForm } from "@/components/deadline-form";
@@ -15,19 +15,18 @@ const empty = { title: "", due_on: "", category: "", source: "", note: "" };
 export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord[]; today: string }) {
   const [creating, setCreating] = useState(false);
   const [announce, setAnnounce] = useState("");
-  const newRef = useRef<HTMLButtonElement>(null);
   const done = useCallback(() => setCreating(false), []);
-  const changed = useCallback((message: string) => {
+  // Une ligne marquée faite, rouverte, déplacée ou supprimée disparaît de sa section : on annonce, puis on met le focus sur le titre de cette
+  // section, SANS défilement (la page ne bouge pas, on enchaîne sur la ligne suivante). Les titres sont toujours présents, même sections vides.
+  const changed = useCallback((message: string, sectionId: string) => {
     setAnnounce(message);
-    // Sans défilement automatique : le navigateur alignerait le bouton tout en haut, sous l'en-tête fixe, où il ne reçoit plus les clics.
-    newRef.current?.focus({ preventScroll: true });
-    newRef.current?.scrollIntoView({ block: "center" });
+    document.getElementById(sectionId)?.focus({ preventScroll: true });
   }, []);
   const { overdue, upcoming, done: finished } = groupDeadlines(deadlines, today);
 
   const section = (id: string, title: string, rows: DeadlineRecord[], emptyText: string) => (
     <section aria-labelledby={id} className="flex flex-col gap-2">
-      <h2 id={id} className="text-lg font-semibold">
+      <h2 id={id} tabIndex={-1} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
         {title} <span className="text-sm font-normal text-muted-foreground">({rows.length})</span>
       </h2>
       {rows.length === 0 ? (
@@ -35,7 +34,7 @@ export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord
       ) : (
         <ul className="flex flex-col gap-2">
           {rows.map((d) => (
-            <DeadlineRow key={d.id} deadline={d} today={today} onChanged={changed} />
+            <DeadlineRow key={d.id} deadline={d} today={today} sectionId={id} onChanged={changed} />
           ))}
         </ul>
       )}
@@ -44,7 +43,7 @@ export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <p role="status" className="text-sm font-semibold">
+      <p className="text-sm font-semibold">
         {overdue.length === 0 ? "Aucune échéance en retard." : `${overdue.length} échéance${overdue.length > 1 ? "s" : ""} en retard.`}
       </p>
       <p role="status" className="sr-only">
@@ -53,7 +52,7 @@ export function DeadlinesPanel({ deadlines, today }: { deadlines: DeadlineRecord
       {creating ? (
         <DeadlineForm idPrefix="new" action={createDeadline} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} />
       ) : (
-        <Button ref={newRef} type="button" size="sm" className="self-start" onClick={() => setCreating(true)}>
+        <Button type="button" size="sm" className="self-start" onClick={() => setCreating(true)}>
           Nouvelle échéance
         </Button>
       )}

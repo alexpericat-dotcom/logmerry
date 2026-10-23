@@ -82,6 +82,6 @@ export function groupDeadlines<T extends Row>(all: T[], today: string): { overdu
   return {
     overdue: todo.filter((d) => d.due_on < today),
     upcoming: todo.filter((d) => d.due_on >= today),
-    done: all.filter((d) => d.done_at !== null).sort((a, b) => (b.done_at as string).localeCompare(a.done_at as string) || a.id.localeCompare(b.id)),
+    done: all.filter((d) => d.done_at !== null).sort((a, b) => Date.parse(b.done_at as string) - Date.parse(a.done_at as string) || a.id.localeCompare(b.id)),
   };
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { setDeadlineDone } from "@/lib/db/deadline-state";
 import { validateDeadlineInput, type DeadlineErrors, type DeadlineInput } from "@/lib/domain/deadlines";
 import { isUuid } from "@/lib/domain/notes";
 import { withSession } from "@/lib/supabase/with-session";
@@ -24,7 +25,7 @@ const readValues = (formData: FormData): DeadlineInput => ({
 
 function refresh() {
   revalidatePath("/calendrier");
-  revalidatePath("/aujourd-hui"); // le cockpit tirera ses tâches du calendrier (story 5.2)
+  revalidatePath("/aujourd-hui"); // 5.2 : le cockpit tirera ses tâches du calendrier
 }
 
 export async function createDeadline(_prev: DeadlineFormState, formData: FormData): Promise<DeadlineFormState> {
@@ -60,44 +61,23 @@ export async function updateDeadline(id: string, _prev: DeadlineFormState, formD
   return { saved: true };
 }
 
-/**
- * LA seule action qui marque une échéance faite (le cockpit de la story 5.2 appellera celle-ci). Elle enregistre le moment de la coche.
- * Idempotente : une échéance déjà faite garde sa date de réalisation (`.is("done_at", null)`), un double clic ou deux onglets n'écrasent rien.
- */
-export async function markDeadlineDone(id: string): Promise<DeadlineActionState> {
-  const result = await withSession(async (supabase) => {
-    if (!isUuid(id)) return { kind: "gone" } as const;
-    const { data, error } = await supabase.from("deadlines").update({ done_at: new Date().toISOString() }).eq("id", id).is("done_at", null).select("id");
-    if (error) return { kind: "error" } as const;
-    if (data?.length) return { kind: "saved" } as const;
-    // Rien de modifié : soit déjà faite (l'état voulu est atteint), soit disparue.
-    const { data: row, error: re } = await supabase.from("deadlines").select("id").eq("id", id).maybeSingle();
-    if (re) return { kind: "error" } as const;
-    return row ? ({ kind: "saved" } as const) : ({ kind: "gone" } as const);
-  });
+async function setDone(id: string, done: boolean): Promise<DeadlineActionState> {
+  const result = await withSession(async (supabase) => (isUuid(id) ? setDeadlineDone(supabase, id, done) : "gone"));
   if (result.status === "signed-out") redirect("/auth/login");
-  if (result.status === "failed" || result.value.kind === "error") return { message: SAVE_FAILED };
-  if (result.value.kind === "gone") return { message: NOT_FOUND };
+  if (result.status === "failed" || result.value === "error") return { message: SAVE_FAILED };
+  if (result.value === "gone") return { message: NOT_FOUND };
   refresh();
   return {};
 }
 
-/** Décocher : l'échéance redevient à faire (décision 3). Idempotente. */
+/** LA seule action qui marque une échéance faite (le cockpit de la story 5.2 appellera celle-ci) : elle enregistre le moment de la coche, sans jamais l'écraser. */
+export async function markDeadlineDone(id: string): Promise<DeadlineActionState> {
+  return setDone(id, true);
+}
+
+/** Décocher : l'échéance redevient à faire (décision 3). */
 export async function reopenDeadline(id: string): Promise<DeadlineActionState> {
-  const result = await withSession(async (supabase) => {
-    if (!isUuid(id)) return { kind: "gone" } as const;
-    const { data, error } = await supabase.from("deadlines").update({ done_at: null }).eq("id", id).not("done_at", "is", null).select("id");
-    if (error) return { kind: "error" } as const;
-    if (data?.length) return { kind: "saved" } as const;
-    const { data: row, error: re } = await supabase.from("deadlines").select("id").eq("id", id).maybeSingle();
-    if (re) return { kind: "error" } as const;
-    return row ? ({ kind: "saved" } as const) : ({ kind: "gone" } as const);
-  });
-  if (result.status === "signed-out") redirect("/auth/login");
-  if (result.status === "failed" || result.value.kind === "error") return { message: SAVE_FAILED };
-  if (result.value.kind === "gone") return { message: NOT_FOUND };
-  refresh();
-  return {};
+  return setDone(id, false);
 }
 
 /** Toujours supprimable (décision 3) : aucune dépendance. */
