@@ -2000,6 +2000,21 @@ describe("isolation des encaissements entre deux comptes fictifs", () => {
     assert.equal(next.error?.code, "23514", "demain refusé");
     const later = await a.client.from("payments").update({ received_on: "2999-01-01" }).eq("id", paymentA.id);
     assert.equal(later.error?.code, "23514");
+    const laterTomorrow = await a.client.from("payments").update({ received_on: tomorrow }).eq("id", paymentA.id);
+    assert.equal(laterTomorrow.error?.code, "23514", "demain refusé aussi à la mise à jour");
+    // Une mise à jour qui ne touche pas la date reste permise : une ligne ancienne s'édite toujours.
+    const sameDay = await a.client.from("payments").update({ note: "sans changer la date" }).eq("id", paymentA.id).select("note");
+    assert.ifError(sameDay.error);
+    assert.deepEqual(sameDay.data, [{ note: "sans changer la date" }]);
+    // Les contraintes valent aussi à la mise à jour, pas seulement à l'insertion.
+    const refusedUpdate = async (patch: Record<string, unknown>, code: string, label: string) => {
+      const r = await a.client.from("payments").update(patch).eq("id", paymentA.id);
+      assert.equal(r.error?.code, code, label);
+    };
+    await refusedUpdate({ amount_ht_cents: 0 }, "23514", "hors taxe nul à la mise à jour");
+    await refusedUpdate({ tax_cents: -1 }, "23514", "taxe négative à la mise à jour");
+    await refusedUpdate({ note: "" }, "23514", "remarque vide à la mise à jour");
+    await refusedUpdate({ received_on: null }, "23502", "date absente à la mise à jour");
     const id = await a.client.from("payments").update({ id: crypto.randomUUID() }).eq("id", paymentA.id);
     assert.equal(id.error?.code, "23514");
     const created = await a.client.from("payments").update({ created_at: "2020-01-01T00:00:00Z" }).eq("id", paymentA.id);
@@ -2010,7 +2025,8 @@ describe("isolation des encaissements entre deux comptes fictifs", () => {
     const second = await a.client.from("payments").insert({ ...base(), amount_ht_cents: 5000, tax_cents: 1000, note: "acompte" }).select("id").single();
     assert.ifError(second.error);
     const count = await a.client.from("payments").select("id", { count: "exact", head: true }).eq("invoice_id", invoiceA.id);
-    assert.ok((count.count ?? 0) >= 2, "plusieurs encaissements sur la même facture");
+    // paymentA, « 0 saisi », les bornes, puis cet acompte : quatre sur la même facture.
+    assert.equal(count.count, 4, "plusieurs encaissements sur la même facture");
     const upd = await a.client.from("payments").update({ amount_ht_cents: 7000, tax_cents: null, note: "corrigé" }).eq("id", second.data!.id).select("amount_ht_cents, tax_cents");
     assert.ifError(upd.error);
     assert.deepEqual(upd.data, [{ amount_ht_cents: 7000, tax_cents: null }]);

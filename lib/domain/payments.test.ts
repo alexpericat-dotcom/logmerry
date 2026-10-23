@@ -16,6 +16,11 @@ test("encaissement valide : centimes, champs vides absents, taxe inconnue = null
   assert.equal(zero.ok && zero.value.tax_cents, 0, "0 saisi reste 0 : c'est une donnée");
 });
 
+test("espaces autour de l'identifiant et du montant : retirés avant la validation", () => {
+  const r = validatePaymentInput({ ...ok, invoice_id: ` ${I} `, amount_ht: " 100 ", received_on: " 2026-10-20 " }, TODAY);
+  assert.deepEqual(r.ok && [r.value.invoice_id, r.value.amount_ht_cents, r.value.received_on], [I, 10000, "2026-10-20"]);
+});
+
 test("facture : identifiant valide obligatoire", () => {
   for (const bad of ["", "x"]) assert.deepEqual(keys(validatePaymentInput({ ...ok, invoice_id: bad }, TODAY)), ["invoice_id"], bad);
 });
@@ -78,7 +83,14 @@ test("taxe de la facture inconnue : le statut se calcule sur le hors taxe, la ta
   const part = invoiceBalance(unknown, [pay(40000, 99999)]);
   assert.deepEqual([part.status, part.basis, part.dueCents, part.paidCents, part.remainingCents, part.paymentsMissingTax], ["partial", "ht", 100000, 40000, 60000, 0]);
   assert.equal(invoiceBalance(unknown, [pay(100000, null)]).status, "paid");
+  assert.equal(invoiceBalance(unknown, [pay(40000, null)]).paymentsMissingTax, 0, "taxe de la facture inconnue : la taxe vide d'un encaissement n'est pas signalée");
   assert.equal(invoiceBalance({ amount_ht_cents: 100000, tax_cents: 0 }, [pay(100000, null)]).status, "paid", "taxe de la facture à 0 saisie : base toutes taxes comprises, rien à encaisser en plus");
+});
+
+test("cas figé : 1 200 € saisis en hors taxe sur une facture de 1 000 € HT + 200 € de taxe, taxe vide : payée, taxe de l'encaissement à confirmer", () => {
+  // Une confusion TTC/HT possible côté utilisateur : le code n'invente rien (taxe vide = zéro) et le signale.
+  const b = invoiceBalance(inv, [pay(120000, null)]);
+  assert.deepEqual([b.status, b.paymentsMissingTax], ["paid", 1]);
 });
 
 test("trop-perçu : calculé, le statut reste payée", () => {

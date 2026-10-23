@@ -48,7 +48,10 @@ export async function createPayment(invoiceId: string, _prev: PaymentFormState, 
   return { saved: true };
 }
 
-/** Un encaissement reste toujours modifiable (décision 3) ; sa facture, elle, ne change jamais (figée par la base). */
+/**
+ * Un encaissement reste toujours modifiable (décision 3) ; sa facture, elle, ne change jamais (figée par la base).
+ * `invoiceId` ne sert qu'à valider l'écho des valeurs et à réafficher le formulaire : il n'entre pas dans l'écriture.
+ */
 export async function updatePayment(id: string, invoiceId: string, _prev: PaymentFormState, formData: FormData): Promise<PaymentFormState> {
   const values = readValues(invoiceId, formData);
   const checked = validatePaymentInput(values, todayParis());
