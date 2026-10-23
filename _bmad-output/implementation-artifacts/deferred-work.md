@@ -1,210 +1,47 @@
-- source_spec: `_bmad-output/implementation-artifacts/spec-1-2-me-connecter-et-me-deconnecter.md`
-  summary: Vérifier que le lien de réinitialisation (GET sur /auth/confirm) n'est pas consommé par un scanner d'e-mails.
-  evidence: Le jeton est à usage unique ; un préchargement du lien par la messagerie le consommerait avant le clic. À tester au premier vrai e-mail ; remède possible : page de confirmation avec bouton (POST). Gravité estimée medium, non vérifiée.
-- source_spec: `_bmad-output/implementation-artifacts/spec-1-2-me-connecter-et-me-deconnecter.md`
-  summary: Ajouter des tests de la route /auth/confirm et du garde du proxy quand un lanceur de tests sera installé.
-  evidence: Seul lib/auth.ts est testé automatiquement ; la route et le proxy reposent sur des vérifications manuelles (curl local, liste de la preview), car ils exigent un client Supabase simulé.
-- source_spec: `_bmad-output/implementation-artifacts/spec-1-3-voir-mon-cockpit-vide-dans-la-barre-laterale.md`
-  summary: Rappeler à chaque nouvelle page de `app/(app)/` de ne pas compter seulement sur la redirection du layout.
-  evidence: Le layout redirige sous `Suspense`, en parallèle des pages enfants ; toute page qui lit des données doit passer par la RLS (`owner_id`) et son propre contrôle. À appliquer dès la story 2.1 (notes).
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-1-creer-et-lister-mes-notes.md`
-  summary: Tester `createNote` avec un client Supabase simulé et prouver la RLS de `notes` avec deux comptes.
-  evidence: Aucun test n'atteint l'action ni les policies ; la story 2.3 livre le script à deux comptes (à rejouer après chaque migration). Ajouter alors les cas : sans session, titre vide, échec d'insertion, succès sans `owner_id`.
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-1-creer-et-lister-mes-notes.md`
-  summary: Paginer la liste des notes et ne charger qu'un début de texte.
-  evidence: `listNotes` charge tout le texte de chaque note sans limite ; Supabase plafonne à 1 000 lignes par défaut. Sans effet avant quelques centaines de notes ; à traiter avec la recherche (2.4). Ajouter aussi `id` comme second critère de tri.
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-1-creer-et-lister-mes-notes.md`
-  summary: Ajouter une contrainte de longueur du texte (`body`) côté base.
-  evidence: La limite de 50 000 caractères n'existe que dans `lib/domain/notes.ts` ; une contrainte demande une nouvelle migration (un fichier par changement), à grouper avec celle de la story 2.2.
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-2-modifier-classer-supprimer-une-note.md`
-  summary: Tester `updateNote`/`deleteNote` (session, zéro ligne, erreur) et vérifier en base le déclencheur `updated_at` et la contrainte de 50 000 caractères.
-  evidence: Rien n'exécute ces cas automatiquement ; à regrouper avec le script à deux comptes de la story 2.3 (ajouter une mise à jour qui change `updated_at`, un texte trop long refusé, une suppression d'une note d'un autre compte qui n'affecte aucune ligne).
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-2-modifier-classer-supprimer-une-note.md`
-  summary: Conserver le filtre de type (`?type=`) au retour sur la liste après modification, suppression ou « Annuler ».
-  evidence: Ces actions renvoient sur `/notes` nu : l'utilisateur qui filtrait sur « Procédures » retombe sur « Toutes ». Sans importance avec peu de notes.
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`
-  summary: Étendre `tests/isolation.test.ts` à chaque nouvelle table (clients, missions, factures, extraits, historique, réalisations…).
-  evidence: Le script ne couvre que `notes` ; la règle de ta charte impose l'isolation sur toutes les tables, et la recherche vectorielle doit aussi filtrer par `owner_id`. À faire dans chaque story qui crée une table.
-- source_spec: `_bmad-output/implementation-artifacts/spec-2-3-deux-comptes-fictifs-ne-se-voient-pas.md`
-  summary: Brancher `npm run test:isolation` sur une vérification avant déploiement quand une CI existera.
-  evidence: Aucune CI aujourd'hui ; le rejeu après chaque migration dépend de la mémoire. Une action GitHub avec les deux comptes en secrets suffirait.
+# Travail différé (trié le 23 octobre 2026)
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-1-preparer-le-serveur-pour-l-ia.md`
-  summary: la fonction de recherche vectorielle (8.5) doit filtrer par `owner_id` sans perdre de résultats avec l'index HNSW.
-  evidence: un index HNSW filtré après coup peut renvoyer moins de `k` lignes ; prévoir une sur-lecture ou le balayage itératif de pgvector, et un test avec plusieurs comptes.
+Tri de 92 points : 8 vérifiés comme résolus et retirés, le reste regroupé par thème et par échéance. L'ancien détail, point par point, est dans l'historique git (`git show 88d4689:_bmad-output/implementation-artifacts/deferred-work.md`). Les nouveaux points s'ajoutent en bas, dans la section du thème concerné.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-3-indexer-une-note-a-l-enregistrement.md`
-  summary: tester `embedTexts` avec un `fetch` simulé (lots de 16 dans l'ordre, statut non OK, délai).
-  evidence: seul l'appel réel (script jetable) le couvre ; une erreur d'ordre entre lots désalignerait extraits et vecteurs pour une note de plus de 16 extraits.
+**Retirés car résolus (vérifiés dans le code)** : isolation à deux comptes sur toutes les tables (12 groupes dans `tests/isolation.test.ts`) ; CI créée (tsc, lint, tests unitaires) ; contrainte `notes_body_length` (50 000 caractères) ; `hnsw.iterative_scan` posé dans `match_chunks` ; effacement de l'historique (`clearHistory`, testé par `purge.test.ts`) ; téléphone et adresse d'un contact ; décision `on delete restrict` de `missions.client_id` ; rappel « ne pas compter sur le layout » (appliqué à chaque page).
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-5-retrouver-les-passages-pertinents.md`
-  summary: passer `hnsw.iterative_scan` de `relaxed_order` à `strict_order` dans `match_chunks` quand le nombre d'extraits devient grand.
-  evidence: `relaxed_order` peut ranger légèrement hors ordre les résultats de l'index ; la limite interne peut alors couper un extrait un peu plus proche. Sans effet tant que la table est petite (balayage séquentiel) ; modifier la fonction demande de recharger pgvector dans la migration (voir la note de la migration).
+## 1. Avant le passage à l'outil pro (première vraie donnée)
+- Tester la suppression d'un compte jetable avec fiches, missions, profil et règles chaînées ou vérifiées : `missions.client_id` est en `restrict`, `owner_id` en `cascade`, l'ordre peut faire échouer la cascade ; ni `professional_profile` ni `regulatory_rules` n'ont de règle de suppression. Sinon purger les missions avant les fiches.
+- Mention RGPD pour l'envoi des extraits à Anthropic et Mistral ; durée de conservation de l'historique de l'assistant (l'effacement existe, pas la durée).
+- Le lien de réinitialisation du mot de passe (GET sur `/auth/confirm`) peut être consommé par un scanner d'e-mails : à tester au premier vrai e-mail ; remède : page de confirmation avec un bouton (POST).
+- Aucune anonymisation du nom du client écrit dans un titre de story envoyé à l'IA (8.21) ; compléter la mention de confidentialité des 8.16 et 8.17 (titre de la mission, nom du client, comme en 8.18 et 8.19).
+- Une règle « essai » est créable par l'API par n'importe quel compte (seule l'étiquette DEMO la distingue) : rien ne la réserve au compte de démonstration.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
-  summary: tester `retrieveChunks` avec un faux client Supabase et extraire l'index de la palette ⌘K en fonction pure testée.
-  evidence: le mappage des champs, le titre de repli et le décalage d'index (+1 avec l'entrée de l'assistant) ne sont couverts que par les essais de bout en bout et à la main.
+## 2. Priorité haute : tests des actions serveur (une seule solution pour tous)
+Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testés. Les actions ne le sont pas : retirer `.select("id")`, inverser `data?.length` ou un garde `.eq("status", …)` laisserait tout vert. Depuis que les clients sont typés (`Db`), un faux client typé est faisable une fois, avec `next/navigation` et `next/cache` remplacés, puis réutilisable partout. Actions concernées : notes (`createNote`, `updateNote`, `deleteNote`), fiches, contacts, `promoteToClient`, missions, stories, tâches, sprints (`closeSprint`, `moveStory`, `deleteSprint`, `renumber` avec filtre), devis (`quote-actions.ts`), `saveProfile` (extraire `buildUpdate` si l'action grossit), `addStoryWithTasks` (compensation), `applyStoryReview` (écriture conditionnelle sur `updated_at`), `placeStoriesInSprint`, `composeSprint`. À ajouter : `retrieveChunks` (voie par mots-clés ignorée si elle échoue, voie par sens fatale), `embedTexts` (lots de 16 dans l'ordre, statut non OK, délai), l'index de la palette ⌘K en fonction pure, la route `/auth/confirm` et le garde du proxy.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-8-poser-une-question-a-l-assistant.md`
-  summary: tester `retrieveChunks` (échec de la voie par mots-clés ignoré, échec de la voie par sens fatal) avec un faux client.
-  evidence: le comportement n'est couvert que par l'essai de bout en bout ; deux chemins asynchrones et une fusion dépendent de lui.
+## 3. Priorité moyenne
+- **CI** : brancher `test:isolation` et `tests/sql/*.sql` (collés à la main aujourd'hui) avec un compte de test jetable en secrets ; plus `next build`.
+- **Deux acceptations de devis simultanées** : la sérialisation repose sur `select … for update` dans `accept_quote`, aucun test à deux connexions ne la prouve.
+- **Coût de l'IA** : pas de plafond de générations par utilisateur (8.16, 8.17, 8.18, 8.21) ; la vérification des chiffres ne contrôle pas les entiers de 1 à 9 ni les nombres en lettres ; la consigne générée n'est pas filtrée contre un mot de passe ou un conseil fiscal ; titres des autres stories envoyés sans plafond ; réponse coupée par `max_tokens` sans message distinct ; une réponse avec remarques mais sans version `story` est refusée.
+- **Actions sérialisées** : après « Annuler », la relance attend la fin de l'appel précédent, jusqu'à 60 s (8.16, 8.17, 8.21) ; erreurs de lecture avalées par `withSession` sans journal.
+- **`updateStory` écrase le statut** avec celui du formulaire resté ouvert (ouvrir l'édition, changer le statut par le menu, enregistrer le formulaire ramène l'ancien statut).
+- **Jeu de test RAG** : le score varie (18, 19, 20 observés) et la consigne est réglée sur ce même jeu ; option `--runs N` et questions non vues. Dernier passage : 20 sur 20.
+- **Pour les stories futures** : le cockpit (epic 5) doit filtrer `status = 'sent'` pour les règles 5 et 6 ; `usableRule` doit relancer `parseParams` sur la ligne lue (4.4 et suivantes) ; `missingFields` ne signale pas statut et catégorie préremplis, les règles exigeront « Confirmé » ou `unconfirmedInputs` (AD-5) ; lien avec le cockpit pour les sprints (stories 5.x).
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-retrouver-mon-historique.md`
-  summary: ajouter un moyen d'effacer l'historique de l'assistant (et décider d'une durée de conservation).
-  evidence: les questions tapées sont conservées sans limite ni moyen de les retirer ; la politique de suppression existe en base (aucune interface). À traiter avec la mention RGPD, avant toute donnée réelle.
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-10-retrouver-mon-historique.md`
-  summary: index sur `message_citations.note_id` et `chunk_id`, et chargement de l'historique à l'ouverture du panneau.
-  evidence: chaque suppression de note ou régénération d'extraits parcourt la table des citations (`on delete set null`) ; l'historique est relu à chaque chargement de la mise en page. Négligeable aujourd'hui.
+## 4. Reporté tant que l'usage reste solo et petit
+- **Plafond de 1 000 lignes de PostgREST** : fiches, missions, notes (`listNotes` sans pagination), palette ⌘K (lit tout à chaque frappe), avancement des missions, backlog et tâches au-delà de 1 000. Marqué `ponytail` ; à traiter ensemble (recherche en base ou pagination) si un compte approche 1 000 lignes. Ajouter `id` comme second critère de tri des notes.
+- **Écritures non atomiques et positions simultanées** : pas de contrainte unique `(mission_id, position)` ni `(story_id, position)`, `moveStory` et `closeSprint` en deux écritures, `renumber` par ligne, stories reportées à la clôture à égalité de position, fenêtre de course de la 8.20, `addStoryWithTasks` en deux écritures. Remède unique : fonctions SQL transactionnelles (`reorder`, `add_story_with_tasks`) si deux onglets ou une panne deviennent un vrai problème. Aucun plafond du nombre de stories par mission ni de tâches par story ; `parseReorderIds` plafonne à 500 (message « a changé entre-temps » trompeur au-delà).
+- **Index sur `message_citations.note_id` et `chunk_id`** ; historique relu à chaque chargement de la mise en page. Négligeable.
+- **`strict_order`** de `hnsw.iterative_scan` quand le nombre d'extraits devient grand (demande de recharger pgvector dans la migration).
+- **Dates** : `parisToday` autour du changement d'heure du 25 octobre 2026 ; sprint planifié dont la fin est passée ; pas de contrôle de chevauchement des sprints ; date d'envoi d'un devis dans le futur acceptée ; date de confirmation du profil et date de vérification d'une règle posées par le code et non bornées par la base (`now()` n'est pas immuable dans un `CHECK`).
+- **Petits défauts de base** : `set_updated_at` exécutable par `anon` (fonction de déclencheur, non exploitable) ; motif d'un lien officiel légèrement différent entre le code (`\S`) et la base (`[^[:space:]]`) ; supprimer la version en vigueur d'une règle laisse la précédente close (échec sûr, « paramètre manquant ») ; une source saisie sans lien ne se corrige pas, il faut supprimer et ressaisir.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-14-jeu-de-test-du-rag-et-score.md`
-  summary: option `--runs N` pour `test:rag` (plusieurs passages, taux de réussite par question) et jeu de questions non vues pour ne pas régler l'assistant sur le jeu de test.
-  evidence: le résultat varie d'une exécution à l'autre (18, 19, 20 observés) et la consigne a été réglée sur ce même jeu ; un score unique contre un seuil de 18 est instable.
+## 5. Accessibilité et interface (à traiter avec la story 7.2)
+- Message de succès et focus sur le premier champ en erreur après l'envoi d'un formulaire ; région vocale unique et toujours montée (deux `role="status"` dans la même section) ; régions « live » à tester avec un vrai lecteur d'écran ; fermer le panneau pendant « Garder » ne laisse aucun retour visible.
+- Niveau de titre « Tâches » (h3) identique à celui du nom du sprint (h3) ; ligne de story repliée sur deux lignes à 412 px ; glisser au toucher non testé sur un vrai téléphone.
+- Thème clair non vérifié pour les panneaux de relecture (8.18), de composition de sprint (8.19), d'ordre (8.20) et des tâches proposées (8.17b) : un seul passage dans Chrome suffit.
+- Le filtre de type (`?type=`) se perd au retour sur `/notes` après modification, suppression ou « Annuler ».
+- « Modifier » une story démonte ses tâches (le texte tapé disparaît) ; ouvrir l'ajout d'une story à la main démonte le panneau d'ordre et perd la proposition ; le formulaire de tâches de la 8.17b reste modifiable pendant l'envoi ; message d'erreur de réordonnancement jamais effacé avant le déplacement suivant.
+- Avant l'hydratation, un envoi de formulaire sans `action` retombe en GET et met le texte dans l'URL (faible) ; « Mission liée » propose aussi les missions terminées et annulées ; la confirmation de suppression d'une mission ne dit pas combien de sprints partent avec elle ; `mergeReview` valide aussi les champs non cochés (message trompeur).
+- Contraste du texte sur les dégradés (Forest sur dégradé 1 et 2, Chalk sur dégradé 5) à tester quand le portfolio public et le bandeau du Cockpit les utiliseront.
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-1-4-appliquer-le-theme-logmerry.md`
-  summary: tester le contraste du texte sur les dégradés (Forest sur dégradé 1 et 2, Chalk sur dégradé 5) quand ils seront utilisés, avec le portfolio public et le bandeau du Cockpit.
-  evidence: les paires validées de `DESIGN.md` (10,60 ; 7,47 ; 6,65) ne sont pas encore couvertes par un test, car aucun écran n'utilise ces dégradés avec du texte.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
-  summary: Téléphone et adresse (postale) d'un client ou d'un contact, et remarque libre sur une fiche.
-  evidence: Non prévus par l'epic 3 (un contact n'a que nom et e-mail facultatif, story 3.2) ; Alex a demandé où seraient e-mail, coordonnées et adresse ; à décider avec la story 3.2.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
-  summary: Tester les Server Actions des notes et des fiches (zéro ligne touchée → « n'existe plus », session absente, identifiant invalide) avec `next/navigation` et `next/cache` remplacés.
-  evidence: Retirer `.select("id")` ou inverser `data?.length` ferait afficher un succès sur une fiche d'un autre compte ; le test d'isolation ne vérifie que la base. Choix repris des notes (colle fine), à revoir.
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
-  summary: Après l'envoi d'un formulaire (notes, fiches) : message de succès et focus sur le premier champ en erreur.
-  evidence: Relecteur aveugle ; commun à tous les formulaires, à traiter avec l'accessibilité (story 7.2).
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-gerer-mes-prospects-et-clients.md`
-  summary: Décider le comportement `on delete` des clés étrangères vers `clients` (missions, devis, factures) : refuser ou conserver, et le dire dans le message de suppression.
-  evidence: Le message actuel dit « définitif » ; dès qu'une mission référence une fiche, la suppression doit être pensée (story 3.4).
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
-  summary: Adresse et téléphone sur la fiche client elle-même (entreprise), à saisir avec l'epic 4 (factures).
-  evidence: Alex a dit « plus tard » ; l'adresse d'une entreprise appartient à la fiche plus qu'à un contact, et les factures en auront besoin.
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
-  summary: « Contact principal » par fiche (un seul).
-  evidence: Alex a dit « on garde pour plus tard » ; demande une règle de base garantissant l'unicité par fiche.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-2-ajouter-des-contacts-et-passer-un-prospect-en-client.md`
-  summary: Tester aussi les Server Actions des contacts (ajout, modification, suppression) et `promoteToClient`, avec la même solution que pour les notes et les fiches.
-  evidence: Relecteurs (lacune de vérification) : changer `promoteToClient` en `status: "prospect"` ou retirer `.select("id")` laisserait tous les tests passer.
-
-- source_spec: idée d'Alex du 2026-10-15 (hors spec, à garder pour plus tard)
-  summary: pièces jointes aux notes : photos, documents (PDF, etc.) et enregistrements audio.
-  evidence: pas décidé ni cadré. Points à trancher le moment venu : stockage dans Supabase Storage (déjà dans la stack) avec une règle d'accès par propriétaire comme pour les tables ; limites de taille et de type ; effet sur le RAG (extraction du texte des documents, transcription des enregistrements, indexation et citation de la source) ; vie privée (les extraits partent chez Mistral AI et Anthropic : mention RGPD, aucune donnée réelle de client pendant le Workshop 8) ; suppression et purge au passage à l'outil pro (fichiers inclus) ; accès mobile (prise de photo, dictée). Probablement un epic à part après le MVP, à relier aux notes (epic 2) et à la base de connaissances.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
-  summary: tester la suppression d'un compte `auth.users` qui a des fiches et des missions, avant le passage à l'outil pro (la purge de la base).
-  evidence: `missions.client_id` est en `on delete restrict` (suppression d'une fiche refusée tant qu'elle a des missions) et `missions.owner_id` en `on delete cascade` ; le `restrict` immédiat peut faire échouer la cascade d'un compte selon l'ordre des suppressions (relecteur, confiance moyenne, non testé). À vérifier avec un compte jetable ; sinon purger les missions avant les fiches, ou passer la clé étrangère en `no action`.
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
-  summary: tester les Server Actions des missions (création, modification, suppression) et le refus de suppression d'une fiche, avec la même solution que pour les notes, fiches et contacts.
-  evidence: les tests couvrent la base (isolation) et les règles pures, pas les actions : inverser la vérification d'existence du client ou le code 23503 laisserait tout vert.
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-4-creer-des-missions.md`
-  summary: liste des missions sans plafond ni pagination ; double envoi du formulaire sans clé d'idempotence.
-  evidence: l'API plafonne à 1 000 lignes par défaut, le total et les filtres ne porteraient que sur les plus récentes ; négligeable pour une activité à un seul utilisateur.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-5a-backlog-et-user-stories.md`
-  summary: unicité `(mission_id, position)` ou renumérotation atomique du backlog ; limite du nombre de stories par mission ; tests des Server Actions de stories.
-  evidence: deux ajouts ou deux déplacements simultanés (deux onglets) peuvent produire des positions en double, départagées par `created_at` et réparées au prochain déplacement ; aucun test ne couvre les actions ; un compte peut créer des milliers de stories (dégradation de sa propre page).
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-5a-backlog-et-user-stories.md`
-  summary: `updateStory` écrase le statut avec celui du formulaire resté ouvert ; avancement de la liste des missions plafonné à 1 000 stories par l'API.
-  evidence: ouvrir l'édition, changer le statut par le menu, puis enregistrer le formulaire ramène l'ancien statut ; l'avancement de toutes les missions est lu d'un coup.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-5b-taches-d-une-user-story.md`
-  summary: ordre des tâches et des stories : mêmes limites que la 3.5a (écritures non atomiques, positions simultanées) ; pas de limite du nombre de tâches par story ; tests des Server Actions de tâches ; glisser au toucher non testé sur un vrai téléphone.
-  evidence: deux déplacements simultanés dans deux onglets : le second est refusé si les éléments ont changé, sinon le dernier gagne ; seul l'émulateur de Chrome a servi pour le toucher.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-5b-taches-d-une-user-story.md` (relecture)
-  summary: « Modifier » une story démonte ses tâches ; message d'erreur de réordonnancement jamais effacé avant le déplacement suivant ; pas de plafond de tâches par story (500 au plus acceptées au réordonnancement) ; ligne de story repliée sur plusieurs lignes à 412 px ; glisser d'une story dépliée difficile sur téléphone.
-  evidence: taper une tâche puis cliquer « Modifier » la story et annuler vide le champ ; au-delà de 500 tâches un déplacement répond « a changé entre-temps » ; à 412 px la ligne repliée prend deux lignes (titre sur deux au plus, puis statut).
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md`
-  summary: pas de plafond de générations par utilisateur (coût d'API), comme la 8.16 ; la vérification des chiffres ne contrôle pas les entiers de 1 à 9 ni les nombres en lettres ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.
-  evidence: un utilisateur connecté peut relancer la génération en boucle ; « Prévoir huit relances » passerait.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-17-decouper-une-story-en-taches-avec-l-ia.md` (relecture)
-  summary: un ajout de tâches lancé puis panneau fermé réussit sans retour visible ; positions en double si deux onglets ajoutent ensemble (pas de contrainte unique sur `(story_id, position)`).
-  evidence: fermer le panneau pendant « Garder » vide l'annonce ; la page se rafraîchit mais rien ne dit que c'est enregistré.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md`
-  summary: pas de plafond de générations ; pas d'anonymisation des noms de client dans les titres ; notes jamais envoyées (à proposer en choix explicite plus tard) ; vérification des nombres limitée (entiers de 1 à 9 et nombres en lettres non contrôlés).
-  evidence: un nom de client écrit dans un titre de story part tel quel ; la consigne seule empêche un conseil fiscal ou juridique sans chiffre.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-8-21-generer-un-prompt-depuis-une-mission.md` (relecture)
-  summary: actions serveur d'un même client sérialisées (après « Annuler », la relance attend la fin de l'appel précédent, jusqu'à 60 s : vaut pour 8.16, 8.17 et 8.21) ; erreurs de lecture avalées par `withSession` sans journal ; consigne générée non filtrée contre mot de passe ou conseil fiscal ; régions « live » remontées à chaque annonce à tester avec un vrai lecteur d'écran ; backlog et tâches au-delà de 1 000 lignes.
-  evidence: Annuler puis relancer tout de suite attend l'ancien appel ; une erreur de statut inconnu ne laisse aucune trace ; un objectif « demande le mot de passe admin » peut être repris dans la consigne.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-3-5c-sprints.md`
-  summary: niveau de titre « Tâches » (h3) identique à celui du nom du sprint (h3) quand une story est dans un sprint ; la confirmation de suppression d'une mission ne dit pas combien de sprints partent avec elle ; positions identiques pour les stories reportées à la clôture (renumérotées au prochain glisser-déposer) ; pas de contrôle de chevauchement des sprints ; lien avec le cockpit à construire (stories 5.x).
-  evidence: structure de titres : Sprints (h2) > sprint (h3) > Tâches (h3) ; seules les stories sont comptées à la suppression d'une mission.
-
-## De la relecture de la 3.5c (17 octobre)
-- Région vocale unique et toujours montée (au lieu d'une région recréée à chaque annonce, muette sur certains lecteurs d'écran) ; deux `role="status"` dans la même section.
-- Clôture : les stories reportées prennent la même position ; conserver leur ordre dans le sprint.
-- Tests d'actions serveur (`closeSprint`, `place`, `moveStory`, `deleteSprint`, `renumber` avec filtre de liste) et d'isolation d'un sprint clos (à écrire avec le déclencheur).
-- `parisToday` autour du changement d'heure du 25 octobre 2026 ; sprint planifié dont la fin est passée.
-- `moveStory` et `closeSprint` : deux écritures non atomiques (procédure stockée si une panne entre les deux devient gênante).
-
-## De la relecture de la 8.17b (17 octobre)
-- Test automatique de `addStoryWithTasks` : compensation, tâches forgées, note disparue (faux client Supabase).
-- Vérifier dans le navigateur : compensation (échec d'ajout des tâches) et thème clair du panneau.
-- Mode « Modifier » d'une proposition : les tâches restent modifiables pendant l'envoi (le formulaire des stories n'expose pas son état d'envoi).
-- Garder une story et ses tâches dans une seule fonction SQL transactionnelle (aujourd'hui compensation en deux écritures).
-
-## De la relecture de la 8.18 (17 octobre)
-- Réponse coupée par `max_tokens` sur une très grosse story : message distinct de « Relecture impossible ».
-- `mergeReview` valide aussi les champs non cochés : message trompeur si un champ ancien non coché est invalide.
-- Une réponse avec remarques mais sans version `story` est refusée (les remarques seraient utiles).
-- Titres des autres stories envoyés sans plafond ; pas de limite de générations (déjà noté).
-- Test automatique de `applyStoryReview` (écriture conditionnelle sur `updated_at`) avec un faux client Supabase.
-- Thème clair de la relecture non vérifié dans le navigateur.
-
-## De la relecture de la 8.19 (17 octobre)
-- Test automatique de `placeStoriesInSprint` et `composeSprint` (faux client Supabase).
-- Deux placements concurrents dans le même sprint depuis deux onglets : positions à égalité (aucune perte).
-- Lecture du backlog plafonnée à 1 000 lignes par PostgREST (négligeable en solo).
-- L'objectif d'un sprint ne passe pas par `validateSprintInput` (longueur seulement) : retours à la ligne acceptés.
-- Compléter la mention de confidentialité des 8.16 et 8.17 (titre de la mission, nom du client, comme en 8.18 et 8.19).
-- Thème clair du panneau « Composer avec l'IA » non vérifié ; placement partiel et sprint clos par course vérifiés par la lecture du code seulement.
-
-## De la relecture de la 8.20 (18 octobre)
-- Fenêtre de course entre la relecture du serveur et `renumber` : un glisser-déposer passé entre les deux serait écrasé (`renumber` ne vérifie que l'ensemble des stories, pas l'ordre) ; écritures par ligne sans transaction (même limite que le glisser-déposer).
-- `parseReorderIds` plafonne à 500 identifiants : un backlog hors sprint de plus de 500 stories ne pourrait pas être réordonné (message « a changé entre-temps » trompeur).
-- Ouvrir l'ajout d'une story à la main démonte le panneau d'ordre et perd la proposition en cours.
-- Story omise par l'IA et identifiants forgés en sortie brute : couverts par les tests purs, pas par un essai réel.
-- Thème clair du panneau d'ordre non vérifié.
-
-## De la relecture de la 3.6 (18 octobre)
-- Deux acceptations simultanées : la sérialisation repose sur `select … for update` dans `accept_quote` (correct à la lecture) mais aucun test à deux connexions ne la prouve ; le script SQL ne joue qu'une transaction (un retrait du `for update` passerait inaperçu). Test à écrire avec deux sessions du même compte (le devis envoyé qu'il crée n'est pas supprimable : fiche jetable à nettoyer par SQL).
-- Les actions `quote-actions.ts` (gardes `.eq("status", …)`, correspondance des codes d'erreur, cas « figé ») n'ont pas de test propre : couvertes par le script SQL et le parcours Chrome seulement.
-- Le cycle complet des devis (figés, `accept_quote`) vit dans `tests/sql/quotes-lifecycle.sql`, collé à la main : pas dans la CI. À automatiser si un compte de test jetable devient possible.
-- « Mission liée » propose aussi les missions terminées et annulées.
-- Date d'envoi dans le futur acceptée sans avertissement (pas de règle dans la spec).
-- `set_updated_at` reste exécutable par `anon` et `public` (antérieur à la 3.6, non exploitable : fonction de déclencheur) ; `quotes_guard` durci dans la migration 20261018100300.
-- Le cockpit (epic 5) devra filtrer `status = 'sent'` pour les règles 5 et 6 : un brouillon n'y compte pas.
-
-## De la relecture de la 3.7 (18 octobre)
-- La recherche ⌘K lit toutes les fiches, tous les contacts et toutes les missions à chaque frappe (après 200 ms) et le plafond de 1 000 lignes de PostgREST fait sortir sans erreur les plus anciennes au-delà : même limite que les fiches, notée `ponytail`. À traiter ensemble (recherche en base ou pagination) si un compte approche 1 000 lignes.
-- Une erreur de lecture des missions fait échouer toute la recherche (notes et fiches comprises) : tout ou rien, comme pour les fiches et les contacts. Un échec partiel avec message serait à décider pour les trois sources à la fois.
-- `fold` (pliage des accents) est exporté de `lib/domain/clients.ts` ; sa place naturelle est `lib/domain/search.ts`. Il ne plie pas « œ », « ß », « ł » (pas de décomposition NFD) : sans importance en français courant.
-- Aucun test de composant pour la palette (ordre des groupes, masquage d'un groupe vide, lien, statut) : vérifié à la main dans Chrome ; le dépôt n'a pas de tests de composants.
-- Titres identiques : l'ordre est celui de la lecture (plus récent d'abord), non spécifié ni testé.
-
-## De la relecture de la 4.1a (18 octobre)
-- Pas de règle de suppression sur `professional_profile` : la purge du passage à l'outil pro devra passer par la cascade de suppression du compte ou par le SQL, et le test de cette cascade (compte jetable) n'existe pas.
-- `saveProfile` n'a pas de test unitaire : extraire une fonction pure `buildUpdate(target, intent, formData)` si l'action grossit (la validation d'un champ est déjà testée dans `profile.test.ts`).
-- Avant l'hydratation de la page, un envoi retombe en GET et met le texte saisi dans l'URL (formulaire sans `action`) ; faible, à traiter avec `method="post"` ou en n'activant les boutons qu'après hydratation.
-- La date de confirmation vient de l'horloge du serveur Next, pas de la base ; le propriétaire peut aussi poser lui-même une date (même future) en écrivant directement par l'API : sans effet entre comptes, mais « la base est le dernier juge » est relatif. Plafonner à `now()` dans le déclencheur si cela compte.
-- `missingFields` ne signale pas statut et catégorie préremplis (« Déclaré ») : les règles futures devront exiger l'état « Confirmé » ou lire `unconfirmedInputs` (AD-5), pas seulement l'absence de valeur.
-- La course entre deux onglets est couverte pour « Confirmer » (valeur vue envoyée et vérifiée), pas testée de bout en bout : vérifiée à la lecture seulement.
-- Catégorie (BNC / BIC) et ACRE n'ont pas d'option « Autre » (ACRE a « Je ne sais pas », qui compte comme « À confirmer ») : décision de l'auteur (18 octobre) : on laisse ainsi.
-
-## De la relecture de la 4.1b (18 octobre)
-- Supprimer la version en vigueur d'une règle laisse la précédente close à sa date de fin : plus aucune règle en vigueur (« paramètre manquant », échec sûr) jusqu'à une nouvelle saisie à partir de cette date. Le panneau de suppression le dit. Une fonction `delete_rule_version` qui rouvre la précédente serait la suite si cela gêne.
-- Une règle « essai » reste créable par l'API par n'importe quel compte (la base accepte « essai » avec la source DEMO, décision 5) : l'application ne l'offre pas et l'étiquette « DEMO, non officielle » la suit partout, mais rien dans la base ne la réserve au compte de démonstration.
-- Les `params` ne sont validés que par l'action serveur (la base vérifie seulement que c'est un objet) : quand les formules arriveront (4.4 et suivantes), `usableRule` devra relancer `parseParams` sur la ligne lue et traiter un échec comme « paramètre manquant ».
-- La date de vérification dans le futur et l'horizon de revérification (5 ans) sont bornés par le code seulement, pas par la base (`now()` n'est pas immuable dans un `CHECK`).
-- Une source saisie sans lien (« à vérifier ») ne se corrige pas : il faut supprimer la version et la ressaisir ; une action « corriger la source » serait un confort.
-- Le motif d'un lien officiel diffère légèrement entre le code (`\S`) et la base (`[^[:space:]]`) pour les espaces Unicode exotiques ; sans effet exploitable.
-- `displayState` compare la revérification à la date visée par le calcul (`asOf`), conformément à AD-12 : un calcul sur une période passée ne voit pas une règle encore en vigueur comme périmée.
-- Aucun test de la cascade de suppression d'un compte avec des règles chaînées ou vérifiées (comme pour le profil : compte jetable nécessaire).
+## 6. Idées à cadrer (aucune décision prise)
+- Pièces jointes aux notes (photos, PDF, enregistrements audio) : idée d'Alex du 15 octobre. À trancher : Supabase Storage avec accès par propriétaire, limites de taille et de type, extraction du texte et transcription pour le RAG, RGPD (extraits chez Mistral AI et Anthropic), purge au passage à l'outil pro, accès mobile. Probablement un epic à part après le MVP.
+- Adresse et téléphone sur la fiche client elle-même (entreprise), à saisir avec les factures ; remarque libre sur une fiche ; « contact principal » unique par fiche (demande une règle de base pour l'unicité).
+- Fonction `delete_rule_version` qui rouvre la version précédente ; action « corriger la source » d'une règle.
+- `fold` (pliage des accents) est dans `lib/domain/clients.ts`, sa place serait `lib/domain/search.ts` ; il ne plie pas « œ », « ß », « ł » ; échec de la palette ⌘K tout ou rien (un échec partiel avec message est à décider pour fiches, contacts et missions ensemble) ; ordre des titres identiques non spécifié.
