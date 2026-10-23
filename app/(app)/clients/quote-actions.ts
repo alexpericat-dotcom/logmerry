@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { isUuid } from "@/lib/domain/notes";
 import { isDay } from "@/lib/domain/missions";
+import { QUOTE_INVOICE_REFUSAL } from "@/lib/domain/invoices";
 import { validateQuoteInput, type QuoteErrors } from "@/lib/domain/quotes";
 import type { TablesUpdate } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
@@ -129,11 +130,13 @@ export async function deleteQuote(id: string): Promise<QuoteActionState> {
   const result = await withSession(async (supabase) => {
     if (!isUuid(id)) return { kind: "gone" as const };
     const { data, error } = await supabase.from("quotes").delete().eq("id", id).eq("status", "draft").select("client_id");
+    if (error?.code === "23503") return { kind: "has-invoice" as const }; // une facture est liée à ce devis (clé étrangère sans cascade)
     if (error) return { kind: "error" as const };
     return data?.length ? { kind: "saved" as const, clientId: data[0].client_id as string } : { kind: "lost" as const };
   });
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value.kind === "error") return { message: "Suppression impossible. Le devis est conservé. Réessaie." };
+  if (result.value.kind === "has-invoice") return { message: QUOTE_INVOICE_REFUSAL };
   if (result.value.kind === "gone") return { message: NOT_FOUND };
   if (result.value.kind === "lost") return { message: "Seul un brouillon se supprime, ou ce devis n'existe plus. Recharge la page." };
   refresh(result.value.clientId);

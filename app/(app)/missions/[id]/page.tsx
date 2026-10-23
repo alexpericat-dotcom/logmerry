@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Backlog } from "@/components/backlog";
+import { InvoicesPanel } from "@/components/invoices-panel";
 import { MissionPrompt } from "@/components/mission-prompt";
 import { MissionStatusBadge } from "@/components/mission-status";
 import { PageBanner } from "@/components/page-banner";
 import { Unset } from "@/components/unset";
 import { Button } from "@/components/ui/button";
+import { listInvoiceChoices, listInvoicesForMission } from "@/lib/db/invoices";
 import { getMission } from "@/lib/db/missions";
 import { listNotesForClient } from "@/lib/db/notes";
 import { listSprints } from "@/lib/db/sprints";
@@ -16,7 +18,7 @@ import { listTasks } from "@/lib/db/tasks";
 import { listStories } from "@/lib/db/user-stories";
 import { isUuid } from "@/lib/domain/notes";
 import { parisToday } from "@/lib/domain/sprints";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, todayParis } from "@/lib/format";
 
 export const metadata = { title: "Mission · LogMerry" };
 
@@ -28,7 +30,7 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
   const mission = await getMission(id);
   if (!mission) notFound();
   const [stories, notes] = await Promise.all([listStories(id), listNotesForClient(mission.client_id)]);
-  const [tasks, sprints] = await Promise.all([listTasks(stories.map((s) => s.id)), listSprints(id)]);
+  const [tasks, sprints, invoices, choices] = await Promise.all([listTasks(stories.map((s) => s.id)), listSprints(id), listInvoicesForMission(id), listInvoiceChoices()]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,6 +86,12 @@ async function MissionView({ params }: { params: Promise<{ id: string }> }) {
             <dd className="font-mono text-xs tabular-nums">{formatDateTime(mission.created_at)}</dd>
           </div>
         </dl>
+      </section>
+      <section aria-labelledby="invoices-title" className="flex flex-col gap-3">
+        <h2 id="invoices-title" className="text-lg font-semibold">
+          Factures
+        </h2>
+        <InvoicesPanel invoices={invoices} missions={choices.missions} quotes={choices.quotes} today={todayParis()} missionId={id} emptyText="Aucune facture pour cette mission." />
       </section>
       <MissionPrompt missionId={id} hasClient={!!mission.client} />
       <Backlog missionId={id} stories={stories} tasks={tasks} sprints={sprints} today={parisToday()} notes={notes.filter((n) => n.status === "active").map((n) => ({ id: n.id, title: n.title, created_at: n.created_at }))} />

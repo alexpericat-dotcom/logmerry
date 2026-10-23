@@ -8,12 +8,12 @@ import { HOME_PATH, NAV_ITEMS, isCurrent } from "./nav.ts";
 test("la barre a les 11 entrées prévues, dans l'ordre", () => {
   assert.deepEqual(
     NAV_ITEMS.map((i) => i.label),
-    ["Cockpit", "Notes", "Clients", "Missions", "Factures", "Échéances", "Paramètres", "Réalisations", "À faire", "Profil", "Règles"],
+    ["Cockpit", "Notes", "Clients", "Missions", "Échéances", "Paramètres", "Réalisations", "À faire", "Factures", "Profil", "Règles"],
   );
 });
 
-test("le cockpit, les notes, les clients, les missions, le profil, les règles et les paramètres sont disponibles pour l'instant", () => {
-  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/parametres", "/profil", "/regles"]);
+test("le cockpit, les notes, les clients, les missions, les factures, le profil, les règles et les paramètres sont disponibles pour l'instant", () => {
+  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/parametres", "/factures", "/profil", "/regles"]);
 });
 
 test("isCurrent : page exacte ou sous-page, pas un préfixe de mot", () => {

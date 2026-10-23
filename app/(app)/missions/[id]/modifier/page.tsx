@@ -5,9 +5,11 @@ import { updateMission } from "@/app/(app)/missions/actions";
 import { DeleteMission } from "@/components/delete-mission";
 import { MissionForm } from "@/components/mission-form";
 import { PageBanner } from "@/components/page-banner";
+import { countInvoicesForMission } from "@/lib/db/invoices";
 import { getMission } from "@/lib/db/missions";
 import { countQuotesForMission } from "@/lib/db/quotes";
 import { storyProgressByMission } from "@/lib/db/user-stories";
+import { invoicesRefusal } from "@/lib/domain/invoices";
 import { isUuid } from "@/lib/domain/notes";
 import { MISSION_QUOTE_REFUSAL } from "@/lib/domain/quotes";
 
@@ -18,7 +20,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
-  const [progress, quoteCount] = await Promise.all([storyProgressByMission([id]), countQuotesForMission(id)]);
+  const [progress, quoteCount, invoiceCount] = await Promise.all([storyProgressByMission([id]), countQuotesForMission(id), countInvoicesForMission(id)]);
   const storyCount = progress[id]?.total ?? 0;
 
   return (
@@ -32,9 +34,9 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
         submitLabel="Enregistrer les modifications"
         cancelHref={`/missions/${id}`}
       />
-      {quoteCount > 0 ? (
+      {invoiceCount > 0 || quoteCount > 0 ? (
         <p role="note" className="max-w-2xl rounded-md border p-3 text-sm text-muted-foreground">
-          {MISSION_QUOTE_REFUSAL}
+          {invoiceCount > 0 ? invoicesRefusal(invoiceCount) : MISSION_QUOTE_REFUSAL}
         </p>
       ) : (
         <DeleteMission id={id} storyCount={storyCount} />
