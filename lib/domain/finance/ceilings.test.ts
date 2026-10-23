@@ -7,8 +7,8 @@ import type { RuleRow } from "./rules.ts";
 const ASOF = "2026-10-23";
 const eur = (n: number) => Math.round(n * 100);
 
-// Les montants des cas A à E sont les valeurs DEMO d'Alex (non officielles, jamais vérifiées) : plafond de CA micro de 83 600 €, année civile, hors taxe.
-// Les cas G à J sont FICTIFS : valeurs inventées pour vérifier la formule. Tous les attendus ont été calculés à la main avant le code.
+// FICTIF (valeurs DEMO d'Alex, non officielles, jamais vérifiées) : cas A à E, plafond de CA micro de 83 600 €, année civile, hors taxe.
+// FICTIF (valeurs inventées pour vérifier la formule) : cas G à J. Tous les attendus ont été calculés à la main avant le code, et validés par Alex le 23 octobre 2026.
 const ceilingRule = (over: Partial<RuleRow> = {}, params: Record<string, unknown> = {}): RuleRow => ({
   id: "r1",
   rule_key: "ceiling_turnover_micro",
@@ -168,4 +168,50 @@ test("rien n'est modifié : les entrées ne bougent pas", () => {
   const snapshot = JSON.stringify([rules, payments]);
   computeCeilings(rules, profile(), payments, ASOF);
   assert.equal(JSON.stringify([rules, payments]), snapshot);
+});
+
+test("revue : un encaissement daté après asOf n'est jamais compté (année civile et 12 mois glissants)", () => {
+  const future = [pay("2026-10-24", 5000), pay("2026-11-05", 1000)];
+  const cal = gauge(micro([ceilingRule({}, { amount_cents: eur(10000) })], profile(), future));
+  assert.deepEqual([cal.consumedCents, cal.lastUpdate], [0, null]);
+  const roll = gauge(micro([ceilingRule({}, { amount_cents: eur(10000), period: "rolling_12_months" })], profile(), future));
+  assert.deepEqual([roll.consumedCents, roll.lastUpdate], [0, null]);
+});
+
+test("revue : seuils inconnus ignorés (80 n'existe pas), seuils non triés, aucune confusion avec un seuil plus bas", () => {
+  const at = (thresholds: number[], ht: number) => gauge(micro([ceilingRule({}, { amount_cents: eur(100) })], profile({ alert_thresholds: thresholds }), [pay("2026-02-01", ht)]));
+  assert.deepEqual([at([80], 85).alertThreshold, at([80], 85).state], [null, "below"], "80 n'est pas un seuil du produit");
+  assert.equal(at([33], 85).alertThreshold, null);
+  assert.equal(at([100, 90, 50], 95).alertThreshold, 90, "le plus haut seuil atteint, quel que soit l'ordre");
+  assert.equal(at([90, 50], 95).alertThreshold, 90);
+});
+
+test("revue : la date la plus récente est retenue quel que soit l'ordre d'arrivée", () => {
+  const g = gauge(micro([ceilingRule()], profile(), [pay("2026-09-30", 100), pay("2026-02-01", 100), pay("2026-07-15", 100)]));
+  assert.equal(g.lastUpdate, "2026-09-30");
+});
+
+test("revue : début d'activité, une date qui n'existe pas (30 février) n'est jamais une date", () => {
+  const g = gauge(micro([ceilingRule()], profile({ activity_start_date: "2026-02-30" }), []));
+  assert.equal(g.firstYearNotProrated, false);
+});
+
+test("revue : profil BIC avec règle BIC = chiffre ; profil BNC avec règle BIC = règle absente", () => {
+  assert.equal(micro([ceilingRule({ activity_category: "bic" })], profile({ activity_category: "bic" }), []).status, "ok");
+  assert.equal(missing(micro([ceilingRule({ activity_category: "bic" })], profile({ activity_category: "bnc" }), [])).reason, "rule_absent");
+});
+
+test("revue : règle en vigueur le jour même de sa date d'effet ; changement de version le jour J ; règle d'essai périmée", () => {
+  assert.equal(micro([ceilingRule({ effective_from: ASOF })], profile(), []).status, "ok", "en vigueur dès le premier jour");
+  const old = ceilingRule({ id: "old", effective_from: "2026-01-01", effective_to: ASOF }, { amount_cents: eur(1000) });
+  const next = ceilingRule({ id: "new", effective_from: ASOF }, { amount_cents: eur(2000) });
+  assert.equal(gauge(micro([old, next], profile(), [])).ceilingCents, eur(2000), "le jour du changement, la nouvelle version s'applique");
+  assert.equal(gauge(micro([old, next], profile(), [], "2026-10-22")).ceilingCents, eur(1000), "la veille, l'ancienne");
+  assert.equal(missing(micro([ceilingRule({ status: "essai", revalidate_after: "2026-10-22" })], profile(), [])).reason, "rule_stale", "une règle d'essai périmée n'est pas utilisée non plus");
+});
+
+test("revue : un montant de plafond qui n'est pas un entier sûr est refusé (jamais un pourcentage faux)", () => {
+  for (const amount_cents of [1e20, Number.MAX_SAFE_INTEGER + 2, Infinity, NaN]) {
+    assert.equal(missing(micro([ceilingRule({}, { amount_cents })], profile(), [])).reason, "params_invalid", String(amount_cents));
+  }
 });

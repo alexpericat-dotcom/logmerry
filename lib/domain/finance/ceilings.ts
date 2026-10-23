@@ -1,7 +1,7 @@
 import { THRESHOLDS } from "../profile.ts";
 import { isDay } from "../missions.ts";
 import { RULE_KEYS } from "./rule-keys.ts";
-import { usableRule, type ActivityCategory, type RuleRow } from "./rules.ts";
+import { usableRule, type RuleRow } from "./rules.ts";
 
 /**
  * Jauges de plafond (story 4.4). Fonction pure : elle reçoit les règles, le profil, les encaissements et `asOf` (jour de Paris), ne lit ni l'horloge ni la base.
@@ -85,7 +85,7 @@ type Params = { amount: number; period: "calendar_year" | "rolling_12_months" | 
 /** Lit les paramètres d'une règle de plafond ; `null` si l'un est absent ou d'un autre type (jamais de valeur par défaut). */
 const readParams = (p: Record<string, unknown>): Params | null => {
   const { amount_cents: amount, period, tax_basis: basis, revenue_category: category } = p;
-  if (typeof amount !== "number" || !Number.isInteger(amount) || amount <= 0) return null;
+  if (typeof amount !== "number" || !Number.isSafeInteger(amount) || amount <= 0) return null;
   if (period !== "calendar_year" && period !== "rolling_12_months" && period !== "other") return null;
   if (basis !== "excl_tax" && basis !== "incl_tax") return null;
   if (typeof category !== "string") return null;
@@ -99,7 +99,7 @@ function oneCeiling(key: CeilingKey, rules: RuleRow[], profile: CeilingProfile, 
   const category = profile?.activity_category;
   if (category !== "bnc" && category !== "bic") return missing("category_missing", "/profil");
 
-  const usable = usableRule(rules, key, category as ActivityCategory, asOf);
+  const usable = usableRule(rules, key, category, asOf);
   if (usable.status === "missing_parameter") {
     return missing(usable.reason === "absente" ? "rule_absent" : usable.reason === "non_verifiee" ? "rule_unverified" : "rule_stale", "/regles");
   }
@@ -113,7 +113,8 @@ function oneCeiling(key: CeilingKey, rules: RuleRow[], profile: CeilingProfile, 
   const paymentsMissingTax = params.basis === "incl_tax" ? counted.filter((p) => p.tax_cents === null).length : 0;
   const percent = Math.floor((consumedCents * 100) / params.amount);
   const active = [...new Set(profile?.alert_thresholds ?? [])].filter((t) => (THRESHOLDS as readonly number[]).includes(t)).sort((a, b) => a - b);
-  const alertThreshold = active.filter((t) => percent >= t).at(-1) ?? null;
+  const reached = active.filter((t) => percent >= t);
+  const alertThreshold = reached.length ? Math.max(...reached) : null;
   const state: CeilingState = consumedCents > params.amount ? "exceeded" : consumedCents === params.amount ? "reached" : alertThreshold !== null ? "threshold" : "below";
   const start = profile?.activity_start_date;
 

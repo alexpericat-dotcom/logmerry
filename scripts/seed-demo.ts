@@ -17,6 +17,8 @@ function env(name: string): string {
 }
 
 const DRY = process.argv.includes("--dry");
+/** Une règle d'essai devient périmée (donc « paramètre manquant ») le lendemain de cette date : à repousser au besoin (au plus 5 ans après la vérification). */
+const REVALIDATE_AFTER = "2028-12-31";
 const NOTE = "DEMO, non officielle : valeur fictive d'Alex, à vérifier à la source officielle avant tout usage réel.";
 const EUR = (n: number) => Math.round(n * 100);
 
@@ -41,10 +43,11 @@ if (signInError) throw new Error(`Connexion impossible : ${signInError.message}`
 
 let written = 0;
 for (const rule of DEMO_RULES) {
-  const existing = await client.from("regulatory_rules").select("id").eq("rule_key", rule.key).eq("activity_category", "bnc").eq("status", "essai").is("effective_to", null);
+  // Toute règle en vigueur pour cette clé (quel que soit son statut) : on n'écrase ni ne clôt rien (create_rule_version fermerait l'ancienne version).
+  const existing = await client.from("regulatory_rules").select("status").eq("rule_key", rule.key).eq("activity_category", "bnc").is("effective_to", null);
   if (existing.error) throw new Error(`Lecture impossible (${rule.key}) : ${existing.error.code}`);
   if (existing.data.length > 0) {
-    console.log(`= ${rule.key} : règle d'essai déjà présente, laissée telle quelle`);
+    console.log(`= ${rule.key} : une règle « ${existing.data[0].status} » est déjà en vigueur, laissée telle quelle`);
     continue;
   }
   console.log(`${DRY ? "(à écrire)" : "+"} ${rule.key} : ${JSON.stringify(rule.params)}`);
@@ -56,7 +59,7 @@ for (const rule of DEMO_RULES) {
     p_effective_from: "2026-01-01",
     p_source: "DEMO",
     p_verified_on: parisToday,
-    p_revalidate_after: "2028-12-31",
+    p_revalidate_after: REVALIDATE_AFTER,
     p_status: "essai",
     p_description: rule.description,
   });

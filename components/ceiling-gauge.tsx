@@ -13,7 +13,7 @@ const BASIS_LABEL = { excl_tax: "hors taxe", incl_tax: "taxe comprise" } as cons
 export function MissingCeiling({ result }: { result: CeilingMissing }) {
   return (
     <li className="flex flex-col gap-2 rounded-md border border-dashed bg-card p-3">
-      <h3 className="font-semibold">{result.label}</h3>
+      <h2 className="font-semibold">{result.label}</h2>
       <p className="text-sm">
         <span className="font-semibold">Paramètre manquant</span> : {MISSING_TEXT[result.reason]}.
       </p>
@@ -41,7 +41,7 @@ export function CeilingGaugeCard({ gauge: g, activeThresholds, note }: { gauge: 
   return (
     <li className="flex flex-col gap-3 rounded-md border bg-card p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold">{g.label}</h3>
+        <h2 className="font-semibold">{g.label}</h2>
         <Badge variant="outline">Estimation</Badge>
         {g.demo && (
           <Badge variant="secondary">
@@ -56,7 +56,7 @@ export function CeilingGaugeCard({ gauge: g, activeThresholds, note }: { gauge: 
         aria-label={`${g.label} : ${g.percent} % du plafond`}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={shown}
+        aria-valuenow={shown} // plafonné à 100 ; le texte ci-dessous dit le vrai pourcentage (ex. 112 %) et prime pour les lecteurs d'écran
         aria-valuetext={`${g.percent} % du plafond`}
         className="h-3 w-full overflow-hidden rounded-sm border bg-background"
       >
@@ -76,11 +76,11 @@ export function CeilingGaugeCard({ gauge: g, activeThresholds, note }: { gauge: 
           <dd className="font-mono tabular-nums">{formatCents(g.consumedCents)}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Pourcentage atteint</dt>
+          <dt className="text-xs text-muted-foreground">{g.minimum ? "Pourcentage atteint (au moins)" : "Pourcentage atteint"}</dt>
           <dd className="font-mono tabular-nums">{g.percent} %</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted-foreground">Restant</dt>
+          <dt className="text-xs text-muted-foreground">{g.minimum ? "Restant (au plus)" : "Restant"}</dt>
           <dd className="font-mono tabular-nums">{formatCents(g.remainingCents)}</dd>
         </div>
         <div>
