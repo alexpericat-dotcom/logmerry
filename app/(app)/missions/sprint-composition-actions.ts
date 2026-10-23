@@ -13,7 +13,6 @@ import {
   composeSources,
   validateCapacity,
   verifyComposition,
-  type BacklogStory,
 } from "@/lib/domain/sprint-composition";
 import { SPRINT_GOAL_MAX, acceptsStories, parseSprintStatus } from "@/lib/domain/sprints";
 import { validateHint } from "@/lib/domain/tasks";
@@ -52,7 +51,7 @@ export async function composeSprint(sprintId: string, capacity: unknown, hint: s
     if (!found.data) return { ok: false, error: SPRINT_GONE };
     const status = parseSprintStatus(found.data.status);
     if (!status || !acceptsStories(status)) return { ok: false, error: SPRINT_CLOSED };
-    const mission = found.data.mission as unknown as { title: string; client: { name: string } | null } | null;
+    const mission = found.data.mission;
     if (!mission) return { ok: false, error: SPRINT_GONE };
 
     const all = await supabase
@@ -63,7 +62,7 @@ export async function composeSprint(sprintId: string, capacity: unknown, hint: s
       .order("created_at", { ascending: true });
     if (all.error) throw new Error(`backlog ${all.error.code ?? ""}`.trim());
     const placed = all.data.filter((s) => s.sprint_id === sprintId).map((s) => ({ title: s.title as string, points: s.points as number | null }));
-    const open = all.data.filter((s) => s.sprint_id === null && s.status !== "done") as unknown as BacklogStory[];
+    const open = all.data.filter((s) => s.sprint_id === null && s.status !== "done");
     // Rien à placer : on le dit sans appeler Claude (un appel sans backlog inventerait des stories).
     if (open.length === 0) return { ok: false, error: "Le backlog est vide : rien à placer dans ce sprint." };
     const backlog = open.slice(0, BACKLOG_MAX);

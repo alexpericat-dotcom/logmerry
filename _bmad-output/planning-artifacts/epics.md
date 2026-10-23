@@ -384,6 +384,13 @@ En tant que propriétaire, je veux saisir mes règles (plafonds, taux, dates d'e
 **Et** le compte de démonstration reçoit des règles d'essai fictives (statut « Essai »), étiquetées « DEMO, non officielle » partout où elles s'affichent, par un script de démonstration (`npm run seed:demo`) ; un autre compte n'en voit jamais.
 **Et** le test d'isolation couvre `regulatory_rules` (lecture, écriture, chevauchement de versions, règle d'un autre compte).
 
+**Décisions de l'auteur du 18 octobre 2026 (spec 4.1b) :**
+1. Catalogue de départ, minimal et **sans aucune valeur** : trois plafonds nommés par usage (« Plafond de chiffre d'affaires (micro) », « Plafond de franchise de TVA », « Seuil de tolérance de TVA »), durée de l'ACRE, base de jours du prorata, bascule de TVA. Les noms sont des étiquettes ; une clé s'ajoute ensuite par le code, avec le schéma de ses paramètres.
+2. Paramètres de chaque clé (structure seulement) : plafond = montant en euros, période (année civile, 12 mois glissants, autre), catégorie de recettes, hors taxe ou taxe ; ACRE = durée en mois ; prorata = base de jours ; bascule de TVA = délai et unité. Chaque règle porte aussi : catégorie d'activité, date d'effet, source avec lien, date de vérification, date de revérification, statut.
+3. « Nouvelle version » : le formulaire reprend les paramètres de l'ancienne version ; source, date d'effet, date de vérification et de revérification restent vides ; la version démarre en « À vérifier », jamais « Vérifiée » sans nouvelle source.
+4. « Vérifiée » exige un vrai lien officiel (`https://`) et une date de vérification.
+5. « Essai » n'est **pas** saisissable depuis la page Règles : seul `npm run seed:demo` en crée (source « DEMO », sans lien). La base accepte « Essai » avec la source DEMO ; l'application ne l'offre pas. Une règle « Essai » porte l'étiquette « DEMO, non officielle » partout et n'est jamais comptée comme « Vérifiée ».
+
 ### Story 4.2 : Enregistrer mes factures
 
 *Modifiée le 18 octobre 2026 (hors taxe et taxe, statut « payée » calculé, lien facultatif vers le devis : PRD FR-9, architecture AD-8).*

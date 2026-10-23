@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { OTHER, PROFILE_FIELDS, fieldState, parseFieldInput, parseThresholds } from "@/lib/domain/profile";
+import type { TablesUpdate } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type ProfileFormState = { error?: string; message?: string };
@@ -51,7 +52,7 @@ export async function saveProfile(target: string, _prev: ProfileFormState, formD
     // En confirmation : seulement un champ « Déclaré » (date vide), et seulement la valeur vue.
     const { data, error } = await supabase
       .from("professional_profile")
-      .update(update)
+      .update(update as TablesUpdate<"professional_profile">)
       .filter(confirm ? `${target}_confirmed_at` : "owner_id", confirm ? "is" : "not.is", null)
       .match(expected)
       .select("owner_id");

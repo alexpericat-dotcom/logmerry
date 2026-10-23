@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { isUuid } from "@/lib/domain/notes";
 import { isDay } from "@/lib/domain/missions";
 import { validateQuoteInput, type QuoteErrors } from "@/lib/domain/quotes";
+import type { TablesUpdate } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type QuoteFormValues = { amount_ht: string; tax: string; sent_on: string; mission_id: string };
@@ -76,7 +77,7 @@ export async function updateQuote(id: string, _prev: QuoteFormState, formData: F
   return { saved: true };
 }
 
-async function transition(id: string, from: "draft" | "sent", patch: Record<string, unknown>, lost: string): Promise<QuoteActionState> {
+async function transition(id: string, from: "draft" | "sent", patch: TablesUpdate<"quotes">, lost: string): Promise<QuoteActionState> {
   const result = await withSession(async (supabase) => {
     if (!isUuid(id)) return { kind: "gone" as const };
     const { data, error } = await supabase.from("quotes").update(patch).eq("id", id).eq("status", from).select("client_id");

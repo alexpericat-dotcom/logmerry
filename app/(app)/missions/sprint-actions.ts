@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -8,6 +7,7 @@ import { isUuid } from "@/lib/domain/notes";
 import { sprintNameForCreate, validateSprintInput, type SprintErrors } from "@/lib/domain/sprints";
 import { nextPosition } from "@/lib/domain/user-stories";
 import { withSession } from "@/lib/supabase/with-session";
+import type { Db } from "@/lib/supabase/server";
 
 export type SprintFormValues = { name: string; goal: string; start_date: string; end_date: string };
 /** `gone` : le sprint ou la mission n'existe plus (supprimé ailleurs) ; l'écran se recharge. */
@@ -32,9 +32,9 @@ type Outcome = "saved" | "not-found" | "error";
 /** Session, validation, écriture d'un sprint ; `write` dit si la base a enregistré ou si la mission ou le sprint a disparu. */
 async function save(
   values: SprintFormValues,
-  write: (supabase: SupabaseClient, value: ReturnType<typeof okValue>) => Promise<{ outcome: Outcome; missionId?: string; gone?: string }>,
+  write: (supabase: Db, value: ReturnType<typeof okValue>) => Promise<{ outcome: Outcome; missionId?: string; gone?: string }>,
   /** Avant la validation : complète les valeurs (le nom automatique d'un nouveau sprint dépend des sprints de la mission). */
-  prepare?: (supabase: SupabaseClient, values: SprintFormValues) => Promise<SprintFormValues>,
+  prepare?: (supabase: Db, values: SprintFormValues) => Promise<SprintFormValues>,
 ): Promise<SprintFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateSprintInput(prepare ? await prepare(supabase, values) : values);

@@ -41,7 +41,7 @@ export async function proposeStories(missionId: string, brief: string, noteIds: 
     const stories = await supabase.from("user_stories").select("title").eq("mission_id", missionId).order("position", { ascending: true });
     if (stories.error) throw new Error(`backlog ${stories.error.code ?? ""}`.trim());
     const existingTitles = stories.data.map((s) => s.title as string);
-    const clientName = (mission.data.client as unknown as { name?: string } | null)?.name ?? "";
+    const clientName = mission.data.client?.name ?? "";
 
     const message = buildProposalMessage({ missionTitle: mission.data.title, clientName, brief: text, notes: kept, existingTitles });
     let raw: unknown[];

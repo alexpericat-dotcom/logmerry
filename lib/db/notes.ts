@@ -27,7 +27,7 @@ export async function listNotes(type: NoteType | null = null, status: "draft" | 
   if (status) query = query.eq("status", status);
   const { data, error } = await query;
   if (error) throw new Error("Impossible de charger les notes.");
-  return data as unknown as Note[];
+  return data;
 }
 
 /** Une de mes notes, ou null si l'identifiant est inconnu ou appartient à un autre compte. */
@@ -35,7 +35,7 @@ export async function getNote(id: string): Promise<Note | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("notes").select(COLUMNS).eq("id", id).maybeSingle();
   if (error) throw new Error("Impossible de charger la note.");
-  return data as unknown as Note | null;
+  return data;
 }
 
 /** Mes notes liées à une fiche, de la plus récente à la plus ancienne. */

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { orderWithClaude } from "@/lib/ai/backlog-order";
 import { renumber } from "@/lib/db/renumber";
-import { applyOrderToSlots, backlogUnchanged, buildOrderMessage, moves, orderSources, pickOrderable, sameOrder, verifyOrder, type OrderStory } from "@/lib/domain/backlog-order";
+import { applyOrderToSlots, backlogUnchanged, buildOrderMessage, moves, orderSources, pickOrderable, sameOrder, verifyOrder } from "@/lib/domain/backlog-order";
 import { isUuid } from "@/lib/domain/notes";
 import { validateHint } from "@/lib/domain/tasks";
 import { parseReorderIds } from "@/lib/domain/user-stories";
@@ -26,7 +26,7 @@ const COLUMNS = "id, title, role, benefit, acceptance_criteria, points, status";
 async function loadBacklog(supabase: Parameters<Parameters<typeof withSession>[0]>[0], missionId: string) {
   const found = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).is("sprint_id", null).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   if (found.error) throw new Error(`backlog ${found.error.code ?? ""}`.trim());
-  return found.data as unknown as (OrderStory & { status: string })[];
+  return found.data;
 }
 
 /**
@@ -57,7 +57,7 @@ export async function proposeBacklogOrder(missionId: string, hint: string): Prom
     if (inSprints.error) throw new Error(`sprints ${inSprints.error.code ?? ""}`.trim());
     const sprintTitles = inSprints.data.map((s) => s.title as string);
 
-    const clientName = (mission.data.client as unknown as { name?: string } | null)?.name ?? "";
+    const clientName = mission.data.client?.name ?? "";
     const input = { missionTitle: mission.data.title as string, clientName, stories: sent, sprintTitles, hint: text };
     let raw: Record<string, unknown>;
     try {

@@ -1,10 +1,10 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { embedTexts } from "@/lib/ai/embeddings";
 import { chunksMatchingKeywords, extractKeywords, mergeRetrieved } from "@/lib/domain/keywords";
 import { MATCH_COUNT, MATCH_THRESHOLD } from "@/lib/domain/matching";
+import type { Db } from "@/lib/supabase/server";
 
 /** `score` : similarité (recherche par sens) ou `null` quand l'extrait n'a été trouvé que par ses mots-clés. */
 export type RetrievedChunk = { id: string; noteId: string; title: string; content: string; score: number | null };
@@ -12,7 +12,7 @@ export type RetrievedChunk = { id: string; noteId: string; title: string; conten
 type Match = { id: string; note_id: string; content: string; similarity: number };
 
 /** Voie « par sens » : vectorisation Mistral puis `match_chunks` (sous RLS), avec le titre des notes. Lève une erreur sans contenu en cas d'échec. */
-async function retrieveBySense(supabase: SupabaseClient, question: string): Promise<RetrievedChunk[]> {
+async function retrieveBySense(supabase: Db, question: string): Promise<RetrievedChunk[]> {
   const [vector] = await embedTexts([question]);
   const { data, error } = await supabase.rpc("match_chunks", {
     query_embedding: JSON.stringify(vector),
@@ -36,7 +36,7 @@ async function retrieveBySense(supabase: SupabaseClient, question: string): Prom
 }
 
 /** Voie « par mots-clés » : plein texte français de `search_notes` (une requête par mot-clé, sous RLS), puis les extraits de ces notes qui contiennent un mot-clé. */
-async function retrieveByKeywords(supabase: SupabaseClient, keywords: string[]): Promise<RetrievedChunk[]> {
+async function retrieveByKeywords(supabase: Db, keywords: string[]): Promise<RetrievedChunk[]> {
   if (!keywords.length) return [];
   const found = await Promise.all(keywords.map((query) => supabase.rpc("search_notes", { query })));
   const titles = new Map<string, string>();
@@ -61,7 +61,7 @@ async function retrieveByKeywords(supabase: SupabaseClient, keywords: string[]):
  * Mes extraits les plus pertinents pour la question : recherche par sens (seuil de similarité) et recherche par mots-clés isolés de la
  * question, fusionnées. Une panne de la voie par sens fait échouer l'appel ; une panne de la voie par mots-clés est journalisée et ignorée.
  */
-export async function retrieveChunks(supabase: SupabaseClient, question: string): Promise<RetrievedChunk[]> {
+export async function retrieveChunks(supabase: Db, question: string): Promise<RetrievedChunk[]> {
   const [bySense, byKeywords] = await Promise.all([
     retrieveBySense(supabase, question),
     retrieveByKeywords(supabase, extractKeywords(question)).catch((e) => {

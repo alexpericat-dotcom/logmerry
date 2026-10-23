@@ -27,7 +27,7 @@ export async function listStories(missionId: string): Promise<StoryRecord[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("user_stories").select(COLUMNS).eq("mission_id", missionId).order("position", { ascending: true }).order("created_at", { ascending: true }).order("id", { ascending: true });
   if (error) throw new Error("Impossible de charger le backlog.");
-  return data as unknown as StoryRecord[];
+  return data;
 }
 
 /** Stories terminées et totales de mes missions (toutes, ou celles de `missionIds`), en une requête : { identifiant de mission : { done, total } }. */

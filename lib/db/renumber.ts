@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { isPermutation } from "../domain/user-stories.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Applique un nouvel ordre à une liste (stories d'une mission, tâches d'une story) : relit la liste, refuse si `ids` n'a pas exactement les mêmes éléments
@@ -8,7 +8,7 @@ import { isPermutation } from "../domain/user-stories.ts";
  * ponytail : une mise à jour par ligne déplacée, non atomique ; quelques dizaines de lignes par liste, une procédure stockée au-delà.
  */
 export async function renumber(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient, // non typé exprès : le nom de table et de colonne varient (le typage par table refuse ces unions)
   table: "user_stories" | "tasks",
   parent: { column: "mission_id" | "story_id"; id: string },
   ids: string[],

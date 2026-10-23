@@ -15,3 +15,10 @@ const dateOnly = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZon
 export function formatDate(day: string): string {
   return dateOnly.format(new Date(`${day}T00:00:00Z`));
 }
+
+const parisDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" });
+
+/** Le jour de Paris, `YYYY-MM-DD` (les règles reçoivent leur date de référence en argument, elles ne lisent jamais l'horloge). */
+export function todayParis(): string {
+  return parisDay.format(new Date());
+}

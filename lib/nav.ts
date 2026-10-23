@@ -6,6 +6,7 @@ export type NavIcon =
   | "factures"
   | "echeances"
   | "profil"
+  | "regles"
   | "parametres"
   | "realisations"
   | "a-faire";
@@ -31,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: false },
   { label: "Profil", href: "/profil", icon: "profil", available: true, group: "Finances" },
+  { label: "Règles", href: "/regles", icon: "regles", available: true, group: "Finances" },
 ];
 
 export const SIDEBAR_COOKIE = "sidebar";

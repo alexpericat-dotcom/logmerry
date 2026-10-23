@@ -10,6 +10,7 @@ import { limitNotes } from "@/lib/domain/story-proposals";
 import { REVIEW_FIELDS, buildReviewMessage, mergeReview, reviewSources, toFieldValues, verifyReview, type FieldChange, type FieldValues, type Remark } from "@/lib/domain/story-review";
 import { validateHint } from "@/lib/domain/tasks";
 import { parseStoryStatus } from "@/lib/domain/user-stories";
+import type { TablesUpdate } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
 export type ReviewState = { ok: true; remarks: Remark[]; changes: FieldChange[]; dropped: number; noteCut: boolean; base: FieldValues } | { ok: false; error: string };
@@ -35,7 +36,7 @@ export async function reviewStory(storyId: string, hint: string): Promise<Review
     if (found.error) throw new Error(`story ${found.error.code ?? ""}`.trim());
     if (!found.data) return { ok: false, error: STORY_GONE };
     const story = found.data;
-    const mission = story.mission as unknown as { title: string; client_id: string; client: { name: string } | null } | null;
+    const mission = story.mission;
     if (!mission) return { ok: false, error: STORY_GONE };
 
     const others = await supabase.from("user_stories").select("title").eq("mission_id", story.mission_id).neq("id", storyId).order("position", { ascending: true });
@@ -102,7 +103,7 @@ export async function applyStoryReview(storyId: string, base: FieldValues, chose
       const v = merged.fields[f] as string;
       values[f] = f === "title" ? v : v === "" ? null : f === "points" ? Number(v) : v;
     }
-    const query = supabase.from("user_stories").update(values).eq("id", storyId).eq("updated_at", found.data.updated_at as string);
+    const query = supabase.from("user_stories").update(values as TablesUpdate<"user_stories">).eq("id", storyId).eq("updated_at", found.data.updated_at as string);
     const { data, error } = await query.select("id");
     if (error) throw new Error(`mise à jour ${error.code ?? ""}`.trim());
     if (!data?.length) return { ok: false, error: "Cette story a changé entre-temps. Relance la relecture.", gone: true };

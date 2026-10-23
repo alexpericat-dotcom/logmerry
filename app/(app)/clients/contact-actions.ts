@@ -1,6 +1,5 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -11,6 +10,7 @@ import {
 } from "@/lib/domain/contacts";
 import { isUuid } from "@/lib/domain/notes";
 import { withSession } from "@/lib/supabase/with-session";
+import type { Db } from "@/lib/supabase/server";
 
 export type ContactFormState = {
   ok?: boolean;
@@ -44,7 +44,7 @@ async function save(
   values: ReturnType<typeof readValues>,
   notFound: string,
   write: (
-    supabase: SupabaseClient,
+    supabase: Db,
     value: ContactValues,
   ) => Promise<WriteResult>,
 ): Promise<ContactFormState> {
