@@ -2039,3 +2039,107 @@ describe("isolation des encaissements entre deux comptes fictifs", () => {
     assert.equal(free.data?.length, 1, "la facture se supprime une fois ses encaissements partis");
   });
 });
+
+describe("isolation des échéances entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let deadlineA: { id: string };
+
+  const base = () => ({ title: `${PREFIX} échéance`, due_on: "2026-11-30", category: "urssaf", source: "https://www.urssaf.fr/exemple" });
+  const cleanup = async () => {
+    for (const account of [a, b]) if (account) await account.client.from("deadlines").delete().like("title", `${PREFIX}%`);
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const d = await a.client.from("deadlines").insert(base()).select("id").single();
+    assert.ifError(d.error);
+    deadlineA = d.data!;
+  });
+
+  after(cleanup);
+
+  test("propriétaire posé par la base, à faire par défaut ; B ne voit rien de A", async () => {
+    const own = await a.client.from("deadlines").select("owner_id, done_at, note").eq("id", deadlineA.id).single();
+    assert.equal(own.data!.owner_id, a.userId);
+    assert.equal(own.data!.done_at, null);
+    assert.equal(own.data!.note, null);
+    const seen = await b.client.from("deadlines").select("id").eq("id", deadlineA.id);
+    assert.deepEqual(seen.data, []);
+  });
+
+  test("B ne modifie ni ne supprime l'échéance de A, ni ne la marque faite", async () => {
+    const upd = await b.client.from("deadlines").update({ title: `${PREFIX} piraté` }).eq("id", deadlineA.id).select("id");
+    assert.deepEqual(upd.data, []);
+    const done = await b.client.from("deadlines").update({ done_at: new Date().toISOString() }).eq("id", deadlineA.id).select("id");
+    assert.deepEqual(done.data, []);
+    const del = await b.client.from("deadlines").delete().eq("id", deadlineA.id).select("id");
+    assert.deepEqual(del.data, []);
+    const still = await a.client.from("deadlines").select("title, done_at").eq("id", deadlineA.id).single();
+    assert.deepEqual(still.data, { title: `${PREFIX} échéance`, done_at: null });
+  });
+
+  test("A ne forge pas le propriétaire ni ne donne son échéance à B ; sans connexion : rien de visible ni de créable", async () => {
+    const forged = await a.client.from("deadlines").insert({ ...base(), owner_id: b.userId });
+    assert.equal(forged.error?.code, "42501");
+    const stolen = await a.client.from("deadlines").update({ owner_id: b.userId }).eq("id", deadlineA.id);
+    assert.equal(stolen.error?.code, "23514", "le propriétaire ne change pas : le déclencheur refuse avant la RLS");
+    const anon = newClient();
+    const read = await anon.from("deadlines").select("id");
+    assert.ifError(read.error);
+    assert.deepEqual(read.data, []);
+    const write = await anon.from("deadlines").insert(base());
+    assert.equal(write.error?.code, "42501");
+  });
+
+  test("la base refuse titre vide ou trop long, source qui n'est pas un lien https://, remarque vide ou trop longue, date ou catégorie absente ou inconnue", async () => {
+    const refused = async (patch: Record<string, unknown>, code: string, label: string) => {
+      const r = await a.client.from("deadlines").insert({ ...base(), ...patch });
+      assert.equal(r.error?.code, code, label);
+    };
+    await refused({ title: "" }, "23514", "titre vide");
+    await refused({ title: "t".repeat(201) }, "23514", "titre de 201 caractères");
+    for (const source of ["", "http://www.urssaf.fr", "urssaf.fr", "Courrier de l'Urssaf", "https://urssaf.fr/a b", "https://", "javascript:alert(1)", `https://x.fr/${"a".repeat(1988)}`]) {
+      await refused({ source }, "23514", `source refusée : ${source.slice(0, 30)}`);
+    }
+    await refused({ note: "" }, "23514", "remarque vide");
+    await refused({ note: "n".repeat(501) }, "23514", "remarque de 501 caractères");
+    await refused({ due_on: null }, "23502", "date obligatoire");
+    await refused({ category: null }, "23502", "catégorie obligatoire");
+    await refused({ source: null }, "23502", "source obligatoire");
+    await refused({ category: "autre" }, "22P02", "catégorie hors énumération");
+    const edge = await a.client.from("deadlines").insert({ ...base(), title: `${PREFIX} ${"t".repeat(200 - PREFIX.length - 1)}`, source: `https://x.fr/${"a".repeat(1987)}`, note: "n".repeat(500), due_on: "2020-01-01" }).select("id").single();
+    assert.ifError(edge.error);
+  });
+
+  test("garde : « faite » jamais dans le futur (insertion et mise à jour), identité figée", async () => {
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString();
+    const future = await a.client.from("deadlines").insert({ ...base(), done_at: tomorrow });
+    assert.equal(future.error?.code, "23514");
+    const later = await a.client.from("deadlines").update({ done_at: tomorrow }).eq("id", deadlineA.id);
+    assert.equal(later.error?.code, "23514");
+    const id = await a.client.from("deadlines").update({ id: crypto.randomUUID() }).eq("id", deadlineA.id);
+    assert.equal(id.error?.code, "23514");
+    const created = await a.client.from("deadlines").update({ created_at: "2020-01-01T00:00:00Z" }).eq("id", deadlineA.id);
+    assert.equal(created.error?.code, "23514");
+  });
+
+  test("cycle : marquer faite (instant posé), changer la date sans la rouvrir, rouvrir, supprimer ; une échéance faite se supprime", async () => {
+    const now = new Date().toISOString();
+    const done = await a.client.from("deadlines").update({ done_at: now }).eq("id", deadlineA.id).is("done_at", null).select("done_at");
+    assert.ifError(done.error);
+    assert.equal(done.data?.length, 1);
+    const again = await a.client.from("deadlines").update({ done_at: new Date(Date.now() + 1000).toISOString() }).eq("id", deadlineA.id).is("done_at", null).select("id");
+    assert.deepEqual(again.data, [], "déjà faite : la condition « à faire » n'écrase pas la date de réalisation");
+    const moved = await a.client.from("deadlines").update({ due_on: "2027-01-15", title: `${PREFIX} décalée` }).eq("id", deadlineA.id).select("done_at, due_on");
+    assert.ifError(moved.error);
+    assert.equal(moved.data![0].due_on, "2027-01-15");
+    assert.notEqual(moved.data![0].done_at, null, "changer la date ne rouvre pas");
+    const reopened = await a.client.from("deadlines").update({ done_at: null }).eq("id", deadlineA.id).not("done_at", "is", null).select("done_at");
+    assert.deepEqual(reopened.data, [{ done_at: null }]);
+    const del = await a.client.from("deadlines").delete().eq("id", deadlineA.id).select("id");
+    assert.equal(del.data?.length, 1, "toujours supprimable");
+  });
+});
