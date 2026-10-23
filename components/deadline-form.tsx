@@ -67,7 +67,7 @@ export function DeadlineForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("title")}>Titre (obligatoire)</Label>
           <Input {...field("title")} defaultValue={values.title} aria-required="true" autoComplete="off" />
