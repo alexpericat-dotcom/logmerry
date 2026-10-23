@@ -16,7 +16,7 @@ export type MissionChoice = { id: string; title: string; client_id: string; clie
 export type QuoteChoice = { id: string; client_id: string; amount_ht_cents: number; sent_on: string | null; status: string };
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
+  "flex h-9 truncate w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 export function InvoiceForm({
   idPrefix,
@@ -135,7 +135,7 @@ export function InvoiceForm({
         <Button type="button" variant="outline" size="sm" className="self-start" aria-expanded={showMore} aria-controls={id("more")} onClick={() => setMore((v) => !v)}>
           Plus de champs
         </Button>
-        <div id={id("more")} hidden={!showMore} className="grid gap-4 sm:grid-cols-2">
+        <div id={id("more")} className={showMore ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
           <div className="grid gap-2">
             <Label htmlFor={id("issued_on")}>Date d&apos;émission</Label>
             <Input {...field("issued_on")} type="date" defaultValue={values.issued_on} />
