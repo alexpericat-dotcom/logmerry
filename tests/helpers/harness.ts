@@ -37,6 +37,8 @@ export const fake = {
   revalidated: [] as string[],
   /** Erreurs du harnais lui-même (méthode du client non gérée) : un test ne doit jamais passer grâce à elles. */
   problems: [] as string[],
+  /** Appels aux modèles d'IA (jamais de vrai appel dans un test) : ce qui a été envoyé, et ce que la doublure répond (`fake.ai.replies[nom]`, une valeur ou une fonction ; une `Error` est levée). */
+  ai: { calls: [] as { name: string; message: string; args: unknown[] }[], replies: {} as Record<string, unknown> },
   /** Notes dont l'indexation (appel à Mistral) a été demandée : jamais de vrai appel dans un test. */
   indexed: [] as string[],
   /** Ce que renvoie la doublure d'`indexNote`. */
@@ -50,6 +52,7 @@ export const fake = {
     this.ops = [];
     this.revalidated = [];
     this.problems = [];
+    this.ai = { calls: [], replies: {} };
     this.indexed = [];
     this.indexResult = "indexed";
     this.failCreate = false;
@@ -62,7 +65,7 @@ export const fake = {
   },
 };
 
-type Route = [match: string | ((op: Op) => boolean), reply: Reply | ((op: Op) => Reply)];
+export type Route = [match: string | ((op: Op) => boolean), reply: Reply | ((op: Op) => Reply)];
 
 /**
  * Répond selon la requête : la première route dont `match` convient l'emporte (`"table:opération"`, ou une fonction), sinon une réponse vide.
@@ -80,6 +83,12 @@ export function routes(...list: Route[]) {
 
 /** L'ordre des requêtes d'écriture (`table:opération`), pour prouver qu'une écriture précède une autre. */
 export const writes = () => fake.ops.filter((o) => o.op !== "select").map((o) => `${o.table}:${o.op}`);
+
+/** Le message d'erreur d'un résultat `{ ok: false, error }` ; échoue si le résultat est un succès (jamais de comparaison avec une chaîne vide). */
+export function errorOf(r: { ok: boolean; error?: string }): string {
+  assert.equal(r.ok, false, "un refus était attendu");
+  return r.error ?? "";
+}
 
 /** Un `FormData` depuis un objet (les actions lisent des formulaires). */
 export function form(o: Record<string, string>): FormData {
