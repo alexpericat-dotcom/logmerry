@@ -1,3 +1,4 @@
+import { daysBetween } from "./dates.ts";
 import { isDay } from "./missions.ts";
 
 export const SPRINT_NAME_MAX = 120;
@@ -64,9 +65,8 @@ export function parisToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-const dayNumber = (day: string) => Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10))) / 86_400_000;
 /** Jours entre deux dates `YYYY-MM-DD` (positif si `to` est après `from`). */
-export const daysBetween = (from: string, to: string) => dayNumber(to) - dayNumber(from);
+export { daysBetween };
 
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 

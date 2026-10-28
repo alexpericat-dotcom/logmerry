@@ -1,3 +1,4 @@
+import { daysBetween } from "./dates.ts";
 import { isDay } from "./missions.ts";
 import { isUuid } from "./notes.ts";
 import type { InvoiceStatus } from "./payments.ts";
@@ -68,13 +69,12 @@ export function validateInvoiceInput(input: InvoiceInput, today: string): { ok: 
   return { ok: true, value: { mission_id: mission, quote_id: quote || null, amount_ht_cents: htCents, tax_cents: taxCents, due_on: due, issued_on: issued || null, reference: reference || null, note: note || null } };
 }
 
-const dayNumber = (day: string) => Date.parse(`${day}T00:00:00Z`) / 86_400_000;
 
 /** Échue : pas totalement payée et échéance strictement avant aujourd'hui (le jour même, elle ne l'est pas encore). */
 export const isOverdue = (due_on: string, today: string, status: InvoiceStatus) => status !== "paid" && due_on < today;
 
 /** Jours de retard (0 si pas échue). */
-export const daysLate = (due_on: string, today: string) => Math.max(0, Math.round(dayNumber(today) - dayNumber(due_on)));
+export const daysLate = (due_on: string, today: string) => Math.max(0, Math.round(daysBetween(due_on, today)));
 
 export const INVOICE_FILTERS = ["toutes", "non-payees", "echues"] as const;
 export type InvoiceFilter = (typeof INVOICE_FILTERS)[number];

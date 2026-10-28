@@ -10,6 +10,8 @@
  */
 import { createClient } from "@supabase/supabase-js";
 
+import { todayParis } from "../lib/format.ts";
+
 function env(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variable manquante : ${name} (voir .env.local et .env.test.local)`);
@@ -35,7 +37,7 @@ const DEMO_RULES: Demo[] = [
 const email = env("DEMO_A_EMAIL");
 if (!email.endsWith("@example.com")) throw new Error("Le compte de démonstration doit être un compte fictif @example.com.");
 
-const parisToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+const parisToday = todayParis();
 const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
 
 const { error: signInError } = await client.auth.signInWithPassword({ email, password: env("DEMO_A_PASSWORD") });

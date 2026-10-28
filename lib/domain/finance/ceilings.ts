@@ -1,3 +1,4 @@
+import { addDays } from "../dates.ts";
 import { THRESHOLDS } from "../profile.ts";
 import { isDay } from "../missions.ts";
 import { RULE_KEYS } from "./rule-keys.ts";
@@ -66,14 +67,12 @@ export type CeilingResult = CeilingMissing | CeilingGauge;
 
 const ceilingLabel = (key: CeilingKey) => RULE_KEYS.find((k) => k.key === key)?.label ?? key;
 
-const dayNumber = (day: string) => Date.parse(`${day}T00:00:00Z`) / 86_400_000;
-const toDay = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
 
 /** Premier jour d'une période de 12 mois glissants qui se termine à `asOf` (inclus) : un an avant, plus un jour. Le 29 février remonte au 28. */
 export function rollingStart(asOf: string): string {
   const [y, m, d] = asOf.split("-").map(Number);
   const prev = `${String(y - 1).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(m === 2 && d === 29 ? 28 : d).padStart(2, "0")}`;
-  return toDay(dayNumber(prev) + 1);
+  return addDays(prev, 1);
 }
 
 export function ceilingPeriod(kind: "calendar_year" | "rolling_12_months", asOf: string): { from: string; to: string } {
