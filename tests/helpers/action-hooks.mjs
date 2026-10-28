@@ -14,6 +14,7 @@ const STUBS = {
   "@/lib/ai/story-review": "stubs/ai.ts",
   "@/lib/ai/prompt-generation": "stubs/ai.ts",
   "@/lib/ai/summary": "stubs/ai.ts",
+  "@/lib/ai/embeddings": "stubs/ai.ts",
   "@/app/(app)/notes/indexing": "stubs/notes-indexing.ts", // appelle Mistral : jamais dans un test
 };
 const HERE = fileURLToPath(new URL("./", import.meta.url));
