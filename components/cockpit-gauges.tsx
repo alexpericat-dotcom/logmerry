@@ -7,7 +7,7 @@ import { formatCents } from "@/lib/domain/quotes";
 
 const FILL = { below: "bg-primary", threshold: "bg-warning", reached: "bg-destructive", exceeded: "bg-destructive" } as const;
 
-function GaugeRow({ g }: { g: CeilingGauge }) {
+function GaugeRow({ g, flags }: { g: CeilingGauge; flags: { demo: boolean; declared: boolean } }) {
   const shown = Math.min(g.percent, 100);
   const state = g.state === "exceeded" ? { icon: OctagonAlert, text: "dépassé" } : g.state === "reached" ? { icon: OctagonAlert, text: "atteint" } : g.state === "threshold" ? { icon: TriangleAlert, text: `seuil ${g.alertThreshold} %` } : null;
   return (
@@ -21,6 +21,8 @@ function GaugeRow({ g }: { g: CeilingGauge }) {
               {state.text}
             </span>
           )}
+          {flags.demo && g.demo && <Badge variant="secondary" title="DEMO, non officielle"><FlaskConical size={11} aria-hidden="true" />DEMO<span className="sr-only">, non officielle</span></Badge>}
+          {flags.declared && g.declaredNotConfirmed && <Badge variant="warning" title="Calcul basé sur une donnée déclarée, non confirmée"><TriangleAlert size={11} aria-hidden="true" />À confirmer<span className="sr-only"> : calcul basé sur une donnée déclarée, non confirmée</span></Badge>}
           <span className="font-mono tabular-nums">{g.percent} %</span>
         </span>
       </div>
@@ -49,20 +51,23 @@ function GaugeRow({ g }: { g: CeilingGauge }) {
  */
 export function CockpitGauges({ ceilings, revenue }: { ceilings: CeilingResult[]; revenue: { cents: number; from: string; to: string } }) {
   const gauges = ceilings.filter((r): r is CeilingGauge => r.status === "ok");
+  // Une étiquette commune se dit une fois en tête ; si elle ne vaut que pour certaines jauges, chacune porte la sienne.
+  const demoAll = gauges.length > 0 && gauges.every((g) => g.demo);
+  const declaredAll = gauges.length > 0 && gauges.every((g) => g.declaredNotConfirmed);
   return (
     <section aria-labelledby="cockpit-gauges" className="flex max-w-4xl flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="cockpit-gauges" className="text-lg font-semibold">Plafonds et CA</h2>
         <span className="flex flex-wrap items-center gap-2">
           {gauges.length > 0 && <Badge variant="outline">Estimation</Badge>}
-          {gauges.some((g) => g.demo) && (
-            <Badge variant="secondary">
+          {demoAll && (
+            <Badge variant="secondary" title="DEMO, non officielle">
               <FlaskConical size={11} aria-hidden="true" />
               DEMO<span className="sr-only">, non officielle</span>
             </Badge>
           )}
-          {gauges.some((g) => g.declaredNotConfirmed) && (
-            <Badge variant="warning">
+          {declaredAll && (
+            <Badge variant="warning" title="Calcul basé sur une donnée déclarée, non confirmée">
               <TriangleAlert size={11} aria-hidden="true" />
               À confirmer<span className="sr-only"> : calcul basé sur une donnée déclarée, non confirmée (catégorie d&apos;activité du profil)</span>
             </Badge>
@@ -76,7 +81,7 @@ export function CockpitGauges({ ceilings, revenue }: { ceilings: CeilingResult[]
       </p>
       {gauges.length > 0 && (
         <ul className="flex flex-col gap-2" aria-label="Jauges de plafond">
-          {gauges.map((g) => <GaugeRow key={g.key} g={g} />)}
+          {gauges.map((g) => <GaugeRow key={g.key} g={g} flags={{ demo: !demoAll, declared: !declaredAll }} />)}
         </ul>
       )}
     </section>

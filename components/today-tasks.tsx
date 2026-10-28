@@ -62,13 +62,13 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
                   <span className={t.done ? "font-semibold line-through" : "font-semibold"}>{t.title}</span>
                   <span className="text-sm text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
                   {t.declared && (
-                    <Badge variant="warning">
+                    <Badge variant="warning" title="Calcul basé sur une donnée déclarée, non confirmée">
                       <TriangleAlert size={11} aria-hidden="true" />
                       À confirmer<span className="sr-only"> : calcul basé sur une donnée déclarée, non confirmée</span>
                     </Badge>
                   )}
                   {t.demo && (
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" title="DEMO, non officielle">
                       <FlaskConical size={11} aria-hidden="true" />
                       DEMO<span className="sr-only">, non officielle</span>
                     </Badge>
@@ -79,7 +79,7 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
             </label>
             <Link
               href={t.kind === "quote" ? `/clients/${t.clientId}` : t.missionId ? `/missions/${t.missionId}` : LINKS[t.kind].href}
-              aria-label={LINKS[t.kind].label}
+              aria-label={`${LINKS[t.kind].label} : ${t.title}`}
               className="flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground"
             >
               <ChevronRight size={18} aria-hidden="true" />
