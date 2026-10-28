@@ -3,7 +3,7 @@ import "../helpers/dom.ts";
 import assert from "node:assert/strict";
 import { afterEach, describe, mock, test } from "node:test";
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, createEvent, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ConfirmPanel } from "../../components/confirm-panel.tsx";
@@ -73,13 +73,30 @@ describe("ConfirmPanel", () => {
     const b = setup({ pending: true });
     const busy = screen.getByRole("button", { name: "Suppression…" });
     assert.equal(busy.getAttribute("aria-disabled"), "true");
+    assert.equal((busy as HTMLButtonElement).disabled, false); // jamais `disabled` : le bouton qui a le focus ne le perd pas
     await b.user.click(busy);
     assert.equal(b.onConfirm.mock.callCount(), 0);
   });
 
-  test("confirmer (action) : le bouton est `disabled` pendant l'action", () => {
+  test("pas d'envoi natif : l'envoi du formulaire (onConfirm) et Échap sont interceptés (preventDefault)", () => {
+    const { onCancel, onConfirm } = setup();
+    const group = screen.getByRole("group");
+    const submit = createEvent.submit(group);
+    fireEvent(group, submit);
+    assert.equal(submit.defaultPrevented, true);
+    assert.equal(onConfirm.mock.callCount(), 1);
+    const escape = createEvent.keyDown(group, { key: "Escape" });
+    fireEvent(group, escape);
+    assert.equal(escape.defaultPrevented, true);
+    assert.equal(onCancel.mock.callCount(), 1);
+  });
+
+  test("confirmer (action) : le bouton est `disabled` pendant l'action, actif sinon", () => {
     setup({ onConfirm: undefined, action: () => {}, pending: true } as never);
     assert.equal((screen.getByRole("button", { name: "Suppression…" }) as HTMLButtonElement).disabled, true);
+    cleanup();
+    setup({ onConfirm: undefined, action: () => {}, pending: false } as never);
+    assert.equal((screen.getByRole("button", { name: "Oui, supprimer" }) as HTMLButtonElement).disabled, false);
   });
 
   test("erreur : annoncée dans un role=alert, absente sans erreur", () => {

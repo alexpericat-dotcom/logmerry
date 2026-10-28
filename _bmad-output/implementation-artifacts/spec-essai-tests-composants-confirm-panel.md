@@ -2,7 +2,7 @@
 title: 'Essai de tests de composants : ConfirmPanel'
 type: 'chore'
 created: '2026-10-28'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'b9574e03ead8200040bceb1bdc7ab03feb0da84e'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -65,7 +65,7 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
-- Fichiers : `tests/helpers/{jsx-hooks.mjs,register-components.mjs,dom.ts,jsdom.d.ts}`, `tests/components/confirm-panel.test.tsx` (8 tests, matrice couverte), `package.json` (4 dépendances de développement, script `test:components` enchaîné dans `npm test`). Aucun fichier d'application modifié.
+- Fichiers : `tests/helpers/{jsx-hooks.mjs,register-components.mjs,dom.ts,jsdom.d.ts}`, `tests/components/confirm-panel.test.tsx` (9 tests après relecture, matrice couverte), `package.json` (4 dépendances de développement, script `test:components` enchaîné dans `npm test`). Aucun fichier d'application modifié.
 - Surprise 1 : `ts-hooks.mjs` résout tout paquet depuis la racine, ce qui donnait à jsdom la v5 de `lru-cache` au lieu de sa v11 imbriquée (plantage au chargement). Le chargeur de composants laisse la résolution de Node aux imports faits depuis `node_modules`.
 - Surprise 2 : jsdom n'a pas de types ; `@types/jsdom` aurait dépassé la liste de la spec, donc `tests/helpers/jsdom.d.ts` déclare le module en `any`.
 - Coût mesuré : `node_modules` 523 780 → 563 452 Ko (+39,7 Mo) ; +49 paquets dans le lockfile (508 → 557) ; `npm install` 14 s ; en copie propre `npm ci` 17 s ; lot de composants 4,3 s (dont démarrage de jsdom) ; `npm test` complet 3 s de plus ; jsdom exige Node 22.22+ ou 24.15+ (la CI est en 24).
@@ -74,6 +74,26 @@ review_loop_iteration: 0
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | `preventDefault` (envoi du formulaire, Échap) non vérifié : le retirer ne faisait échouer aucun test | medium | patch : test `createEvent.submit` / `keyDown` ; les deux mutations sont détectées |
+| 2 | Bouton de confirmation jamais vérifié « non `disabled` » en mode `onConfirm` (focus perdu) | medium | patch ; mutation `disabled={pending}` détectée |
+| 3 | Mode `action` hors action (bouton actif) non testé | low | patch |
+| 4 | « Lockfile absent du diff » | false | `package-lock.json` est commité (+681 lignes) ; exclu du diff relu par mes soins, `npm ci` vérifié en copie propre |
+| 5 | Versions en `^` alors que la spec dit « exactes » | low | rejeté : `package-lock.json` fige les versions installées ; `npm ci` (CI) ne dérive pas |
+| 6 | Pas d'`engines` / Node épinglé (jsdom 30 exige 22.22+/24.15+) | low | rejeté : CI en Node 24, exigence notée au journal |
+| 7 | Globaux de Node (`Event`, `EventTarget`, `AbortController`) non remplacés par ceux de jsdom | low | defer : tous les tests passent ; à revoir si un composant testé s'appuie sur `instanceof Event` |
+| 8 | Pas de carte de sources ni de diagnostics dans le chargeur JSX | low | defer : utile si l'essai est étendu |
+| 9 | Fenêtre jsdom jamais fermée | low | rejeté : le processus se termine, durée du lot 4 s |
+| 10 | Types effacés (`as never`, `props as object`) | low | defer : acceptable pour un essai ; typer `setup` par l'union si on étend |
+| 11 | Tests regroupant plusieurs rendus ; libellés par défaut du composant en dur | low | rejeté (lisibilité, pas d'effet) |
+| 12 | `cleanup()` hors `finally` dans la boucle `stopEscape` | low | rejeté : `afterEach(cleanup)` couvre |
+| 13 | `stopEscape` avec `pending` non testé | low | rejeté : chemin déjà couvert séparément |
+| 14 | Texte de dette périmé (« Décision à prendre : ajouter la dépendance ») | low | patch |
+| 15 | Conflit probable de la ligne `test` avec la PR #65 | low | noté : à rebaser quand #65 est fusionnée |
 
 ## Verification
 
