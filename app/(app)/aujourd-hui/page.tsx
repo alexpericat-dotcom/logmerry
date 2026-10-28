@@ -7,7 +7,7 @@ import { listInvoices } from "@/lib/db/invoices";
 import { listAllMissions } from "@/lib/db/missions";
 import { listPaymentsForCeilings } from "@/lib/db/payments";
 import { getProfile } from "@/lib/db/profile";
-import { listActiveSprintWork } from "@/lib/db/sprints";
+import { listActiveSprintWork } from "@/lib/db/sprint-work";
 import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
@@ -22,7 +22,7 @@ export const metadata = { title: "Aujourd'hui · LogMerry" };
 const EMPTY = "Rien à faire pour aujourd'hui. Tes tâches apparaîtront ici dès que tu auras saisi tes échéances, tes factures et tes devis.";
 
 async function Tasks() {
-  const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), listActiveSprintWork()]);
+  const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), createClient().then(listActiveSprintWork)]);
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const checked = await listTaskChecks(await createClient(), today);
   const sprints: SprintWork[] = sprintRows.map((sp) => ({

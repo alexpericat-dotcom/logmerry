@@ -229,3 +229,9 @@ test("plusieurs sprints : fin la plus proche d'abord, un seul plafond de trois ;
   assert.deepEqual(targetOf(sp([e])[0]), { rule: 7, sourceId: "e" });
   assert.equal(targetOf(sp([a])[0]), null, "tâche de sprint : coche dans tasks.done");
 });
+
+test("« N autres tâches » : le lien vise la mission de la première tâche cachée, pas celle de la première tâche", () => {
+  const a = sprint("a", 5, [story("s", "in_progress", 1, [task("a1", 1), task("a2", 2), task("a3", 3)])]);
+  const b = sprint("b", 9, [story("s", "in_progress", 1, [task("b1", 1), task("b2", 2)])]);
+  assert.deepEqual(sprintOverflow([a, b], TODAY), { count: 2, missionId: "m-b" });
+});

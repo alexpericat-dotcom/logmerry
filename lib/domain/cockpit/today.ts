@@ -105,7 +105,6 @@ type SprintTasks = { shown: TodayTask[]; extra: number; extraMissionId: string |
 function sprintTasks(sprints: SprintWork[], asOf: string): SprintTasks {
   const open: TodayTask[] = [];
   const doneToday: TodayTask[] = [];
-  let firstMission: string | null = null;
   const ordered = [...sprints].sort((a, b) => a.end_date.localeCompare(b.end_date) || a.id.localeCompare(b.id));
   for (const sp of ordered) {
     const left = daysUntil(sp.end_date, asOf);
@@ -116,16 +115,15 @@ function sprintTasks(sprints: SprintWork[], asOf: string): SprintTasks {
       for (const t of [...st.tasks].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))) {
         if (t.done && t.done_on !== asOf) continue;
         const list = t.done ? doneToday : open;
-        if (!t.done && !firstMission) firstMission = sp.mission.id;
         list.push({ rule: 8, id: t.id, kind: "sprint-task", title: t.title, reason, date: sp.end_date, done: t.done, context, missionId: sp.mission.id, order: list.length });
       }
     }
   }
   const shown = open.slice(0, SPRINT_TASKS_SHOWN);
-  return { shown: [...shown, ...doneToday], extra: open.length - shown.length, extraMissionId: firstMission };
+  return { shown: [...shown, ...doneToday], extra: open.length - shown.length, extraMissionId: open[SPRINT_TASKS_SHOWN]?.missionId ?? null };
 }
 
-/** Ligne « N autres tâches dans ton sprint » (pas une tâche) : ce qui dépasse les trois affichées, avec la mission à ouvrir. */
+/** Ligne « N autres tâches dans ton sprint » (pas une tâche) : ce qui dépasse les trois affichées, avec la mission de la première tâche cachée. */
 export function sprintOverflow(sprints: SprintWork[], asOf: string): { count: number; missionId: string } | null {
   const { extra, extraMissionId } = sprintTasks(sprints, asOf);
   return extra > 0 && extraMissionId ? { count: extra, missionId: extraMissionId } : null;

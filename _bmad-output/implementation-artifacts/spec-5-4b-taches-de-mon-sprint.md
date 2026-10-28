@@ -78,6 +78,8 @@ Implémentée directement, sans sous-agent ni relecteurs (non demandés). `setTa
 
 ## Review Triage Log
 
+Relecture 5.4b (3 relecteurs, 28 octobre). patch : « Bravo » affiché alors que « N autres tâches » restent (medium, 2 relecteurs) ; lien « N autres tâches » vers la mission de la première tâche, pas de la première cachée (medium, 3 relecteurs) ; `revalidatePath('/aujourd-hui')` placé avant la lecture qui peut échouer (low, correction directe) ; lecture des sprints sans test d'isolation (medium : extraite dans `lib/db/sprint-work.ts`, testée avec deux comptes). false : mission nulle ou statut de mission non filtré (la spec ne retient que le statut du sprint ; la RLS pose le propriétaire), statuts de stories (énumération fermée), `Invalid Date` (horodatage de la base), journal absent (écrit avant la relecture). defer : `updated_at` comme date de « fait » (toute modification d'une tâche faite la rend « faite aujourd'hui » ; une colonne `done_at` demanderait une migration), autres actions de missions qui ne revalident pas le cockpit (la page est dynamique, pas de cache client), `router.refresh()` après « tâche introuvable », garde de `valid()` non testée.
+
 ## Design Notes
 
 « Septième règle » : l'alerte de fin de sprint porte le numéro 7 ; les tâches du sprint viennent après (rang 8 en interne, non affiché), conformément à l'épopée (« après les règles 1 à 7 »). Les tâches faites aujourd'hui restent visibles pour que « décocher est possible » ait un sens : sans cela, une tâche cochée disparaîtrait au rechargement.

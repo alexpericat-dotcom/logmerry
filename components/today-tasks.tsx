@@ -35,7 +35,7 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
         const r = t.kind === "deadline" ? await (done ? markDeadlineDone(t.id) : reopenDeadline(t.id)) : t.kind === "sprint-task" ? await setTaskDone(t.id, done) : await checkTask(targetOf(t)!, done);
         setError(r.message);
         if (!r.message) {
-          const last = done && tasks.every((x) => x === t || x.done);
+          const last = done && !overflow && tasks.every((x) => x === t || x.done);
           setAnnounce(done ? `${t.title} : fait.${last ? ` ${ALL_DONE}` : ""}` : `${t.title} : à refaire.`);
         }
       } catch {
@@ -44,7 +44,7 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
     });
   };
 
-  const allDone = tasks.length > 0 && tasks.every((t) => t.done);
+  const allDone = tasks.length > 0 && !overflow && tasks.every((t) => t.done); // des tâches de sprint cachées restent à faire
   return (
     <div className="flex flex-col gap-3">
       <p role="status" className="sr-only">{announce}</p>
