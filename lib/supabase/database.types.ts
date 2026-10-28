@@ -725,28 +725,34 @@ export type Database = {
       };
       task_checks: {
         Row: {
+          ceiling_key: string | null;
           checked_at: string;
           id: string;
           owner_id: string;
           period_start: string;
           rule_no: number;
-          source_id: string;
+          source_id: string | null;
+          threshold: number | null;
         };
         Insert: {
+          ceiling_key?: string | null;
           checked_at?: string;
           id?: string;
           owner_id?: string;
           period_start: string;
           rule_no: number;
-          source_id: string;
+          source_id?: string | null;
+          threshold?: number | null;
         };
         Update: {
+          ceiling_key?: string | null;
           checked_at?: string;
           id?: string;
           owner_id?: string;
           period_start?: string;
           rule_no?: number;
-          source_id?: string;
+          source_id?: string | null;
+          threshold?: number | null;
         };
         Relationships: [];
       };

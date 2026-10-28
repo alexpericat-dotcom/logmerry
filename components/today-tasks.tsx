@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import { checkInvoiceTask } from "@/app/(app)/aujourd-hui/actions";
+import { checkTask } from "@/app/(app)/aujourd-hui/actions";
 import { markDeadlineDone, reopenDeadline } from "@/app/(app)/calendrier/actions";
-import type { TodayTask } from "@/lib/domain/cockpit/today";
+import { targetOf } from "@/lib/db/task-checks";
+import type { MissingLine, TodayTask } from "@/lib/domain/cockpit/today";
+
+const LINKS = {
+  deadline: { href: "/calendrier", label: "Voir le calendrier" },
+  invoice: { href: "/factures", label: "Voir les factures" },
+  ceiling: { href: "/plafonds", label: "Voir les plafonds" },
+  acre: { href: "/profil", label: "Voir le profil" },
+} as const;
 
 export const ALL_DONE = "Bravo, tu as fait toutes tes tâches du jour.";
 
@@ -20,7 +28,7 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
     start(async () => {
       try {
         const done = !t.done;
-        const r = t.kind === "deadline" ? await (done ? markDeadlineDone(t.id) : reopenDeadline(t.id)) : await checkInvoiceTask(t.id, done);
+        const r = t.kind === "deadline" ? await (done ? markDeadlineDone(t.id) : reopenDeadline(t.id)) : await checkTask(targetOf(t)!, done);
         setError(r.message);
         if (!r.message) {
           const last = done && tasks.every((x) => x === t || x.done);
@@ -46,14 +54,35 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
               <span className="flex flex-col">
                 <span className={t.done ? "font-semibold line-through" : "font-semibold"}>{t.title}</span>
                 <span className="text-sm text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
+                {t.declared && <span className="text-sm text-muted-foreground">Calcul basé sur une donnée déclarée, non confirmée.</span>}
+                {t.demo && <span className="text-sm font-semibold">DEMO, non officielle</span>}
               </span>
             </label>
-            <Link href={t.kind === "deadline" ? "/calendrier" : "/factures"} className="flex min-h-11 items-center px-3 text-sm underline">
-              {t.kind === "deadline" ? "Voir le calendrier" : "Voir les factures"}
+            <Link href={LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
+              {LINKS[t.kind].label}
             </Link>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Lignes « paramètre manquant » : ce qui empêche une règle de produire une tâche, avec le lien pour le renseigner. */
+export function MissingParameters({ lines }: { lines: MissingLine[] }) {
+  if (!lines.length) return null;
+  return (
+    <ul className="flex flex-col gap-2" aria-label="Paramètres manquants">
+      {lines.map((l) => (
+        <li key={l.text} className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-dashed bg-card">
+          <p className="flex-1 p-3 text-sm text-muted-foreground">
+            <span className="font-semibold">Paramètre manquant.</span> {l.text}
+          </p>
+          <Link href={l.link} className="flex min-h-11 items-center px-3 text-sm underline">
+            {l.link === "/profil" ? "Voir le profil" : "Voir les règles"}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
