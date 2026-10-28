@@ -1,3 +1,4 @@
+import { formatDate } from "../format.ts";
 import { isDay } from "./missions.ts";
 
 export const OTHER = "other";
@@ -95,4 +96,12 @@ export type ProfileRow = Record<string, unknown> & { alert_thresholds: number[] 
 /** Les champs encore « À confirmer » : utile aux règles qui en dépendent (« paramètre manquant »). */
 export function missingFields(row: ProfileRow | null): string[] {
   return PROFILE_FIELDS.filter((f) => fieldState(row?.[f.key], row?.[`${f.key}_confirmed_at`] as string | null, f.key) === "missing").map((f) => f.key);
+}
+
+/** Valeur lisible d'un champ : libellé de la liste, texte « Autre », date ou texte libre. `null` = rien à afficher (« À confirmer »). */
+export function displayValue(def: ProfileFieldDef, value: string | null, other: string | null): string | null {
+  if (fieldState(value, null, def.key) === "missing") return null;
+  if (def.kind === "date") return isDay(value as string) ? formatDate(value as string) : value;
+  if (value === OTHER) return other || null;
+  return def.options?.find((o) => o.value === value)?.label ?? value;
 }
