@@ -2,7 +2,7 @@
  * Test d'isolation à deux comptes fictifs (story 2.3).
  * À rejouer après chaque migration : npm run test:isolation
  *
- * Se connecte avec la clé PUBLIQUE (jamais service_role) en tant que « démo A » et « démo B ».
+ * Se connecte avec la clé PUBLIQUE (jamais service_role) en tant que « compte de test A » et « compte de test B » (TEST_A_*, TEST_B_* : jamais le compte de démonstration).
  * Identifiants : .env.test.local (ignoré par git). Écrit des notes préfixées [isolation-test]
  * dans la vraie base, puis les supprime. Refuse de tourner avec un compte hors @example.com.
  * Prérequis : les deux comptes existent (voir .env.test.local.example) ; sans ce fichier, Node
@@ -13,6 +13,8 @@ import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
+
+import { testAccount } from "./helpers/accounts.ts";
 
 import { setDeadlineDone } from "../lib/db/deadline-state.ts";
 import { listActiveSprintWork } from "../lib/db/sprint-work.ts";
@@ -34,15 +36,14 @@ const newClient = () =>
   createClient(URL, KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
 async function signIn(who: "A" | "B") {
-  const email = env(`DEMO_${who}_EMAIL`);
-  assert.ok(email.endsWith("@example.com"), `démo ${who} doit être un compte fictif @example.com`);
+  const { email, password } = testAccount(who);
   const client = newClient();
   const { data, error } = await client.auth.signInWithPassword({
     email,
-    password: env(`DEMO_${who}_PASSWORD`),
+    password,
   });
   if (error || !data.user) {
-    throw new Error(`Connexion impossible pour démo ${who} : ${error?.message ?? "pas d'utilisateur"}`);
+    throw new Error(`Connexion impossible pour compte de test ${who} : ${error?.message ?? "pas d'utilisateur"}`);
   }
   return { client, userId: data.user.id };
 }
