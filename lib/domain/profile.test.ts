@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { fieldState, missingFields, parseFieldInput, parseThresholds, PROFILE_FIELDS } from "./profile.ts";
+import { displayValue, fieldState, missingFields, parseFieldInput, parseThresholds, PROFILE_FIELDS } from "./profile.ts";
 
 test("fieldState : vide, déclaré, confirmé", () => {
   assert.equal(fieldState(null, null), "missing");
@@ -79,4 +79,15 @@ test("longueur en points de code, comme char_length : 2 000 émojis passent, 2 0
   assert.equal(parseFieldInput("legal_status", { value: "other", other: "😀".repeat(201) }).ok, false);
   assert.deepEqual(parseFieldInput("financial_goals", { value: "\u0000" }), { ok: true, patch: { financial_goals: null } });
   assert.deepEqual(parseFieldInput("legal_status", { value: "other", other: "As\u0000so" }), { ok: true, patch: { legal_status: "other", legal_status_other: "Asso" } });
+});
+
+test("displayValue : libellé, « Autre » et date lisibles ; vide, « je ne sais pas » ou « Autre » sans texte = rien", () => {
+  const def = (key: string) => PROFILE_FIELDS.find((f) => f.key === key)!;
+  assert.equal(displayValue(def("vat_regime"), "franchise", null), "Franchise en base");
+  assert.equal(displayValue(def("vat_regime"), "other", "Régime étranger"), "Régime étranger");
+  assert.equal(displayValue(def("vat_regime"), "other", null), null);
+  assert.equal(displayValue(def("acre"), "unknown", null), null);
+  assert.equal(displayValue(def("vat_regime"), null, null), null);
+  assert.match(displayValue(def("activity_start_date"), "2026-11-02", null) ?? "", /2026/);
+  assert.equal(displayValue(def("financial_goals"), "Viser 3 missions", null), "Viser 3 missions");
 });

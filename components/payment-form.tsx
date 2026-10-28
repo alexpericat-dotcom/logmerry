@@ -65,7 +65,7 @@ export function PaymentForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={id("amount_ht")}>Montant hors taxe encaissé, en € (obligatoire)</Label>
           <Input {...field("amount_ht")} inputMode="decimal" defaultValue={values.amount_ht} aria-required="true" autoComplete="off" onChange={(ev) => setDraft((d) => ({ ...d, amount_ht: ev.target.value }))} />

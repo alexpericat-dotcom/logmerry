@@ -187,6 +187,7 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
         <Label htmlFor="body">Texte</Label>
         <Textarea
           id="body"
+          className="min-h-40"
           name="body"
           defaultValue={values.body}
           aria-invalid={bodyError ? true : undefined}

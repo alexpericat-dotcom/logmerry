@@ -78,7 +78,7 @@ export function InvoiceForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("mission_id")}>Mission (obligatoire)</Label>
           {lockedMissionId && <input type="hidden" name="mission_id" value={lockedMissionId} />}
@@ -141,7 +141,7 @@ export function InvoiceForm({
         <Button type="button" variant="outline" size="sm" className="self-start" aria-expanded={showMore} aria-controls={id("more")} onClick={() => setMore((v) => !v)}>
           Plus de champs
         </Button>
-        <div id={id("more")} className={showMore ? "grid gap-4 sm:grid-cols-2" : "hidden"}>
+        <div id={id("more")} className={showMore ? "grid items-start gap-4 sm:grid-cols-2" : "hidden"}>
           <div className="grid gap-2">
             <Label htmlFor={id("issued_on")}>Date d&apos;émission</Label>
             <Input {...field("issued_on")} type="date" defaultValue={values.issued_on} />
