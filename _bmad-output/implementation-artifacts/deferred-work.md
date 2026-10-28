@@ -77,3 +77,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
   summary: Cockpit allégé : rappeler « aucun seuil d'alerte actif » et la période du CA si Alex le souhaite ; décider si les « paramètres manquants » restent repliés ; clés React des lignes manquantes (texte identique) ; `GaugeRow` du cockpit et `CeilingGaugeCard` de la page Plafonds sont deux affichages du même calcul (dérive possible de présentation, pas de chiffre).
   evidence: relecture du cockpit allégé (28 octobre) : choix de présentation assumés (demande d'Alex d'un cockpit léger), pas d'écart de calcul.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
+  summary: Tableau de bord du cockpit : extraire en domaine (et tester) le mapping « facture → échue » de la tuile « Factures à encaisser » ; compter clients et prospects par requête au lieu de lire toutes les fiches ; échelle de valeurs sur la courbe du CA ; séparer les blocs lourds en frontières Suspense distinctes ; valeurs négatives (avoir) sur la courbe.
+  evidence: relecture du tableau de bord (28 octobre) : réels mais sans effet sur les chiffres actuels (montants de la base strictement positifs, quelques centaines de fiches) ; le reste de la relecture est corrigé (état d'alerte des barres, anneau d'une journée libre, dégradé d'une courbe plate, fenêtre de 7 jours, calendrier testé).

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { computeCeilings } from "./ceilings.ts";
 import type { RuleRow } from "./rules.ts";
-import { collectedRevenue } from "./revenue.ts";
+import { collectedRevenue, monthlyRevenue } from "./revenue.ts";
 
 const pay = (amount_ht_cents: number, received_on: string) => ({ amount_ht_cents, received_on });
 const TODAY = "2026-10-28";
@@ -30,4 +30,13 @@ test("même chiffre que la jauge : le CA hors taxe de l'année = le consommé d'
   const gauge = computeCeilings([rule], { activity_category: "bnc", alert_thresholds: [] }, payments, TODAY)[0];
   assert.equal(gauge.status, "ok");
   assert.equal(gauge.status === "ok" && gauge.consumedCents, collectedRevenue(payments, TODAY).cents);
+});
+
+test("CA par mois : douze mois, encaissements du bon mois, l'an dernier et le futur exclus, somme = CA de l'année", () => {
+  const payments = [pay(10_000, "2026-01-31"), pay(5_000, "2026-01-01"), pay(25_050, TODAY), pay(99_999, "2025-12-31"), pay(500, "2026-12-31")];
+  const months = monthlyRevenue(payments, TODAY);
+  assert.equal(months.length, 12);
+  assert.deepEqual([months[0].cents, months[9].cents, months[11].cents], [15_000, 25_050, 0]);
+  assert.equal(months.reduce((s, m) => s + m.cents, 0), collectedRevenue(payments, TODAY).cents);
+  assert.equal(monthlyRevenue([], TODAY).every((m) => m.cents === 0), true);
 });
