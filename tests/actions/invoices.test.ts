@@ -2,16 +2,11 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import { createInvoice, deleteInvoice, updateInvoice } from "../../app/(app)/factures/actions.ts";
-import { Redirect, fake, filterValue, withHarness } from "../helpers/harness.ts";
+import { fake, filterValue, form, toLogin, withHarness } from "../helpers/harness.ts";
 
 const MISSION = "22222222-2222-4222-8222-222222222222";
 const ID = "33333333-3333-4333-8333-333333333333";
 
-const form = (o: Record<string, string>) => {
-  const f = new FormData();
-  for (const [k, v] of Object.entries(o)) f.set(k, v);
-  return f;
-};
 const VALID = { mission_id: MISSION, quote_id: "", amount_ht: "1500,00", tax: "", due_on: "2099-12-31", issued_on: "", reference: "F-1", note: "" };
 const REFRESHED = ["/factures", "/missions/[id]#page", "/aujourd-hui", "/plafonds"]; // la fiche d'une mission montre ses factures : revalidée avec le type « page »
 
@@ -45,7 +40,6 @@ describe("createInvoice", () => {
 
   test("sans session : redirection vers la connexion, aucune requête (aussi pour modifier et supprimer)", async () => {
     fake.claims = null;
-    const toLogin = (e: unknown) => e instanceof Redirect && e.url === "/auth/login";
     await assert.rejects(() => createInvoice({}, form(VALID)), toLogin);
     await assert.rejects(() => updateInvoice(ID, {}, form(VALID)), toLogin);
     await assert.rejects(() => deleteInvoice(ID), toLogin);

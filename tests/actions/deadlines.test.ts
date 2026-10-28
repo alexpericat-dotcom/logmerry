@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import { deleteDeadline, markDeadlineDone, reopenDeadline } from "../../app/(app)/calendrier/actions.ts";
-import { Redirect, fake, filterValue, withHarness } from "../helpers/harness.ts";
+import { fake, filterValue, toLogin, withHarness } from "../helpers/harness.ts";
 
 const ID = "66666666-6666-4666-8666-666666666666";
 const SERIES = "77777777-7777-4777-8777-777777777777";
@@ -53,7 +53,6 @@ describe("markDeadlineDone / reopenDeadline", () => {
 
   test("sans session : redirection vers la connexion, aucune requête", async () => {
     fake.claims = null;
-    const toLogin = (e: unknown) => e instanceof Redirect && e.url === "/auth/login";
     await assert.rejects(() => markDeadlineDone(ID), toLogin);
     await assert.rejects(() => reopenDeadline(ID), toLogin);
     await assert.rejects(() => deleteDeadline(ID), toLogin);

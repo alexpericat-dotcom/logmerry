@@ -1,4 +1,4 @@
-// Crochets de chargement des tests d'actions serveur : comme ts-hooks.mjs, plus trois doublures (next/cache, next/navigation, client Supabase).
+// Crochets de chargement des tests d'actions serveur : comme ts-hooks.mjs, plus quatre doublures (next/cache, next/navigation, client Supabase, indexation des notes).
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { resolve as base } from "./ts-hooks.mjs";
@@ -7,6 +7,7 @@ const STUBS = {
   "next/cache": "stubs/next-cache.ts",
   "next/navigation": "stubs/next-navigation.ts",
   "@/lib/supabase/server": "stubs/supabase-server.ts",
+  "@/app/(app)/notes/indexing": "stubs/notes-indexing.ts", // appelle Mistral : jamais dans un test
 };
 const HERE = fileURLToPath(new URL("./", import.meta.url));
 
