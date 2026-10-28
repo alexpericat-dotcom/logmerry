@@ -5,10 +5,10 @@ export const vec = (tag: number) => [tag, ...new Array<number>(1023).fill(0)];
 
 /** Remplace `fetch` : chaque appel répond ce que `reply(corps)` rend. Rend la liste des corps envoyés. */
 export function mockFetch(t: TestContext, reply: (body: { model: string; input: string[] }, init: RequestInit) => Response) {
-  const calls: { input: string[]; init: RequestInit }[] = [];
-  t.mock.method(globalThis, "fetch", async (_url: unknown, init: RequestInit) => {
+  const calls: { url: string; input: string[]; init: RequestInit }[] = [];
+  t.mock.method(globalThis, "fetch", async (url: unknown, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
-    calls.push({ input: body.input, init });
+    calls.push({ url: String(url), input: body.input, init });
     return reply(body, init);
   });
   return calls;

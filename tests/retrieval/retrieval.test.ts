@@ -12,6 +12,8 @@ type Setup = {
   searchError?: Err;
   chunks?: { id: string; note_id: string; content: string }[];
   titles?: { id: string; title: string }[];
+  titlesError?: Err; // lecture des titres (table notes)
+  chunksError?: Err; // lecture des extraits (table note_chunks)
 };
 
 /** Client Supabase minimal : les deux RPC et les deux lectures que fait `retrieveChunks`. Note les appels de `search_notes`. */
@@ -26,7 +28,8 @@ function fakeDb(s: Setup) {
     from: (table: string) => ({
       select: () => ({
         in: () => {
-          const result = { data: table === "notes" ? (s.titles ?? []) : (s.chunks ?? []), error: null };
+          const error = (table === "notes" ? s.titlesError : s.chunksError) ?? null;
+          const result = { data: error ? null : table === "notes" ? (s.titles ?? []) : (s.chunks ?? []), error };
           return { limit: async () => result, then: (ok: (v: unknown) => unknown) => Promise.resolve(result).then(ok) };
         },
       }),
@@ -62,7 +65,32 @@ describe("retrieveChunks", () => {
     assert.deepEqual(out.map((c) => c.id), ["c1"]);
     assert.equal(log.mock.callCount(), 1);
     assert.equal(log.mock.calls[0].arguments[0], "Recherche par mots-clés impossible :");
-    assert.ok(!JSON.stringify(log.mock.calls).includes("renouvelé")); // ni le texte des notes ni la question
+    assert.deepEqual(log.mock.calls[0].arguments, ["Recherche par mots-clés impossible :", "search_notes XX000"]); // seulement le code, ni mot-clé, ni question, ni texte
+  });
+
+  test("lecture des extraits en erreur : voie par sens seule, journalisée ; lecture des titres en erreur : l'appel échoue", async (t) => {
+    withFakeKey(t);
+    mockFetch(t, embeddingsOk);
+    const log = t.mock.method(console, "error", () => {});
+    const found = [{ id: "n2", title: "Locaux" }];
+    const sense = { matches: SENSE, titles: [{ id: "n1", title: "Bail" }] };
+    const out = await retrieveChunks(fakeDb({ ...sense, found, chunksError: { code: "XX001" } }).db, QUESTION);
+    assert.deepEqual(out.map((c) => c.id), ["c1"]);
+    assert.deepEqual(log.mock.calls[0].arguments, ["Recherche par mots-clés impossible :", "extraits XX001"]);
+    await assert.rejects(retrieveChunks(fakeDb({ ...sense, titlesError: { code: "XX002" } }).db, QUESTION), /titres XX002/);
+  });
+
+  test("même extrait trouvé par les deux voies : gardé une fois, avec son score ; rien trouvé : liste vide", async (t) => {
+    withFakeKey(t);
+    mockFetch(t, embeddingsOk);
+    const both = fakeDb({
+      matches: SENSE,
+      titles: [{ id: "n1", title: "Bail" }],
+      found: [{ id: "n1", title: "Bail" }],
+      chunks: [{ id: "c1", note_id: "n1", content: "Le contrat de bail est renouvelé." }],
+    });
+    assert.deepEqual((await retrieveChunks(both.db, QUESTION)).map((c) => [c.id, c.score]), [["c1", 0.9]]);
+    assert.deepEqual(await retrieveChunks(fakeDb({}).db, QUESTION), []);
   });
 
   test("voie par sens en échec (Mistral ou match_chunks) : l'appel échoue, même si les mots-clés répondent", async (t) => {

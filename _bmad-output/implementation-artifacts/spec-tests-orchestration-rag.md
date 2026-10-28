@@ -2,7 +2,7 @@
 title: 'Tests de l''orchestration RAG (embedTexts, retrieveChunks)'
 type: 'chore'
 created: '2026-10-28'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'b9574e03ead8200040bceb1bdc7ab03feb0da84e'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -49,10 +49,10 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `tests/retrieval/embeddings.test.ts` -- cas `embedTexts` de la matrice, `fetch` simulé par `t.mock.method(globalThis, "fetch")` -- aucun réseau
-- [ ] `tests/retrieval/retrieval.test.ts` -- cas `retrieveChunks` de la matrice, client factice de ~20 lignes (`rpc`, `from().select().in().limit()`), `fetch` simulé pour la voie par sens -- les deux voies sont le vrai code
-- [ ] `package.json` -- script `test:retrieval` (avec `--import ./tests/helpers/register.mjs`), ajouté à `npm test` -- la CI le lance
-- [ ] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- noter le résultat ; retirer le point « `retrieveChunks` et `embedTexts` » de la section 2
+- [x] `tests/retrieval/embeddings.test.ts` -- cas `embedTexts` de la matrice, `fetch` simulé par `t.mock.method(globalThis, "fetch")` -- aucun réseau
+- [x] `tests/retrieval/retrieval.test.ts` -- cas `retrieveChunks` de la matrice, client factice de ~20 lignes (`rpc`, `from().select().in().limit()`), `fetch` simulé pour la voie par sens -- les deux voies sont le vrai code
+- [x] `package.json` -- script `test:retrieval` (avec `--import ./tests/helpers/register.mjs`), ajouté à `npm test` -- la CI le lance
+- [x] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- noter le résultat ; retirer le point « `retrieveChunks` et `embedTexts` » de la section 2
 
 **Acceptance Criteria:**
 - Given aucune variable d'environnement réelle, when `npm test` tourne, then les nouveaux tests passent sans réseau.
@@ -61,9 +61,28 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `tests/retrieval/helpers.ts` (aide : `fetch` simulé, clé factice) ajouté en plus des deux fichiers prévus. Après relecture : 15 tests (9 + 6). Aucun fichier de l'application modifié, aucune dépendance.
+- Vérification : `npm test`, `npx tsc --noEmit` et `npm run lint` passent ; mutations (lot de 17, voie par sens avalée, `.catch` retiré, garde `rows.error` retiré) : chacune fait échouer au moins un test.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Assertion de fuite du journal ne peut pas échouer (`JSON.stringify` d'une `Error`, mot absent du chemin) | medium | patch : le journal est comparé exactement à `[message, "search_notes XX000"]` |
+| 2 | URL, modèle et `Content-Type` de la requête non vérifiés | medium | patch : corps comparé à `{ model: "mistral-embed", input }`, URL vérifiée |
+| 3 | Éléments d'un lot dans le désordre, deuxième lot en échec, vecteur de mauvaise taille, corps non JSON non testés | medium | patch : quatre cas ajoutés |
+| 4 | Gardes d'erreur « extraits » et « titres » inatteignables (client factice sans erreur) | medium | patch : `titlesError`, `chunksError` ; mutation du garde `rows.error` détectée |
+| 5 | Extrait trouvé par les deux voies, rien trouvé : non testés | low | patch |
+| 6 | Signal d'annulation vérifié seulement dans le test des lots | low | patch : aussi dans le test du délai |
+| 7 | Durée de 20 s du délai non vérifiée | low | defer : une durée sur un `AbortSignal` ne s'asserte pas proprement ; présence du signal testée |
+| 8 | Client factice non lié aux types (`as never`), arguments de `select`/`in`/`limit` ignorés | low | defer (ajouté aux limites du harnais) |
+| 9 | Garde réseau global si un test oublie `mockFetch` | low | rejeté : la clé est factice, un appel réel échouerait en 401 sans rien divulguer ; ajouter un garde est plus de code que de risque |
+| 10 | Placement du script `test:retrieval`, commentaire sur le chargeur différent | low | rejeté (cosmétique) ; raison du chargeur dans la spec |
+| 11 | Spec non à jour (statut, tâches), journal sans résultats de vérification | low | patch (cette mise à jour) |
 
 ## Verification
 
