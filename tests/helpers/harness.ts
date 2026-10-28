@@ -16,10 +16,12 @@ export type Op = {
   filters: Filter[];
   /** Colonnes de `.select(...)` : sur une écriture, signe que l'action relit les lignes touchées. */
   columns?: string;
+  /** Options de `.select(cols, options)`, ex. `{ count: "exact", head: true }`. */
+  selectOptions?: unknown;
   returning: boolean;
   terminal?: "single" | "maybeSingle";
 };
-export type Reply = { data?: unknown; error?: { code?: string; message?: string } | null };
+export type Reply = { data?: unknown; error?: { code?: string; message?: string } | null; count?: number | null };
 
 export class Redirect extends Error {
   url: string;
@@ -35,6 +37,10 @@ export const fake = {
   revalidated: [] as string[],
   /** Erreurs du harnais lui-même (méthode du client non gérée) : un test ne doit jamais passer grâce à elles. */
   problems: [] as string[],
+  /** Notes dont l'indexation (appel à Mistral) a été demandée : jamais de vrai appel dans un test. */
+  indexed: [] as string[],
+  /** Ce que renvoie la doublure d'`indexNote`. */
+  indexResult: "indexed" as "indexed" | "failed",
   /** `createClient()` lève (réseau, cookies) : l'action doit répondre « échec », pas planter. */
   failCreate: false,
   claims: { sub: "00000000-0000-4000-8000-000000000001" } as Record<string, unknown> | null,
@@ -44,6 +50,8 @@ export const fake = {
     this.ops = [];
     this.revalidated = [];
     this.problems = [];
+    this.indexed = [];
+    this.indexResult = "indexed";
     this.failCreate = false;
     this.claims = { sub: "00000000-0000-4000-8000-000000000001" };
     this.respond = () => ({ data: [], error: null });
@@ -53,6 +61,17 @@ export const fake = {
     return this.ops.filter((o) => o.table === table && (!op || o.op === op));
   },
 };
+
+/** Un `FormData` depuis un objet (les actions lisent des formulaires). */
+export function form(o: Record<string, string>): FormData {
+  const f = new FormData();
+  for (const [k, v] of Object.entries(o)) f.set(k, v);
+  return f;
+}
+
+/** Prédicat pour `assert.rejects` : l'action a redirigé vers `url` (un `redirect()` de Next lève). */
+export const redirectsTo = (url: string) => (e: unknown) => e instanceof Redirect && e.url === url;
+export const toLogin = redirectsTo("/auth/login");
 
 /** Branche le harnais sur le fichier de test : remise à zéro avant chaque test, et échec si le client factice a reçu un appel qu'il ne connaît pas. */
 export function withHarness() {
@@ -84,12 +103,13 @@ function builder(table: string) {
       data = data[0] ?? null;
       if (data === null && op.terminal === "single" && !error) error = { code: "PGRST116", message: "no rows" };
     }
-    return { data, error };
+    return { data, error, count: r.count ?? null };
   };
   const b: Record<string, unknown> = {
-    select(columns?: string) {
+    select(columns?: string, options?: unknown) {
       if (started) op.returning = true;
       op.columns = columns ?? "*";
+      op.selectOptions = options;
       started = true;
       return b;
     },
@@ -133,7 +153,7 @@ export const client = {
     return Promise.resolve().then(() => {
       fake.ops.push(op);
       const r = fake.respond(op);
-      return { data: r.data ?? null, error: r.error ?? null };
+      return { data: r.data ?? null, error: r.error ?? null, count: r.count ?? null };
     });
   },
   auth: {

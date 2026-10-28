@@ -2,16 +2,11 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import { createPayment, deletePayment, updatePayment } from "../../app/(app)/factures/payment-actions.ts";
-import { Redirect, fake, filterValue, withHarness } from "../helpers/harness.ts";
+import { fake, filterValue, form, toLogin, withHarness } from "../helpers/harness.ts";
 
 const INVOICE = "44444444-4444-4444-8444-444444444444";
 const ID = "55555555-5555-4555-8555-555555555555";
 
-const form = (o: Record<string, string>) => {
-  const f = new FormData();
-  for (const [k, v] of Object.entries(o)) f.set(k, v);
-  return f;
-};
 const REFRESHED_PAGE = "/missions/[id]#page";
 const VALID = { amount_ht: "500,00", tax: "", received_on: "2026-10-01", note: "" };
 
@@ -37,7 +32,6 @@ describe("createPayment", () => {
 
   test("sans session : redirection, aucune requête (création, modification, suppression)", async () => {
     fake.claims = null;
-    const toLogin = (e: unknown) => e instanceof Redirect && e.url === "/auth/login";
     await assert.rejects(() => createPayment(INVOICE, {}, form(VALID)), toLogin);
     await assert.rejects(() => updatePayment(ID, INVOICE, {}, form(VALID)), toLogin);
     await assert.rejects(() => deletePayment(ID), toLogin);
