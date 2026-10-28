@@ -73,3 +73,15 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-4b-taches-de-mon-sprint.md`
   summary: Ajouter une colonne `tasks.done_at` (migration) au lieu de lire `updated_at` pour « faite aujourd'hui » ; `router.refresh()` quand cocher une tâche de sprint répond « introuvable » ; tester la garde `valid()` de l'action de coche (règles 2 à 7) ; ne calculer `sprintTasks` qu'une fois par rendu (appelée par `todayTasks` et `sprintOverflow`).
   evidence: relecture 5.4b : `updated_at` bouge à toute modification d'une tâche (déclencheur `tasks_set_updated_at`), donc une tâche faite il y a des jours réapparaît « cochée aujourd'hui » après un renommage ou un réordonnancement ; les trois autres points sont des finitions sans conséquence de sécurité.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
+  summary: Cockpit allégé : rappeler « aucun seuil d'alerte actif » et la période du CA si Alex le souhaite ; décider si les « paramètres manquants » restent repliés ; clés React des lignes manquantes (texte identique) ; `GaugeRow` du cockpit et `CeilingGaugeCard` de la page Plafonds sont deux affichages du même calcul (dérive possible de présentation, pas de chiffre).
+  evidence: relecture du cockpit allégé (28 octobre) : choix de présentation assumés (demande d'Alex d'un cockpit léger), pas d'écart de calcul.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
+  summary: Tableau de bord du cockpit : extraire en domaine (et tester) le mapping « facture → échue » de la tuile « Factures à encaisser » ; compter clients et prospects par requête au lieu de lire toutes les fiches ; échelle de valeurs sur la courbe du CA ; séparer les blocs lourds en frontières Suspense distinctes ; valeurs négatives (avoir) sur la courbe.
+  evidence: relecture du tableau de bord (28 octobre) : réels mais sans effet sur les chiffres actuels (montants de la base strictement positifs, quelques centaines de fiches) ; le reste de la relecture est corrigé (état d'alerte des barres, anneau d'une journée libre, dégradé d'une courbe plate, fenêtre de 7 jours, calendrier testé).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
+  summary: Cockpit compact : la description du bandeau monte deux `TypedText` (un par largeur, un seul visible) ; catégorie des échéances et précision des tuiles seulement en infobulle (invisibles au tactile) ; « À confirmer » absent de l'anneau du plafond le plus avancé ; `seed:activity` non reprenable après une écriture interrompue (supprimer à la main les lignes « (démo) ») et sans liste des noms purgés en `--dry` ; aucun test de rendu sur les composants du tableau de bord.
+  evidence: relecture du cockpit compact (28 octobre) : réels, sans effet sur les chiffres ; le reste est corrigé.

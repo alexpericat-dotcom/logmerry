@@ -182,7 +182,7 @@ export function todayTasks(
       ceilingKey: c.key,
       threshold: c.alertThreshold,
       title: c.label,
-      reason: c.state === "exceeded" ? `${c.label} dépassé (estimation)` : `${c.label} à ${c.alertThreshold} % (estimation)`,
+      reason: c.state === "exceeded" ? "dépassé (estimation)" : `à ${c.alertThreshold} % (estimation)`,
       date: asOf,
       done: checked.has(checkKey(3, null, c.key, c.alertThreshold)),
       declared: c.declaredNotConfirmed,

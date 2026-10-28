@@ -1,10 +1,12 @@
 "use client";
 
+import { ChevronRight, FlaskConical, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { setTaskDone } from "@/app/(app)/missions/task-actions";
 import { checkTask } from "@/app/(app)/aujourd-hui/actions";
+import { Badge } from "@/components/ui/badge";
 import { markDeadlineDone, reopenDeadline } from "@/app/(app)/calendrier/actions";
 import { targetOf, type MissingLine, type TodayTask } from "@/lib/domain/cockpit/today";
 
@@ -50,50 +52,74 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
       <p role="status" className="sr-only">{announce}</p>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {allDone && <p className="rounded-md border bg-card p-3 font-semibold">{ALL_DONE}</p>}
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1.5">
         {tasks.map((t) => (
-          <li key={`${t.kind}-${t.id}`} className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border bg-card">
-            <label className="flex min-h-11 flex-1 cursor-pointer items-start gap-3 p-3">
+          <li key={`${t.kind}-${t.id}`} className="flex items-center justify-between gap-x-2 rounded-md border bg-card">
+            <label className="flex min-h-11 flex-1 cursor-pointer items-start gap-2 px-3 py-1.5">
               <input type="checkbox" className="mt-0.5 size-5 shrink-0" checked={t.done} aria-busy={pending} onChange={() => toggle(t)} />
-              <span className="flex flex-col">
-                <span className={t.done ? "font-semibold line-through" : "font-semibold"}>{t.title}</span>
-                <span className="text-sm text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
-                {t.context && <span className="text-sm text-muted-foreground">{t.context}</span>}
-                {t.declared && <span className="text-sm text-muted-foreground">Calcul basé sur une donnée déclarée, non confirmée.</span>}
-                {t.demo && <span className="text-sm font-semibold">DEMO, non officielle</span>}
+              <span className="flex flex-col gap-0.5">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className={t.done ? "text-sm font-semibold line-through" : "text-sm font-semibold"}>{t.title}</span>
+                  <span className="text-xs text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
+                  {t.declared && (
+                    <Badge variant="warning" title="Calcul basé sur une donnée déclarée, non confirmée">
+                      <TriangleAlert size={11} aria-hidden="true" />
+                      À confirmer<span className="sr-only"> : calcul basé sur une donnée déclarée, non confirmée</span>
+                    </Badge>
+                  )}
+                  {t.demo && (
+                    <Badge variant="secondary" title="DEMO, non officielle">
+                      <FlaskConical size={11} aria-hidden="true" />
+                      DEMO<span className="sr-only">, non officielle</span>
+                    </Badge>
+                  )}
+                </span>
+                {t.context && <span className="text-xs text-muted-foreground">{t.context}</span>}
               </span>
             </label>
-            <Link href={t.kind === "quote" ? `/clients/${t.clientId}` : t.missionId ? `/missions/${t.missionId}` : LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
-              {LINKS[t.kind].label}
+            <Link
+              href={t.kind === "quote" ? `/clients/${t.clientId}` : t.missionId ? `/missions/${t.missionId}` : LINKS[t.kind].href}
+              aria-label={`${LINKS[t.kind].label} : ${t.title}`}
+              className="flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground"
+            >
+              <ChevronRight size={18} aria-hidden="true" />
             </Link>
           </li>
         ))}
       </ul>
       {overflow && (
-        <p className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-dashed bg-card">
+        <p className="flex items-center justify-between gap-x-2 rounded-md border border-dashed bg-card">
           <span className="p-3 text-sm text-muted-foreground">{overflow.count} autre{overflow.count > 1 ? "s" : ""} tâche{overflow.count > 1 ? "s" : ""} dans ton sprint</span>
-          <Link href={`/missions/${overflow.missionId}`} className="flex min-h-11 items-center px-3 text-sm underline">Voir la mission</Link>
+          <Link href={`/missions/${overflow.missionId}`} aria-label="Voir la mission" className="flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground">
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
         </p>
       )}
     </div>
   );
 }
 
-/** Lignes « paramètre manquant » : ce qui empêche une règle de produire une tâche, avec le lien pour le renseigner. */
+/** « Paramètre manquant » : une seule ligne repliée (N manquants), le détail et le lien de chacun à l'ouverture. Jamais une tâche. */
 export function MissingParameters({ lines }: { lines: MissingLine[] }) {
   if (!lines.length) return null;
   return (
-    <ul className="flex flex-col gap-2" aria-label="Paramètres manquants">
-      {lines.map((l) => (
-        <li key={l.text} className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-dashed bg-card">
-          <p className="flex-1 p-3 text-sm text-muted-foreground">
-            <span className="font-semibold">Paramètre manquant.</span> {l.text}
-          </p>
-          <Link href={l.link} className="flex min-h-11 items-center px-3 text-sm underline">
-            {l.link === "/profil" ? "Voir le profil" : "Voir les règles"}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <details className="rounded-md border border-dashed bg-card">
+      <summary className="flex min-h-11 cursor-pointer items-center gap-2 p-3 text-sm">
+        <TriangleAlert size={16} aria-hidden="true" />
+        <span className="font-semibold">
+          {lines.length} paramètre{lines.length > 1 ? "s" : ""} manquant{lines.length > 1 ? "s" : ""}
+        </span>
+      </summary>
+      <ul aria-label="Paramètres manquants" className="flex flex-col border-t">
+        {lines.map((l) => (
+          <li key={l.text} className="flex items-center justify-between gap-x-2">
+            <p className="flex-1 p-3 text-sm text-muted-foreground">{l.text}</p>
+            <Link href={l.link} aria-label={l.link === "/profil" ? "Voir le profil" : "Voir les règles"} className="flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground">
+              <ChevronRight size={18} aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

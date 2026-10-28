@@ -7,13 +7,18 @@ import { isOfficialLink } from "@/lib/domain/finance/rules";
 import { formatCents } from "@/lib/domain/quotes";
 import { formatDate } from "@/lib/format";
 
+/** Notes par plafond, communes à la page Plafonds et au cockpit : la franchise de TVA s'apprécie normalement sur l'année N-1 (décision 6). */
+export const CEILING_NOTES: Record<string, string> = {
+  ceiling_vat_franchise: "Sans la règle de l'année N-1 : la jauge compte la période de la règle, sans distinguer l'année précédente.",
+};
+
 const BASIS_LABEL = { excl_tax: "hors taxe", incl_tax: "taxe comprise" } as const;
 
 /** « Paramètre manquant » : jamais un chiffre ; ce qui manque, et le lien qui le débloque. */
-export function MissingCeiling({ result }: { result: CeilingMissing }) {
+export function MissingCeiling({ result, heading: H = "h2" }: { result: CeilingMissing; heading?: "h2" | "h3" }) {
   return (
     <li className="flex flex-col gap-2 rounded-md border border-dashed bg-card p-3">
-      <h2 className="font-semibold">{result.label}</h2>
+      <H className="font-semibold">{result.label}</H>
       <p className="text-sm">
         <span className="font-semibold">Paramètre manquant</span> : {MISSING_TEXT[result.reason]}.
       </p>
@@ -33,15 +38,15 @@ function stateLine(g: Gauge, activeThresholds: number): { icon: typeof CircleChe
 
 const FILL = { ok: "bg-primary", warn: "bg-warning", alert: "bg-destructive" } as const;
 
-/** Une jauge chiffrée : seuil, consommé, pourcentage, restant, période, mise à jour, source, date d'effet, « estimation » (décision 5). */
-export function CeilingGaugeCard({ gauge: g, activeThresholds, note }: { gauge: Gauge; activeThresholds: number; note?: string }) {
+/** `heading` : niveau du titre (h3 quand la carte est sous un titre de section, comme sur le cockpit). Une jauge chiffrée : seuil, consommé, pourcentage, restant, période, mise à jour, source, date d'effet, « estimation » (décision 5). */
+export function CeilingGaugeCard({ gauge: g, activeThresholds, note, heading: H = "h2" }: { gauge: Gauge; activeThresholds: number; note?: string; heading?: "h2" | "h3" }) {
   const { icon: StateIcon, text, tone } = stateLine(g, activeThresholds);
   const shown = Math.min(g.percent, 100);
   const period = `du ${formatDate(g.period.from)} au ${formatDate(g.period.to)}${g.period.kind === "rolling_12_months" ? " (12 mois glissants)" : " (année civile)"}`;
   return (
     <li className="flex flex-col gap-3 rounded-md border bg-card p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-semibold">{g.label}</h2>
+        <H className="font-semibold">{g.label}</H>
         <Badge variant="outline">Estimation</Badge>
         {g.demo && (
           <Badge variant="secondary">

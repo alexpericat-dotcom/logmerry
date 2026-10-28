@@ -17,6 +17,7 @@ export function PageBanner({
   children,
   className,
   hero = false,
+  tiles,
 }: {
   title: string;
   description?: string;
@@ -24,11 +25,14 @@ export function PageBanner({
   children?: ReactNode;
   className?: string;
   hero?: boolean;
+  /** Cockpit : rangée de tuiles au bas du bandeau. */
+  tiles?: ReactNode;
 }) {
   return (
     <header
       className={cn(
         "relative flex min-h-44 flex-col justify-between gap-6 overflow-hidden rounded-lg border bg-gradient-sunset bg-[length:var(--banner-size)] px-4 pb-4 pt-5 shadow-hard max-md:min-h-28 md:px-6 md:pb-5 md:pt-6",
+        hero && "min-h-0 gap-3 md:pb-3 md:pt-3",
         className,
       )}
     >
@@ -36,11 +40,13 @@ export function PageBanner({
         <h1 className="break-words font-pixel text-3xl font-bold uppercase leading-none tracking-wide text-display [text-shadow:2px_2px_0_hsl(var(--tone-teal))] md:text-4xl dark:font-sans dark:normal-case dark:leading-9 dark:tracking-normal dark:text-foreground dark:[text-shadow:none] dark:md:text-3xl">
           {title}
         </h1>
+        {hero && description && <p className={cn(cartridge, "max-w-xl text-sm max-md:hidden")}><TypedText text={description} /></p>}
         {actions}
       </div>
+      {tiles}
       {(description || children) && (
         <div className="relative flex flex-col gap-2">
-          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "dark:ml-auto")}>{hero ? <TypedText text={description} /> : description}</p>}
+          {description && <p className={cn(cartridge, "max-w-2xl text-sm", hero && "md:hidden")}>{hero ? <TypedText text={description} /> : description}</p>}
           {children && <div className="flex flex-col gap-2">{children}</div>}
         </div>
       )}
