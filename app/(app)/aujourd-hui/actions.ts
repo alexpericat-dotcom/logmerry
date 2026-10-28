@@ -12,7 +12,7 @@ import { todayParis } from "@/lib/format";
 import { withSession } from "@/lib/supabase/with-session";
 
 const valid = (t: CheckTarget): boolean =>
-  t.rule === 2 || t.rule === 5
+  t.rule === 2 || t.rule === 5 || t.rule === 7
     ? isUuid(t.sourceId ?? "")
     : t.rule === 3
       ? (CEILING_KEYS as readonly string[]).includes(t.ceilingKey ?? "") && (THRESHOLDS as readonly number[]).includes(t.threshold ?? 0)

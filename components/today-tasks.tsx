@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
+import { setTaskDone } from "@/app/(app)/missions/task-actions";
 import { checkTask } from "@/app/(app)/aujourd-hui/actions";
 import { markDeadlineDone, reopenDeadline } from "@/app/(app)/calendrier/actions";
 import { targetOf, type MissingLine, type TodayTask } from "@/lib/domain/cockpit/today";
@@ -13,13 +14,15 @@ const LINKS = {
   ceiling: { href: "/plafonds", label: "Voir les plafonds" },
   acre: { href: "/profil", label: "Voir le profil" },
   quote: { href: "/clients", label: "Voir la fiche" },
+  "sprint-end": { href: "/missions", label: "Voir la mission" },
+  "sprint-task": { href: "/missions", label: "Voir la mission" },
   pipeline: { href: "/missions", label: "Voir les missions" },
 } as const;
 
 export const ALL_DONE = "Bravo, tu as fait toutes tes tâches du jour.";
 
 /** Tâches du jour (calculées côté serveur) : une case par tâche, motif visible, annonce aux lecteurs d'écran à chaque coche. */
-export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
+export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: { count: number; missionId: string } | null }) {
   const [announce, setAnnounce] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [pending, start] = useTransition();
@@ -29,10 +32,10 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
     start(async () => {
       try {
         const done = !t.done;
-        const r = t.kind === "deadline" ? await (done ? markDeadlineDone(t.id) : reopenDeadline(t.id)) : await checkTask(targetOf(t)!, done);
+        const r = t.kind === "deadline" ? await (done ? markDeadlineDone(t.id) : reopenDeadline(t.id)) : t.kind === "sprint-task" ? await setTaskDone(t.id, done) : await checkTask(targetOf(t)!, done);
         setError(r.message);
         if (!r.message) {
-          const last = done && tasks.every((x) => x === t || x.done);
+          const last = done && !overflow && tasks.every((x) => x === t || x.done);
           setAnnounce(done ? `${t.title} : fait.${last ? ` ${ALL_DONE}` : ""}` : `${t.title} : à refaire.`);
         }
       } catch {
@@ -41,7 +44,7 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
     });
   };
 
-  const allDone = tasks.length > 0 && tasks.every((t) => t.done);
+  const allDone = tasks.length > 0 && !overflow && tasks.every((t) => t.done); // des tâches de sprint cachées restent à faire
   return (
     <div className="flex flex-col gap-3">
       <p role="status" className="sr-only">{announce}</p>
@@ -55,16 +58,23 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
               <span className="flex flex-col">
                 <span className={t.done ? "font-semibold line-through" : "font-semibold"}>{t.title}</span>
                 <span className="text-sm text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
+                {t.context && <span className="text-sm text-muted-foreground">{t.context}</span>}
                 {t.declared && <span className="text-sm text-muted-foreground">Calcul basé sur une donnée déclarée, non confirmée.</span>}
                 {t.demo && <span className="text-sm font-semibold">DEMO, non officielle</span>}
               </span>
             </label>
-            <Link href={t.kind === "quote" ? `/clients/${t.clientId}` : LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
+            <Link href={t.kind === "quote" ? `/clients/${t.clientId}` : t.missionId ? `/missions/${t.missionId}` : LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
               {LINKS[t.kind].label}
             </Link>
           </li>
         ))}
       </ul>
+      {overflow && (
+        <p className="flex flex-wrap items-center justify-between gap-x-3 rounded-md border border-dashed bg-card">
+          <span className="p-3 text-sm text-muted-foreground">{overflow.count} autre{overflow.count > 1 ? "s" : ""} tâche{overflow.count > 1 ? "s" : ""} dans ton sprint</span>
+          <Link href={`/missions/${overflow.missionId}`} className="flex min-h-11 items-center px-3 text-sm underline">Voir la mission</Link>
+        </p>
+      )}
     </div>
   );
 }

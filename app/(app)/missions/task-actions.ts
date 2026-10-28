@@ -19,8 +19,9 @@ const STORY_GONE = "Cette user story n'existe plus.";
 
 type Outcome = "saved" | "not-found" | "error" | "invalid";
 
-/** Seule la page de la mission affiche les tâches. */
+/** La page de la mission et le cockpit affichent les tâches. */
 async function refresh(supabase: Db, storyId: string) {
+  revalidatePath("/aujourd-hui"); // le cockpit affiche aussi les tâches du sprint : avant la lecture, qui peut échouer
   try {
     const { data } = await supabase.from("user_stories").select("mission_id").eq("id", storyId).maybeSingle();
     if (data?.mission_id) revalidatePath(`/missions/${data.mission_id}`);

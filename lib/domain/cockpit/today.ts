@@ -7,10 +7,15 @@ import { fieldState } from "../profile.ts";
 
 /** Tâche du jour du cockpit, calculée à la lecture (AD-5) : jamais stockée, tri unique règle → date → identifiant. */
 export type TodayTask = {
-  rule: 1 | 2 | 3 | 4 | 5 | 6;
+  rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   /** Identifiant de la source (échéance ou facture) : une source, une tâche. Règle 3 : plafond et seuil ; règle 4 : « acre ». */
   id: string;
-  kind: "deadline" | "invoice" | "ceiling" | "acre" | "quote" | "pipeline";
+  kind: "deadline" | "invoice" | "ceiling" | "acre" | "quote" | "pipeline" | "sprint-end" | "sprint-task";
+  /** Règles 7 et 8 : « Client / Mission / Sprint X » et la mission (lien). */
+  context?: string;
+  missionId?: string;
+  /** Départage à date égale, avant l'identifiant (ordre du sprint, des stories, des tâches). */
+  order?: number;
   /** Règle 5 : fiche du client du devis (lien de la tâche). */
   clientId?: string;
   /** Règle 3 : clé de coche (plafond, seuil). */
@@ -33,12 +38,12 @@ export type AcreProfile = Record<string, unknown> | null;
 
 export type MissingLine = { text: string; link: "/profil" | "/regles" };
 
-/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle) ou 5 (devis). */
-export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6; sourceId?: string; ceilingKey?: string; threshold?: number };
+/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle), 5 (devis) ou 7 (sprint). */
+export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6 | 7; sourceId?: string; ceilingKey?: string; threshold?: number };
 
 /** Cible de coche d'une tâche du cockpit ; `null` pour une échéance (sa coche vit dans `deadlines.done_at`). Ici, dans le domaine : le composant client l'importe. */
 export const targetOf = (t: TodayTask): CheckTarget | null =>
-  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : null;
+  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : t.rule === 7 ? { rule: 7, sourceId: t.id } : null; // règle 8 (tâche de sprint) : la coche vit dans tasks.done
 
 /** Clé de coche du jour : règle, source, plafond, seuil (cocher 90 % ne masque pas 100 %). */
 export const checkKey = (rule: number, sourceId?: string | null, ceilingKey?: string | null, threshold?: number | null) => `${rule}|${sourceId ?? ""}|${ceilingKey ?? ""}|${threshold ?? ""}`;
@@ -81,6 +86,48 @@ export const QUOTE_IDLE_DAYS = 7;
 export const PIPELINE_MIN = 2;
 /** Règle 4 : la tâche apparaît à 31 jours ou moins de la fin d'ACRE estimée. */
 export const ACRE_WARN_DAYS = 31;
+/** Règle 7 : fin de sprint à 0 à 2 jours ; tâches de sprint affichées : 3 au plus. */
+export const SPRINT_END_DAYS = 2;
+export const SPRINT_TASKS_SHOWN = 3;
+
+/** Sprint « en cours » avec ses stories et leurs tâches (lecture du cockpit) ; `done_on` = jour de Paris où la tâche a été faite. */
+export type SprintWork = {
+  id: string;
+  name: string;
+  end_date: string;
+  mission: { id: string; title: string; client_name: string | null };
+  stories: { id: string; status: string; position: number; tasks: { id: string; title: string; done: boolean; done_on: string; position: number }[] }[];
+};
+
+type SprintTasks = { shown: TodayTask[]; extra: number; extraMissionId: string | null };
+
+/** Tâches des stories « en cours » des sprints actifs : non faites (trois au plus, ordre du sprint) puis faites aujourd'hui (cochées, hors décompte). */
+function sprintTasks(sprints: SprintWork[], asOf: string): SprintTasks {
+  const open: TodayTask[] = [];
+  const doneToday: TodayTask[] = [];
+  const ordered = [...sprints].sort((a, b) => a.end_date.localeCompare(b.end_date) || a.id.localeCompare(b.id));
+  for (const sp of ordered) {
+    const left = daysUntil(sp.end_date, asOf);
+    const reason = left >= 0 ? `dans ton sprint, qui se termine dans ${days(left)}` : `dans ton sprint, dont la fin est dépassée de ${days(-left)}`;
+    const context = `${sp.mission.client_name ?? "Sans client"} / ${sp.mission.title} / ${sp.name}`;
+    const stories = sp.stories.filter((st) => st.status === "in_progress").sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+    for (const st of stories) {
+      for (const t of [...st.tasks].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))) {
+        if (t.done && t.done_on !== asOf) continue;
+        const list = t.done ? doneToday : open;
+        list.push({ rule: 8, id: t.id, kind: "sprint-task", title: t.title, reason, date: sp.end_date, done: t.done, context, missionId: sp.mission.id, order: list.length });
+      }
+    }
+  }
+  const shown = open.slice(0, SPRINT_TASKS_SHOWN);
+  return { shown: [...shown, ...doneToday], extra: open.length - shown.length, extraMissionId: open[SPRINT_TASKS_SHOWN]?.missionId ?? null };
+}
+
+/** Ligne « N autres tâches dans ton sprint » (pas une tâche) : ce qui dépasse les trois affichées, avec la mission de la première tâche cachée. */
+export function sprintOverflow(sprints: SprintWork[], asOf: string): { count: number; missionId: string } | null {
+  const { extra, extraMissionId } = sprintTasks(sprints, asOf);
+  return extra > 0 && extraMissionId ? { count: extra, missionId: extraMissionId } : null;
+}
 
 /** Devis lu par les règles 5 et 6 ; `updated_on` = jour de Paris de `updated_at`. Seul « sent » compte. */
 export type QuoteInput = { id: string; status: string; client_id: string; client_name: string | null; mission_id: string | null; updated_on: string };
@@ -92,6 +139,7 @@ const days = (n: number) => `${n} jour${n > 1 ? "s" : ""}`;
  * Règle 1 : échéances saisies dans 0 à 3 jours (une échéance en retard relève du calendrier). Les faites restent, cochées.
  * Règle 2 : factures non soldées dont l'échéance est dépassée d'au moins 1 jour. `checked` : clés de coche du jour (`task_checks`, voir `checkKey`).
  * Règle 5 : devis « envoyé » sans modification depuis plus de 7 jours. Règle 6 : moins de 2 éléments au pipeline (missions à planifier ou en cours, devis envoyés ; un devis lié à une telle mission compte une fois).
+ * Règle 7 : sprint en cours qui se termine dans 0 à 2 jours avec des stories non terminées. Après toutes les règles : tâches du sprint (rang 8, trois au plus).
  * Règle 3 : un plafond dont un seuil actif du profil est atteint (le plus haut seul, 100 % remplace 90 %). Règle 4 : fin d'ACRE estimée dans 0 à 31 jours.
  * Les tâches cochées descendent en bas ; l'ordre reste règle, date la plus proche, identifiant.
  */
@@ -104,6 +152,7 @@ export function todayTasks(
   profile: AcreProfile,
   quotes: QuoteInput[],
   missions: MissionPipelineInput[],
+  sprints: SprintWork[],
   asOf: string,
 ): TodayTask[] {
   const tasks: TodayTask[] = [];
@@ -177,5 +226,22 @@ export function todayTasks(
   if (pipeline < PIPELINE_MIN) {
     tasks.push({ rule: 6, id: "pipeline", kind: "pipeline", title: "Pipeline", reason: "ton pipeline se vide", date: asOf, done: checked.has(checkKey(6)) });
   }
-  return tasks.sort((a, b) => Number(a.done) - Number(b.done) || a.rule - b.rule || a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+  for (const sp of sprints) {
+    const left = daysUntil(sp.end_date, asOf);
+    const open = sp.stories.filter((st) => st.status !== "done").length;
+    if (left < 0 || left > SPRINT_END_DAYS || open === 0) continue;
+    tasks.push({
+      rule: 7,
+      id: sp.id,
+      kind: "sprint-end",
+      title: `Sprint ${sp.name}`,
+      reason: `ton sprint se termine ${left === 0 ? "aujourd'hui" : `dans ${days(left)}`}, ${open} ${open > 1 ? "stories non terminées" : "story non terminée"}`,
+      date: sp.end_date,
+      done: checked.has(checkKey(7, sp.id)),
+      missionId: sp.mission.id,
+      context: `${sp.mission.client_name ?? "Sans client"} / ${sp.mission.title} / ${sp.name}`,
+    });
+  }
+  tasks.push(...sprintTasks(sprints, asOf).shown);
+  return tasks.sort((a, b) => Number(a.done) - Number(b.done) || a.rule - b.rule || a.date.localeCompare(b.date) || (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id));
 }

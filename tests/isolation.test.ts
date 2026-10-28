@@ -15,6 +15,7 @@ import { after, before, describe, test } from "node:test";
 import { createClient } from "@supabase/supabase-js";
 
 import { setDeadlineDone } from "../lib/db/deadline-state.ts";
+import { listActiveSprintWork } from "../lib/db/sprint-work.ts";
 import { listTaskChecks, setTaskChecked } from "../lib/db/task-checks.ts";
 import { checkKey } from "../lib/domain/cockpit/today.ts";
 import { toHistory, type MessageRow } from "../lib/domain/history.ts";
@@ -2312,7 +2313,7 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
   const CEIL = { rule: 3 as const, ceilingKey: "ceiling_turnover_micro", threshold: 90 };
 
   const cleanup = async () => {
-    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4,6)`);
+    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4,6,7)`);
   };
 
   before(async () => {
@@ -2405,10 +2406,68 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
     assert.equal(await setTaskChecked(a.client, pipeline, DAY, false), "saved");
   });
 
+  test("coche de fin de sprint (règle 7) : une par sprint, isolée, cohérente avec sa règle", async () => {
+    const sprint = { rule: 7 as const, sourceId: SOURCE };
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, true), "saved");
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, true), "saved");
+    assert.equal((await a.client.from("task_checks").select("id").eq("rule_no", 7).eq("period_start", DAY)).data?.length, 1, "idempotent");
+    assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)));
+    assert.deepEqual((await b.client.from("task_checks").select("id").eq("rule_no", 7)).data, [], "B ne voit rien");
+    await setTaskChecked(b.client, sprint, DAY, false);
+    assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)), "B ne décoche pas la coche de A");
+    assert.equal((await a.client.from("task_checks").insert({ rule_no: 7, period_start: DAY } as never)).error?.code, "23514", "sprint manquant");
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, false), "saved");
+    assert.ok(!(await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)));
+  });
+
   test("A décoche ; une règle hors 1 à 7 est refusée par la base", async () => {
     assert.equal(await setTaskChecked(a.client, INVOICE, DAY, false), "saved");
     assert.deepEqual((await a.client.from("task_checks").select("id").eq("source_id", SOURCE)).data, []);
     const bad = await a.client.from("task_checks").insert({ rule_no: 8, source_id: SOURCE, period_start: DAY });
     assert.equal(bad.error?.code, "23514");
+  });
+});
+
+describe("isolation de la lecture des sprints en cours (cockpit) entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  const NAME = `${PREFIX} cockpit sprint`;
+
+  const cleanup = async () => {
+    if (!a) return;
+    await a.client.from("user_stories").delete().like("title", `${NAME}%`);
+    await a.client.from("sprints").delete().like("name", `${NAME}%`);
+    await a.client.from("missions").delete().like("title", `${NAME}%`);
+    await a.client.from("clients").delete().like("name", `${NAME}%`);
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+  });
+
+  after(cleanup);
+
+  test("A voit son sprint actif (mission, client, story, tâche) ; ni un sprint planifié, ni B", async () => {
+    const client = await a.client.from("clients").insert({ name: NAME, origin: "demo" }).select("id").single();
+    assert.ifError(client.error);
+    const mission = await a.client.from("missions").insert({ client_id: client.data!.id, title: NAME }).select("id").single();
+    assert.ifError(mission.error);
+    const m = mission.data!.id;
+    const active = await a.client.from("sprints").insert({ mission_id: m, name: `${NAME} actif`, start_date: "2026-10-20", end_date: "2026-10-30", status: "active" }).select("id").single();
+    const planned = await a.client.from("sprints").insert({ mission_id: m, name: `${NAME} planifié`, start_date: "2026-11-01", end_date: "2026-11-10", status: "planned" });
+    assert.ifError(active.error);
+    assert.ifError(planned.error);
+    const story = await a.client.from("user_stories").insert({ mission_id: m, title: `${NAME} story`, status: "in_progress", sprint_id: active.data!.id, position: 1 }).select("id").single();
+    assert.ifError(story.error);
+    assert.ifError((await a.client.from("tasks").insert({ story_id: story.data!.id, title: "tâche", position: 1 })).error);
+
+    const mine = (await listActiveSprintWork(a.client)).filter((s) => s.name.startsWith(NAME));
+    assert.deepEqual(mine.map((s) => s.name), [`${NAME} actif`], "le sprint planifié est absent");
+    assert.deepEqual(mine[0].mission, { id: m, title: NAME, client_name: NAME });
+    assert.equal(mine[0].stories[0].status, "in_progress");
+    assert.deepEqual(mine[0].stories[0].tasks.map((t) => [t.title, t.done, typeof t.updated_at]), [["tâche", false, "string"]]);
+    assert.equal((await listActiveSprintWork(b.client)).filter((s) => s.name.startsWith(NAME)).length, 0, "B ne voit rien de A");
   });
 });
