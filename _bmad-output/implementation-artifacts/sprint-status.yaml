@@ -74,11 +74,11 @@ development_status:
   5-1a-échéances-saisies: done
   5-1b-calendrier-administratif-complet: done
   5-2-voir-mes-tâches-du-jour-échéances-et-factures-échues: done
-  5-3-alertes-de-plafond-et-fin-de-l-acre: review
-  5-4-tâches-devis-sans-réponse-et-pipeline-vide: review
-  5-4b-tâches-de-mon-sprint: review
-  5-5-voir-mon-ca-encaissé-et-mes-jauges-sur-le-cockpit: review
-  5-6-écran-à-faire-et-ligne-de-synthèse: review
+  5-3-alertes-de-plafond-et-fin-de-l-acre: done
+  5-4-tâches-devis-sans-réponse-et-pipeline-vide: done
+  5-4b-tâches-de-mon-sprint: done
+  5-5-voir-mon-ca-encaissé-et-mes-jauges-sur-le-cockpit: done
+  5-6-écran-à-faire-et-ligne-de-synthèse: done
   epic-5-retrospective: optional
 
   epic-6: backlog
