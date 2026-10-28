@@ -86,7 +86,7 @@ export function PaymentForm({
         </div>
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("note")}>Remarque</Label>
-          <Textarea {...field("note")} defaultValue={values.note} rows={2} className="min-h-0" />
+          <Textarea {...field("note")} defaultValue={values.note} rows={2} />
           {errorLine("note")}
         </div>
       </div>
