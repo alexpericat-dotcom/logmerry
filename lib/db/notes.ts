@@ -30,6 +30,14 @@ export async function listNotes(type: NoteType | null = null, status: "draft" | 
   return data;
 }
 
+/** Type de chacune de mes notes brouillon (sans les textes) : de quoi compter pour la ligne de synthèse du cockpit. */
+export async function listDraftTypes(): Promise<NoteType[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("notes").select("type").eq("status", "draft");
+  if (error) throw new Error("Impossible de charger les brouillons.");
+  return data.map((n) => n.type);
+}
+
 /** Une de mes notes, ou null si l'identifiant est inconnu ou appartient à un autre compte. */
 export async function getNote(id: string): Promise<Note | null> {
   const supabase = await createClient();

@@ -12,8 +12,8 @@ test("la barre a les 12 entrées prévues, dans l'ordre", () => {
   );
 });
 
-test("le cockpit, les notes, les clients, les missions, le calendrier, les factures, les plafonds, le profil, les règles et les paramètres sont disponibles pour l'instant", () => {
-  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/calendrier", "/parametres", "/factures", "/plafonds", "/profil", "/regles"]);
+test("le cockpit, les notes, les clients, les missions, le calendrier, « À faire », les factures, les plafonds, le profil, les règles et les paramètres sont disponibles pour l'instant", () => {
+  assert.deepEqual(NAV_ITEMS.filter((i) => i.available).map((i) => i.href), ["/aujourd-hui", "/notes", "/clients", "/missions", "/calendrier", "/parametres", "/a-faire", "/factures", "/plafonds", "/profil", "/regles"]);
 });
 
 test("isCurrent : page exacte ou sous-page, pas un préfixe de mot", () => {
