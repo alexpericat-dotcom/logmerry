@@ -9,10 +9,10 @@ import { formatCents } from "@/lib/domain/quotes";
 function GaugeRow({ g, flags }: { g: CeilingGauge; flags: { demo: boolean; declared: boolean } }) {
   const state = g.state === "exceeded" ? { icon: OctagonAlert, text: "dépassé" } : g.state === "reached" ? { icon: OctagonAlert, text: "atteint" } : g.state === "threshold" ? { icon: TriangleAlert, text: `seuil ${g.alertThreshold} %` } : null;
   return (
-    <li className="flex flex-col gap-1.5 rounded-md border bg-card p-3">
+    <li className="flex flex-col gap-1">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <h3 className="font-semibold">{g.label}</h3>
-        <span className="flex items-center gap-2 text-sm">
+        <h3 className="text-sm font-semibold">{g.label}</h3>
+        <span className="flex items-center gap-2 text-xs">
           {state && (
             <span className="flex items-center gap-1 font-semibold">
               <state.icon size={14} aria-hidden="true" />
@@ -43,9 +43,9 @@ export function CockpitGauges({ ceilings }: { ceilings: CeilingResult[] }) {
   const demoAll = gauges.length > 0 && gauges.every((g) => g.demo);
   const declaredAll = gauges.length > 0 && gauges.every((g) => g.declaredNotConfirmed);
   return (
-    <section aria-labelledby="cockpit-gauges" className="flex flex-col gap-2">
+    <section aria-labelledby="cockpit-gauges" className="flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3 lg:col-span-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="cockpit-gauges" className="text-lg font-semibold">Plafonds</h2>
+        <h2 id="cockpit-gauges" className="text-sm font-semibold">Plafonds</h2>
         <span className="flex flex-wrap items-center gap-2">
           {gauges.length > 0 && <Badge variant="outline">Estimation</Badge>}
           {demoAll && (
@@ -63,8 +63,9 @@ export function CockpitGauges({ ceilings }: { ceilings: CeilingResult[] }) {
           <Link href="/plafonds" className="flex min-h-11 items-center text-sm underline underline-offset-4">Détails</Link>
         </span>
       </div>
+      {gauges.length === 0 && <p className="text-sm text-muted-foreground">Aucun plafond calculable pour l&apos;instant : voir les paramètres manquants.</p>}
       {gauges.length > 0 && (
-        <ul className="flex flex-col gap-2" aria-label="Jauges de plafond">
+        <ul className="flex flex-col gap-3" aria-label="Jauges de plafond">
           {gauges.map((g) => <GaugeRow key={g.key} g={g} flags={{ demo: !demoAll, declared: !declaredAll }} />)}
         </ul>
       )}

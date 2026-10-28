@@ -21,25 +21,24 @@ const toneVar = (t: Tone) => `hsl(var(--tone-${t}))`;
 const ALERT: Record<string, string> = { threshold: "hsl(var(--warning))", reached: "hsl(var(--destructive))", exceeded: "hsl(var(--destructive))" };
 const along = (i: number, n: number) => toneVar(TONES[Math.min(TONES.length - 1, Math.floor((i / n) * TONES.length))]);
 
-const TILE: Record<Tone, string> = {
-  teal: "border-tone-teal/40 bg-tone-teal/10 hover:bg-tone-teal/20",
-  violet: "border-tone-violet/40 bg-tone-violet/10 hover:bg-tone-violet/20",
-  orange: "border-tone-orange/40 bg-tone-orange/10 hover:bg-tone-orange/20",
-  pink: "border-tone-pink/40 bg-tone-pink/10 hover:bg-tone-pink/20",
-  yellow: "border-tone-yellow/40 bg-tone-yellow/10 hover:bg-tone-yellow/20",
-};
+const BORDER: Record<Tone, string> = { teal: "border-tone-teal", violet: "border-tone-violet", orange: "border-tone-orange", pink: "border-tone-pink", yellow: "border-tone-yellow" };
 const BUBBLE: Record<Tone, string> = { teal: "bg-tone-teal", violet: "bg-tone-violet", orange: "bg-tone-orange", pink: "bg-tone-pink", yellow: "bg-tone-yellow" };
 
-/** Tuile-bulle d'un chiffre-clé : pastille colorée avec son icône, grand chiffre, intitulé, précision. Toute la tuile est un lien. */
-export function KpiTile({ href, icon: Icon, tone, label, value, hint }: { href: string; icon: LucideIcon; tone: Tone; label: string; value: number | string; hint?: string }) {
+/** Tuile-bulle d'un chiffre-clé, compacte (posée sur le bandeau, fond plein) : pastille colorée, chiffre, intitulé ; la précision est dans l'infobulle et pour les lecteurs d'écran. Toute la tuile est un lien. */
+export function KpiTile({ href, icon: Icon, tone, label, value, hint, alert }: { href: string; icon: LucideIcon; tone: Tone; label: string; value: number | string; hint?: string; alert?: string }) {
   return (
-    <Link href={href} className={cn("group flex min-h-11 flex-col gap-2 rounded-lg border p-3 transition-colors", TILE[tone])}>
-      <span className={cn("flex size-10 items-center justify-center rounded-full text-action-foreground transition-transform group-hover:scale-110 motion-reduce:transition-none", BUBBLE[tone])}>
-        <Icon size={20} aria-hidden="true" />
+    <Link href={href} title={hint} className={cn("group flex min-h-11 items-center gap-2 rounded-lg border bg-card p-2 transition-colors hover:bg-muted dark:border-0", BORDER[tone])}>
+      <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full text-action-foreground transition-transform group-hover:scale-110 motion-reduce:transition-none", BUBBLE[tone])}>
+        <Icon size={18} aria-hidden="true" />
       </span>
-      <span className="font-mono text-3xl font-semibold tabular-nums leading-none">{value}</span>
-      <span className="text-sm font-semibold">{label}</span>
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+      <span className="flex min-w-0 flex-col">
+        <span className="flex items-baseline gap-1.5">
+          <span className="font-mono text-xl font-semibold tabular-nums leading-none">{value}</span>
+          {alert && <span className="text-xs font-semibold text-destructive">{alert}</span>}
+        </span>
+        <span className="truncate text-xs font-semibold">{label}</span>
+        {hint && <span className="sr-only">{hint}</span>}
+      </span>
     </Link>
   );
 }
@@ -71,7 +70,7 @@ export function SegmentedRing({ percent, label, caption, size = 132, ticks = 40 
         })}
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">
-        <span className="font-mono text-2xl font-semibold tabular-nums">{percent} %</span>
+        <span className={cn("font-mono font-semibold tabular-nums", size < 110 ? "text-lg" : "text-2xl")}>{percent} %</span>
         {caption && <span className="max-w-[70%] text-center text-[11px] leading-tight text-muted-foreground">{caption}</span>}
       </div>
     </div>
@@ -110,10 +109,10 @@ function smooth(pts: { x: number; y: number }[], lo: number, hi: number): string
 /** CA encaissé par mois (hors taxe) : courbe en aire jusqu'au mois en cours, point repère sur le mois en cours, tableau pour les lecteurs d'écran. */
 export function RevenueChart({ months, currentMonth, year }: { months: { month: number; label: string; cents: number }[]; currentMonth: number; year: number }) {
   const W = 600;
-  const H = 200;
+  const H = 150;
   const padX = 24;
   const top = 18;
-  const bottom = 28;
+  const bottom = 34;
   const max = Math.max(1, ...months.slice(0, currentMonth).map((m) => m.cents));
   const x = (i: number) => padX + (i * (W - padX * 2)) / 11;
   const y = (cents: number) => top + (1 - cents / max) * (H - top - bottom);
@@ -122,7 +121,7 @@ export function RevenueChart({ months, currentMonth, year }: { months: { month: 
   const area = pts.length ? `${line} L${pts.at(-1)!.x},${H - bottom} L${pts[0].x},${H - bottom} Z` : "";
   const cur = pts.at(-1);
   return (
-    <figure className="flex flex-col gap-2">
+    <figure className="flex flex-col">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" aria-hidden="true">
         <defs>
           <linearGradient id="rev-line" gradientUnits="userSpaceOnUse" x1={padX} x2={W - padX} y1="0" y2="0">
@@ -141,11 +140,11 @@ export function RevenueChart({ months, currentMonth, year }: { months: { month: 
         })}
         {area && <path d={area} fill="url(#rev-area)" />}
         {line && <path d={line} fill="none" strokeWidth={3} strokeLinecap="round" stroke="url(#rev-line)" />}
-        {months.map((m, i) => (
-          <text key={m.month} x={x(i)} y={H - 8} textAnchor="middle" fontSize={11} style={{ fill: "hsl(var(--muted-foreground))" }}>
+        {months.map((m, i) => (i % 2 === 0 ? (
+          <text key={m.month} x={x(i)} y={H - 10} textAnchor="middle" fontSize={18} style={{ fill: "hsl(var(--muted-foreground))" }}>
             {m.label}
           </text>
-        ))}
+        ) : null))}
         {pts.map((p, i) => (months[i].cents > 0 && i !== currentMonth - 1 ? <circle key={i} cx={p.x} cy={p.y} r={3} style={{ fill: toneVar("violet") }} /> : null))}
         {cur && (
           <>
@@ -154,7 +153,7 @@ export function RevenueChart({ months, currentMonth, year }: { months: { month: 
           </>
         )}
       </svg>
-      <figcaption className="text-xs text-muted-foreground">Encaissements hors taxe par mois, {year}. Le repère orange est le mois en cours.</figcaption>
+      <figcaption className="sr-only">Encaissements hors taxe par mois, {year}. Le repère orange est le mois en cours.</figcaption>
       <table className="sr-only">
         <caption>CA encaissé par mois en {year}</caption>
         <tbody>
@@ -175,13 +174,13 @@ export function MiniCalendar({ asOf, deadlineDays }: { asOf: string; deadlineDay
   const grid = monthGrid(asOf);
   const today = Number(asOf.slice(8, 10));
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-semibold capitalize">{grid.label}</p>
+    <div className="flex flex-col gap-1">
+      <p className="text-xs font-semibold capitalize">{grid.label}</p>
       <table className="w-full table-fixed text-center text-sm">
         <thead>
           <tr>
             {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-              <th key={i} scope="col" className="pb-1 text-xs font-medium text-muted-foreground">
+              <th key={i} scope="col" className="text-xs font-medium text-muted-foreground">
                 {d}
               </th>
             ))}
@@ -193,10 +192,10 @@ export function MiniCalendar({ asOf, deadlineDays }: { asOf: string; deadlineDay
               {week.map((day, di) => {
                 const n = day ? (deadlineDays.get(day) ?? 0) : 0;
                 return (
-                  <td key={di} className="p-0.5">
+                  <td key={di} className="p-px">
                     {day && (
                       <span
-                        className={cn("relative mx-auto flex size-8 items-center justify-center rounded-full font-mono text-xs tabular-nums", day === today ? "bg-tone-orange font-semibold text-action-foreground" : "")}
+                        className={cn("relative mx-auto flex size-6 items-center justify-center rounded-full font-mono text-xs tabular-nums", day === today ? "bg-tone-orange font-semibold text-action-foreground" : "")}
                         aria-current={day === today ? "date" : undefined}
                       >
                         {day}
@@ -226,14 +225,12 @@ export function UpcomingDeadlines({ items }: { items: { id: string; title: strin
     <ul className="flex flex-col gap-1.5">
       {items.map((d) => (
         <li key={d.id}>
-          <Link href="/calendrier" className="flex min-h-11 items-center gap-3 rounded-md border bg-card px-3 py-1.5 hover:bg-accent/40">
-            <span className={cn("rounded-md px-2 py-0.5 font-mono text-xs font-semibold tabular-nums text-action-foreground", d.days <= 3 ? "bg-tone-orange" : "bg-tone-violet")}>{d.days === 0 ? "Auj." : `J-${d.days}`}</span>
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-sm font-semibold">{d.title}</span>
-              <span className="text-xs text-muted-foreground">
-                {formatDate(d.due_on)} · {DEADLINE_CATEGORY_LABELS[d.category]}
-              </span>
+          <Link href="/calendrier" className="flex min-h-11 flex-col gap-0.5 rounded-md border px-2 py-1 hover:bg-accent/40">
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className={cn("shrink-0 whitespace-nowrap rounded-md px-1.5 py-0.5 font-mono font-semibold tabular-nums text-action-foreground", d.days <= 3 ? "bg-tone-orange" : "bg-tone-violet")}>{d.days === 0 ? "Auj." : `J-${d.days}`}</span>
+              <span className="truncate">{formatDate(d.due_on)}</span>
             </span>
+            <span className="truncate text-sm font-semibold" title={`${d.title} · ${DEADLINE_CATEGORY_LABELS[d.category]}`}>{d.title}</span>
           </Link>
         </li>
       ))}
@@ -244,9 +241,9 @@ export function UpcomingDeadlines({ items }: { items: { id: string; title: strin
 /** Carte de section du tableau de bord : titre, contenu, et un lien facultatif en haut à droite. */
 export function Panel({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("flex flex-col gap-3 rounded-lg border bg-card p-4", className)}>
+    <section className={cn("flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3", className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold">{title}</h2>
         {action}
       </div>
       {children}

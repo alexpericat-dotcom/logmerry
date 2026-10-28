@@ -52,15 +52,15 @@ export function TodayTasks({ tasks, overflow }: { tasks: TodayTask[]; overflow: 
       <p role="status" className="sr-only">{announce}</p>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {allDone && <p className="rounded-md border bg-card p-3 font-semibold">{ALL_DONE}</p>}
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1.5">
         {tasks.map((t) => (
           <li key={`${t.kind}-${t.id}`} className="flex items-center justify-between gap-x-2 rounded-md border bg-card">
-            <label className="flex min-h-11 flex-1 cursor-pointer items-start gap-3 p-3">
+            <label className="flex min-h-11 flex-1 cursor-pointer items-start gap-2 px-3 py-1.5">
               <input type="checkbox" className="mt-0.5 size-5 shrink-0" checked={t.done} aria-busy={pending} onChange={() => toggle(t)} />
               <span className="flex flex-col gap-0.5">
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className={t.done ? "font-semibold line-through" : "font-semibold"}>{t.title}</span>
-                  <span className="text-sm text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
+                  <span className={t.done ? "text-sm font-semibold line-through" : "text-sm font-semibold"}>{t.title}</span>
+                  <span className="text-xs text-muted-foreground">{t.reason.charAt(0).toUpperCase() + t.reason.slice(1)}</span>
                   {t.declared && (
                     <Badge variant="warning" title="Calcul basé sur une donnée déclarée, non confirmée">
                       <TriangleAlert size={11} aria-hidden="true" />
