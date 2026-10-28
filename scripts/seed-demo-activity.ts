@@ -8,6 +8,9 @@
  */
 import { createClient } from "@supabase/supabase-js";
 
+import { addDays } from "../lib/domain/dates.ts";
+import { todayParis } from "../lib/format.ts";
+
 function env(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variable manquante : ${name} (voir .env.local et .env.test.local)`);
@@ -19,9 +22,9 @@ const email = env("DEMO_A_EMAIL");
 if (!email.endsWith("@example.com")) throw new Error("Le compte de démonstration doit être un compte fictif @example.com.");
 
 const EUR = (n: number) => Math.round(n * 100);
-const parisToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
-/** Jour décalé de `n` jours (calcul en UTC sur la date seule : pas de décalage d'heure d'été). */
-const day = (n: number, from = parisToday) => new Date(Date.parse(`${from}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+const parisToday = todayParis();
+/** Jour décalé de `n` jours. */
+const day = (n: number, from = parisToday) => addDays(from, n);
 const year = Number(parisToday.slice(0, 4));
 const thisMonth = Number(parisToday.slice(5, 7));
 const ofMonth = (m: number, d: number) => `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;

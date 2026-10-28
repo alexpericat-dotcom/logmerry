@@ -1,3 +1,4 @@
+import { addDays, daysBetween, daysInMonth } from "./dates.ts";
 import { isOfficialLink } from "./finance/rules.ts";
 import { isDay } from "./missions.ts";
 import { PROFILE_FIELDS, fieldState, type ProfileRow } from "./profile.ts";
@@ -92,11 +93,10 @@ export function validateDeadlineInput(input: DeadlineInput, today: string): { ok
   };
 }
 
-const dayNumber = (day: string) => Date.parse(`${day}T00:00:00Z`) / 86_400_000;
 const plural = (n: number) => `${n} jour${n > 1 ? "s" : ""}`;
 
 /** Jours entre aujourd'hui et la date (positif : à venir, négatif : en retard). */
-export const daysUntil = (due_on: string, today: string) => Math.round(dayNumber(due_on) - dayNumber(today));
+export const daysUntil = (due_on: string, today: string) => Math.round(daysBetween(today, due_on));
 
 /** « en retard de N jours », « aujourd'hui » ou « dans N jours ». */
 export function deadlineWhen(due_on: string, today: string): string {
@@ -126,7 +126,6 @@ export function groupDeadlines<T extends Row>(all: T[], today: string): { overdu
 
 const parts = (day: string) => day.split("-").map(Number) as [number, number, number];
 const pad = (n: number) => String(n).padStart(2, "0");
-const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 
 /** Ajoute des mois à une date en visant `targetDay` (ramené au dernier jour des mois courts : 31 janv. + 1 mois = 28 ou 29 févr.). */
 export function addMonths(day: string, months: number, targetDay: number = parts(day)[2]): string {
@@ -137,7 +136,6 @@ export function addMonths(day: string, months: number, targetDay: number = parts
   return `${year}-${pad(month)}-${pad(Math.min(targetDay, daysInMonth(year, month)))}`;
 }
 
-const addDays = (day: string, n: number) => new Date(dayNumber(day) * 86_400_000 + n * 86_400_000).toISOString().slice(0, 10);
 
 /** Dernier jour de l'horizon d'une série : douze mois après aujourd'hui. */
 export const seriesHorizon = (today: string) => addMonths(today, 12);

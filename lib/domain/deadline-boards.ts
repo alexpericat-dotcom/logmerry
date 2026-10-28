@@ -1,3 +1,4 @@
+import { dayFromNumber, dayNumber } from "./dates.ts";
 import { daysUntil, inView } from "./deadlines.ts";
 
 /** Affichages du calendrier (`?affichage=`) : la liste reste celui par défaut. */
@@ -53,7 +54,6 @@ export function kanbanColumns<T extends { due_on: string; done: boolean }>(items
   return out;
 }
 
-const dayNumber = (day: string) => Date.parse(`${day}T00:00:00Z`) / 86_400_000;
 const GANTT_MIN_DAYS = 30;
 const GANTT_PAD_DAYS = 7;
 
@@ -64,9 +64,8 @@ export function ganttScale(dates: string[], today: string): GanttScale {
   const all = [...dates, today].sort();
   const first = dayNumber(all[0]) - GANTT_PAD_DAYS;
   const last = Math.max(dayNumber(all[all.length - 1]) + GANTT_PAD_DAYS, first + GANTT_MIN_DAYS);
-  const iso = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
   const days = last - first;
-  return { start: iso(first), end: iso(last), days, position: (day) => Math.min(100, Math.max(0, ((dayNumber(day) - first) / days) * 100)) };
+  return { start: dayFromNumber(first), end: dayFromNumber(last), days, position: (day) => Math.min(100, Math.max(0, ((dayNumber(day) - first) / days) * 100)) };
 }
 
 /** Niveaux d'affichage de jalons sur une même ligne : un jalon va sur le premier niveau libre (sa place en pixels, plus la largeur de son intitulé, est la fin du niveau). */
