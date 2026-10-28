@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { CockpitGauges } from "@/components/cockpit-gauges";
 import { PageBanner } from "@/components/page-banner";
 import { MissingParameters, TodayTasks } from "@/components/today-tasks";
 import { listDeadlines } from "@/lib/db/deadlines";
@@ -13,6 +14,7 @@ import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
 import { sprintOverflow, todayMissing, todayTasks, type SprintWork } from "@/lib/domain/cockpit/today";
 import { computeCeilings } from "@/lib/domain/finance/ceilings";
+import { collectedRevenue } from "@/lib/domain/finance/revenue";
 import { invoiceBalance } from "@/lib/domain/payments";
 import { todayParis } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -49,6 +51,7 @@ async function Tasks() {
       <PageBanner hero title="Aujourd'hui" description={tasks.length ? "Ce qui demande ton attention, dans l'ordre." : EMPTY} />
       {tasks.length > 0 && <TodayTasks tasks={tasks} overflow={overflow} />}
       <MissingParameters lines={missing} />
+      <CockpitGauges ceilings={ceilings} revenue={collectedRevenue(payments, today)} activeThresholds={profile?.alert_thresholds.length ?? 0} />
     </>
   );
 }

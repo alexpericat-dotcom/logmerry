@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { CeilingGaugeCard, MissingCeiling } from "@/components/ceiling-gauge";
+import { CEILING_NOTES, CeilingGaugeCard, MissingCeiling } from "@/components/ceiling-gauge";
 import { PageBanner } from "@/components/page-banner";
 import { listPaymentsForCeilings } from "@/lib/db/payments";
 import { getProfile } from "@/lib/db/profile";
@@ -10,11 +10,6 @@ import { todayParis } from "@/lib/format";
 
 export const metadata = { title: "Plafonds · LogMerry" };
 
-/** La franchise de TVA s'apprécie normalement sur l'année N-1 : la jauge compte l'année en cours, sans cette règle (décision 6). */
-const NOTES: Record<string, string> = {
-  ceiling_vat_franchise: "Sans la règle de l'année N-1 : la jauge compte la période de la règle, sans distinguer l'année précédente.",
-};
-
 async function Ceilings() {
   // Lecture seule : cette page n'écrit rien (ni profil créé, ni règle, ni encaissement).
   const [rules, profile, payments] = await Promise.all([listRules(), getProfile(), listPaymentsForCeilings()]);
@@ -23,7 +18,7 @@ async function Ceilings() {
   const active = profile?.alert_thresholds ?? [];
   return (
     <ul className="flex max-w-4xl flex-col gap-3" aria-label="Jauges de plafond">
-      {results.map((r) => (r.status === "ok" ? <CeilingGaugeCard key={r.key} gauge={r} activeThresholds={active.length} note={NOTES[r.key]} /> : <MissingCeiling key={r.key} result={r} />))}
+      {results.map((r) => (r.status === "ok" ? <CeilingGaugeCard key={r.key} gauge={r} activeThresholds={active.length} note={CEILING_NOTES[r.key]} /> : <MissingCeiling key={r.key} result={r} />))}
     </ul>
   );
 }

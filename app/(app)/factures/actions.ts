@@ -30,6 +30,8 @@ const readValues = (formData: FormData): InvoiceInput => ({
 function refresh() {
   revalidatePath("/factures");
   revalidatePath("/missions/[id]", "page");
+  revalidatePath("/aujourd-hui"); // le cockpit montre le CA et les jauges
+  revalidatePath("/plafonds");
 }
 
 /** 42501 : la règle d'accès refuse une mission ou un devis d'un autre compte ; 23503 : l'un des deux a disparu. */

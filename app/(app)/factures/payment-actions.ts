@@ -27,6 +27,8 @@ const readValues = (invoiceId: string, formData: FormData): PaymentInput => ({
 function refresh() {
   revalidatePath("/factures");
   revalidatePath("/missions/[id]", "page");
+  revalidatePath("/aujourd-hui"); // le cockpit montre le CA et les jauges
+  revalidatePath("/plafonds");
 }
 
 /** 42501 : la règle d'accès refuse une facture d'un autre compte ou disparue ; 23503 : la facture a disparu. */
