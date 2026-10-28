@@ -7,10 +7,11 @@ import { listInvoices } from "@/lib/db/invoices";
 import { listAllMissions } from "@/lib/db/missions";
 import { listPaymentsForCeilings } from "@/lib/db/payments";
 import { getProfile } from "@/lib/db/profile";
+import { listActiveSprintWork } from "@/lib/db/sprints";
 import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
-import { todayMissing, todayTasks } from "@/lib/domain/cockpit/today";
+import { sprintOverflow, todayMissing, todayTasks, type SprintWork } from "@/lib/domain/cockpit/today";
 import { computeCeilings } from "@/lib/domain/finance/ceilings";
 import { invoiceBalance } from "@/lib/domain/payments";
 import { todayParis } from "@/lib/format";
@@ -21,9 +22,13 @@ export const metadata = { title: "Aujourd'hui · LogMerry" };
 const EMPTY = "Rien à faire pour aujourd'hui. Tes tâches apparaîtront ici dès que tu auras saisi tes échéances, tes factures et tes devis.";
 
 async function Tasks() {
-  const [deadlines, invoices, rules, profile, payments, quotes, missions] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions()]);
+  const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), listActiveSprintWork()]);
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const checked = await listTaskChecks(await createClient(), today);
+  const sprints: SprintWork[] = sprintRows.map((sp) => ({
+    ...sp,
+    stories: sp.stories.map((st) => ({ ...st, tasks: st.tasks.map((t) => ({ ...t, done_on: todayParis(new Date(t.updated_at)) })) })), // jour de Paris de la dernière modification
+  }));
   const ceilings = computeCeilings(rules, profile, payments, today);
   const tasks = todayTasks(
     deadlines,
@@ -34,13 +39,15 @@ async function Tasks() {
     profile,
     quotes.map((q) => ({ ...q, updated_on: todayParis(new Date(q.updated_at)) })), // jour de Paris de la dernière modification
     missions,
+    sprints,
     today,
   );
+  const overflow = sprintOverflow(sprints, today);
   const missing = todayMissing(ceilings, rules, profile, today);
   return (
     <>
       <PageBanner hero title="Aujourd'hui" description={tasks.length ? "Ce qui demande ton attention, dans l'ordre." : EMPTY} />
-      {tasks.length > 0 && <TodayTasks tasks={tasks} />}
+      {tasks.length > 0 && <TodayTasks tasks={tasks} overflow={overflow} />}
       <MissingParameters lines={missing} />
     </>
   );

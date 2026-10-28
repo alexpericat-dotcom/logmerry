@@ -2312,7 +2312,7 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
   const CEIL = { rule: 3 as const, ceilingKey: "ceiling_turnover_micro", threshold: 90 };
 
   const cleanup = async () => {
-    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4,6)`);
+    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4,6,7)`);
   };
 
   before(async () => {
@@ -2403,6 +2403,20 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
     assert.equal(await setTaskChecked(a.client, quote, DAY, false), "saved");
     assert.ok(!(await listTaskChecks(a.client, DAY)).has(checkKey(5, SOURCE)));
     assert.equal(await setTaskChecked(a.client, pipeline, DAY, false), "saved");
+  });
+
+  test("coche de fin de sprint (règle 7) : une par sprint, isolée, cohérente avec sa règle", async () => {
+    const sprint = { rule: 7 as const, sourceId: SOURCE };
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, true), "saved");
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, true), "saved");
+    assert.equal((await a.client.from("task_checks").select("id").eq("rule_no", 7).eq("period_start", DAY)).data?.length, 1, "idempotent");
+    assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)));
+    assert.deepEqual((await b.client.from("task_checks").select("id").eq("rule_no", 7)).data, [], "B ne voit rien");
+    await setTaskChecked(b.client, sprint, DAY, false);
+    assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)), "B ne décoche pas la coche de A");
+    assert.equal((await a.client.from("task_checks").insert({ rule_no: 7, period_start: DAY } as never)).error?.code, "23514", "sprint manquant");
+    assert.equal(await setTaskChecked(a.client, sprint, DAY, false), "saved");
+    assert.ok(!(await listTaskChecks(a.client, DAY)).has(checkKey(7, SOURCE)));
   });
 
   test("A décoche ; une règle hors 1 à 7 est refusée par la base", async () => {
