@@ -5,16 +5,19 @@ import { PageBanner } from "@/components/page-banner";
 import { completeDeadlineSeries, listDeadlines } from "@/lib/db/deadlines";
 import { listInvoices } from "@/lib/db/invoices";
 import { getProfile } from "@/lib/db/profile";
+import { parseDisplay } from "@/lib/domain/deadline-boards";
 import { invoiceLines, parseDeadlineView, toConfirmLines } from "@/lib/domain/deadlines";
 import { invoiceBalance } from "@/lib/domain/payments";
 import { todayParis } from "@/lib/format";
 
 export const metadata = { title: "Calendrier · LogMerry" };
 
-type SearchParams = Promise<{ vue?: string | string[] }>;
+type SearchParams = Promise<{ vue?: string | string[]; affichage?: string | string[] }>;
 
 async function Deadlines({ searchParams }: { searchParams: SearchParams }) {
-  const view = parseDeadlineView((await searchParams).vue);
+  const params = await searchParams;
+  const view = parseDeadlineView(params.vue);
+  const display = parseDisplay(params.affichage);
   const [first, invoices, profile] = await Promise.all([listDeadlines(), listInvoices(), getProfile()]);
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   // Les séries se complètent à la lecture (12 mois) ; on relit seulement si des lignes viennent d'être créées.
@@ -26,7 +29,7 @@ async function Deadlines({ searchParams }: { searchParams: SearchParams }) {
     ),
     ...toConfirmLines(profile, deadlines),
   ];
-  return <DeadlinesPanel deadlines={deadlines} lines={lines} view={view} today={today} />;
+  return <DeadlinesPanel deadlines={deadlines} lines={lines} view={view} display={display} today={today} />;
 }
 
 export default function CalendrierPage({ searchParams }: { searchParams: SearchParams }) {

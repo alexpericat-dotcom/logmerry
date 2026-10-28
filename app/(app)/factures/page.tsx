@@ -23,21 +23,22 @@ async function InvoicesList({ searchParams }: { searchParams: SearchParams }) {
   );
   const chips = INVOICE_FILTERS.map((f) => ({ label: INVOICE_FILTER_LABELS[f], href: f === "toutes" ? "/factures" : `/factures?filtre=${f}`, active: f === filter }));
   const empty = all.length === 0 ? "Aucune facture pour l'instant." : "Aucune facture ne correspond à ce filtre.";
-  return (
-    <div className="flex flex-col gap-4">
+  const toolbar = (
+    <>
       <FilterChips label="Filtrer les factures" items={chips} />
       <p role="status" className="text-sm text-muted-foreground">
-        {rows.length} facture{rows.length > 1 ? "s" : ""} affichée{rows.length > 1 ? "s" : ""} sur {all.length}
+        <span className="sr-only">Factures affichées : </span>
+        {rows.length} sur {all.length}
       </p>
-      <InvoicesPanel invoices={rows} missions={choices.missions} quotes={choices.quotes} today={today} emptyText={empty} />
-    </div>
+    </>
   );
+  return <InvoicesPanel invoices={rows} missions={choices.missions} quotes={choices.quotes} today={today} emptyText={empty} toolbar={toolbar} />;
 }
 
 export default function FacturesPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner title="Factures" description="Les factures que tu as émises, avec leur échéance, pour savoir lesquelles relancer. Le statut « payée » se déduit des encaissements que tu saisis sur chaque facture." />
+      <PageBanner title="Factures" description="Tes factures émises et leur échéance, pour savoir lesquelles relancer. « Payée » se déduit des encaissements que tu saisis." />
       <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
         <InvoicesList searchParams={searchParams} />
       </Suspense>
