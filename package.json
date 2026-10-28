@@ -5,7 +5,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --test \"lib/**/*.test.ts\" && npm run test:actions",
+    "test": "node --test \"lib/**/*.test.ts\" && npm run test:actions && npm run test:components",
     "test:actions": "node --import ./tests/helpers/register-actions.mjs --test \"tests/actions/*.test.ts\"",
     "test:isolation": "node --env-file=.env.local --env-file=.env.test.local --test tests/isolation.test.ts",
     "test:leak": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs --test-concurrency=1 --test tests/leak-search.test.ts tests/leak-assistant.test.ts tests/purge.test.ts",
@@ -13,7 +13,8 @@
     "test:leak:assistant": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs --test tests/leak-assistant.test.ts",
     "test:proposals": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/proposals-run.ts",
     "seed:demo": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo.ts",
-    "seed:activity": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-activity.ts"
+    "seed:activity": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-activity.ts",
+    "test:components": "node --import ./tests/helpers/register-components.mjs --test \"tests/components/*.test.tsx\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -36,12 +37,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "^16.4.2",
+    "jsdom": "^30.1.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
