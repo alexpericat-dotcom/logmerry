@@ -39,3 +39,11 @@ export async function countQuotesForMission(missionId: string): Promise<number> 
   if (error) throw new Error("Impossible de compter les devis de la mission.");
   return count ?? 0;
 }
+
+/** Mes devis envoyés, avec le nom du client et la date de dernière modification : de quoi calculer « sans réponse » et le pipeline (cockpit). */
+export async function listSentQuotes(): Promise<{ id: string; status: QuoteStatus; client_id: string; client_name: string | null; mission_id: string | null; updated_at: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("quotes").select("id, status, client_id, mission_id, updated_at, client:clients(name)").eq("status", "sent");
+  if (error) throw new Error("Impossible de charger les devis envoyés.");
+  return data.map(({ client, ...q }) => ({ ...q, client_name: client?.name ?? null }));
+}

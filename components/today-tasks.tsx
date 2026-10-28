@@ -5,14 +5,15 @@ import { useState, useTransition } from "react";
 
 import { checkTask } from "@/app/(app)/aujourd-hui/actions";
 import { markDeadlineDone, reopenDeadline } from "@/app/(app)/calendrier/actions";
-import { targetOf } from "@/lib/db/task-checks";
-import type { MissingLine, TodayTask } from "@/lib/domain/cockpit/today";
+import { targetOf, type MissingLine, type TodayTask } from "@/lib/domain/cockpit/today";
 
 const LINKS = {
   deadline: { href: "/calendrier", label: "Voir le calendrier" },
   invoice: { href: "/factures", label: "Voir les factures" },
   ceiling: { href: "/plafonds", label: "Voir les plafonds" },
   acre: { href: "/profil", label: "Voir le profil" },
+  quote: { href: "/clients", label: "Voir la fiche" },
+  pipeline: { href: "/missions", label: "Voir les missions" },
 } as const;
 
 export const ALL_DONE = "Bravo, tu as fait toutes tes tâches du jour.";
@@ -58,7 +59,7 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
                 {t.demo && <span className="text-sm font-semibold">DEMO, non officielle</span>}
               </span>
             </label>
-            <Link href={LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
+            <Link href={t.kind === "quote" ? `/clients/${t.clientId}` : LINKS[t.kind].href} className="flex min-h-11 items-center px-3 text-sm underline">
               {LINKS[t.kind].label}
             </Link>
           </li>

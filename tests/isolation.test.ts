@@ -2312,7 +2312,7 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
   const CEIL = { rule: 3 as const, ceilingKey: "ceiling_turnover_micro", threshold: 90 };
 
   const cleanup = async () => {
-    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4)`);
+    for (const account of [a, b]) if (account) await account.client.from("task_checks").delete().or(`source_id.eq.${SOURCE},rule_no.in.(3,4,6)`);
   };
 
   before(async () => {
@@ -2379,6 +2379,30 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
     assert.equal(await setTaskChecked(a.client, CEIL, DAY, false), "saved");
     assert.ok(!(await listTaskChecks(a.client, DAY)).has(checkKey(3, null, CEIL.ceilingKey, 90)));
     assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(3, null, CEIL.ceilingKey, 100)), "décocher 90 % laisse 100 %");
+  });
+
+  test("coches de devis (règle 5) et de pipeline (règle 6) : isolées, idempotentes, cohérentes avec leur règle", async () => {
+    const quote = { rule: 5 as const, sourceId: SOURCE };
+    const pipeline = { rule: 6 as const };
+    for (const t of [quote, pipeline]) {
+      assert.equal(await setTaskChecked(a.client, t, DAY, true), "saved");
+      assert.equal(await setTaskChecked(a.client, t, DAY, true), "saved");
+    }
+    assert.equal((await a.client.from("task_checks").select("id").in("rule_no", [5, 6]).eq("period_start", DAY)).data?.length, 2, "idempotent");
+    const keys = await listTaskChecks(a.client, DAY);
+    assert.ok(keys.has(checkKey(5, SOURCE)) && keys.has(checkKey(6)));
+    assert.deepEqual((await b.client.from("task_checks").select("id").in("rule_no", [5, 6])).data, [], "B ne voit rien");
+    await setTaskChecked(b.client, pipeline, DAY, false);
+    assert.ok((await listTaskChecks(a.client, DAY)).has(checkKey(6)), "B ne décoche pas la coche de A");
+    const shapes: Record<string, unknown>[] = [
+      { rule_no: 5, period_start: DAY }, // devis manquant
+      { rule_no: 5, source_id: SOURCE, threshold: 90, ceiling_key: "ceiling_turnover_micro", period_start: DAY },
+      { rule_no: 6, source_id: SOURCE, period_start: "2026-10-24" },
+    ];
+    for (const bad of shapes) assert.equal((await a.client.from("task_checks").insert(bad as never)).error?.code, "23514", JSON.stringify(bad));
+    assert.equal(await setTaskChecked(a.client, quote, DAY, false), "saved");
+    assert.ok(!(await listTaskChecks(a.client, DAY)).has(checkKey(5, SOURCE)));
+    assert.equal(await setTaskChecked(a.client, pipeline, DAY, false), "saved");
   });
 
   test("A décoche ; une règle hors 1 à 7 est refusée par la base", async () => {

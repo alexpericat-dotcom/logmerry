@@ -4,8 +4,10 @@ import { PageBanner } from "@/components/page-banner";
 import { MissingParameters, TodayTasks } from "@/components/today-tasks";
 import { listDeadlines } from "@/lib/db/deadlines";
 import { listInvoices } from "@/lib/db/invoices";
+import { listAllMissions } from "@/lib/db/missions";
 import { listPaymentsForCeilings } from "@/lib/db/payments";
 import { getProfile } from "@/lib/db/profile";
+import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
 import { todayMissing, todayTasks } from "@/lib/domain/cockpit/today";
@@ -19,7 +21,7 @@ export const metadata = { title: "Aujourd'hui · LogMerry" };
 const EMPTY = "Rien à faire pour aujourd'hui. Tes tâches apparaîtront ici dès que tu auras saisi tes échéances, tes factures et tes devis.";
 
 async function Tasks() {
-  const [deadlines, invoices, rules, profile, payments] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings()]);
+  const [deadlines, invoices, rules, profile, payments, quotes, missions] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions()]);
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const checked = await listTaskChecks(await createClient(), today);
   const ceilings = computeCeilings(rules, profile, payments, today);
@@ -30,6 +32,8 @@ async function Tasks() {
     ceilings,
     rules,
     profile,
+    quotes.map((q) => ({ ...q, updated_on: todayParis(new Date(q.updated_at)) })), // jour de Paris de la dernière modification
+    missions,
     today,
   );
   const missing = todayMissing(ceilings, rules, profile, today);

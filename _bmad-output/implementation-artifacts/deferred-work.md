@@ -61,3 +61,11 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-2-voir-mes-taches-du-jour.md`
   summary: Extraire l'assemblage de la page cockpit (statut de facture via `invoiceBalance`, coches du jour) en fonction pure testée ; purger les coches orphelines ou anciennes de `task_checks` ; vérifier dans Chrome que le focus survit au déplacement d'une ligne cochée.
   evidence: relecture 5.2 : seul le domaine est testé, la page ne l'est pas ; `task_checks` grossit d'une ligne par coche et par jour sans rétention ; le focus après réordonnancement est maybe-false (non vérifié dans un navigateur).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-4-taches-devis-sans-reponse-et-pipeline-vide.md`
+  summary: Brouillon de relance d'un devis sans réponse proposé par l'IA depuis la tâche de règle 5.
+  evidence: l'épopée dit « un brouillon de relance peut être proposé » ; c'est une fonction d'IA distincte (texte fourni traité comme donnée, aucune donnée hors fiche du client), hors du périmètre des deux règles pures de la 5.4.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-4-taches-devis-sans-reponse-et-pipeline-vide.md`
+  summary: Cockpit : une source en échec fait tomber toute la page ; l'action de coche ne vérifie pas que la facture ou le devis existe (coche orpheline) ni les champs en trop des règles 4 et 6 (la base les refuse en erreur générique) ; ligne « paramètre manquant » non masquable ; liste des plafonds et seuils dupliquée entre SQL et code ; la page annonce « Rien à faire » quand seules des lignes « paramètre manquant » s'affichent ; un compte vide reçoit toujours la tâche de règle 6 (voulu par l'épopée).
+  evidence: relecture des 5.3 et 5.4 (28 octobre) : réels mais bas, aucun n'est une faille de cloisonnement (la RLS pose le propriétaire) ; chacun demande des gardes ou un changement de conception.

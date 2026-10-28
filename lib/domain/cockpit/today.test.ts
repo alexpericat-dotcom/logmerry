@@ -3,13 +3,15 @@ import test from "node:test";
 
 import { computeCeilings } from "../finance/ceilings.ts";
 import type { RuleRow } from "../finance/rules.ts";
-import { checkKey, todayMissing, todayTasks, type AcreProfile } from "./today.ts";
+import { checkKey, targetOf, todayMissing, todayTasks, type AcreProfile, type QuoteInput } from "./today.ts";
 
 const TODAY = "2026-10-23";
+/** Pipeline suffisant (2 missions vivantes) : les tests des règles 1 à 4 ne voient pas la règle 6. */
+const FULL = [{ id: "m1", status: "in_progress" }, { id: "m2", status: "planned" }];
 const dl = (id: string, due_on: string, done_at: string | null = null) => ({ id, title: `Échéance ${id}`, due_on, done_at });
 type Inv = { id: string; reference: string | null; due_on: string; status: "unpaid" | "partial" | "paid"; mission: { title: string } | null };
 const inv = (id: string, due_on: string, status: Inv["status"] = "unpaid"): Inv => ({ id, reference: `F-${id}`, due_on, status, mission: null });
-const run = (d: ReturnType<typeof dl>[], i: Inv[], checked: string[] = []) => todayTasks(d, i, new Set(checked.map((id) => checkKey(2, id))), [], [], null, TODAY);
+const run = (d: ReturnType<typeof dl>[], i: Inv[], checked: string[] = []) => todayTasks(d, i, new Set(checked.map((id) => checkKey(2, id))), [], [], null, [], FULL, TODAY);
 
 const rule = (rule_key: string, params: Record<string, unknown>, status: RuleRow["status"] = "verifiee"): RuleRow => ({
   id: rule_key, rule_key, activity_category: "bnc", description: null, params, effective_from: "2026-01-01", effective_to: null,
@@ -20,7 +22,7 @@ const ACRE_RULE = rule("acre_duration", { months: 12 });
 const pay = (cents: number) => [{ amount_ht_cents: cents, tax_cents: null, received_on: "2026-05-01" }];
 const profile = (over: Record<string, unknown> = {}) => ({ activity_category: "bnc", activity_category_confirmed_at: "2026-01-01", alert_thresholds: [90, 100], ...over });
 const tasks = (rules: RuleRow[], p: ReturnType<typeof profile>, cents: number, checked: string[] = []) =>
-  todayTasks([], [], new Set(checked), computeCeilings(rules, p, pay(cents), TODAY), rules, p as AcreProfile, TODAY);
+  todayTasks([], [], new Set(checked), computeCeilings(rules, p, pay(cents), TODAY), rules, p as AcreProfile, [], FULL, TODAY);
 const only3 = (t: ReturnType<typeof tasks>) => t.filter((x) => x.rule === 3);
 
 test("règle 3 : 90 % = tâche à 90 %, 100 % = seule la tâche à 100 %, dépassé annoncé", () => {
@@ -51,14 +53,14 @@ test("règle 3 : bandeau déclarée non confirmée, étiquette DEMO", () => {
 });
 
 test("sans règle ni profil : lignes « paramètre manquant » (3 plafonds + ACRE), aucune tâche", () => {
-  assert.deepEqual(todayTasks([], [], new Set(), computeCeilings([], null, [], TODAY), [], null, TODAY), []);
+  assert.deepEqual(todayTasks([], [], new Set(), computeCeilings([], null, [], TODAY), [], null, [], FULL, TODAY), []);
   const lines = todayMissing(computeCeilings([], null, [], TODAY), [], null, TODAY);
   assert.equal(lines.length, 4);
   assert.ok(lines.every((l) => l.text.length > 0));
 });
 
 const acreProfile = (over: Record<string, unknown> = {}) => profile({ acre: "eligible", activity_start_date: "2025-11-30", activity_start_date_confirmed_at: "2026-01-01", ...over });
-const acreTasks = (p: ReturnType<typeof profile>, rules = [ACRE_RULE]) => todayTasks([], [], new Set(), [], rules, p as AcreProfile, TODAY).filter((x) => x.rule === 4);
+const acreTasks = (p: ReturnType<typeof profile>, rules = [ACRE_RULE]) => todayTasks([], [], new Set(), [], rules, p as AcreProfile, [], FULL, TODAY).filter((x) => x.rule === 4);
 
 test("règle 4 : fin à J+31 = tâche, J+32 ou passée = rien", () => {
   // début 2025-11-23 + 12 mois = 2026-11-23 = J+31 depuis le 2026-10-23
@@ -85,7 +87,7 @@ test("règle 4 : date déclarée non confirmée = bandeau ; tri règle 3 avant r
   const t = acreTasks(acreProfile({ activity_start_date: "2025-11-23", activity_start_date_confirmed_at: null }));
   assert.equal(t[0].declared, true);
   const p = acreProfile({ activity_start_date: "2025-11-23" });
-  const all = todayTasks([], [], new Set([checkKey(3, null, CEIL.rule_key, 90)]), computeCeilings([CEIL, ACRE_RULE], p, pay(90_000), TODAY), [CEIL, ACRE_RULE], p as AcreProfile, TODAY);
+  const all = todayTasks([], [], new Set([checkKey(3, null, CEIL.rule_key, 90)]), computeCeilings([CEIL, ACRE_RULE], p, pay(90_000), TODAY), [CEIL, ACRE_RULE], p as AcreProfile, [], FULL, TODAY);
   assert.deepEqual(all.map((x) => x.rule), [4, 3]);
   assert.equal(checkKey(4), "4|||");
 });
@@ -125,4 +127,54 @@ test("titre de facture : référence, sinon titre de mission, sinon « sans réf
 
 test("échéance faite hors fenêtre : aucune tâche", () => {
   assert.deepEqual(run([dl("a", "2026-10-30", "2026-10-22T08:00:00Z")], []), []);
+});
+
+const quote = (id: string, updated_on: string, over: Partial<QuoteInput> = {}): QuoteInput => ({ id, status: "sent", client_id: "c1", client_name: "Acme", mission_id: null, updated_on, ...over });
+const day = (back: number) => new Date(Date.parse(`${TODAY}T00:00:00Z`) - back * 86_400_000).toISOString().slice(0, 10);
+const withPipeline = (quotes: QuoteInput[], missions: { id: string; status: string }[] = FULL, checked: string[] = []) =>
+  todayTasks([], [], new Set(checked), [], [], null, quotes, missions, TODAY).filter((x) => x.rule >= 5);
+
+test("règle 5 : devis envoyé modifié il y a 8 jours = tâche ; 7 jours ou aujourd'hui = rien", () => {
+  assert.deepEqual(withPipeline([quote("a", day(8))]).map((x) => [x.rule, x.reason, x.clientId]), [[5, "devis sans réponse depuis 8 jours", "c1"]]);
+  assert.equal(withPipeline([quote("b", day(7)), quote("c", day(0))]).length, 0);
+});
+
+test("règle 5 : accepté, refusé ou brouillon dormant = rien", () => {
+  assert.equal(withPipeline([quote("a", day(30), { status: "accepted" }), quote("b", day(30), { status: "refused" }), quote("c", day(30), { status: "draft" })]).length, 0);
+});
+
+test("règle 6 : moins de 2 éléments = tâche ; 2 = rien", () => {
+  const t = withPipeline([], [{ id: "m1", status: "in_progress" }]);
+  assert.deepEqual(t.map((x) => [x.rule, x.reason]), [[6, "ton pipeline se vide"]]);
+  assert.equal(withPipeline([quote("a", day(0))], [{ id: "m1", status: "planned" }]).length, 0);
+  assert.equal(withPipeline([], FULL).length, 0);
+});
+
+test("règle 6 : un devis lié à une mission vivante compte une fois ; lié à une mission close, il compte comme devis", () => {
+  assert.equal(withPipeline([quote("a", day(0), { mission_id: "m1" })], [{ id: "m1", status: "in_progress" }]).length, 1, "1 élément");
+  assert.equal(withPipeline([quote("a", day(0), { mission_id: "m9" })], [{ id: "m1", status: "in_progress" }, { id: "m9", status: "done" }]).length, 0, "mission + devis = 2");
+});
+
+test("règles 5 et 6 : coche du jour, tri après la règle 4, cochées en bas", () => {
+  const t = withPipeline([quote("a", day(9))], [], [checkKey(6)]);
+  assert.deepEqual(t.map((x) => [x.rule, x.id, x.done]), [[5, "a", false], [6, "pipeline", true]]);
+  assert.equal(withPipeline([quote("a", day(9))], [], [checkKey(5, "a")]).find((x) => x.rule === 5)?.done, true);
+  assert.deepEqual(withPipeline([quote("b", day(8)), quote("a", day(8))]).map((x) => x.id), ["a", "b"], "même date : identifiant");
+  assert.equal(checkKey(6), "6|||");
+});
+
+test("coche : la cible de chaque tâche des règles 2 à 6 reconstruit la clé lue par `done`", () => {
+  const p = acreProfile({ activity_start_date: "2025-11-23" });
+  const ceilings = computeCeilings([CEIL, ACRE_RULE], p, pay(90_000), TODAY);
+  const all = todayTasks([], [inv("f", "2026-10-22")], new Set(), ceilings, [CEIL, ACRE_RULE], p as AcreProfile, [quote("q", day(9))], [], TODAY);
+  assert.deepEqual(all.map((t) => t.rule).sort(), [2, 3, 4, 5, 6]);
+  for (const t of all) {
+    const target = targetOf(t);
+    assert.ok(target, `règle ${t.rule}`);
+    const key = checkKey(target.rule, target.sourceId, target.ceilingKey, target.threshold);
+    const again = todayTasks([], [inv("f", "2026-10-22")], new Set([key]), ceilings, [CEIL, ACRE_RULE], p as AcreProfile, [quote("q", day(9))], [], TODAY);
+    assert.equal(again.find((x) => x.rule === t.rule)?.done, true, `la coche de la règle ${t.rule} est relue`);
+    assert.equal(again.filter((x) => x.done).length, 1, "une coche ne coche qu'une tâche");
+  }
+  assert.equal(targetOf(todayTasks([dl("a", TODAY)], [], new Set(), [], [], null, [], FULL, TODAY)[0]), null, "échéance : coche dans deadlines");
 });
