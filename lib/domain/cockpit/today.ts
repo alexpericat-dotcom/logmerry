@@ -33,6 +33,13 @@ export type AcreProfile = Record<string, unknown> | null;
 
 export type MissingLine = { text: string; link: "/profil" | "/regles" };
 
+/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle) ou 5 (devis). */
+export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6; sourceId?: string; ceilingKey?: string; threshold?: number };
+
+/** Cible de coche d'une tâche du cockpit ; `null` pour une échéance (sa coche vit dans `deadlines.done_at`). Ici, dans le domaine : le composant client l'importe. */
+export const targetOf = (t: TodayTask): CheckTarget | null =>
+  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : null;
+
 /** Clé de coche du jour : règle, source, plafond, seuil (cocher 90 % ne masque pas 100 %). */
 export const checkKey = (rule: number, sourceId?: string | null, ceilingKey?: string | null, threshold?: number | null) => `${rule}|${sourceId ?? ""}|${ceilingKey ?? ""}|${threshold ?? ""}`;
 
@@ -69,9 +76,11 @@ export function todayMissing(ceilings: CeilingResult[], rules: RuleRow[], profil
   return lines;
 }
 
-/** Seuils de la règle 5 (jours sans modification) et de la règle 6 (éléments au pipeline) : nommés, pas dispersés. */
+/** Seuils des règles 4 à 6 (jours avant la fin d'ACRE, jours sans modification, éléments au pipeline) : nommés, pas dispersés. */
 export const QUOTE_IDLE_DAYS = 7;
 export const PIPELINE_MIN = 2;
+/** Règle 4 : la tâche apparaît à 31 jours ou moins de la fin d'ACRE estimée. */
+export const ACRE_WARN_DAYS = 31;
 
 /** Devis lu par les règles 5 et 6 ; `updated_on` = jour de Paris de `updated_at`. Seul « sent » compte. */
 export type QuoteInput = { id: string; status: string; client_id: string; client_name: string | null; mission_id: string | null; updated_on: string };
@@ -134,7 +143,7 @@ export function todayTasks(
   const acre = acreEnd(rules, profile, asOf);
   if (acre.status === "ok") {
     const n = daysUntil(acre.endsOn, asOf);
-    if (n >= 0 && n <= 31) {
+    if (n >= 0 && n <= ACRE_WARN_DAYS) {
       tasks.push({
         rule: 4,
         id: "acre",

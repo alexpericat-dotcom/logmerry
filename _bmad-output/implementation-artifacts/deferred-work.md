@@ -65,3 +65,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-4-taches-devis-sans-reponse-et-pipeline-vide.md`
   summary: Brouillon de relance d'un devis sans réponse proposé par l'IA depuis la tâche de règle 5.
   evidence: l'épopée dit « un brouillon de relance peut être proposé » ; c'est une fonction d'IA distincte (texte fourni traité comme donnée, aucune donnée hors fiche du client), hors du périmètre des deux règles pures de la 5.4.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-4-taches-devis-sans-reponse-et-pipeline-vide.md`
+  summary: Cockpit : une source en échec fait tomber toute la page ; l'action de coche ne vérifie pas que la facture ou le devis existe (coche orpheline) ni les champs en trop des règles 4 et 6 (la base les refuse en erreur générique) ; ligne « paramètre manquant » non masquable ; liste des plafonds et seuils dupliquée entre SQL et code ; la page annonce « Rien à faire » quand seules des lignes « paramètre manquant » s'affichent ; un compte vide reçoit toujours la tâche de règle 6 (voulu par l'épopée).
+  evidence: relecture des 5.3 et 5.4 (28 octobre) : réels mais bas, aucun n'est une faille de cloisonnement (la RLS pose le propriétaire) ; chacun demande des gardes ou un changement de conception.

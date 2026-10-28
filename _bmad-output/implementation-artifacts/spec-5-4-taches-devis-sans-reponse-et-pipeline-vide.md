@@ -78,6 +78,8 @@ Implémentée directement, sans sous-agent ni relecteurs. La migration ne change
 
 ## Review Triage Log
 
+Relecture 5.3 + 5.4 (3 relecteurs, 28 octobre). patch : constante `ACRE_WARN_DAYS` (medium-low) ; `targetOf` dans le domaine, importé par le composant client (medium) ; test d'aller-retour coche → clé (medium). false : migration sur lignes existantes (déjà appliquée), `Invalid Date` (horodatage de la base), minuit à Paris (testé dans `lib/format.test.ts`), horloge `updated_at` (voulue par l'épopée). defer : source en échec, coches orphelines, champs en trop, lignes non masquables, listes dupliquées SQL/code, texte « Rien à faire » (`deferred-work.md`).
+
 ## Design Notes
 
 « Pipeline » = missions à planifier ou en cours + devis envoyés, comptés une fois quand ils sont liés. Un compte tout neuf déclenche donc la règle 6 tant qu'il n'a pas deux éléments : c'est le comportement demandé. Le brouillon de relance (« peut être proposé » dans l'épopée) est une fonction d'IA distincte, notée dans `deferred-work.md`.

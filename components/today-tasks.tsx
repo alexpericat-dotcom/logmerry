@@ -5,8 +5,7 @@ import { useState, useTransition } from "react";
 
 import { checkTask } from "@/app/(app)/aujourd-hui/actions";
 import { markDeadlineDone, reopenDeadline } from "@/app/(app)/calendrier/actions";
-import { targetOf } from "@/lib/db/task-checks";
-import type { MissingLine, TodayTask } from "@/lib/domain/cockpit/today";
+import { targetOf, type MissingLine, type TodayTask } from "@/lib/domain/cockpit/today";
 
 const LINKS = {
   deadline: { href: "/calendrier", label: "Voir le calendrier" },

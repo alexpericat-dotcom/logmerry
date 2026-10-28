@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { computeCeilings } from "../finance/ceilings.ts";
 import type { RuleRow } from "../finance/rules.ts";
-import { checkKey, todayMissing, todayTasks, type AcreProfile, type QuoteInput } from "./today.ts";
+import { checkKey, targetOf, todayMissing, todayTasks, type AcreProfile, type QuoteInput } from "./today.ts";
 
 const TODAY = "2026-10-23";
 /** Pipeline suffisant (2 missions vivantes) : les tests des règles 1 à 4 ne voient pas la règle 6. */
@@ -161,4 +161,20 @@ test("règles 5 et 6 : coche du jour, tri après la règle 4, cochées en bas", 
   assert.equal(withPipeline([quote("a", day(9))], [], [checkKey(5, "a")]).find((x) => x.rule === 5)?.done, true);
   assert.deepEqual(withPipeline([quote("b", day(8)), quote("a", day(8))]).map((x) => x.id), ["a", "b"], "même date : identifiant");
   assert.equal(checkKey(6), "6|||");
+});
+
+test("coche : la cible de chaque tâche des règles 2 à 6 reconstruit la clé lue par `done`", () => {
+  const p = acreProfile({ activity_start_date: "2025-11-23" });
+  const ceilings = computeCeilings([CEIL, ACRE_RULE], p, pay(90_000), TODAY);
+  const all = todayTasks([], [inv("f", "2026-10-22")], new Set(), ceilings, [CEIL, ACRE_RULE], p as AcreProfile, [quote("q", day(9))], [], TODAY);
+  assert.deepEqual(all.map((t) => t.rule).sort(), [2, 3, 4, 5, 6]);
+  for (const t of all) {
+    const target = targetOf(t);
+    assert.ok(target, `règle ${t.rule}`);
+    const key = checkKey(target.rule, target.sourceId, target.ceilingKey, target.threshold);
+    const again = todayTasks([], [inv("f", "2026-10-22")], new Set([key]), ceilings, [CEIL, ACRE_RULE], p as AcreProfile, [quote("q", day(9))], [], TODAY);
+    assert.equal(again.find((x) => x.rule === t.rule)?.done, true, `la coche de la règle ${t.rule} est relue`);
+    assert.equal(again.filter((x) => x.done).length, 1, "une coche ne coche qu'une tâche");
+  }
+  assert.equal(targetOf(todayTasks([dl("a", TODAY)], [], new Set(), [], [], null, [], FULL, TODAY)[0]), null, "échéance : coche dans deadlines");
 });

@@ -1,12 +1,5 @@
 import type { Db } from "../supabase/server.ts";
-import { checkKey, type TodayTask } from "../domain/cockpit/today.ts";
-
-/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle) ou 5 (devis). */
-export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6; sourceId?: string; ceilingKey?: string; threshold?: number };
-
-/** Cible de coche d'une tâche du cockpit ; `null` pour une échéance (sa coche vit dans `deadlines.done_at`). */
-export const targetOf = (t: TodayTask): CheckTarget | null =>
-  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : null;
+import { checkKey, type CheckTarget } from "../domain/cockpit/today.ts";
 
 /**
  * Cocher (`checked: true`) ou décocher une tâche du cockpit (règles 2 à 6) pour le jour `day` : LA seule écriture de cette coche,

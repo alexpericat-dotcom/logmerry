@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { setTaskChecked, type CheckTarget } from "@/lib/db/task-checks";
+import { setTaskChecked } from "@/lib/db/task-checks";
+import type { CheckTarget } from "@/lib/domain/cockpit/today";
 import { CEILING_KEYS } from "@/lib/domain/finance/ceilings";
 import { isUuid } from "@/lib/domain/notes";
 import { THRESHOLDS } from "@/lib/domain/profile";
