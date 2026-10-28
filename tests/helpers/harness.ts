@@ -62,6 +62,25 @@ export const fake = {
   },
 };
 
+type Route = [match: string | ((op: Op) => boolean), reply: Reply | ((op: Op) => Reply)];
+
+/**
+ * Répond selon la requête : la première route dont `match` convient l'emporte (`"table:opération"`, ou une fonction), sinon une réponse vide.
+ * Ex. `routes(["tasks:select", { data: [{ position: 2 }] }], ["tasks:insert", { error: { code: "XX000" } }])`.
+ */
+export function routes(...list: Route[]) {
+  fake.respond = (op) => {
+    for (const [match, reply] of list) {
+      const hit = typeof match === "string" ? `${op.table}:${op.op}` === match : match(op);
+      if (hit) return typeof reply === "function" ? reply(op) : reply;
+    }
+    return { data: [], error: null };
+  };
+}
+
+/** L'ordre des requêtes d'écriture (`table:opération`), pour prouver qu'une écriture précède une autre. */
+export const writes = () => fake.ops.filter((o) => o.op !== "select").map((o) => `${o.table}:${o.op}`);
+
 /** Un `FormData` depuis un objet (les actions lisent des formulaires). */
 export function form(o: Record<string, string>): FormData {
   const f = new FormData();
