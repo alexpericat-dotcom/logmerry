@@ -2,7 +2,8 @@
 title: 'Story 5.3 : Alertes de plafond et fin de l''ACRE'
 type: 'feature'
 created: '2026-10-28'
-status: 'ready-for-dev'
+status: 'done'
+baseline_commit: 'ba53db920ca2d29ba9d0e9082c0e9f6871c242a5'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -60,12 +61,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `supabase/migrations/<horodatage>_task_checks_ceilings.sql` -- colonnes, unicité, cohérence ; SQL montré avant application -- socle
-- [ ] `lib/supabase/database.types.ts` -- reporté -- clients typés
-- [ ] `lib/domain/cockpit/today.ts` + test -- règles 3 et 4, lignes « paramètre manquant », bandeaux -- logique pure testée
-- [ ] `lib/db/task-checks.ts`, `app/(app)/aujourd-hui/actions.ts` -- coche à clés généralisées -- écritures
-- [ ] `app/(app)/aujourd-hui/page.tsx`, `components/today-tasks.tsx` -- lecture, tâches, bandeaux, lignes manquantes -- interface
-- [ ] `tests/isolation.test.ts` -- coches de plafond et d'ACRE, cohérence par règle -- preuve
+- [x] `supabase/migrations/<horodatage>_task_checks_ceilings.sql` -- colonnes, unicité, cohérence ; SQL montré avant application -- socle
+- [x] `lib/supabase/database.types.ts` -- reporté -- clients typés
+- [x] `lib/domain/cockpit/today.ts` + test -- règles 3 et 4, lignes « paramètre manquant », bandeaux -- logique pure testée
+- [x] `lib/db/task-checks.ts`, `app/(app)/aujourd-hui/actions.ts` -- coche à clés généralisées -- écritures
+- [x] `app/(app)/aujourd-hui/page.tsx`, `components/today-tasks.tsx` -- lecture, tâches, bandeaux, lignes manquantes -- interface
+- [x] `tests/isolation.test.ts` -- coches de plafond et d'ACRE, cohérence par règle -- preuve
 
 **Acceptance Criteria:**
 - Given un plafond à 90 % avec le seuil 90 actif, when j'ouvre le cockpit, then une tâche règle 3 s'affiche avec son motif ; à 100 %, seule celle à 100 %.

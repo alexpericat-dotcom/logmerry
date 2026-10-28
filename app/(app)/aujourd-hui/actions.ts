@@ -3,14 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { setInvoiceTaskChecked } from "@/lib/db/task-checks";
+import { setTaskChecked, type CheckTarget } from "@/lib/db/task-checks";
+import { CEILING_KEYS } from "@/lib/domain/finance/ceilings";
 import { isUuid } from "@/lib/domain/notes";
+import { THRESHOLDS } from "@/lib/domain/profile";
 import { todayParis } from "@/lib/format";
 import { withSession } from "@/lib/supabase/with-session";
 
-/** Cocher ou décocher une tâche de facture pour aujourd'hui (jour de Paris) ; la facture elle-même ne change pas. */
-export async function checkInvoiceTask(invoiceId: string, checked: boolean): Promise<{ message?: string }> {
-  const result = await withSession(async (supabase) => (isUuid(invoiceId) ? setInvoiceTaskChecked(supabase, invoiceId, todayParis(), checked) : "error"));
+const valid = (t: CheckTarget): boolean =>
+  t.rule === 2
+    ? isUuid(t.sourceId ?? "")
+    : t.rule === 3
+      ? (CEILING_KEYS as readonly string[]).includes(t.ceilingKey ?? "") && (THRESHOLDS as readonly number[]).includes(t.threshold ?? 0)
+      : t.rule === 4;
+
+/** Cocher ou décocher une tâche du cockpit (facture, plafond, ACRE) pour aujourd'hui (jour de Paris) ; facture, profil et règles ne changent pas. */
+export async function checkTask(target: CheckTarget, checked: boolean): Promise<{ message?: string }> {
+  const result = await withSession(async (supabase) => (valid(target) ? setTaskChecked(supabase, target, todayParis(), checked) : "error"));
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Enregistrement impossible. Réessaie." };
   revalidatePath("/aujourd-hui");
