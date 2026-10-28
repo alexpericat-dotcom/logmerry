@@ -107,7 +107,7 @@ const DEADLINES = [
 
 console.log(`${DRY ? "(à écrire)" : "+"} ${CLIENTS.length} fiches, ${MISSIONS.length} missions, 2 devis envoyés, ${PAID.length + 3} factures, ${DEADLINES.length} échéances`);
 if (DRY) {
-  await db.auth.signOut();
+  await db.auth.signOut({ scope: "local" });
   process.exit(0);
 }
 
@@ -145,4 +145,4 @@ await invoice("rag", EUR(3000), day(-10), day(20), { cents: EUR(1000), on: day(-
 for (const d of DEADLINES) ok(d.title, await db.from("deadlines").insert({ title: d.title, due_on: day(d.in), category: d.category, source: d.source, note: "DEMO : date fictive." }).select("id").single());
 
 console.log("Terminé : activité fictive écrite.");
-await db.auth.signOut();
+await db.auth.signOut({ scope: "local" });

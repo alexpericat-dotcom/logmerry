@@ -89,3 +89,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-6-ecran-a-faire-et-ligne-de-synthese.md`
   summary: Écran « À faire » : liste sans limite ni pagination (comme la liste des Notes) ; les revalidations ajoutées aux actions de notes ne sont pas testées (aucun précédent de test d'action serveur).
   evidence: relecture 5.6 (28 octobre) : réels mais sans effet à l'échelle actuelle (quelques brouillons).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-calendrier-vues-liste-kanban-gantt.md`
+  summary: Calendrier : cible tactile de 44 px des liens du gantt ; focus après « faite » depuis le kanban sur un titre de colonne peut être hors écran ; colonne « Faites » sans limite ; la barre d'une colonne et les pastilles de ses cartes n'ont pas toujours la même couleur ; échéance faite absente du gantt (à confirmer) ; vérification visuelle (clair, sombre, téléphone) à faire.
+  evidence: relecture des vues du calendrier (28 octobre) : réels, sans effet sur les données ; rendu non encore observé.

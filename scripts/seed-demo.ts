@@ -67,4 +67,4 @@ for (const rule of DEMO_RULES) {
   written += 1;
 }
 console.log(DRY ? "Essai à blanc terminé : rien n'a été écrit." : `Terminé : ${written} règle(s) d'essai écrite(s).`);
-await client.auth.signOut();
+await client.auth.signOut({ scope: "local" });

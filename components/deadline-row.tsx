@@ -1,23 +1,25 @@
 "use client";
 
-import { CalendarCheck, CircleDashed, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { DeadlineForm } from "@/components/deadline-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { UrgencyBadge } from "@/components/urgency-badge";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
+import { URGENCY_STYLES, urgency } from "@/lib/domain/deadline-boards";
 import { DEADLINE_CATEGORY_LABELS, DEADLINE_PRIORITY_LABELS, DEADLINE_RECURRENCE_LABELS, deadlineWhen } from "@/lib/domain/deadlines";
 import { isOfficialLink } from "@/lib/domain/finance/rules";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadline: DeadlineRecord; today: string; sectionId: string; onChanged: (message: string, sectionId: string) => void }) {
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
   const done = deadline.done_at !== null;
-  const late = !done && deadline.due_on < today;
+  const level = urgency(deadline.due_on, done, today);
   const panelRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasDeleting = useRef(false);
@@ -73,27 +75,13 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border bg-card p-3">
+    <li className={cn("flex flex-col gap-2 rounded-md border border-l-4 bg-card p-3", URGENCY_STYLES[level].border)}>
       <div className="flex flex-wrap items-center gap-2">
         <span className={done ? "font-semibold line-through" : "font-semibold"}>{deadline.title}</span>
         <Badge variant="outline">{DEADLINE_CATEGORY_LABELS[deadline.category]}</Badge>
         {deadline.priority !== "normal" && <Badge variant={deadline.priority === "high" ? "warning" : "outline"}>Priorité {DEADLINE_PRIORITY_LABELS[deadline.priority].toLowerCase()}</Badge>}
         {deadline.recurrence && <Badge variant="outline">{DEADLINE_RECURRENCE_LABELS[deadline.recurrence]}</Badge>}
-        {done ? (
-          <Badge variant="success">
-            <CalendarCheck size={11} aria-hidden="true" />
-            Faite
-          </Badge>
-        ) : late ? (
-          <Badge variant="warning">
-            <TriangleAlert size={11} aria-hidden="true" />
-            En retard
-          </Badge>
-        ) : (
-          <Badge variant="outline">
-            <CircleDashed size={11} aria-hidden="true" />À faire
-          </Badge>
-        )}
+        <UrgencyBadge level={level} />
       </div>
       <p className="text-sm text-muted-foreground">
         Échéance le <span className="font-mono tabular-nums">{formatDate(deadline.due_on)}</span>

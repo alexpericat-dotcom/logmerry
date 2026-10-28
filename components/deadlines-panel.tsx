@@ -5,11 +5,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { CalendarLineRow } from "@/components/calendar-line-row";
 import { DeadlineForm } from "@/components/deadline-form";
+import { DeadlineGantt } from "@/components/deadline-gantt";
+import { DeadlineKanban } from "@/components/deadline-kanban";
 import { DeadlineRow } from "@/components/deadline-row";
 import { FilterChips } from "@/components/filter-chips";
 import { PageBanner } from "@/components/page-banner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
+import { DISPLAYS, DISPLAY_LABELS, calendarHref, type Display } from "@/lib/domain/deadline-boards";
 import { DEADLINE_VIEWS, DEADLINE_VIEW_LABELS, groupDeadlines, inView, type CalendarLine, type DeadlineView } from "@/lib/domain/deadlines";
 
 export const CALENDAR_DESCRIPTION = "Tes obligations administratives, chacune avec sa date et son lien officiel. Ce n'est pas un agenda : pas de rendez-vous, seulement ce que tu dois faire avant une date.";
@@ -20,7 +24,7 @@ type Entry = { key: string; date: string; node: React.ReactNode };
 const byDate = (a: Entry, b: Entry) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key);
 
 /** Formulaire « Nouvelle échéance » et trois sections : En retard, À venir, Faites (décision 4 de la spec 5.1a). */
-export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: DeadlineRecord[]; lines: CalendarLine[]; view: DeadlineView; today: string }) {
+export function DeadlinesPanel({ deadlines, lines, view, display, today }: { deadlines: DeadlineRecord[]; lines: CalendarLine[]; view: DeadlineView; display: Display; today: string }) {
   const [creating, setCreating] = useState(false);
   const [announce, setAnnounce] = useState("");
   const newRef = useRef<HTMLButtonElement>(null);
@@ -52,7 +56,7 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
   const section = (id: string, title: string, rows: DeadlineRecord[], extra: CalendarLine[], emptyText: string) => {
     const list: Entry[] = [
       ...rows.map((d) => ({ key: d.id, date: d.due_on, node: <DeadlineRow key={d.id} deadline={d} today={today} sectionId={id} onChanged={changed} /> })),
-      ...extra.map((l) => ({ key: l.key, date: l.due_on as string, node: <CalendarLineRow key={l.key} line={l} /> })),
+      ...extra.map((l) => ({ key: l.key, date: l.due_on as string, node: <CalendarLineRow key={l.key} line={l} today={today} /> })),
     ];
     // Le tri par date ne sert qu'à intercaler les lignes calculées ; sans elles, l'ordre de `groupDeadlines` (dont « Faites », par date de réalisation) reste.
     if (extra.length) list.sort(byDate);
@@ -69,7 +73,10 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
       </section>
     );
   };
-  const chips = DEADLINE_VIEWS.map((v) => ({ label: DEADLINE_VIEW_LABELS[v], href: v === "toutes" ? "/calendrier" : `/calendrier?vue=${v}`, active: v === view }));
+  // L'adresse garde les deux choix : la période (`vue`) et l'affichage (`affichage`).
+  const href = calendarHref;
+  const chips = DEADLINE_VIEWS.map((v) => ({ label: DEADLINE_VIEW_LABELS[v], href: href(v, display), active: v === view }));
+  const displayChips = DISPLAYS.map((d) => ({ label: DISPLAY_LABELS[d], href: href(view, d), active: d === display }));
 
   return (
     <>
@@ -83,9 +90,10 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
           </Button>
         }
       >
-        <FilterChips label="Choisir une vue du calendrier" items={chips} />
+        <FilterChips label="Choisir un affichage du calendrier" items={displayChips} />
+        <FilterChips label="Choisir une période du calendrier" items={chips} />
       </PageBanner>
-      <div className="flex max-w-3xl flex-col gap-6">
+      <div className={cn("flex flex-col gap-6", display === "liste" && "max-w-3xl")}>
         <p className="text-sm font-semibold">
           {overdueCount === 0 ? "Rien en retard." : `${overdueCount} élément${overdueCount > 1 ? "s" : ""} en retard (échéances et factures).`}
         </p>
@@ -93,9 +101,15 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
           {announce}
         </p>
         {creating && <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />}
-        {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
-        {view !== "retard" && section("deadlines-upcoming", "À venir", upcoming, datedLines.filter((l) => (l.due_on as string) >= today), deadlines.length === 0 && lines.length === 0 ? "Aucune échéance pour l'instant." : "Rien à venir.")}
-        {view === "toutes" && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
+        {display === "kanban" && <DeadlineKanban deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
+        {display === "gantt" && <DeadlineGantt deadlines={visible} lines={datedLines} today={today} />}
+        {display === "liste" && (
+          <>
+          {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
+          {view !== "retard" && section("deadlines-upcoming", "À venir", upcoming, datedLines.filter((l) => (l.due_on as string) >= today), deadlines.length === 0 && lines.length === 0 ? "Aucune échéance pour l'instant." : "Rien à venir.")}
+          {view === "toutes" && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
+          </>
+        )}
         {view === "toutes" && undatedLines.length > 0 && (
           <section aria-labelledby="deadlines-confirm" className="flex flex-col gap-2">
             <h2 id="deadlines-confirm" className="text-lg font-semibold">
@@ -104,7 +118,7 @@ export function DeadlinesPanel({ deadlines, lines, view, today }: { deadlines: D
             <p className="text-sm text-muted-foreground">Obligations attendues d&apos;après ton profil, sans date : rien n&apos;est estimé. Saisis l&apos;échéance avec sa source officielle.</p>
             <ul className="flex flex-col gap-2">
               {undatedLines.map((l) => (
-                <CalendarLineRow key={l.key} line={l} />
+                <CalendarLineRow key={l.key} line={l} today={today} />
               ))}
             </ul>
           </section>
