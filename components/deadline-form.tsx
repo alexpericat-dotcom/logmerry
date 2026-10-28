@@ -118,7 +118,7 @@ export function DeadlineForm({
         </Button>
         <div id={id("more")} className={showMore ? "grid gap-2" : "hidden"}>
           <Label htmlFor={id("note")}>Remarque</Label>
-          <Textarea {...field("note")} defaultValue={values.note} rows={3} />
+          <Textarea {...field("note")} defaultValue={values.note} rows={3} className="min-h-0" />
           {errorLine("note")}
           {canRecur && (
             <>
