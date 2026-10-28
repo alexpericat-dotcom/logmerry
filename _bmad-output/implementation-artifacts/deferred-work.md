@@ -93,3 +93,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-calendrier-vues-liste-kanban-gantt.md`
   summary: Calendrier : cible tactile de 44 px des liens du gantt ; focus après « faite » depuis le kanban sur un titre de colonne peut être hors écran ; colonne « Faites » sans limite ; la barre d'une colonne et les pastilles de ses cartes n'ont pas toujours la même couleur ; échéance faite absente du gantt (à confirmer) ; vérification visuelle (clair, sombre, téléphone) à faire.
   evidence: relecture des vues du calendrier (28 octobre) : réels, sans effet sur les données ; rendu non encore observé.
+
+- source_spec: none (page Factures allégée, 28 octobre)
+  summary: la couleur du liseré d'une facture (échue, payée, partielle) et l'ouverture du détail ne sont pas testées ; extraire le choix de couleur dans `lib/domain` avec un test si la règle évolue ; vérifier le rendu clair et bureau.
+  evidence: relecture de la page Factures : le dépôt ne teste que `lib/domain` (aucun test de composant).

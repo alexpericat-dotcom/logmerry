@@ -17,6 +17,7 @@ export function InvoicesPanel({
   today,
   missionId = "",
   emptyText,
+  toolbar,
 }: {
   invoices: InvoiceRecord[];
   missions: MissionChoice[];
@@ -24,6 +25,8 @@ export function InvoicesPanel({
   today: string;
   missionId?: string;
   emptyText: string;
+  /** Filtres et décompte de la page Factures, à gauche du bouton de création (une seule ligne). */
+  toolbar?: React.ReactNode;
 }) {
   const [creating, setCreating] = useState(false);
   const [announce, setAnnounce] = useState("");
@@ -38,11 +41,19 @@ export function InvoicesPanel({
   const done = useCallback(() => setCreating(false), []);
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">{INVOICE_NOT_LEGAL}</p>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        {toolbar && <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">{toolbar}</div>}
+        {!creating && (
+          <Button ref={newRef} type="button" size="sm" className="ml-auto shrink-0" disabled={missions.length === 0} onClick={() => setCreating(true)}>
+            Nouvelle facture
+          </Button>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">{INVOICE_NOT_LEGAL}</p>
       <p role="status" className="sr-only">
         {announce}
       </p>
-      {creating ? (
+      {creating && (
         <InvoiceForm
           idPrefix={`new-${missionId || "all"}`}
           action={createInvoice}
@@ -54,16 +65,12 @@ export function InvoicesPanel({
           onDone={done}
           onCancel={done}
         />
-      ) : (
-        <Button ref={newRef} type="button" size="sm" className="self-start" disabled={missions.length === 0} onClick={() => setCreating(true)}>
-          Nouvelle facture
-        </Button>
       )}
       {missions.length === 0 && <p className="text-sm text-muted-foreground">Crée d&apos;abord une mission : une facture se rattache toujours à une mission.</p>}
       {invoices.length === 0 ? (
         <p className="text-muted-foreground">{emptyText}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-1.5">
           {invoices.map((i) => (
             <InvoiceRow key={i.id} invoice={i} missions={missions} quotes={quotes} today={today} lockedMissionId={missionId || undefined} onDeleted={deleted} />
           ))}
