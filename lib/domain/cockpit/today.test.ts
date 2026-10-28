@@ -26,7 +26,7 @@ const tasks = (rules: RuleRow[], p: ReturnType<typeof profile>, cents: number, c
 const only3 = (t: ReturnType<typeof tasks>) => t.filter((x) => x.rule === 3);
 
 test("règle 3 : 90 % = tâche à 90 %, 100 % = seule la tâche à 100 %, dépassé annoncé", () => {
-  assert.match(only3(tasks([CEIL], profile(), 90_000))[0].reason, / à 90 % \(estimation\)/);
+  assert.match(only3(tasks([CEIL], profile(), 90_000))[0].reason, /^à 90 % \(estimation\)/);
   const t100 = only3(tasks([CEIL], profile(), 100_000));
   assert.deepEqual(t100.map((x) => x.threshold), [100]);
   assert.match(only3(tasks([CEIL], profile(), 120_000))[0].reason, /dépassé/);

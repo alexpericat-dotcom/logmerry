@@ -51,7 +51,7 @@ async function Tasks() {
       <PageBanner hero title="Aujourd'hui" description={tasks.length ? "Ce qui demande ton attention, dans l'ordre." : EMPTY} />
       {tasks.length > 0 && <TodayTasks tasks={tasks} overflow={overflow} />}
       <MissingParameters lines={missing} />
-      <CockpitGauges ceilings={ceilings} revenue={collectedRevenue(payments, today)} activeThresholds={profile?.alert_thresholds.length ?? 0} />
+      <CockpitGauges ceilings={ceilings} revenue={collectedRevenue(payments, today)} />
     </>
   );
 }
