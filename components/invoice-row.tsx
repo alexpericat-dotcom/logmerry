@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteInvoice, updateInvoice } from "@/app/(app)/factures/actions";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { InvoiceForm, type MissionChoice, type QuoteChoice } from "@/components/invoice-form";
 import { InvoicePayments } from "@/components/invoice-payments";
 import { Badge } from "@/components/ui/badge";
@@ -63,14 +64,12 @@ export function InvoiceRow({
       }
     });
 
-  // Le focus suit le panneau : sur « Annuler » (le choix sûr) à l'ouverture, sur la rangée d'actions à la fermeture.
-  const panelRef = useRef<HTMLDivElement>(null);
+  // Le focus revient sur la rangée d'actions à la fermeture de la confirmation (« Annuler » reçoit le focus à l'ouverture : ConfirmPanel).
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
   useEffect(() => {
     const open = mode === "delete";
-    if (open) [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1)?.focus();
-    else if (wasOpen.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
+    if (!open && wasOpen.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
     wasOpen.current = open;
   }, [mode]);
 
@@ -189,30 +188,11 @@ export function InvoiceRow({
               </Button>
             </div>
           )}
-        {mode === "delete" && (
-          <div
-            ref={panelRef}
-            role="group"
-            aria-label={`Supprimer la facture ${title}`}
-            onKeyDown={(ev) => {
-              if (ev.key !== "Escape" || pending) return;
-              ev.preventDefault();
-              back();
-            }}
-            className="flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3"
-          >
-            <p className="font-semibold">Supprimer cette facture ?</p>
-            <p className="text-sm text-muted-foreground">Cette action est définitive. La mission et le devis ne sont pas touchés.</p>
-            <div className="flex gap-3">
-              <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={remove}>
-                {pending ? "…" : "Supprimer"}
-              </Button>
-              <Button type="button" size="sm" variant="outline" disabled={pending} onClick={back}>
-                Annuler
-              </Button>
-            </div>
-          </div>
-        )}
+          {mode === "delete" && (
+            <ConfirmPanel label={`Supprimer la facture ${title}`} question="Supprimer cette facture ?" size="compact" confirmLabel="Supprimer" pendingLabel="…" pending={pending} onCancel={back} onConfirm={remove}>
+              Cette action est définitive. La mission et le devis ne sont pas touchés.
+            </ConfirmPanel>
+          )}
         {message && (
           <p role="alert" className="text-sm text-destructive">
             {message}

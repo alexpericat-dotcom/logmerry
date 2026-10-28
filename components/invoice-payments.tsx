@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { createPayment, deletePayment, updatePayment } from "@/app/(app)/factures/payment-actions";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { PaymentForm } from "@/components/payment-form";
 import { Button } from "@/components/ui/button";
 import type { PaymentRecord } from "@/lib/db/invoices";
@@ -16,7 +17,6 @@ function PaymentRow({ invoiceId, invoice, others, payment, onDeleted }: { invoic
   const [mode, setMode] = useState<"view" | "edit" | "delete">("view");
   const [message, setMessage] = useState<string | undefined>();
   const [pending, start] = useTransition();
-  const panelRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasDeleting = useRef(false);
   const back = useCallback(() => {
@@ -24,10 +24,9 @@ function PaymentRow({ invoiceId, invoice, others, payment, onDeleted }: { invoic
     setMessage(undefined);
   }, []);
 
-  // Le focus suit le panneau : sur « Annuler » (le choix sûr) à l'ouverture, sur la rangée d'actions à la fermeture.
+  // Le focus revient sur la rangée d'actions à la fermeture de la confirmation (« Annuler » reçoit le focus à l'ouverture : ConfirmPanel).
   useEffect(() => {
-    if (mode === "delete") [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1)?.focus();
-    else if (wasDeleting.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
+    if (mode !== "delete" && wasDeleting.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
     wasDeleting.current = mode === "delete";
   }, [mode]);
 
@@ -80,28 +79,9 @@ function PaymentRow({ invoiceId, invoice, others, payment, onDeleted }: { invoic
         </div>
       )}
       {mode === "delete" && (
-        <div
-          ref={panelRef}
-          role="group"
-          aria-label={`Supprimer ${label}`}
-          onKeyDown={(ev) => {
-            if (ev.key !== "Escape" || pending) return;
-            ev.preventDefault();
-            back();
-          }}
-          className="flex flex-col gap-2 rounded-md border border-destructive p-2"
-        >
-          <p className="font-semibold">Supprimer cet encaissement ?</p>
-          <p className="text-muted-foreground">Cette action est définitive. Le statut de la facture se recalcule.</p>
-          <div className="flex gap-3">
-            <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={remove}>
-              {pending ? "…" : "Supprimer"}
-            </Button>
-            <Button type="button" size="sm" variant="outline" disabled={pending} onClick={back}>
-              Annuler
-            </Button>
-          </div>
-        </div>
+        <ConfirmPanel label={`Supprimer ${label}`} question="Supprimer cet encaissement ?" size="compact" confirmLabel="Supprimer" pendingLabel="…" pending={pending} onCancel={back} onConfirm={remove}>
+          Cette action est définitive. Le statut de la facture se recalcule.
+        </ConfirmPanel>
       )}
       {message && (
         <p role="alert" className="text-destructive">

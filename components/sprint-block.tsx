@@ -9,6 +9,7 @@ import { SprintForm } from "@/components/sprint-form";
 import { StoryList } from "@/components/story-list";
 import { selectClass } from "@/components/story-form";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
@@ -56,9 +57,9 @@ export function SprintBlock({
   const cancelButton = useRef<HTMLButtonElement>(null);
   const closeMode = () => setMode("view");
 
-  // Le focus suit le mode : « Annuler » à la confirmation (le choix sûr), le bouton d'origine au retour.
+  // Le focus suit le mode : « Annuler » à la clôture (le choix sûr), le bouton d'origine au retour (la suppression : ConfirmPanel).
   useEffect(() => {
-    if ((mode === "delete" || mode === "close") && cancelButton.current) cancelButton.current.focus();
+    if (mode === "close") cancelButton.current?.focus();
     if (mode === "view" && openedFrom.current) (openedFrom.current === "edit" ? editButton : openedFrom.current === "close" ? closeButton : deleteButton).current?.focus();
     openedFrom.current = mode === "view" ? null : mode;
   }, [mode]);
@@ -190,35 +191,18 @@ export function SprintBlock({
         </form>
       )}
       {mode === "delete" && (
-        <form
-          role="group"
-          aria-label={`Supprimer le sprint ${sprint.name}`}
-          className="flex flex-col gap-2 rounded-md border border-destructive p-3"
-          onKeyDown={(e) => {
-            if (e.key !== "Escape" || pending) return;
-            e.preventDefault();
-            e.stopPropagation();
-            setMode("view");
-          }}
-          onSubmit={(e) => {
-            e.preventDefault();
-            // `onDeleted` dès la réponse : la revalidation retire ce bloc avant qu'un effet ne s'exécute.
-            run(() => deleteSprint(sprint.id), onDeleted);
-          }}
+        <ConfirmPanel
+          label={`Supprimer le sprint ${sprint.name}`}
+          question="Supprimer ce sprint ? C'est définitif."
+          size="compact"
+          stopEscape
+          pending={pending}
+          onCancel={() => setMode("view")}
+          // `onDeleted` dès la réponse : la revalidation retire ce bloc avant qu'un effet ne s'exécute.
+          onConfirm={() => run(() => deleteSprint(sprint.id), onDeleted)}
         >
-          <p className="text-sm font-semibold">
-            Supprimer ce sprint ? C&apos;est définitif.
-            {stories.length > 0 && ` ${stories.length} stor${stories.length > 1 ? "ies retourneront" : "y retournera"} au backlog.`}
-          </p>
-          <div className="flex gap-3">
-            <Button type="submit" variant="destructive" size="sm" aria-disabled={pending}>
-              {pending ? "Suppression…" : "Oui, supprimer"}
-            </Button>
-            <Button ref={cancelButton} type="button" variant="outline" size="sm" onClick={() => setMode("view")}>
-              Annuler
-            </Button>
-          </div>
-        </form>
+          {stories.length > 0 && <strong className="text-foreground">{stories.length} stor{stories.length > 1 ? "ies retourneront" : "y retournera"} au backlog.</strong>}
+        </ConfirmPanel>
       )}
       <StoryList
         listId={sprint.id}

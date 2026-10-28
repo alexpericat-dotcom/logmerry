@@ -15,6 +15,7 @@ import {
   type ContactDeleteState,
 } from "@/app/(app)/clients/contact-actions";
 import { ContactForm } from "@/components/contact-form";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import type { ContactRecord } from "@/lib/db/contacts";
 import { initials } from "@/lib/domain/contacts";
@@ -30,49 +31,17 @@ function DeleteContact({
     () => deleteContact(contact.id),
     {},
   );
-  const cancel = useRef<HTMLButtonElement>(null);
-  useEffect(() => cancel.current?.focus(), []); // « Annuler » d'abord : le choix sûr
   return (
-    <form
+    <ConfirmPanel
+      label={`Supprimer ${contact.name}`}
+      question={`Supprimer ${contact.name} ? C'est définitif.`}
+      size="compact"
+      className="mt-3"
       action={action}
-      role="group"
-      aria-label={`Supprimer ${contact.name}`}
-      onKeyDown={(e) => {
-        if (e.key !== "Escape" || pending) return;
-        e.preventDefault(); // la confirmation prend la touche : le panneau de l'assistant reste ouvert
-        onCancel();
-      }}
-      className="mt-3 flex flex-col gap-2 rounded-md border border-destructive p-3"
-    >
-      <p className="text-sm font-semibold">
-        Supprimer {contact.name} ? C&apos;est définitif.
-      </p>
-      {state.message && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.message}
-        </p>
-      )}
-      <div className="flex gap-3">
-        <Button
-          type="submit"
-          variant="destructive"
-          size="sm"
-          disabled={pending}
-        >
-          {pending ? "Suppression…" : "Oui, supprimer"}
-        </Button>
-        <Button
-          ref={cancel}
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={onCancel}
-        >
-          Annuler
-        </Button>
-      </div>
-    </form>
+      pending={pending}
+      error={state.message}
+      onCancel={onCancel}
+    />
   );
 }
 

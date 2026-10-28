@@ -13,6 +13,7 @@ import { StoryForm, selectClass } from "@/components/story-form";
 import { StoryReview } from "@/components/story-review";
 import { Badge } from "@/components/ui/badge";
 import { Tasks } from "@/components/tasks";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
@@ -35,38 +36,17 @@ function DeleteStory({ story, taskCount, onCancel, onDeleted }: { story: StoryRe
       return { message: UNREACHABLE };
     }
   }, {});
-  const cancel = useRef<HTMLButtonElement>(null);
-  useEffect(() => cancel.current?.focus(), []); // « Annuler » d'abord : le choix sûr
   return (
-    <form
+    <ConfirmPanel
+      label={`Supprimer la user story ${story.title}`}
+      question={`Supprimer cette user story ? C'est définitif.${taskCount > 0 ? ` Ses ${taskCount > 1 ? `${taskCount} tâches seront supprimées` : "1 tâche sera supprimée"} aussi.` : ""}`}
+      size="compact"
+      className="mt-3"
       action={action}
-      role="group"
-      aria-label={`Supprimer la user story ${story.title}`}
-      onKeyDown={(e) => {
-        if (e.key !== "Escape" || pending) return;
-        e.preventDefault(); // la confirmation prend la touche : le panneau de l'assistant reste ouvert
-        onCancel();
-      }}
-      className="mt-3 flex flex-col gap-2 rounded-md border border-destructive p-3"
-    >
-      <p className="text-sm font-semibold">
-        Supprimer cette user story ? C&apos;est définitif.
-        {taskCount > 0 && ` Ses ${taskCount > 1 ? `${taskCount} tâches seront supprimées` : "1 tâche sera supprimée"} aussi.`}
-      </p>
-      {state.message && (
-        <p role="alert" className="text-sm text-destructive">
-          {state.message}
-        </p>
-      )}
-      <div className="flex gap-3">
-        <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-          {pending ? "Suppression…" : "Oui, supprimer"}
-        </Button>
-        <Button ref={cancel} type="button" variant="outline" size="sm" disabled={pending} onClick={onCancel}>
-          Annuler
-        </Button>
-      </div>
-    </form>
+      pending={pending}
+      error={state.message}
+      onCancel={onCancel}
+    />
   );
 }
 

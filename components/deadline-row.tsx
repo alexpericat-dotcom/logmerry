@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { DeadlineForm } from "@/components/deadline-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,6 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
   const [pending, start] = useTransition();
   const done = deadline.done_at !== null;
   const level = urgency(deadline.due_on, done, today);
-  const panelRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const wasDeleting = useRef(false);
 
@@ -39,10 +39,9 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
     [deadline.id, deadline.title, onChanged, sectionId],
   );
 
-  // Le focus suit le panneau : sur « Annuler » (le choix sûr) à l'ouverture, sur la rangée d'actions à la fermeture.
+  // Le focus revient sur la rangée d'actions à la fermeture de la confirmation (« Annuler » reçoit le focus à l'ouverture : ConfirmPanel).
   useEffect(() => {
-    if (mode === "delete") [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1)?.focus();
-    else if (wasDeleting.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
+    if (mode !== "delete" && wasDeleting.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
     wasDeleting.current = mode === "delete";
   }, [mode]);
 
@@ -120,30 +119,18 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
         </div>
       )}
       {mode === "delete" && (
-        <div
-          ref={panelRef}
-          role="group"
-          aria-label={`Supprimer l'échéance ${deadline.title}`}
-          onKeyDown={(ev) => {
-            if (ev.key !== "Escape" || pending) return;
-            ev.preventDefault();
-            back();
-          }}
-          className="flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3"
+        <ConfirmPanel
+          label={`Supprimer l'échéance ${deadline.title}`}
+          question={deadline.recurrence ? "Supprimer cette série d'échéances ?" : "Supprimer cette échéance ?"}
+          size="compact"
+          confirmLabel="Supprimer"
+          pendingLabel="…"
+          pending={pending}
+          onCancel={back}
+          onConfirm={() => run(() => deleteDeadline(deadline.id), `Échéance ${deadline.title} supprimée.`)}
         >
-          <p className="font-semibold">{deadline.recurrence ? "Supprimer cette série d'échéances ?" : "Supprimer cette échéance ?"}</p>
-          <p className="text-sm text-muted-foreground">
-            {deadline.recurrence ? "Toute la série à faire sera supprimée ; les occurrences déjà faites sont conservées. Cette action est définitive." : "Cette action est définitive."}
-          </p>
-          <div className="flex gap-3">
-            <Button type="button" size="sm" variant="destructive" disabled={pending} onClick={() => run(() => deleteDeadline(deadline.id), `Échéance ${deadline.title} supprimée.`)}>
-              {pending ? "…" : "Supprimer"}
-            </Button>
-            <Button type="button" size="sm" variant="outline" disabled={pending} onClick={back}>
-              Annuler
-            </Button>
-          </div>
-        </div>
+          {deadline.recurrence ? "Toute la série à faire sera supprimée ; les occurrences déjà faites sont conservées. Cette action est définitive." : "Cette action est définitive."}
+        </ConfirmPanel>
       )}
       {message && (
         <p role="alert" className="text-sm text-destructive">
