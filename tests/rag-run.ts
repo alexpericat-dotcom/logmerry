@@ -17,6 +17,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { testAccount } from "./helpers/accounts.ts";
+
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { askClaude } from "@/lib/ai/chat";
 import { retrieveChunks } from "@/lib/db/retrieval";
@@ -34,13 +36,12 @@ function env(name: string): string {
 }
 
 async function signIn(who: "A" | "B") {
-  const email = env(`DEMO_${who}_EMAIL`);
-  assert.ok(email.endsWith("@example.com"), `démo ${who} doit être un compte fictif @example.com`);
+  const { email, password } = testAccount(who);
   const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { error } = await client.auth.signInWithPassword({ email, password: env(`DEMO_${who}_PASSWORD`) });
-  if (error) throw new Error(`Connexion impossible pour démo ${who} : ${error.message}`);
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(`Connexion impossible pour compte de test ${who} : ${error.message}`);
   return client;
 }
 

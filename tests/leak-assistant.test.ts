@@ -15,6 +15,8 @@ import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { testAccount } from "./helpers/accounts.ts";
+
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { askClaude } from "@/lib/ai/chat";
 import { listHistory, saveExchange } from "@/lib/db/history";
@@ -37,11 +39,10 @@ const newClient = () =>
   });
 
 async function signIn(who: "A" | "B") {
-  const email = env(`DEMO_${who}_EMAIL`);
-  assert.ok(email.endsWith("@example.com"), `démo ${who} doit être un compte fictif @example.com`);
+  const { email, password } = testAccount(who);
   const client = newClient();
-  const { data, error } = await client.auth.signInWithPassword({ email, password: env(`DEMO_${who}_PASSWORD`) });
-  if (error || !data.user) throw new Error(`${NON_CONCLUANT}connexion impossible pour démo ${who} : ${error?.message ?? "?"}`);
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error || !data.user) throw new Error(`${NON_CONCLUANT}connexion impossible pour compte de test ${who} : ${error?.message ?? "?"}`);
   return { client, userId: data.user.id };
 }
 type Account = Awaited<ReturnType<typeof signIn>>;

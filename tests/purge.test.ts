@@ -1,11 +1,13 @@
 /**
  * Vider l'historique : un compte supprime tout SON historique (citations comprises) et rien de celui de l'autre.
- * Utilise le compte fictif B pour la suppression : le compte A (celui de la démonstration) n'est jamais vidé ; son nombre de messages doit rester identique.
+ * Utilise le compte fictif B pour la suppression : le compte de test A n'est jamais vidé ; son nombre de messages doit rester identique.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
+
+import { testAccount } from "./helpers/accounts.ts";
 
 import { clearHistory, listHistory, saveExchange } from "@/lib/db/history";
 
@@ -17,9 +19,8 @@ const env = (name: string) => {
 
 async function signIn(who: "A" | "B") {
   const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
-  const email = env(`DEMO_${who}_EMAIL`);
-  assert.ok(email.endsWith("@example.com"), "compte fictif attendu");
-  const { error } = await client.auth.signInWithPassword({ email, password: env(`DEMO_${who}_PASSWORD`) });
+  const { email, password } = testAccount(who);
+  const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw new Error(`TEST NON CONCLUANT : connexion ${who} impossible`);
   return client;
 }

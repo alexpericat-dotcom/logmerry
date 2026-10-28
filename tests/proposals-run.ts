@@ -7,9 +7,10 @@
  * Même garde-fous que tests/isolation.test.ts : clé publique, comptes @example.com seulement, tout est préfixé et nettoyé.
  * Code de sortie 1 si un scénario échoue. Hors de `npm test` (réseau, identifiants, clé Anthropic dans .env.local).
  */
-import assert from "node:assert/strict";
 
 import { createClient } from "@supabase/supabase-js";
+
+import { testAccount } from "./helpers/accounts.ts";
 
 import { proposeWithClaude } from "@/lib/ai/story-proposals";
 import { writePromptWithClaude } from "@/lib/ai/prompt-generation";
@@ -35,11 +36,10 @@ function env(name: string): string {
 }
 
 async function signIn(who: "A" | "B") {
-  const email = env(`DEMO_${who}_EMAIL`);
-  assert.ok(email.endsWith("@example.com"), `démo ${who} doit être un compte fictif @example.com`);
+  const { email, password } = testAccount(who);
   const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
-  const { error } = await client.auth.signInWithPassword({ email, password: env(`DEMO_${who}_PASSWORD`) });
-  if (error) throw new Error(`Connexion impossible pour démo ${who} : ${error.message}`);
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(`Connexion impossible pour compte de test ${who} : ${error.message}`);
   return client;
 }
 
