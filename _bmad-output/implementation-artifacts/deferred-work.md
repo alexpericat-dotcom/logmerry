@@ -85,3 +85,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-5-ca-encaisse-et-jauges-sur-le-cockpit.md`
   summary: Cockpit compact : la description du bandeau monte deux `TypedText` (un par largeur, un seul visible) ; catégorie des échéances et précision des tuiles seulement en infobulle (invisibles au tactile) ; « À confirmer » absent de l'anneau du plafond le plus avancé ; `seed:activity` non reprenable après une écriture interrompue (supprimer à la main les lignes « (démo) ») et sans liste des noms purgés en `--dry` ; aucun test de rendu sur les composants du tableau de bord.
   evidence: relecture du cockpit compact (28 octobre) : réels, sans effet sur les chiffres ; le reste est corrigé.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-6-ecran-a-faire-et-ligne-de-synthese.md`
+  summary: Écran « À faire » : liste sans limite ni pagination (comme la liste des Notes) ; les revalidations ajoutées aux actions de notes ne sont pas testées (aucun précédent de test d'action serveur).
+  evidence: relecture 5.6 (28 octobre) : réels mais sans effet à l'échelle actuelle (quelques brouillons).

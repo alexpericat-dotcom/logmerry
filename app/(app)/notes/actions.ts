@@ -114,6 +114,8 @@ async function save(
   if (result.value.outcome !== "saved") return { message: SAVE_FAILED, values };
 
   revalidatePath("/notes");
+  revalidatePath("/a-faire");
+  revalidatePath("/aujourd-hui");
   redirect("/notes");
 }
 
@@ -157,6 +159,8 @@ export async function deleteNote(id: string): Promise<DeleteState> {
   if (result.value === "not-found") return { message: NOT_FOUND };
 
   revalidatePath("/notes");
+  revalidatePath("/a-faire");
+  revalidatePath("/aujourd-hui");
   redirect("/notes");
 }
 
@@ -176,6 +180,8 @@ export async function retryIndexing(id: string): Promise<RetryState> {
   if (result.status === "failed") return { message: "Indexation impossible pour le moment. Réessaie." };
   if (result.value === "not-found") return { message: NOT_FOUND };
   revalidatePath("/notes");
+  revalidatePath("/a-faire");
+  revalidatePath("/aujourd-hui");
   revalidatePath(`/notes/${id}`);
   return result.value === "failed" ? { message: "Indexation impossible pour le moment. Réessaie." } : {};
 }
@@ -204,5 +210,7 @@ export async function createDraftFromQuestion(question: string): Promise<DraftSt
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || !result.value) return failed;
   revalidatePath("/notes");
+  revalidatePath("/a-faire");
+  revalidatePath("/aujourd-hui");
   return { ok: true, ...result.value };
 }

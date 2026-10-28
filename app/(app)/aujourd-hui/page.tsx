@@ -1,4 +1,4 @@
-import { Briefcase, CalendarClock, FileText, Receipt, Target, Users } from "lucide-react";
+import { Briefcase, CalendarClock, ChevronRight, FileText, Receipt, Target, Users } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -10,6 +10,7 @@ import { listAllClients } from "@/lib/db/clients";
 import { listDeadlines } from "@/lib/db/deadlines";
 import { listInvoices } from "@/lib/db/invoices";
 import { listAllMissions } from "@/lib/db/missions";
+import { listDraftTypes } from "@/lib/db/notes";
 import { listPaymentsForCeilings } from "@/lib/db/payments";
 import { getProfile } from "@/lib/db/profile";
 import { listActiveSprintWork } from "@/lib/db/sprint-work";
@@ -17,6 +18,7 @@ import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
 import { cockpitKpis, deadlineDaysOfMonth, upcomingDeadlines } from "@/lib/domain/cockpit/overview";
+import { draftSummary } from "@/lib/domain/cockpit/summary";
 import { sprintOverflow, todayMissing, todayTasks, type SprintWork } from "@/lib/domain/cockpit/today";
 import { computeCeilings } from "@/lib/domain/finance/ceilings";
 import { collectedRevenue, monthlyRevenue } from "@/lib/domain/finance/revenue";
@@ -31,7 +33,7 @@ export const metadata = { title: "Aujourd'hui · LogMerry" };
 const EMPTY = "Rien à faire pour aujourd'hui. Tes tâches apparaîtront ici dès que tu auras saisi tes échéances, tes factures et tes devis.";
 
 async function Tasks() {
-  const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows, clients] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), createClient().then(listActiveSprintWork), listAllClients()]);
+  const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows, clients, drafts] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), createClient().then(listActiveSprintWork), listAllClients(), listDraftTypes().catch(() => [])]); // la ligne de synthèse est secondaire : sa lecture en échec ne bloque pas le cockpit
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const checked = await listTaskChecks(await createClient(), today);
   const sprints: SprintWork[] = sprintRows.map((sp) => ({
@@ -65,6 +67,7 @@ async function Tasks() {
   const revenue = collectedRevenue(payments, today);
   const months = monthlyRevenue(payments, today);
   const top = ceilings.flatMap((c) => (c.status === "ok" ? [c] : [])).sort((a, b) => b.percent - a.percent)[0];
+  const draftLine = draftSummary(drafts);
   const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
   const description = tasks.length ? `${plural(tasks.length - done, "tâche à faire", "tâches à faire")} aujourd'hui, ${done} déjà faite${done > 1 ? "s" : ""}.` : "Rien à faire pour aujourd'hui.";
   return (
@@ -127,6 +130,12 @@ async function Tasks() {
         <Panel title="À faire aujourd'hui" className="lg:col-span-7">
           {tasks.length > 0 ? <TodayTasks tasks={tasks} overflow={overflow} /> : <p className="text-sm text-muted-foreground">{EMPTY}</p>}
           <MissingParameters lines={missing} />
+          {draftLine && (
+            <Link href="/a-faire" className="flex min-h-11 items-center justify-between gap-2 rounded-md border bg-card px-3 text-sm hover:bg-accent/40">
+              <span>{draftLine}</span>
+              <ChevronRight size={16} aria-hidden="true" />
+            </Link>
+          )}
         </Panel>
         <CockpitGauges ceilings={ceilings} />
       </div>
