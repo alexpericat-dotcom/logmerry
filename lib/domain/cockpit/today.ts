@@ -7,10 +7,12 @@ import { fieldState } from "../profile.ts";
 
 /** Tâche du jour du cockpit, calculée à la lecture (AD-5) : jamais stockée, tri unique règle → date → identifiant. */
 export type TodayTask = {
-  rule: 1 | 2 | 3 | 4;
+  rule: 1 | 2 | 3 | 4 | 5 | 6;
   /** Identifiant de la source (échéance ou facture) : une source, une tâche. Règle 3 : plafond et seuil ; règle 4 : « acre ». */
   id: string;
-  kind: "deadline" | "invoice" | "ceiling" | "acre";
+  kind: "deadline" | "invoice" | "ceiling" | "acre" | "quote" | "pipeline";
+  /** Règle 5 : fiche du client du devis (lien de la tâche). */
+  clientId?: string;
   /** Règle 3 : clé de coche (plafond, seuil). */
   ceilingKey?: string;
   threshold?: number;
@@ -67,11 +69,20 @@ export function todayMissing(ceilings: CeilingResult[], rules: RuleRow[], profil
   return lines;
 }
 
+/** Seuils de la règle 5 (jours sans modification) et de la règle 6 (éléments au pipeline) : nommés, pas dispersés. */
+export const QUOTE_IDLE_DAYS = 7;
+export const PIPELINE_MIN = 2;
+
+/** Devis lu par les règles 5 et 6 ; `updated_on` = jour de Paris de `updated_at`. Seul « sent » compte. */
+export type QuoteInput = { id: string; status: string; client_id: string; client_name: string | null; mission_id: string | null; updated_on: string };
+export type MissionPipelineInput = { id: string; status: string };
+
 const days = (n: number) => `${n} jour${n > 1 ? "s" : ""}`;
 
 /**
  * Règle 1 : échéances saisies dans 0 à 3 jours (une échéance en retard relève du calendrier). Les faites restent, cochées.
  * Règle 2 : factures non soldées dont l'échéance est dépassée d'au moins 1 jour. `checked` : clés de coche du jour (`task_checks`, voir `checkKey`).
+ * Règle 5 : devis « envoyé » sans modification depuis plus de 7 jours. Règle 6 : moins de 2 éléments au pipeline (missions à planifier ou en cours, devis envoyés ; un devis lié à une telle mission compte une fois).
  * Règle 3 : un plafond dont un seuil actif du profil est atteint (le plus haut seul, 100 % remplace 90 %). Règle 4 : fin d'ACRE estimée dans 0 à 31 jours.
  * Les tâches cochées descendent en bas ; l'ordre reste règle, date la plus proche, identifiant.
  */
@@ -82,6 +93,8 @@ export function todayTasks(
   ceilings: CeilingResult[],
   rules: RuleRow[],
   profile: AcreProfile,
+  quotes: QuoteInput[],
+  missions: MissionPipelineInput[],
   asOf: string,
 ): TodayTask[] {
   const tasks: TodayTask[] = [];
@@ -134,6 +147,26 @@ export function todayTasks(
         demo: acre.demo,
       });
     }
+  }
+  const sent = quotes.filter((q) => q.status === "sent");
+  for (const q of sent) {
+    const idle = -daysUntil(q.updated_on, asOf);
+    if (idle <= QUOTE_IDLE_DAYS) continue;
+    tasks.push({
+      rule: 5,
+      id: q.id,
+      kind: "quote",
+      clientId: q.client_id,
+      title: `Relancer le devis ${q.client_name ?? "sans client"}`,
+      reason: `devis sans réponse depuis ${days(idle)}`,
+      date: q.updated_on,
+      done: checked.has(checkKey(5, q.id)),
+    });
+  }
+  const live = new Set(missions.filter((m) => m.status === "planned" || m.status === "in_progress").map((m) => m.id));
+  const pipeline = live.size + sent.filter((q) => !q.mission_id || !live.has(q.mission_id)).length;
+  if (pipeline < PIPELINE_MIN) {
+    tasks.push({ rule: 6, id: "pipeline", kind: "pipeline", title: "Pipeline", reason: "ton pipeline se vide", date: asOf, done: checked.has(checkKey(6)) });
   }
   return tasks.sort((a, b) => Number(a.done) - Number(b.done) || a.rule - b.rule || a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 }

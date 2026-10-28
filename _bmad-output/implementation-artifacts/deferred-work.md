@@ -61,3 +61,7 @@ Aujourd'hui seuls le domaine pur et la base (isolation, scripts SQL) sont testé
 - source_spec: `_bmad-output/implementation-artifacts/spec-5-2-voir-mes-taches-du-jour.md`
   summary: Extraire l'assemblage de la page cockpit (statut de facture via `invoiceBalance`, coches du jour) en fonction pure testée ; purger les coches orphelines ou anciennes de `task_checks` ; vérifier dans Chrome que le focus survit au déplacement d'une ligne cochée.
   evidence: relecture 5.2 : seul le domaine est testé, la page ne l'est pas ; `task_checks` grossit d'une ligne par coche et par jour sans rétention ; le focus après réordonnancement est maybe-false (non vérifié dans un navigateur).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-5-4-taches-devis-sans-reponse-et-pipeline-vide.md`
+  summary: Brouillon de relance d'un devis sans réponse proposé par l'IA depuis la tâche de règle 5.
+  evidence: l'épopée dit « un brouillon de relance peut être proposé » ; c'est une fonction d'IA distincte (texte fourni traité comme donnée, aucune donnée hors fiche du client), hors du périmètre des deux règles pures de la 5.4.
