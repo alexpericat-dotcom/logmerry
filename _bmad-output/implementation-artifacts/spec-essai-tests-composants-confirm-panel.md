@@ -2,7 +2,7 @@
 title: 'Essai de tests de composants : ConfirmPanel'
 type: 'chore'
 created: '2026-10-28'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: 'b9574e03ead8200040bceb1bdc7ab03feb0da84e'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -51,11 +51,11 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `package.json` -- ajouter les 4 dépendances de développement et le script `test:components`, l'enchaîner dans `npm test` -- la CI le lance
-- [ ] `tests/helpers/jsx-hooks.mjs`, `tests/helpers/register-components.mjs` -- chargeur : `resolve` de `ts-hooks.mjs`, `load` des `.tsx` par `ts.transpileModule` (JSX automatique, modules ES) -- JSX sans nouvelle dépendance
-- [ ] `tests/helpers/dom.ts` -- installe jsdom sur `globalThis` (window, document, navigator, éléments, `IS_REACT_ACT_ENVIRONMENT`) -- à importer en premier par le test
-- [ ] `tests/components/confirm-panel.test.tsx` -- une ligne de test par ligne de la matrice, user-event pour clavier et clic -- contrat vérifié
-- [ ] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- coût mesuré, constat, point « pas de test de composant » mis à jour selon le résultat
+- [x] `package.json` -- ajouter les 4 dépendances de développement et le script `test:components`, l'enchaîner dans `npm test` -- la CI le lance
+- [x] `tests/helpers/jsx-hooks.mjs`, `tests/helpers/register-components.mjs` -- chargeur : `resolve` de `ts-hooks.mjs`, `load` des `.tsx` par `ts.transpileModule` (JSX automatique, modules ES) -- JSX sans nouvelle dépendance
+- [x] `tests/helpers/dom.ts` -- installe jsdom sur `globalThis` (window, document, navigator, éléments, `IS_REACT_ACT_ENVIRONMENT`) -- à importer en premier par le test
+- [x] `tests/components/confirm-panel.test.tsx` -- une ligne de test par ligne de la matrice, user-event pour clavier et clic -- contrat vérifié
+- [x] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- coût mesuré, constat, point « pas de test de composant » mis à jour selon le résultat
 
 **Acceptance Criteria:**
 - Given une installation propre (`npm ci`), when `npm test` tourne, then le lot de composants passe sans réseau.
@@ -64,6 +64,12 @@ review_loop_iteration: 0
 - Given les 11 appelants, then aucun fichier d'application modifié.
 
 ## Implementation Notes
+
+- Fichiers : `tests/helpers/{jsx-hooks.mjs,register-components.mjs,dom.ts,jsdom.d.ts}`, `tests/components/confirm-panel.test.tsx` (8 tests, matrice couverte), `package.json` (4 dépendances de développement, script `test:components` enchaîné dans `npm test`). Aucun fichier d'application modifié.
+- Surprise 1 : `ts-hooks.mjs` résout tout paquet depuis la racine, ce qui donnait à jsdom la v5 de `lru-cache` au lieu de sa v11 imbriquée (plantage au chargement). Le chargeur de composants laisse la résolution de Node aux imports faits depuis `node_modules`.
+- Surprise 2 : jsdom n'a pas de types ; `@types/jsdom` aurait dépassé la liste de la spec, donc `tests/helpers/jsdom.d.ts` déclare le module en `any`.
+- Coût mesuré : `node_modules` 523 780 → 563 452 Ko (+39,7 Mo) ; +49 paquets dans le lockfile (508 → 557) ; `npm install` 14 s ; en copie propre `npm ci` 17 s ; lot de composants 4,3 s (dont démarrage de jsdom) ; `npm test` complet 3 s de plus ; jsdom exige Node 22.22+ ou 24.15+ (la CI est en 24).
+- Vérifié : `tsc`, lint, `npm test`, `next build` (copie propre) ; trois mutations (retrait de `stopPropagation`, du `!pending` du clic, du focus initial) font échouer 1, 1 et 3 tests.
 
 ## Spec Change Log
 
