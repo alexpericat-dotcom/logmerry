@@ -7,6 +7,7 @@ import { useEffect, useId, useOptimistic, useRef, useState, useTransition, type 
 import { addTask, deleteTask, reorderTasks, setTaskDone, updateTask, type TaskActionState } from "@/app/(app)/missions/task-actions";
 import { SortableList } from "@/components/sortable-list";
 import { TaskProposals } from "@/components/task-proposals";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isRedirect, UNREACHABLE } from "@/lib/client-actions";
@@ -35,13 +36,11 @@ function TaskRow({ task, handle, onDeleted }: { task: TaskRecord; handle: ReactN
   const editButton = useRef<HTMLButtonElement>(null);
   const deleteButton = useRef<HTMLButtonElement>(null);
   const titleInput = useRef<HTMLInputElement>(null);
-  const cancel = useRef<HTMLButtonElement>(null);
   const inputId = useId();
 
-  // Le focus suit le mode : champ à l'édition, « Annuler » à la confirmation, bouton d'origine au retour.
+  // Le focus suit le mode : champ à l'édition, bouton d'origine au retour (« Annuler » reçoit le focus à la confirmation : ConfirmPanel).
   useEffect(() => {
     if (mode === "edit") titleInput.current?.focus();
-    if (mode === "delete") cancel.current?.focus();
     if (mode === "view" && openedFrom.current) (openedFrom.current === "edit" ? editButton : deleteButton).current?.focus();
     openedFrom.current = mode === "view" ? null : mode;
   }, [mode]);
@@ -116,42 +115,23 @@ function TaskRow({ task, handle, onDeleted }: { task: TaskRecord; handle: ReactN
 
   if (mode === "delete") {
     return (
-      <form
-        role="group"
-        aria-label={`Supprimer la tâche ${task.title}`}
-        className="flex flex-col gap-2 rounded-md border border-destructive p-2"
-        onKeyDown={(e) => {
-          if (e.key !== "Escape" || pending) return;
-          e.preventDefault();
-          e.stopPropagation();
-          setMode("view");
-        }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (pending) return;
+      <ConfirmPanel
+        label={`Supprimer la tâche ${task.title}`}
+        question="Supprimer cette tâche ? C'est définitif."
+        size="compact"
+        stopEscape
+        pending={pending}
+        error={error}
+        onCancel={() => setMode("view")}
+        onConfirm={() =>
           startTransition(async () => {
             setError("");
             // `onDeleted` dès la réponse : la revalidation retire cette ligne avant qu'un effet ne s'exécute.
             const result = await safely(() => deleteTask(task.id));
             if (report(result)) onDeleted();
-          });
-        }}
-      >
-        <p className="text-sm font-semibold">Supprimer cette tâche ? C&apos;est définitif.</p>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <div className="flex gap-3">
-          <Button type="submit" variant="destructive" size="sm" aria-disabled={pending}>
-            {pending ? "Suppression…" : "Oui, supprimer"}
-          </Button>
-          <Button ref={cancel} type="button" variant="outline" size="sm" onClick={() => setMode("view")}>
-            Annuler
-          </Button>
-        </div>
-      </form>
+          })
+        }
+      />
     );
   }
 

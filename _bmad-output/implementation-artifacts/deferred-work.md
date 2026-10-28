@@ -103,3 +103,7 @@ Tri de 92 points : 8 vérifiés comme résolus et retirés, le reste regroupé p
 - source_spec: none (séparation des comptes de test, 28 octobre)
   summary: les six scripts qui écrivent dans la vraie base (`isolation`, `leak-assistant`, `leak-search`, `purge`, `proposals-run`, `rag-run`) recopient chacun leur `signIn` ; le garde-fou (`testAccount`) est testé, mais rien n'empêche un nouveau script de relire `DEMO_*` : factoriser la connexion dans `tests/helpers/accounts.ts` ; les 369 fiches « [isolation-test] » et 14 missions « [essai-ui] » purgées du compte de démo le 28 octobre ne reviendront plus une fois les comptes de test créés (deux lignes liées à un devis envoyé y restent).
   evidence: relecture de la séparation des comptes de test : le garde-fou central est couvert (A et B, vide, casse, adresses de démonstration connues), pas son adoption par chaque script (hors `npm test`, réseau et identifiants).
+
+- source_spec: none (extraction de `ConfirmPanel`, 28 octobre)
+  summary: aucun test de composant : le contrat de `ConfirmPanel` (focus sur « Annuler », Échap, `stopEscape`, `aria-disabled` pendant l'action, annonce de l'erreur) et le câblage des onze appelants ne sont vérifiés qu'à la main (Chrome) ; ajouter jsdom et Testing Library, puis un `tests/components/confirm-panel.test.tsx`. Les types `DeleteClientState`, `DeleteMissionState`, `DeleteState` ne sont probablement plus utilisés par les composants.
+  evidence: relecture de `ConfirmPanel` : le dépôt ne teste que `lib/` et les actions serveur ; une dépendance de test est une décision à prendre.

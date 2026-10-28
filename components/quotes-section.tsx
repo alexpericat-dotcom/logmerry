@@ -16,6 +16,7 @@ import {
   type QuoteFormValues,
 } from "@/app/(app)/clients/quote-actions";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -181,28 +182,16 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
   const wasOpen = useRef(false);
   useEffect(() => {
     const open = mode !== "view" && mode !== "edit";
-    // Date d'envoi : le champ ; confirmation : « Annuler » (dernier bouton), le choix sûr.
-    if (open) (panelRef.current?.querySelector<HTMLElement>("input") ?? [...(panelRef.current?.querySelectorAll<HTMLElement>("button") ?? [])].at(-1))?.focus();
-    else if (wasOpen.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
+    // Date d'envoi : le champ (les confirmations donnent le focus à « Annuler » elles-mêmes : ConfirmPanel).
+    if (mode === "send") panelRef.current?.querySelector<HTMLElement>("input")?.focus();
+    else if (!open && wasOpen.current) actionsRef.current?.querySelector<HTMLElement>("button")?.focus();
     wasOpen.current = open;
   }, [mode]);
-  const dangerClass = "flex max-w-2xl flex-col gap-3 rounded-md border border-destructive p-3";
-  const neutralClass = "flex max-w-2xl flex-col gap-3 rounded-md border border-input p-3";
   const close = (ev: React.KeyboardEvent) => {
     if (ev.key !== "Escape" || pending) return;
     ev.preventDefault();
     back();
   };
-  const buttons = (label: string, go: () => void, variant: "default" | "destructive" = "destructive") => (
-    <div className="flex gap-3">
-      <Button type="button" size="sm" variant={variant} disabled={pending} onClick={go}>
-        {pending ? "…" : label}
-      </Button>
-      <Button type="button" size="sm" variant="outline" disabled={pending} onClick={back}>
-        Annuler
-      </Button>
-    </div>
-  );
 
   if (mode === "edit") {
     return (
@@ -285,31 +274,33 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
         </div>
       )}
       {mode === "accept" && (
-        <div ref={panelRef} role="group" aria-label="Confirmer l'acceptation" className={neutralClass} onKeyDown={close}>
-          <p className="font-semibold">Marquer ce devis comme accepté ?</p>
-          <p className="text-sm text-muted-foreground">
-            {quote.mission_id
-              ? "Le devis sera figé : il ne pourra plus changer d'état."
-              : clientStatus === "prospect"
-                ? "Le devis sera figé, cette fiche deviendra un client et une mission « à planifier » sera créée."
-                : "Le devis sera figé et une mission « à planifier » sera créée."}
-          </p>
-          {buttons("Oui, accepté", () => run(() => acceptQuote(quote.id), "Devis accepté. Une mission à planifier est liée."), "default")}
-        </div>
+        <ConfirmPanel
+          label="Confirmer l'acceptation"
+          question="Marquer ce devis comme accepté ?"
+          tone="neutral"
+          size="compact"
+          confirmLabel="Oui, accepté"
+          pendingLabel="…"
+          pending={pending}
+          onCancel={back}
+          onConfirm={() => run(() => acceptQuote(quote.id), "Devis accepté. Une mission à planifier est liée.")}
+        >
+          {quote.mission_id
+            ? "Le devis sera figé : il ne pourra plus changer d'état."
+            : clientStatus === "prospect"
+              ? "Le devis sera figé, cette fiche deviendra un client et une mission « à planifier » sera créée."
+              : "Le devis sera figé et une mission « à planifier » sera créée."}
+        </ConfirmPanel>
       )}
       {mode === "refuse" && (
-        <div ref={panelRef} role="group" aria-label="Confirmer le refus" className={dangerClass} onKeyDown={close}>
-          <p className="font-semibold">Marquer ce devis comme refusé ?</p>
-          <p className="text-sm text-muted-foreground">C&apos;est définitif : si le client revient, tu créeras un nouveau devis.</p>
-          {buttons("Oui, refusé", () => run(() => refuseQuote(quote.id), "Devis marqué comme refusé."))}
-        </div>
+        <ConfirmPanel label="Confirmer le refus" question="Marquer ce devis comme refusé ?" size="compact" confirmLabel="Oui, refusé" pendingLabel="…" pending={pending} onCancel={back} onConfirm={() => run(() => refuseQuote(quote.id), "Devis marqué comme refusé.")}>
+          C&apos;est définitif : si le client revient, tu créeras un nouveau devis.
+        </ConfirmPanel>
       )}
       {mode === "delete" && (
-        <div ref={panelRef} role="group" aria-label="Confirmer la suppression" className={dangerClass} onKeyDown={close}>
-          <p className="font-semibold">Supprimer ce brouillon ?</p>
-          <p className="text-sm text-muted-foreground">Cette action est définitive.</p>
-          {buttons("Oui, supprimer", () => run(() => deleteQuote(quote.id), "Brouillon supprimé."))}
-        </div>
+        <ConfirmPanel label="Confirmer la suppression" question="Supprimer ce brouillon ?" size="compact" pendingLabel="…" pending={pending} onCancel={back} onConfirm={() => run(() => deleteQuote(quote.id), "Brouillon supprimé.")}>
+          Cette action est définitive.
+        </ConfirmPanel>
       )}
       {message && (
         <p role="alert" className="text-sm text-destructive">
