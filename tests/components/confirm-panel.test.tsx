@@ -104,7 +104,7 @@ describe("ConfirmPanel", () => {
     assert.equal(screen.getByRole("alert").textContent, "Échec de la suppression.");
     cleanup();
     setup();
-    assert.equal(screen.queryByRole("alert"), null);
+    assert.ok(screen.queryByRole("alert") === null);
   });
 
   test("description : aria-describedby vers le texte quand il y a des enfants, absent sinon", () => {

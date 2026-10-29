@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { calendarInvoiceInputs, calendarSections, overdueText, upcomingEmptyText } from "./calendar-panel.ts";
+import { calendarInvoiceInputs, calendarSections, overdueText, upcomingEmptyText, viewChangeAnnouncement } from "./calendar-panel.ts";
 import type { CalendarLine } from "./deadlines.ts";
 
 const TODAY = "2026-10-28"; // mercredi
@@ -87,4 +87,12 @@ test("bornes des périodes : dimanche dans la semaine, lundi suivant non ; derni
   assert.deepEqual(keys(calendarSections(rows, [], "retard", TODAY).visible), ["hier"]);
   assert.deepEqual(keys(calendarSections(rows, [], "aujourd-hui", TODAY).visible), []);
   assert.ok(keys(calendarSections(rows, [], "toutes", TODAY).visible).includes("faite-auj"));
+});
+
+test("annonce d'un changement de vue : l'affichage d'abord, puis la période ; rien si rien n'a changé", () => {
+  const base = { view: "toutes", display: "liste" } as const;
+  assert.equal(viewChangeAnnouncement(base, base), null);
+  assert.equal(viewChangeAnnouncement(base, { ...base, display: "kanban" }), "Affichage : Kanban");
+  assert.equal(viewChangeAnnouncement(base, { ...base, view: "mois" }), "Période : Ce mois-ci");
+  assert.equal(viewChangeAnnouncement(base, { view: "semaine", display: "gantt" }), "Affichage : Gantt", "les deux changent : l'affichage prime");
 });

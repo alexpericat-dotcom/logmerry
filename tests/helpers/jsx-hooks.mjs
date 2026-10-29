@@ -10,6 +10,9 @@ import { resolve as appResolve } from "./ts-hooks.mjs";
 const STUBS = {
   "next/navigation": new URL("./stubs/next-navigation-client.ts", import.meta.url).href,
   "next/link": new URL("./stubs/next-link.tsx", import.meta.url).href,
+  // Server Actions : on teste les composants, pas les actions (testées dans tests/actions).
+  "@/app/(app)/calendrier/actions": new URL("./stubs/calendrier-actions.ts", import.meta.url).href,
+  "@/app/(app)/factures/payment-actions": new URL("./stubs/payment-actions.ts", import.meta.url).href,
 };
 
 /** Les imports faits depuis `node_modules` gardent la résolution de Node : ts-hooks.mjs résout tout paquet depuis la racine, ce qui donnerait à jsdom

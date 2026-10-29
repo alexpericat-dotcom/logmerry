@@ -20,7 +20,7 @@ describe("ErrorLine et useFormFields", () => {
     assert.equal(p?.textContent, "Saisis le titre.");
     assert.equal(p?.getAttribute("role"), null);
     rerender(<ErrorLine id="new-title" message={undefined} />);
-    assert.equal(container.querySelector("p"), null);
+    assert.ok(container.querySelector("p") === null);
   });
 
   test("field et errorLine d'un formulaire : mêmes attributs que les helpers recopiés (id, name, aria-invalid, aria-describedby, valeur par défaut)", () => {
@@ -63,7 +63,7 @@ describe("ErrorSummary", () => {
 
   test("sans erreur : rien ; avec erreurs : titre « N erreurs à corriger » et un lien par erreur", () => {
     const { container, rerender } = render(view({}, {}));
-    assert.equal(container.querySelector('[role="group"]'), null);
+    assert.ok(container.querySelector('[role="group"]') === null);
     rerender(view({}));
     assert.ok(screen.getByText("2 erreurs à corriger"));
     assert.deepEqual(screen.getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")]), [["Saisis le titre.", "#new-title"], ["Saisis la date.", "#new-due_on"]]);

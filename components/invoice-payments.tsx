@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { createPayment, deletePayment, updatePayment } from "@/app/(app)/factures/payment-actions";
 import { ConfirmPanel } from "@/components/confirm-panel";
+import { focusField } from "@/components/form-helpers";
 import { PaymentForm } from "@/components/payment-form";
 import { Button } from "@/components/ui/button";
 import type { PaymentRecord } from "@/lib/db/invoices";
@@ -102,9 +103,12 @@ export function InvoicePayments({ invoiceId, invoice, payments, balance, today }
   const deleted = useCallback(() => {
     setAnnounce("Encaissement supprimé.");
     // Sans défilement automatique : le navigateur alignerait le bouton tout en haut, sous l'en-tête fixe, où il ne reçoit plus les clics.
-    addRef.current?.focus({ preventScroll: true });
-    addRef.current?.scrollIntoView({ block: "center" });
-  }, []);
+    // Formulaire d'ajout ouvert : le bouton n'existe pas, le focus va au premier champ du formulaire (sinon il serait perdu avec la ligne supprimée).
+    if (addRef.current) {
+      addRef.current.focus({ preventScroll: true });
+      addRef.current.scrollIntoView({ block: "center" });
+    } else focusField(`new-${invoiceId}-amount_ht`);
+  }, [invoiceId]);
   const sorted = [...payments].sort((a, b) => a.received_on.localeCompare(b.received_on) || a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
   const sentence = `Encaissé ${formatCents(balance.paidCents)} sur ${formatCents(balance.dueCents)}${balance.basis === "ht" ? " hors taxe" : ""}`;
 
