@@ -155,8 +155,9 @@ export async function updateStory(id: string, _prev: StoryFormState, formData: F
   const statusUntouched = formData.get("initial_status") === values.status;
   return save(values, async (supabase, value) => {
     if (!isUuid(id)) return { outcome: "not-found" };
-    const { status: _status, ...withoutStatus } = value;
-    const { data, error } = await supabase.from("user_stories").update(statusUntouched ? withoutStatus : value).eq("id", id).select("id, mission_id");
+    const { status, ...withoutStatus } = value;
+    const patch = statusUntouched ? withoutStatus : { ...withoutStatus, status };
+    const { data, error } = await supabase.from("user_stories").update(patch).eq("id", id).select("id, mission_id");
     if (error) return { outcome: "error" };
     return data?.length ? { outcome: "saved", missionId: data[0].mission_id } : { outcome: "not-found" };
   });

@@ -5,25 +5,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { createClient } from "@supabase/supabase-js";
-
-import { testAccount } from "./helpers/accounts.ts";
+import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { clearHistory, listHistory, saveExchange } from "@/lib/db/history";
 
-const env = (name: string) => {
-  const v = process.env[name];
-  if (!v) throw new Error(`TEST NON CONCLUANT : variable manquante ${name}`);
-  return v;
-};
-
-async function signIn(who: "A" | "B") {
-  const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
-  const { email, password } = testAccount(who);
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(`TEST NON CONCLUANT : connexion ${who} impossible`);
-  return client;
-}
+const signIn = async (who: "A" | "B") => (await signInTestAccount(who, "TEST NON CONCLUANT : ")).client;
 
 test("vider l'historique supprime tout l'historique du compte B et laisse celui de A intact", async () => {
   const [a, b] = [await signIn("A"), await signIn("B")];

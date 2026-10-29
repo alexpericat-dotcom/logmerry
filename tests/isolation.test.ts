@@ -14,7 +14,7 @@ import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { testAccount } from "./helpers/accounts.ts";
+import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { setDeadlineDone } from "../lib/db/deadline-state.ts";
 import { listActiveSprintWork } from "../lib/db/sprint-work.ts";
@@ -35,18 +35,7 @@ const PREFIX = "[isolation-test]";
 const newClient = () =>
   createClient(URL, KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 
-async function signIn(who: "A" | "B") {
-  const { email, password } = testAccount(who);
-  const client = newClient();
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (error || !data.user) {
-    throw new Error(`Connexion impossible pour compte de test ${who} : ${error?.message ?? "pas d'utilisateur"}`);
-  }
-  return { client, userId: data.user.id };
-}
+const signIn = (who: "A" | "B") => signInTestAccount(who);
 
 type Account = Awaited<ReturnType<typeof signIn>>;
 

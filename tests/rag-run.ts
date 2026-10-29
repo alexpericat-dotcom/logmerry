@@ -15,9 +15,8 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 
-import { createClient } from "@supabase/supabase-js";
 
-import { testAccount } from "./helpers/accounts.ts";
+import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { askClaude } from "@/lib/ai/chat";
@@ -35,15 +34,7 @@ function env(name: string): string {
   return value;
 }
 
-async function signIn(who: "A" | "B") {
-  const { email, password } = testAccount(who);
-  const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(`Connexion impossible pour compte de test ${who} : ${error.message}`);
-  return client;
-}
+const signIn = async (who: "A" | "B") => (await signInTestAccount(who)).client;
 
 type Corpus = { notes: { key: string; type: string; title: string; body: string }[]; questions: RagCase[] };
 const corpus = JSON.parse(readFileSync("tests/rag-cases.json", "utf8")) as Corpus;
