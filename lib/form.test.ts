@@ -34,6 +34,7 @@ test("récapitulatif : une ligne par erreur, dans l'ordre des clés, identifiant
     { key: "due_on", id: "new-due_on", message: "Saisis la date." },
   ]);
   assert.deepEqual(errorSummaryItems({ name: "Saisis le nom." }), [{ key: "name", id: "name", message: "Saisis le nom." }]);
+  assert.deepEqual(errorSummaryItems({ "param:amount": "Valeur invalide." }, "rf-x", (k) => `rf-x-${k.startsWith("param:") ? `p_${k.slice(6)}` : k}`), [{ key: "param:amount", id: "rf-x-p_amount", message: "Valeur invalide." }]);
   assert.deepEqual(errorSummaryItems(undefined), []);
   assert.deepEqual(errorSummaryItems({}), []);
 });

@@ -17,6 +17,7 @@ import {
 } from "@/app/(app)/clients/quote-actions";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmPanel } from "@/components/confirm-panel";
+import { ErrorSummary, selectClass, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,8 +35,6 @@ export type QuoteItem = {
 };
 type MissionOption = { id: string; title: string; status: string };
 
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 const BADGE = {
   draft: { icon: FileText, variant: "outline" },
@@ -79,18 +78,7 @@ function QuoteForm({
   const values = state.values ?? initial;
   const e = state.errors ?? {};
   const id = (name: string) => `${idPrefix}-${name}`;
-  const field = (name: string, error: string | undefined) => ({
-    id: id(name),
-    name,
-    "aria-invalid": error ? (true as const) : undefined,
-    "aria-describedby": error ? `${id(name)}-error` : undefined,
-  });
-  const errorLine = (name: string, error: string | undefined) =>
-    error && (
-      <p id={`${id(name)}-error`} role="alert" className="text-sm text-destructive">
-        {error}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, e);
 
   return (
     <form
@@ -103,25 +91,26 @@ function QuoteForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
+      <ErrorSummary errors={e} prefix={idPrefix} token={state} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={id("amount_ht")}>Montant hors taxe, en € (obligatoire)</Label>
-          <Input {...field("amount_ht", e.amount_ht)} inputMode="decimal" defaultValue={values.amount_ht} aria-required="true" autoComplete="off" />
-          {errorLine("amount_ht", e.amount_ht)}
+          <Input {...field("amount_ht")} inputMode="decimal" defaultValue={values.amount_ht} aria-required="true" autoComplete="off" />
+          {errorLine("amount_ht")}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("tax")}>Taxe, en € (vide si inconnue)</Label>
-          <Input {...field("tax", e.tax)} inputMode="decimal" defaultValue={values.tax} autoComplete="off" />
-          {errorLine("tax", e.tax)}
+          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} autoComplete="off" />
+          {errorLine("tax")}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("sent_on")}>Date d&apos;envoi</Label>
-          <Input {...field("sent_on", e.sent_on)} type="date" defaultValue={values.sent_on} />
-          {errorLine("sent_on", e.sent_on)}
+          <Input {...field("sent_on")} type="date" defaultValue={values.sent_on} />
+          {errorLine("sent_on")}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("mission_id")}>Mission liée (facultatif)</Label>
-          <select {...field("mission_id", e.mission_id)} defaultValue={values.mission_id} className={selectClass}>
+          <select {...field("mission_id")} defaultValue={values.mission_id} className={selectClass}>
             <option value="">Aucune</option>
             {selectableMissions(missions, values.mission_id).map((m) => (
               <option key={m.id} value={m.id}>
@@ -129,7 +118,7 @@ function QuoteForm({
               </option>
             ))}
           </select>
-          {errorLine("mission_id", e.mission_id)}
+          {errorLine("mission_id")}
         </div>
       </div>
       {state.message && (

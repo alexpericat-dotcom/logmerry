@@ -40,8 +40,8 @@ export function focusField(id: string) {
  * Récapitulatif d'erreurs en tête d'un formulaire (EXPERIENCE.md) : titre, un lien par erreur (le texte est le message), le focus dessus après chaque
  * envoi refusé (`token` change à chaque réponse du serveur). Un lien met le focus sur son champ ; `reveal(clé)` ouvre d'abord un champ replié.
  */
-export function ErrorSummary({ errors, prefix, token, reveal }: { errors: Record<string, string | undefined> | undefined; prefix?: string; token: unknown; reveal?: (key: string) => void }) {
-  const items = errorSummaryItems(errors, prefix);
+export function ErrorSummary({ errors, prefix, token, reveal, idOf }: { errors: Record<string, string | undefined> | undefined; prefix?: string; token: unknown; reveal?: (key: string) => void; idOf?: (key: string) => string }) {
+  const items = errorSummaryItems(errors, prefix, idOf);
   const box = useRef<HTMLDivElement>(null);
   const count = items.length;
   useEffect(() => {

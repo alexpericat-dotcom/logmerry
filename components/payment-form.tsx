@@ -3,12 +3,14 @@
 import { useActionState, useEffect, useState } from "react";
 
 import type { PaymentFormState } from "@/app/(app)/factures/payment-actions";
+import { ErrorSummary, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { overpaymentIfSaved, type InvoiceAmounts, type PaymentAmounts, type PaymentInput } from "@/lib/domain/payments";
 import { formatCents } from "@/lib/domain/quotes";
+import { describedBy } from "@/lib/form";
 import { submitWith } from "@/lib/submit-with";
 
 export function PaymentForm({
@@ -44,18 +46,7 @@ export function PaymentForm({
   const over = overpaymentIfSaved(invoice, others, draft);
   const e = state.errors ?? {};
   const id = (name: string) => `${idPrefix}-${name}`;
-  const field = (name: keyof PaymentInput) => ({
-    id: id(name),
-    name,
-    "aria-invalid": e[name] ? (true as const) : undefined,
-    "aria-describedby": e[name] ? `${id(name)}-error` : undefined,
-  });
-  const errorLine = (name: keyof PaymentInput) =>
-    e[name] && (
-      <p id={`${id(name)}-error`} role="alert" className="text-sm text-destructive">
-        {e[name]}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, e);
 
   return (
     <form
@@ -68,6 +59,7 @@ export function PaymentForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
+      <ErrorSummary errors={e} prefix={idPrefix} token={state} />
       <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor={id("amount_ht")}>Montant hors taxe encaissé, en € (obligatoire)</Label>
@@ -76,7 +68,7 @@ export function PaymentForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("tax")}>Taxe encaissée, en € (vide si inconnue)</Label>
-          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={e.tax ? `${id("tax")}-error` : id("tax-help")} autoComplete="off" onChange={(ev) => setDraft((d) => ({ ...d, tax: ev.target.value }))} />
+          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={describedBy(e.tax && `${id("tax")}-error`, id("tax-help"))} autoComplete="off" onChange={(ev) => setDraft((d) => ({ ...d, tax: ev.target.value }))} />
           <p id={id("tax-help")} className="text-xs text-muted-foreground">
             Vide veut dire « inconnue », pas 0. Elle n&apos;est jamais répartie automatiquement.
           </p>

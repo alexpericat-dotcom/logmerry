@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 
 import type { InvoiceFormState } from "@/app/(app)/factures/actions";
+import { ErrorSummary, selectClassTruncate as selectClass, useFormFields, useMoreFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,13 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { linkableQuotes, type InvoiceInput } from "@/lib/domain/invoices";
 import { formatCents } from "@/lib/domain/quotes";
 import { formatDate } from "@/lib/format";
+import { describedBy } from "@/lib/form";
 import { submitWith } from "@/lib/submit-with";
 
 export type MissionChoice = { id: string; title: string; client_id: string; client_name: string };
 export type QuoteChoice = { id: string; client_id: string; amount_ht_cents: number; sent_on: string | null; status: string };
 
-const selectClass =
-  "flex h-9 truncate w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 export function InvoiceForm({
   idPrefix,
@@ -49,23 +49,12 @@ export function InvoiceForm({
   // Le devis proposé dépend de la mission choisie : ces deux menus sont contrôlés (React 19 vide un formulaire après une action).
   const [missionId, setMissionId] = useState(values.mission_id);
   const [quoteId, setQuoteId] = useState(values.quote_id);
-  const [more, setMore] = useState(!!(values.issued_on || values.reference || values.note));
-  const showMore = more || !!(e.issued_on || e.reference || e.note); // une erreur ne reste jamais cachée
+  // « Plus de champs » : une erreur qui arrive dans un champ replié l'ouvre ; le bouton peut ensuite le refermer.
+  const [showMore, setMore] = useMoreFields(!!(values.issued_on || values.reference || values.note), state.errors, !!(e.issued_on || e.reference || e.note));
   const clientId = missions.find((m) => m.id === missionId)?.client_id;
   const options = clientId ? linkableQuotes(quotes, clientId) : [];
   const id = (name: string) => `${idPrefix}-${name}`;
-  const field = (name: keyof InvoiceInput) => ({
-    id: id(name),
-    name,
-    "aria-invalid": e[name] ? (true as const) : undefined,
-    "aria-describedby": e[name] ? `${id(name)}-error` : undefined,
-  });
-  const errorLine = (name: keyof InvoiceInput) =>
-    e[name] && (
-      <p id={`${id(name)}-error`} role="alert" className="text-sm text-destructive">
-        {e[name]}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, e);
 
   return (
     <form
@@ -78,6 +67,7 @@ export function InvoiceForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
+      <ErrorSummary errors={e} prefix={idPrefix} token={state} reveal={() => setMore(true)} />
       <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("mission_id")}>Mission (obligatoire)</Label>
@@ -111,7 +101,7 @@ export function InvoiceForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("tax")}>Taxe, en € (vide si inconnue)</Label>
-          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={e.tax ? `${id("tax")}-error` : id("tax-help")} autoComplete="off" />
+          <Input {...field("tax")} inputMode="decimal" defaultValue={values.tax} aria-describedby={describedBy(e.tax && `${id("tax")}-error`, id("tax-help"))} autoComplete="off" />
           <p id={id("tax-help")} className="text-xs text-muted-foreground">
             Vide veut dire « inconnue », pas 0.
           </p>

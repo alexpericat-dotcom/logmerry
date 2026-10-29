@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 
 import type { ContactFormState } from "@/app/(app)/clients/contact-actions";
+import { ErrorSummary, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,26 +58,7 @@ export function ContactForm({
     if (state.ok) onDone();
   }, [state.ok, onDone]);
 
-  const field = (key: keyof Values) => {
-    const id = `${idPrefix}-${key}`;
-    return {
-      id,
-      name: key,
-      defaultValue: values[key],
-      "aria-invalid": errors[key] ? (true as const) : undefined,
-      "aria-describedby": errors[key] ? `${id}-error` : undefined,
-    };
-  };
-  const errorLine = (key: keyof Values) =>
-    errors[key] && (
-      <p
-        id={`${idPrefix}-${key}-error`}
-        role="alert"
-        className="text-sm text-destructive"
-      >
-        {errors[key]}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, errors, values);
 
   return (
     <form
@@ -84,6 +66,7 @@ export function ContactForm({
       noValidate
       className="flex max-w-2xl flex-col gap-4 rounded-md border border-primary/30 bg-primary/10 p-4"
     >
+      <ErrorSummary errors={errors} prefix={idPrefix} token={state} />
       <div className="grid gap-2">
         <Label htmlFor={`${idPrefix}-name`}>Nom (obligatoire)</Label>
         <Input {...field("name")} aria-required="true" autoComplete="off" />

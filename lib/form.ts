@@ -20,8 +20,13 @@ export function fieldProps(prefix: string | undefined, key: string, error: strin
 export const describedBy = (...ids: (string | false | null | undefined)[]) => ids.filter(Boolean).join(" ") || undefined;
 
 /** Les erreurs de champ à lister dans le récapitulatif, dans l'ordre des clés ; les messages vides sont ignorés. */
-export function errorSummaryItems(errors: Record<string, string | undefined> | undefined, prefix?: string): { key: string; id: string; message: string }[] {
-  return Object.entries(errors ?? {}).flatMap(([key, message]) => (message ? [{ key, id: fieldId(prefix, key), message }] : []));
+export function errorSummaryItems(
+  errors: Record<string, string | undefined> | undefined,
+  prefix?: string,
+  /** Identifiant du champ d'une clé d'erreur quand il diffère de `${préfixe}-${clé}` (ex. les paramètres d'une règle). */
+  idOf?: (key: string) => string,
+): { key: string; id: string; message: string }[] {
+  return Object.entries(errors ?? {}).flatMap(([key, message]) => (message ? [{ key, id: idOf ? idOf(key) : fieldId(prefix, key), message }] : []));
 }
 
 /** Titre du récapitulatif : « 1 erreur à corriger », « 2 erreurs à corriger ». */
