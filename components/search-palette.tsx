@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { CLIENT_ORIGIN_LABELS } from "@/lib/domain/clients";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
-import { GROUP_LABELS, enterAction, firstOfGroup as isFirstOfGroup, isPaletteShortcut, itemHref, nextActive, paletteItems, paletteNav, paletteOptionId, statusText, type PaletteItem } from "@/lib/domain/palette";
+import { GROUP_LABELS, enterAction, isPaletteShortcut, itemHref, nextActive, paletteItems, paletteNav, paletteOptionId, startsGroup, statusText, type PaletteItem } from "@/lib/domain/palette";
 import { SEARCH_MAX, normalizeQuery } from "@/lib/domain/search";
 import { cn } from "@/lib/utils";
 
@@ -186,7 +186,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           {shown.map((item, i) => {
             const index = hasAssistant ? i + 1 : i;
             const group = GROUP_LABELS[item.kind];
-            const firstOfGroup = isFirstOfGroup(shown, i);
+            const firstOfGroup = startsGroup(shown, i);
             return (
               <Fragment key={paletteOptionId(item)}>
                 {firstOfGroup && (

@@ -2,7 +2,7 @@
 title: 'Extraction de la logique de la palette ⌘K et du panneau du calendrier'
 type: 'refactor'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'a60d3dc2dba2815f8ee4b338e31b5651eb98bd12'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -59,13 +59,13 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/domain/palette.ts` -- `isPaletteShortcut`, `paletteItems`, `paletteOptionId`, `paletteNav`, `nextActive`, `enterAction`, `statusText`, `itemHref`, `firstOfGroup`, `GROUP_LABELS` -- code déplacé tel quel
-- [ ] `lib/domain/palette.test.ts` -- une ligne de test par ligne de la matrice -- comportement figé
-- [ ] `components/search-palette.tsx` -- appeler ces fonctions -- même rendu
-- [ ] `lib/domain/calendar-panel.ts` -- `calendarSections`, `overdueText`, `upcomingEmptyText`, `calendarInvoiceInputs` -- code déplacé tel quel
-- [ ] `lib/domain/calendar-panel.test.ts` -- une ligne de test par ligne de la matrice
-- [ ] `components/deadlines-panel.tsx`, `app/(app)/calendrier/page.tsx` -- appeler ces fonctions -- même rendu
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les deux éléments
+- [x] `lib/domain/palette.ts` -- `isPaletteShortcut`, `paletteItems`, `paletteOptionId`, `paletteNav`, `nextActive`, `enterAction`, `statusText`, `itemHref`, `firstOfGroup`, `GROUP_LABELS` -- code déplacé tel quel
+- [x] `lib/domain/palette.test.ts` -- une ligne de test par ligne de la matrice -- comportement figé
+- [x] `components/search-palette.tsx` -- appeler ces fonctions -- même rendu
+- [x] `lib/domain/calendar-panel.ts` -- `calendarSections`, `overdueText`, `upcomingEmptyText`, `calendarInvoiceInputs` -- code déplacé tel quel
+- [x] `lib/domain/calendar-panel.test.ts` -- une ligne de test par ligne de la matrice
+- [x] `components/deadlines-panel.tsx`, `app/(app)/calendrier/page.tsx` -- appeler ces fonctions -- même rendu
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les deux éléments
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
@@ -75,9 +75,27 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `lib/domain/palette.ts` (génériques `PaletteItem<N, C, M>`, `paletteNav`, `nextActive`, `enterAction`, `statusText`, `itemHref`, `startsGroup`, `isPaletteShortcut`) et `lib/domain/calendar-panel.ts` (`calendarSections`, `overdueText`, `upcomingEmptyText`, `calendarInvoiceInputs`) ; `search-palette.tsx`, `deadlines-panel.tsx` et `calendrier/page.tsx` les appellent. Écart : `firstOfGroup` renommée `startsGroup` (pas d'alias dans le composant). Après relecture : 18 tests.
+- Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre) ; 16 mutations détectées (liste dans le journal). Non couvert : le câblage des composants (quel résultat va dans quelle section), contrôle d'Alex.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Bornes des périodes (dimanche, lundi suivant, dernier jour du mois, « Retard » le jour même, faite aujourd'hui) non testées | medium | patch : test ajouté |
+| 2 | Alias `firstOfGroup as isFirstOfGroup` puis variable locale du même nom | low | patch : export renommé `startsGroup` |
+| 3 | `e.key` indéfini fait lever `isPaletteShortcut` (autoremplissage) | low | defer : comportement d'avant, la spec interdit d'y toucher ; noté dans la dette |
+| 4 | Spec périmée, relecture non consignée, espace parasite dans un test | low | patch |
+| 5 | Câblage des composants non testé (sections et lignes permutables) | low | defer : déjà couvert par la dette « pas de test de composant » ; contrôle d'Alex |
+| 6 | Ligne de dette retirée en entier (parenthèses historiques) | low | rejeté : tout y était résolu, l'historique est dans le journal |
+| 7 | Mutations non rejouables | low | rejeté : listées au journal |
+| 8 | Ligne payée dans le compteur « en retard » | false | `invoiceLines` ignore les factures payées (`status === "paid"`) |
+| 9 | Gardes pour `firstOfGroup` hors liste, `active` négatif, vue inconnue | low | rejeté : inatteignables (appel dans la boucle, index borné par les flèches, vue analysée par `parseDeadlineView`) |
+| 10 | `datedLines` filtrées trois fois, casts, onze champs retournés, type d'entrée lâche | low | rejeté : cosmétique ; code déplacé tel quel |
 
 ## Verification
 

@@ -10,7 +10,7 @@ export const paletteOptionId = (item: { kind: string; id: string }) => `search-$
 export const itemHref = (item: { kind: Kind; id: string }) => `/${ROUTES[item.kind]}/${item.id}`;
 
 /** Titre de groupe : seulement à la première ligne d'un type. */
-export const firstOfGroup = (shown: { kind: string }[], i: number) => i === 0 || shown[i - 1].kind !== shown[i].kind;
+export const startsGroup = (shown: { kind: string }[], i: number) => i === 0 || shown[i - 1].kind !== shown[i].kind;
 
 /** ⌘K ou Ctrl+K (majuscule comprise), hors saisie en composition (IME). */
 export const isPaletteShortcut = (e: { isComposing: boolean; key: string; metaKey: boolean; ctrlKey: boolean }) => !e.isComposing && e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);

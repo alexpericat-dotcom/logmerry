@@ -9,7 +9,7 @@ const dl = (id: string, due_on: string, done = false) => ({ id, due_on, created_
 const line = (key: string, due_on: string | null): CalendarLine => ({ kind: due_on ? "invoice_issue" : "to_confirm", key, title: key, due_on, href: "/factures", detail: "" });
 const keys = (rows: { id?: string; key?: string }[]) => rows.map((r) => r.id ?? r.key);
 
-const DEADLINES = [dl("retard", "2026-10-20"), dl("auj", "2026-10-28"), dl("sem", "2026-10-30"), dl("mois", "2026-11-02" ), dl("loin", "2027-02-01"), dl("faite", "2026-10-10", true)];
+const DEADLINES = [dl("retard", "2026-10-20"), dl("auj", "2026-10-28"), dl("sem", "2026-10-30"), dl("mois", "2026-11-02"), dl("loin", "2027-02-01"), dl("faite", "2026-10-10", true)];
 const LINES = [line("f-retard", "2026-10-15"), line("f-auj", "2026-10-28"), line("f-loin", "2026-12-01"), line("confirmer", null)];
 
 test("vue « Toutes » : tout est visible, les lignes sans date (« À confirmer ») aussi", () => {
@@ -78,4 +78,13 @@ test("factures de la page : forme attendue par invoiceLines, statut par le solde
   assert.deepEqual(out[0], { id: "1", reference: "F-1", issued_on: null, due_on: "2026-10-20", status: "unpaid", mission: { title: "M1" } });
   assert.ok(!("payments" in out[0]) && !("amount_ht_cents" in out[0]));
   assert.deepEqual(calendarInvoiceInputs([]), []);
+});
+
+test("bornes des périodes : dimanche dans la semaine, lundi suivant non ; dernier jour du mois dans le mois ; « Retard » exclut le jour même ; faite aujourd'hui seulement en Toutes", () => {
+  const rows = [dl("dim", "2026-11-01"), dl("lun", "2026-11-02"), dl("fin-mois", "2026-10-31"), dl("hier", "2026-10-27"), dl("faite-auj", "2026-10-28", true)];
+  assert.deepEqual(keys(calendarSections(rows, [], "semaine", TODAY).visible), ["dim", "fin-mois"]);
+  assert.deepEqual(keys(calendarSections(rows, [], "mois", TODAY).visible), ["fin-mois"]);
+  assert.deepEqual(keys(calendarSections(rows, [], "retard", TODAY).visible), ["hier"]);
+  assert.deepEqual(keys(calendarSections(rows, [], "aujourd-hui", TODAY).visible), []);
+  assert.ok(keys(calendarSections(rows, [], "toutes", TODAY).visible).includes("faite-auj"));
 });

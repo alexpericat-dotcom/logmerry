@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ASSISTANT_OPTION_ID, enterAction, firstOfGroup, isPaletteShortcut, itemHref, nextActive, paletteItems, paletteNav, paletteOptionId, statusText } from "./palette.ts";
+import { ASSISTANT_OPTION_ID, enterAction, isPaletteShortcut, itemHref, nextActive, paletteItems, paletteNav, paletteOptionId, startsGroup, statusText } from "./palette.ts";
 
 const note = (id: string) => ({ id, title: `Note ${id}` });
 const client = (id: string) => ({ id, name: `Fiche ${id}` });
@@ -81,6 +81,6 @@ test("adresse et groupes : /notes, /clients, /missions ; titre de groupe à la p
   assert.equal(itemHref({ kind: "note", id: "n1" }), "/notes/n1");
   assert.equal(itemHref({ kind: "client", id: "c1" }), "/clients/c1");
   assert.equal(itemHref({ kind: "mission", id: "m1" }), "/missions/m1");
-  assert.deepEqual(ALL.map((_, i) => firstOfGroup(ALL, i)), [true, false, true, true]);
+  assert.deepEqual(ALL.map((_, i) => startsGroup(ALL, i)), [true, false, true, true]);
   assert.equal(paletteOptionId({ kind: "client", id: "c1" }), "search-client-c1");
 });
