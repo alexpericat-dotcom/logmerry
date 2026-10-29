@@ -142,3 +142,18 @@ export function matchMissions<T extends { id: string; title: string; client: { n
     .slice(0, limit)
     .map(({ m }) => m);
 }
+
+/** Missions qu'on peut lier à un devis : les missions ouvertes (à planifier, en cours) et celle qui est déjà liée (même terminée ou annulée : elle reste visible et sélectionnée). */
+export function selectableMissions<M extends { id: string; status: string }>(missions: M[], currentId: string): M[] {
+  return missions.filter((m) => m.status === "planned" || m.status === "in_progress" || m.id === currentId);
+}
+
+/** Phrase de la confirmation de suppression d'une mission : ce qui part avec elle (stories, sprints), au singulier ou au pluriel ; `null` s'il n'y a rien. */
+export function missionDeletionNotice(stories: number, sprints: number): string | null {
+  const parts = [
+    ...(stories > 0 ? [`${stories} user ${stories > 1 ? "stories" : "story"}`] : []),
+    ...(sprints > 0 ? [`${sprints} sprint${sprints > 1 ? "s" : ""}`] : []),
+  ];
+  if (!parts.length) return null;
+  return `${stories > 0 ? "Son backlog sera supprimé aussi" : "Ses sprints seront supprimés aussi"} : ${parts.join(", ")}.`;
+}
