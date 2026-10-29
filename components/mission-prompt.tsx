@@ -13,7 +13,7 @@ import { CONTEXT_LEVELS, CONTEXT_LEVEL_LABELS, type ContextLevel } from "@/lib/d
 import { OBJECTIVE_MAX } from "@/lib/domain/prompt-generation";
 
 /**
- * Panneau « Générer un prompt avec l'IA » d'une mission : contenu, assistant visé et objectif en entrée, prompt modifiable en sortie.
+ * Panneau « Préparer un prompt pour un autre assistant » d'une mission : contenu, assistant visé et objectif en entrée, prompt modifiable en sortie.
  * Claude rédige la consigne, le code ajoute le contexte tel quel. Rien n'est enregistré ; fermer le panneau oublie le prompt.
  */
 export function MissionPrompt({ missionId, hasClient }: { missionId: string; hasClient: boolean }) {
@@ -111,7 +111,7 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
     return (
       <Button ref={openButton} type="button" variant="outline" className="self-start" onClick={() => setOpen(true)}>
         <Sparkles aria-hidden="true" />
-        Générer un prompt avec l&apos;IA
+        Préparer un prompt pour un autre assistant
       </Button>
     );
   }
@@ -133,7 +133,7 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
       <div className="flex items-start justify-between gap-3">
         <h3 id={`${id}-title`} className="flex items-center gap-2 font-semibold">
           <Sparkles size={16} aria-hidden="true" />
-          Générer un prompt avec l&apos;IA
+          Préparer un prompt pour un autre assistant
         </h3>
         <Button type="button" variant="ghost" size="icon" className="max-md:size-11" onClick={closePanel} aria-label={pending ? "Annuler et fermer le panneau" : "Fermer le panneau"}>
           <X size={16} aria-hidden="true" />
