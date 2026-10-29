@@ -153,8 +153,9 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
       </div>
       <p className="text-xs text-muted-foreground">Le trait gris marque aujourd&apos;hui. Clique sur un jalon d&apos;échéance pour ouvrir sa fiche : modifier, cocher ou supprimer.</p>
       {selected && (
-        // Échap ferme la fiche (le focus revient au jalon) ; une confirmation ouverte la capte avant (`ConfirmPanel` : `preventDefault`), donc la fiche reste.
-        <section id="gantt-record" aria-labelledby="gantt-record-title" className="flex max-w-3xl flex-col gap-2" onKeyDown={(e) => e.key === "Escape" && !e.defaultPrevented && close()}>
+        // Échap ferme la fiche (le focus revient au jalon) ; une confirmation ou une modification ouverte la capte avant (`preventDefault`), donc la fiche reste. Pendant un envoi elles
+        // ne la captent plus (bouton désactivé) : on n'écarte pas la fiche sous les yeux d'une action en cours. Pas de fermeture non plus pendant une composition (IME).
+        <section id="gantt-record" aria-labelledby="gantt-record-title" className="flex max-w-3xl flex-col gap-2" onKeyDown={(e) => e.key === "Escape" && !e.defaultPrevented && !e.nativeEvent.isComposing && !e.currentTarget.querySelector('[aria-disabled="true"], :disabled') && close()}>
           <div className="flex items-center justify-between gap-2">
             <h3 id="gantt-record-title" tabIndex={-1} className="text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
               Fiche de l&apos;échéance

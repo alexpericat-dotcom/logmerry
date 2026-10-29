@@ -89,10 +89,10 @@ test("bornes des périodes : dimanche dans la semaine, lundi suivant non ; derni
   assert.ok(keys(calendarSections(rows, [], "toutes", TODAY).visible).includes("faite-auj"));
 });
 
-test("annonce d'un changement de vue : l'affichage d'abord, puis la période ; rien si rien n'a changé", () => {
+test("annonce d'un changement de vue : affichage, période, ou les deux ; rien si rien n'a changé", () => {
   const base = { view: "toutes", display: "liste" } as const;
   assert.equal(viewChangeAnnouncement(base, base), null);
   assert.equal(viewChangeAnnouncement(base, { ...base, display: "kanban" }), "Affichage : Kanban");
   assert.equal(viewChangeAnnouncement(base, { ...base, view: "mois" }), "Période : Ce mois-ci");
-  assert.equal(viewChangeAnnouncement(base, { view: "semaine", display: "gantt" }), "Affichage : Gantt", "les deux changent : l'affichage prime");
+  assert.equal(viewChangeAnnouncement(base, { view: "semaine", display: "gantt" }), "Affichage : Gantt. Période : Cette semaine", "les deux changent : les deux sont annoncées");
 });

@@ -43,9 +43,11 @@ export function calendarInvoiceInputs<I extends InvoiceForLines>(invoices: I[]):
   return invoices.map((i) => ({ id: i.id, reference: i.reference, issued_on: i.issued_on, due_on: i.due_on, status: invoiceBalance(i, i.payments).status, mission: i.mission }));
 }
 
-/** Annonce vocale d'un changement d'affichage ou de période du calendrier ; `null` si rien n'a changé (jamais d'annonce au premier rendu). */
+/** Annonce vocale d'un changement d'affichage ou de période du calendrier ; `null` si rien n'a changé (jamais d'annonce au premier rendu) ; les deux changent ensemble (bouton précédent) : les deux sont dites. */
 export function viewChangeAnnouncement(prev: { view: DeadlineView; display: Display }, next: { view: DeadlineView; display: Display }): string | null {
-  if (next.display !== prev.display) return `Affichage : ${DISPLAY_LABELS[next.display]}`;
-  if (next.view !== prev.view) return `Période : ${DEADLINE_VIEW_LABELS[next.view]}`;
-  return null;
+  const parts = [
+    ...(next.display !== prev.display ? [`Affichage : ${DISPLAY_LABELS[next.display]}`] : []),
+    ...(next.view !== prev.view ? [`Période : ${DEADLINE_VIEW_LABELS[next.view]}`] : []),
+  ];
+  return parts.length ? parts.join(". ") : null;
 }

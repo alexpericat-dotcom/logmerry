@@ -62,4 +62,8 @@ route: 'dispatch'
 
 ## Review Triage Log
 
-(à remplir après les relecteurs)
+(29 octobre 2026, 3 relecteurs, 19 constats, aucun bloquant)
+
+Corrigés : Échap pendant un envoi (la confirmation et le formulaire ne le captent plus : la fiche ne se ferme pas tant qu'un bouton de la fiche est désactivé), pas de fermeture pendant une composition IME ; annonce quand l'affichage ET la période changent (bouton précédent) : les deux sont dites ; tests : Échap dans une confirmation (la fiche reste), classes de 44 px et variable de niveau, composant `DeadlinesPanel` (rien au premier rendu ni à vue identique, annonces d'affichage, de période et des deux).
+Reportés (dette) : Échap pendant un envoi non testé (la doublure des actions réussit tout de suite) ; Échap ne fait rien quand la fiche est ouverte et le focus revenu sur le jalon ; un message identique de part et d'autre d'une action intercalée peut ne pas être relu ; suppression d'un encaissement pendant la modification d'un autre : le focus saute au bouton « Ajouter » (comme avant) ; `:disabled` détecte un envoi en cours par le bouton désactivé (heuristique).
+Rejetés : région vocale non vidée après l'annonce (sans effet) ; test « Échap sans fiche » faible mais inoffensif.
