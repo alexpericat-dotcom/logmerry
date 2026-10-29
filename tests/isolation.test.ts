@@ -382,7 +382,7 @@ describe("isolation des notes entre deux comptes fictifs", () => {
 
   test("historique : chacun ne voit que le sien ; une citation ne peut viser que mes notes et mes extraits ; rien ne se modifie ; suppression de la note : citation orpheline", async () => {
     const msg = (client: typeof a.client, role: "user" | "assistant", content: string) =>
-      client.from("messages").insert({ role, content }).select("id").single();
+      client.from("messages").insert({ role, content }).select("id, created_at").single();
     const mA = await msg(a.client, "assistant", `${PREFIX} réponse de A`);
     assert.ifError(mA.error);
     const mB = await msg(b.client, "assistant", `${PREFIX} réponse de B`);
@@ -426,7 +426,7 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     assert.ifError(read.error);
     const history = toHistory(read.data as unknown as MessageRow[]);
     assert.deepEqual(history.map((m) => m.text), [], "un message de réponse seul n'ouvre pas l'historique (pas de question avant)");
-    const withQuestion = await a.client.from("messages").insert({ role: "user", content: `${PREFIX} question de A`, created_at: new Date(Date.now() - 1000).toISOString() });
+    const withQuestion = await a.client.from("messages").insert({ role: "user", content: `${PREFIX} question de A`, created_at: new Date(Date.parse(mA.data!.created_at) - 1000).toISOString() }); // une seconde avant la réponse, selon l'horloge de la BASE (jamais l'horloge locale)
     assert.ifError(withQuestion.error);
     const read2 = await a.client.from("messages").select(JOINED).like("content", `${PREFIX}%`).order("created_at", { ascending: false });
     assert.ifError(read2.error);
