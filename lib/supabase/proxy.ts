@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   // La première page est la connexion : `/` redirige ici (avant tout rendu) vers le cockpit si on est connecté, vers la connexion sinon.
-  // Hors `/login` et `/auth`, sans session : connexion. La décision est dans `accessDecision` (testée).
+  // Hors `/auth` et `/auth/…`, sans session : connexion. La décision est dans `accessDecision` (testée).
   const pathname = request.nextUrl.pathname;
   const decision = accessDecision(pathname, !!user);
   if (decision.action === "redirect") {

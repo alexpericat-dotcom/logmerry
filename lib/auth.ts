@@ -9,13 +9,17 @@ export function safeNext(next: string | null | undefined): string {
 
 export type AccessDecision = { action: "next" } | { action: "redirect"; to: string };
 
+/** Pages d'authentification, publiques : `/auth` et tout ce qui est sous `/auth/`. */
+const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
+
 /**
- * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; hors `/login` et `/auth`, sans session, on est renvoyé à la connexion ;
- * le reste passe. Le chemin est celui de l'adresse, sans la requête.
+ * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors `/auth` (le chemin exact) et `/auth/…`
+ * est renvoyé à la connexion (`/authors` ne l'est pas : un préfixe sans barre n'est pas public) ; le reste passe.
+ * Le chemin est celui de l'adresse, sans la requête.
  */
 export function accessDecision(pathname: string, signedIn: boolean): AccessDecision {
   if (pathname === "/") return { action: "redirect", to: signedIn ? "/aujourd-hui" : "/auth/login" };
-  if (!signedIn && !pathname.startsWith("/login") && !pathname.startsWith("/auth")) return { action: "redirect", to: "/auth/login" };
+  if (!signedIn && !isAuthPath(pathname)) return { action: "redirect", to: "/auth/login" };
   return { action: "next" };
 }
 
