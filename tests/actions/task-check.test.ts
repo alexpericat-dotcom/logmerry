@@ -21,6 +21,13 @@ test("coche valide : upsert dans task_checks, cockpit revalidé", async () => {
   assert.deepEqual(fake.revalidated, ["/aujourd-hui"]);
 });
 
+test("règle 8 (mission à facturer) : la coche porte la mission, comme la règle 7", async () => {
+  assert.deepEqual(await checkTask({ rule: 8, sourceId: UUID }, true), {});
+  const [op] = fake.on("task_checks", "upsert");
+  assert.equal((op.payload as { rule_no: number }).rule_no, 8);
+  assert.equal((op.payload as { source_id: string }).source_id, UUID);
+});
+
 test("décocher : delete filtré par règle, jour et source (jamais tout supprimer)", async () => {
   await checkTask({ rule: 5, sourceId: UUID }, false);
   const [op] = fake.on("task_checks", "delete");
@@ -38,7 +45,7 @@ test("plafond (règle 3) : décocher filtre aussi sur le plafond et le seuil", a
 });
 
 test("cible invalide : aucune écriture, message d'erreur", async () => {
-  const invalid: CheckTarget[] = [{ rule: 2, sourceId: "pas-un-uuid" }, { rule: 2 }, { rule: 3, ceilingKey: "inconnu", threshold: 90 }, { rule: 9 as 2 }];
+  const invalid: CheckTarget[] = [{ rule: 2, sourceId: "pas-un-uuid" }, { rule: 2 }, { rule: 3, ceilingKey: "inconnu", threshold: 90 }, { rule: 8 }, { rule: 8, sourceId: "pas-un-uuid" }, { rule: 9 as 2 }];
   for (const target of invalid) {
     const r = await checkTask(target, true);
     assert.equal(r.message, "Enregistrement impossible. Réessaie.");
