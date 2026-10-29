@@ -64,3 +64,7 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Adresse et téléphone sur la fiche client elle-même (entreprise), à saisir avec les factures ; remarque libre sur une fiche ; « contact principal » unique par fiche (demande une règle de base pour l'unicité).
 - Fonction `delete_rule_version` qui rouvre la version précédente ; action « corriger la source » d'une règle.
 - `fold` (pliage des accents) est dans `lib/domain/clients.ts`, sa place serait `lib/domain/search.ts` ; il ne plie pas « œ », « ß », « ł » ; échec de la palette ⌘K tout ou rien (un échec partiel avec message est à décider pour fiches, contacts et missions ensemble) ; ordre des titres identiques non spécifié.
+
+- source_spec: none
+  summary: Extraire et tester l'index de la palette ⌘K (`components/search-palette.tsx` : assemblage des lignes, navigation au clavier, texte d'état, raccourci) et la composition du panneau du calendrier (`components/deadlines-panel.tsx` : filtrage par vue, lignes datées ou non, compteur « en retard », découpage retard / à venir ; mappage facture → ligne dans `app/(app)/calendrier/page.tsx`).
+  evidence: scindé de la spec d'accès (garde du proxy et route `/auth/confirm`, 29 octobre 2026) : deux PR indépendantes ; même méthode que `lib/domain/cockpit/assembly.ts`, avec contrôle visuel d'Alex.
