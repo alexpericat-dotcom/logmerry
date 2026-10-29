@@ -73,6 +73,16 @@ test("application : champs cochés seulement ; refus si un champ coché a chang�
   assert.equal(mergeReview(base, base, "todo", { title: 42 as unknown as string }).ok, false); // non textuel : ignoré, donc rien de coché
 });
 
+test("application : une erreur d'un champ NON coché (déjà en base) ne bloque pas et n'est pas affichée ; celle d'un champ coché l'est, avec son message", () => {
+  const base = toFieldValues(story);
+  const dirty = { ...base, role: "x".repeat(500), title: "" }; // état invalide déjà en base (ancien enregistrement)
+  assert.deepEqual(mergeReview(dirty, dirty, "todo", { benefit: "gagner du temps" }), { ok: true, fields: { benefit: "gagner du temps" } });
+  const bad = mergeReview(dirty, dirty, "todo", { role: "y".repeat(500) });
+  assert.equal(bad.ok, false);
+  if (!bad.ok) assert.match(bad.error, /rôle/i); // le message nomme le champ coché, pas le titre vide
+  assert.equal(mergeReview(dirty, dirty, "todo", { title: "" }).ok, false); // titre coché et vide : refusé
+});
+
 test("seuils des nombres : 9 accepté, 10 et décimal refusés, « 1 200 » égal à « 1200 » ; précision, note et nom du client sont des sources", () => {
   const pick = (extra: string, src: string[] = sources) => verifyReview(raw({ acceptance_criteria: `- ${extra}` }), story, src).changes.length;
   assert.equal(pick("gérer 9 inscrits"), 1);
