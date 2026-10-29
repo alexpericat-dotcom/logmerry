@@ -24,7 +24,7 @@ describe("DeadlineForm", () => {
     const { container } = render(form(async () => ({ errors: { title: "Saisis le titre.", due_on: "Saisis la date." }, values: EMPTY })));
     await submit(user);
     await waitFor(() => assert.ok(screen.getByText("2 erreurs à corriger")));
-    assert.equal(document.activeElement, screen.getByRole("group"));
+    assert.ok(document.activeElement === screen.getByRole("group"));
     const title = container.querySelector("#d-title");
     assert.deepEqual([title?.getAttribute("aria-invalid"), title?.getAttribute("aria-describedby")], ["true", "d-title-error"]);
     assert.equal(container.querySelector("#d-title-error")?.getAttribute("role"), null);

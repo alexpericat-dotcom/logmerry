@@ -31,7 +31,7 @@ describe("ClientForm", () => {
     const { container } = render(<ClientForm action={refuse} submitLabel="Créer" />);
     await user.click(screen.getByRole("button", { name: "Créer" }));
     await waitFor(() => assert.ok(screen.getByText("2 erreurs à corriger")));
-    assert.equal(document.activeElement, screen.getByRole("group"));
+    assert.ok(document.activeElement === screen.getByRole("group"));
     const name = container.querySelector("#name");
     assert.deepEqual([name?.getAttribute("aria-invalid"), name?.getAttribute("aria-describedby")], ["true", "name-error"]);
     const line = container.querySelector("#name-error");

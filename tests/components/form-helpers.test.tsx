@@ -74,10 +74,10 @@ describe("ErrorSummary", () => {
   test("le focus va au récapitulatif à chaque envoi refusé (nouveau `token`), même avec les mêmes erreurs", () => {
     const { rerender } = render(view("a"));
     const box = screen.getByRole("group");
-    assert.equal(document.activeElement, box);
+    assert.ok(document.activeElement === box);
     (document.activeElement as HTMLElement).blur();
     rerender(view("b"));
-    assert.equal(document.activeElement, screen.getByRole("group"));
+    assert.ok(document.activeElement === screen.getByRole("group"));
   });
 
   test("un lien met le focus sur son champ et ne change pas l'adresse", async () => {
