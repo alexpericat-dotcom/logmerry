@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { indexNote } from "@/app/(app)/notes/indexing";
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage, type QuotaResult } from "@/lib/domain/ai-quota";
 import { pickToIndex } from "@/lib/domain/index-batch";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,12 +37,18 @@ export async function indexAllNotes(): Promise<IndexAllState> {
         const { todo, remaining } = pickToIndex(data);
         let indexed = 0;
         let failed = 0;
+        let refused: QuotaResult = "ok";
+        let done = 0;
         for (const note of todo) {
+          // Un appel au fournisseur par note : une unité de plafond par note, et on s'arrête au premier refus (les notes restantes restent « en attente »).
+          refused = await consumeAiQuota(supabase);
+          if (refused !== "ok") break;
           // Une par une : ménage le fournisseur et garde l'ordre ; `indexNote` ne lève jamais.
           if ((await indexNote(supabase, note.id, note)) === "indexed") indexed++;
           else failed++;
+          done++;
         }
-        state = { indexed, failed, remaining };
+        state = { indexed, failed, remaining: remaining + (todo.length - done), ...(refused !== "ok" && { message: quotaMessage(refused) }) };
         revalidatePath("/parametres");
         revalidatePath("/notes");
       }

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { reviewWithClaude } from "@/lib/ai/story-review";
 import { notesForProposal } from "@/lib/db/proposal-notes";
 import { isUuid } from "@/lib/domain/notes";
@@ -50,6 +52,8 @@ export async function reviewStory(storyId: string, hint: string): Promise<Review
 
     const current = { title: story.title, role: story.role, benefit: story.benefit, acceptance_criteria: story.acceptance_criteria, points: story.points };
     const message = buildReviewMessage({ missionTitle: mission.title, clientName: mission.client?.name ?? "", story: current, otherTitles, hint: text, note });
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: Record<string, unknown>;
     try {
       raw = await reviewWithClaude(message);

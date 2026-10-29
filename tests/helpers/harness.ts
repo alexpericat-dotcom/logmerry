@@ -41,6 +41,11 @@ export const fake = {
   ai: { calls: [] as { name: string; message: string; args: unknown[] }[], replies: {} as Record<string, unknown> },
   /** Notes dont l'indexation (appel à Mistral) a été demandée : jamais de vrai appel dans un test. */
   indexed: [] as string[],
+  /** Réponse de `consume_ai_quota()` (plafond d'appels à l'IA) et nombre d'appels : cette fonction n'entre pas dans `ops`, pour que les listes de requêtes attendues restent celles du métier. */
+  quota: "ok" as string,
+  /** Réponses successives (la première d'abord) avant de revenir à `quota` : pour un plafond atteint au milieu d'une boucle. */
+  quotaQueue: [] as string[],
+  quotaCalls: 0,
   /** Ce que renvoie la doublure d'`indexNote`. */
   indexResult: "indexed" as "indexed" | "failed",
   /** Échange du code de confirmation (`/auth/confirm`) : codes reçus, et réponse (une `Error` posée est levée, comme une panne réseau). */
@@ -57,6 +62,9 @@ export const fake = {
     this.ai = { calls: [], replies: {} };
     this.indexed = [];
     this.indexResult = "indexed";
+    this.quota = "ok";
+    this.quotaQueue = [];
+    this.quotaCalls = 0;
     this.exchange = { codes: [], reply: { error: null } };
     this.failCreate = false;
     this.claims = { sub: "00000000-0000-4000-8000-000000000001" };
@@ -180,6 +188,10 @@ function builder(table: string) {
 export const client = {
   from: (table: string) => builder(table),
   rpc(name: string, args?: unknown) {
+    if (name === "consume_ai_quota") {
+      fake.quotaCalls++;
+      return Promise.resolve({ data: fake.quotaQueue.shift() ?? fake.quota, error: null, count: null });
+    }
     const op: Op = { table: name, op: "rpc", payload: args, filters: [], returning: false };
     return Promise.resolve().then(() => {
       fake.ops.push(op);

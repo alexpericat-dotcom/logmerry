@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { proposeTasksWithClaude } from "@/lib/ai/task-proposals";
 import { notesForProposal } from "@/lib/db/proposal-notes";
 import { isUuid } from "@/lib/domain/notes";
@@ -56,6 +58,8 @@ export async function proposeTasks(storyId: string, hint: string): Promise<TaskP
       hint: text,
       note,
     });
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: unknown[];
     try {
       raw = await proposeTasksWithClaude(message);

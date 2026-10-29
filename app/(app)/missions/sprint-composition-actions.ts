@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { composeWithClaude } from "@/lib/ai/sprint-composition";
 import { renumber } from "@/lib/db/renumber";
 import { isUuid } from "@/lib/domain/notes";
@@ -69,6 +71,8 @@ export async function composeSprint(sprintId: string, capacity: unknown, hint: s
 
     const sprint = { name: found.data.name as string, goal: found.data.goal as string | null, start_date: found.data.start_date as string, end_date: found.data.end_date as string };
     const input = { missionTitle: mission.title, clientName: mission.client?.name ?? "", sprint, placed, backlog, capacity: cap.value, hint: text };
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: Record<string, unknown>;
     try {
       raw = await composeWithClaude(buildComposeMessage(input));

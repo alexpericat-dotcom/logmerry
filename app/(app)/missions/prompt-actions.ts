@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { writePromptWithClaude } from "@/lib/ai/prompt-generation";
 import { isUuid } from "@/lib/domain/notes";
 import { buildMissionContext, clientNameOf, hideClientName, type StoryForContext, type TaskForContext } from "@/lib/domain/mission-context";
@@ -67,6 +69,8 @@ export async function generateMissionPrompt(missionId: string, options: { level:
     const objectiveText = shown.objective;
     const context = buildMissionContext({ mission: { title: missionTitle, status, start_date: found.data.start_date, end_date: found.data.end_date, clientName }, stories: shown.stories, tasks: shown.tasks, level, includeClient });
     const message = buildPromptMessage({ missionTitle, level, objective: objectiveText, contextText: context.text });
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: string;
     try {
       raw = await writePromptWithClaude(message);

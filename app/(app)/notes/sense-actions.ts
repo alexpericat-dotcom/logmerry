@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
 import { retrieveChunks } from "@/lib/db/retrieval";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 import { normalizeQuery } from "@/lib/domain/search";
 import { createClient } from "@/lib/supabase/server";
@@ -28,12 +30,16 @@ export async function searchBySense(raw: string): Promise<SenseState> {
     if (authError || !claims?.claims) {
       signedOut = true;
     } else {
-      const chunks = await retrieveChunks(supabase, question);
-      state = {
-        searched: true,
-        question,
-        results: chunks.map((c) => ({ chunkId: c.id, noteId: c.noteId, title: c.title, content: c.content, score: c.score })),
-      };
+      const quota = await consumeAiQuota(supabase);
+      if (quota !== "ok") state = { results: [], message: quotaMessage(quota), question };
+      else {
+        const chunks = await retrieveChunks(supabase, question);
+        state = {
+          searched: true,
+          question,
+          results: chunks.map((c) => ({ chunkId: c.id, noteId: c.noteId, title: c.title, content: c.content, score: c.score })),
+        };
+      }
     }
   } catch (e) {
     // Journal sans question ni contenu de note ni clé : seulement la nature de l'échec.

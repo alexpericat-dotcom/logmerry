@@ -2521,3 +2521,62 @@ describe("isolation de la lecture des sprints en cours (cockpit) entre deux comp
     assert.ok(Date.parse(forgedInsert.data!.done_at!) > Date.parse("2020-01-01"), "insertion avec date forgée : la base pose la sienne");
   });
 });
+
+describe("plafond d'appels à l'IA (ai_calls, consume_ai_quota) : isolation et verrouillage entre deux comptes fictifs", () => {
+  // Les comptes ne peuvent ni insérer ni supprimer leurs lignes (c'est le but) : ce test ne nettoie rien et part de l'état réel du compte.
+  // Les lignes de plus de deux jours sont supprimées par la fonction ; fenêtre d'une minute, plafond du jour et absence de session : tests/sql/ai-quota.sql.
+  let a: Account;
+  let b: Account;
+
+  const consume = async (account: Account) => {
+    const { data, error } = await account.client.rpc("consume_ai_quota");
+    assert.ifError(error);
+    return data;
+  };
+  const since = async (account: Account, ms: number) => {
+    const { data, error } = await account.client.from("ai_calls").select("at").gte("at", new Date(Date.now() - ms).toISOString());
+    assert.ifError(error);
+    return data!.length;
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+  });
+
+  test("les appels sont comptés un par un jusqu'au plafond, puis refusés sans rien enregistrer ; l'autre compte n'est pas touché", async () => {
+    const [minute, day, dayB] = [await since(a, 60_000), await since(a, 86_400_000), await since(b, 86_400_000)];
+    const allowed = Math.max(0, Math.min(20 - minute, 300 - day));
+    const refusal = 20 - minute <= 300 - day ? "minute" : "day";
+    const results: unknown[] = [];
+    for (let i = 0; i <= allowed; i++) results.push(await consume(a));
+    assert.deepEqual(results, [...Array(allowed).fill("ok"), refusal]);
+    assert.equal(await since(a, 86_400_000), day + allowed, "seuls les appels acceptés sont enregistrés");
+    assert.equal(await since(b, 86_400_000), dayB, "le compteur de B n'a pas bougé");
+  });
+
+  test("chacun ne voit que ses propres lignes", async () => {
+    for (const account of [a, b]) {
+      const { data, error } = await account.client.from("ai_calls").select("owner_id");
+      assert.ifError(error);
+      assert.ok(data!.every((r) => r.owner_id === account.userId));
+    }
+  });
+
+  test("le plafond ne se contourne pas par l'API : insérer, modifier ou supprimer ses lignes est refusé, au nom de l'autre compte aussi", async () => {
+    const before = await since(a, 86_400_000);
+    assert.ok(before > 0, "A a au moins une ligne (premier test)");
+    assert.equal((await a.client.from("ai_calls").insert({})).error?.code, "42501");
+    assert.equal((await a.client.from("ai_calls").insert({ owner_id: b.userId })).error?.code, "42501");
+    assert.equal((await a.client.from("ai_calls").update({ at: "2000-01-01T00:00:00Z" }).gte("at", "2000-01-01")).error?.code, "42501");
+    assert.equal((await a.client.from("ai_calls").delete().gte("at", "2000-01-01")).error?.code, "42501");
+    assert.equal(await since(a, 86_400_000), before, "aucune ligne n'a disparu");
+  });
+
+  test("sans connexion : ni la fonction ni la table ne sont accessibles", async () => {
+    const anon = newClient();
+    assert.equal((await anon.rpc("consume_ai_quota")).error?.code, "42501");
+    assert.equal((await anon.from("ai_calls").select("id")).error?.code, "42501");
+    assert.equal((await anon.from("ai_calls").insert({ owner_id: a.userId })).error?.code, "42501");
+  });
+});

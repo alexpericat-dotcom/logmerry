@@ -9,6 +9,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      ai_calls: {
+        Row: {
+          at: string;
+          id: string;
+          owner_id: string;
+        };
+        Insert: {
+          at?: string;
+          id?: string;
+          owner_id?: string;
+        };
+        Update: {
+          at?: string;
+          id?: string;
+          owner_id?: string;
+        };
+        Relationships: [];
+      };
       clients: {
         Row: {
           created_at: string;
@@ -879,6 +897,7 @@ export type Database = {
     };
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string };
+      consume_ai_quota: { Args: never; Returns: string };
       create_rule_version: {
         Args: {
           p_activity_category: string;
