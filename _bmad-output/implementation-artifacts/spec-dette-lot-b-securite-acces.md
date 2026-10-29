@@ -2,7 +2,7 @@
 title: 'Dette, lot B : sécurité de l''accès (proxy, matcher, 401 de l''API)'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '5f75fa2a21d21942f2050539b007838cc9541c48'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -52,12 +52,12 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/auth.ts`, `lib/auth.test.ts` -- action `unauthorized` pour `/api` sans session ; cas de la matrice -- décision pure testée
-- [ ] `tests/helpers/proxy-hooks.mjs`, `register-proxy.mjs`, `tests/proxy/proxy.test.ts`, `package.json` -- doublures et `test:proxy` : décision câblée, cibles, cookies uniquement sur `/`, ordre, 401 JSON, cookies rafraîchis -- câblage prouvé
-- [ ] `tests/proxy/matcher.test.ts` -- lire le littéral dans `proxy.ts` et le tester (modèle `^…$` ; approximation du convertisseur de Next, notée) -- exclusions et inclusions
-- [ ] `lib/supabase/proxy.ts` -- branche `unauthorized` -- 401 JSON
-- [ ] `lib/domain/chat-flow.ts` (+ test), `components/assistant-provider.tsx` -- `chatErrorMessage` -- message de session expirée
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
+- [x] `lib/auth.ts`, `lib/auth.test.ts` -- action `unauthorized` pour `/api` sans session ; cas de la matrice -- décision pure testée
+- [x] `tests/helpers/proxy-hooks.mjs`, `register-proxy.mjs`, `tests/proxy/proxy.test.ts`, `package.json` -- doublures et `test:proxy` : décision câblée, cibles, cookies uniquement sur `/`, ordre, 401 JSON, cookies rafraîchis -- câblage prouvé
+- [x] `tests/proxy/matcher.test.ts` -- lire le littéral dans `proxy.ts` et le tester (modèle `^…$` ; approximation du convertisseur de Next, notée) -- exclusions et inclusions
+- [x] `lib/supabase/proxy.ts` -- branche `unauthorized` -- 401 JSON
+- [x] `lib/domain/chat-flow.ts` (+ test), `components/assistant-provider.tsx` -- `chatErrorMessage` -- message de session expirée
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent, les anciens sont inchangés.
@@ -67,9 +67,28 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `accessDecision` : action `unauthorized` pour `/api` et `/api/…` sans session ; `updateSession` répond 401 JSON ; `SESSION_EXPIRED` vit dans `lib/auth.ts` (proxy et chat partagent le texte, réexporté par `chat-flow.ts`) ; `chatErrorMessage(status, json)` dans `chat-flow.ts`, utilisé par `assistant-provider.tsx` (`CHAT_GENERIC_ERROR` aussi). `test:proxy` : doublures (`tests/helpers/stubs/{proxy-fake,supabase-ssr,next-server-proxy}.ts`), chargeur `proxy-hooks.mjs`, `tests/proxy/{proxy,matcher}.test.ts`, enchaîné dans `npm test`.
+- Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre) ; dix mutations détectées. Non couvert : le composant du chat (contrôle d'Alex).
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Message de session dupliqué entre le proxy et `chat-flow` (le test ne l'assertait qu'en partie) | medium | patch : constante unique dans `lib/auth.ts`, test à l'identique |
+| 2 | Cookie rafraîchi sur un 401 : cas non testé (une copie passerait) | medium | patch : test avec `refreshCookie` |
+| 3 | Commentaire de `isAuthPath` détaché par l'insertion de `isApiPath` | low | patch |
+| 4 | Message d'erreur blanc affiché tel quel par le chat | low | patch : `trim()` + test |
+| 5 | Cas `/_next/image?url=x` du `matcher` sans objet (la requête était retirée) ; message d'échec peu clair | low | patch |
+| 6 | Cookies périmés non effacés sur le 401 | low | defer : décision de la spec, comme pour les redirections de pages ; noté dans la dette |
+| 7 | Server Actions et autres appels toujours redirigés (307) à l'expiration | low | defer : dette (audit) |
+| 8 | Aucun test ne rend `AssistantProvider` avec `fetch` simulée | low | defer : dette ; logique pure testée |
+| 9 | 401 sans lien avec l'expiration montrerait « session expirée » | low | rejeté : la seule cause d'un 401 est l'absence de session (proxy et route) |
+| 10 | `Cache-Control: no-store` sur le 401 ; stub `NextResponse.next` ignore `{ request }` ; `matcher` à plusieurs entrées ; script de mutations | low | rejeté : hors de la demande, POST non mis en cache, parseur du test échoue bruyamment |
+| 11 | Spec périmée, triage non consigné | low | patch (cette mise à jour) |
 
 ## Verification
 

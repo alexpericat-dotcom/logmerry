@@ -8,7 +8,7 @@ import { describe, test } from "node:test";
  */
 const source = readFileSync(new URL("../../proxy.ts", import.meta.url), "utf8");
 const literal = /matcher:\s*\[\s*(?:\/\*[\s\S]*?\*\/\s*)?"((?:[^"\\]|\\.)+)"/.exec(source)?.[1];
-if (!literal) throw new Error("matcher introuvable dans proxy.ts : ce test ne prouverait rien");
+if (!literal) throw new Error("matcher introuvable dans proxy.ts (une chaîne entre guillemets doubles, éventuellement après un commentaire de bloc) : adapte l'extraction de CE test, pas le matcher");
 const pattern = new RegExp(`^${JSON.parse(`"${literal}"`) as string}$`);
 const matched = (path: string) => pattern.test(path);
 
@@ -22,8 +22,8 @@ describe("matcher de proxy.ts", () => {
   });
 
   test("non traité : fichiers statiques de Next, favicon et images (svg, png, jpg, jpeg, gif, webp)", () => {
-    for (const path of ["/_next/static/chunks/a.js", "/_next/image", "/_next/image?url=x", "/favicon.ico", "/icon.svg", "/opengraph-image.png", "/images/logo.png", "/a/b.jpg", "/a.jpeg", "/a.gif", "/a.webp"]) {
-      assert.equal(matched(path.split("?")[0]), false, path);
+    for (const path of ["/_next/static/chunks/a.js", "/_next/image", "/favicon.ico", "/icon.svg", "/opengraph-image.png", "/images/logo.png", "/a/b.jpg", "/a.jpeg", "/a.gif", "/a.webp"]) {
+      assert.equal(matched(path), false, path);
     }
   });
 

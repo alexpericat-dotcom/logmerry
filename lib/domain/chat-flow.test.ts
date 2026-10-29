@@ -88,5 +88,6 @@ test("message d'erreur du chat : 401 = session expirée (même avec un message d
   assert.equal(chatErrorMessage(502, null), CHAT_GENERIC_ERROR);
   assert.equal(chatErrorMessage(200, {}), CHAT_GENERIC_ERROR);
   assert.equal(chatErrorMessage(500, { error: "" }), CHAT_GENERIC_ERROR);
+  assert.equal(chatErrorMessage(500, { error: "  " }), CHAT_GENERIC_ERROR); // message blanc : jamais affiché
   assert.equal(chatErrorMessage(500, { error: 42 }), CHAT_GENERIC_ERROR);
 });

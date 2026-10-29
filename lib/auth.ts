@@ -7,13 +7,16 @@ export function safeNext(next: string | null | undefined): string {
   return next;
 }
 
+/** Refus 401 de l'API sans session (proxy), et message du chat quand il reçoit ce refus : un seul texte. */
+export const SESSION_EXPIRED = "Ta session a expiré. Recharge la page pour te reconnecter.";
+
 export type AccessDecision = { action: "next" } | { action: "redirect"; to: string } | { action: "unauthorized" };
 
 /** Pages d'authentification, publiques : `/auth` et tout ce qui est sous `/auth/`. */
+const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
+
 /** L'API : `/api` et tout ce qui est sous `/api/` (un faux ami comme `/apiary` n'en est pas). */
 const isApiPath = (pathname: string) => pathname === "/api" || pathname.startsWith("/api/");
-
-const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
 
 /**
  * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors des pages d'authentification

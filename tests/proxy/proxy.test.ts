@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
+import { SESSION_EXPIRED } from "../../lib/auth.ts";
 import { updateSession } from "../../lib/supabase/proxy.ts";
 import { fakeRequest, NextResponse } from "../helpers/stubs/next-server-proxy.ts";
 import { fake } from "../helpers/stubs/proxy-fake.ts";
@@ -47,9 +48,11 @@ describe("updateSession : câblage de la garde d'accès", () => {
   test("API : sans session 401 JSON (pas de redirection), avec session elle passe", async () => {
     const out = await run("/api/chat", false);
     assert.deepEqual([out.kind, out.status], ["json", 401]);
-    assert.match((out.body as { error: string }).error, /session a expiré/);
+    assert.deepEqual(out.body, { error: SESSION_EXPIRED });
     assert.ok(!fake.calls.includes("redirect"));
     assert.deepEqual(names(out), []);
+    const refreshed = await run("/api/chat", false, true); // le client a rafraîchi des cookies : aucun n'est copié sur le 401 (décision de la spec, comme pour les redirections de pages)
+    assert.deepEqual(names(refreshed), []);
     const inn = await run("/api/chat", true);
     assert.equal(inn.kind, "next");
   });
