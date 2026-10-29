@@ -15,6 +15,7 @@ import {
   type ContactDeleteState,
 } from "@/app/(app)/clients/contact-actions";
 import { ContactForm } from "@/components/contact-form";
+import { FocusOnMount } from "@/components/form-helpers";
 import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import type { ContactRecord } from "@/lib/db/contacts";
@@ -59,20 +60,22 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
   if (mode === "edit") {
     return (
       <li className="md:col-span-2">
-        <ContactForm
-          idPrefix={`edit-${contact.id}`}
-          action={updateContact.bind(null, contact.id)}
-          initial={{
-            name: contact.name,
-            job_title: contact.job_title ?? "",
-            email: contact.email ?? "",
-            phone: contact.phone ?? "",
-            address: contact.address ?? "",
-          }}
-          submitLabel="Enregistrer les modifications"
-          onDone={close}
-          onCancel={close}
-        />
+        <FocusOnMount>
+          <ContactForm
+            idPrefix={`edit-${contact.id}`}
+            action={updateContact.bind(null, contact.id)}
+            initial={{
+              name: contact.name,
+              job_title: contact.job_title ?? "",
+              email: contact.email ?? "",
+              phone: contact.phone ?? "",
+              address: contact.address ?? "",
+            }}
+            submitLabel="Enregistrer les modifications"
+            onDone={close}
+            onCancel={close}
+          />
+        </FocusOnMount>
       </li>
     );
   }
@@ -224,13 +227,15 @@ export function ContactsSection({
         </ul>
       )}
       {adding ? (
-        <ContactForm
-          idPrefix="add"
-          action={addContact.bind(null, clientId)}
-          submitLabel="Ajouter le contact"
-          onDone={done}
-          onCancel={done}
-        />
+        <FocusOnMount>
+          <ContactForm
+            idPrefix="add"
+            action={addContact.bind(null, clientId)}
+            submitLabel="Ajouter le contact"
+            onDone={done}
+            onCancel={done}
+          />
+        </FocusOnMount>
       ) : (
         <Button
           ref={addButton}

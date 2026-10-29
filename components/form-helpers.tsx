@@ -1,8 +1,34 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import { errorSummaryItems, fieldProps, summaryTitle } from "@/lib/form";
+
+/**
+ * Enveloppe un formulaire qui apparaît à la demande (bouton « Nouveau… » qui disparaît quand le formulaire s'ouvre) : au montage, le premier champ reçoit le focus.
+ * Sans cela, le focus tombe sur la page au moment où le bouton est démonté, et un utilisateur au clavier perd sa place. `contents` : l'enveloppe n'a aucun effet sur la mise en page.
+ */
+export function FocusOnMount({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Premier champ de saisie qui accepte vraiment le focus (un champ en lecture seule, une case ou un champ masqué est sauté).
+    const fields = box.current?.querySelectorAll<HTMLElement>(
+      "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled]):not([readonly])",
+    );
+    for (const field of fields ?? []) {
+      field.focus({ preventScroll: true }); // pas de saut brutal ; le centrage doux suit, comme dans `focusField`
+      if (document.activeElement === field) {
+        field.scrollIntoView?.({ block: "center" });
+        return;
+      }
+    }
+  }, []);
+  return (
+    <div ref={box} className="contents">
+      {children}
+    </div>
+  );
+}
 
 /** Menu de sélection des formulaires : deux variantes seulement ; `truncate` pour les intitulés longs (facture, échéance). */
 export const selectClass =

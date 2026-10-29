@@ -17,7 +17,7 @@ import {
 } from "@/app/(app)/clients/quote-actions";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmPanel } from "@/components/confirm-panel";
-import { ErrorSummary, selectClass, useFormFields } from "@/components/form-helpers";
+import { ErrorSummary, FocusOnMount, selectClass, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -186,15 +186,17 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
   if (mode === "edit") {
     return (
       <li>
-        <QuoteForm
-          idPrefix={`edit-${quote.id}`}
-          action={updateQuote.bind(null, quote.id)}
-          initial={{ amount_ht: centsToInput(quote.amount_ht_cents), tax: quote.tax_cents === null ? "" : centsToInput(quote.tax_cents), sent_on: quote.sent_on ?? "", mission_id: quote.mission_id ?? "" }}
-          missions={missions}
-          submitLabel="Enregistrer"
-          onDone={back}
-          onCancel={back}
-        />
+        <FocusOnMount>
+          <QuoteForm
+            idPrefix={`edit-${quote.id}`}
+            action={updateQuote.bind(null, quote.id)}
+            initial={{ amount_ht: centsToInput(quote.amount_ht_cents), tax: quote.tax_cents === null ? "" : centsToInput(quote.tax_cents), sent_on: quote.sent_on ?? "", mission_id: quote.mission_id ?? "" }}
+            missions={missions}
+            submitLabel="Enregistrer"
+            onDone={back}
+            onCancel={back}
+          />
+        </FocusOnMount>
       </li>
     );
   }
@@ -320,15 +322,17 @@ export function QuotesSection({ clientId, clientStatus, quotes, missions, today 
         )}
       </div>
       {creating && (
-        <QuoteForm
-          idPrefix="new-quote"
-          action={createQuote.bind(null, clientId)}
-          initial={{ amount_ht: "", tax: "", sent_on: "", mission_id: "" }}
-          missions={missions}
-          submitLabel="Enregistrer le brouillon"
-          onDone={close}
-          onCancel={close}
-        />
+        <FocusOnMount>
+          <QuoteForm
+            idPrefix="new-quote"
+            action={createQuote.bind(null, clientId)}
+            initial={{ amount_ht: "", tax: "", sent_on: "", mission_id: "" }}
+            missions={missions}
+            submitLabel="Enregistrer le brouillon"
+            onDone={close}
+            onCancel={close}
+          />
+        </FocusOnMount>
       )}
       {quotes.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucun devis pour cette fiche. Un nouveau devis commence en brouillon : il ne compte nulle part tant qu&apos;il n&apos;est pas envoyé.</p>

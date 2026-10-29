@@ -36,7 +36,7 @@ colors:
   chart-4: '#302060'
   chart-5: '#B814B8'
   # Sombre
-  display: '#E4600B'               # titres pixel (texte de grande taille seulement : 3,36:1 sur le fond)
+  display: '#C44A00'               # titres pixel (texte de grande taille seulement : 4,64:1 sur le fond, 3,77:1 sur le point le plus clair du bandeau ; valeur d'avant l'audit 7.2 : #E4600B, 2,73:1 sur le bandeau)
   tone-teal: '#46D9C8'             # accents décoratifs (barres de titre, étoiles, ombres de titre) : jamais du texte
   tone-violet: '#A996F0'
   tone-orange: '#FF9A4D'           # aussi la pastille « sélectionné » et le bouton d'action

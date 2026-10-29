@@ -38,7 +38,7 @@
     --chart-3: 44.9 80.4% 32%; /* #937210 */
     --chart-4: 255 50% 25.1%; /* #302060 */
     --chart-5: 300 80.4% 40%; /* #B814B8 */
-    --display: 23.5 90.8% 46.9%; /* #E4600B : titres pixel, texte de grande taille seulement (3:1) */
+    --display: 22.7 100% 38.4%; /* #C44A00 : titres pixel, texte de grande taille seulement ; 3,77:1 sur le point le plus clair du bandeau, 4,64:1 sur le fond de page (audit 7.2, ancienne valeur #E4600B : 2,73:1) */
     --tone-teal: 173.1 65.9% 56.3%; /* #46D9C8 : accents décoratifs, jamais du texte */
     --tone-violet: 252.7 75% 76.5%; /* #A996F0 */
     --tone-orange: 26 100% 65.1%; /* #FF9A4D */

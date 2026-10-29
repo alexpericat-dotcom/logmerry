@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteDeadline, markDeadlineDone, reopenDeadline, updateDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { ConfirmPanel } from "@/components/confirm-panel";
+import { FocusOnMount } from "@/components/form-helpers";
 import { DeadlineForm } from "@/components/deadline-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,15 +61,17 @@ export function DeadlineRow({ deadline, today, sectionId, onChanged }: { deadlin
   if (mode === "edit") {
     return (
       <li>
-        <DeadlineForm
-          idPrefix={`edit-${deadline.id}`}
-          action={update}
-          initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "", priority: deadline.priority, recurrence: "" }}
-          series={deadline.recurrence !== null}
-          submitLabel="Enregistrer"
-          onDone={back}
-          onCancel={back}
-        />
+        <FocusOnMount>
+          <DeadlineForm
+            idPrefix={`edit-${deadline.id}`}
+            action={update}
+            initial={{ title: deadline.title, due_on: deadline.due_on, category: deadline.category, source: deadline.source, note: deadline.note ?? "", priority: deadline.priority, recurrence: "" }}
+            series={deadline.recurrence !== null}
+            submitLabel="Enregistrer"
+            onDone={back}
+            onCancel={back}
+          />
+        </FocusOnMount>
       </li>
     );
   }

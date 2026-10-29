@@ -82,6 +82,13 @@ Envoie le formulaire **vide** (ou avec une erreur volontaire). Attendu partout :
 - [ ] Aucun défilement horizontal de page sur téléphone (hors gantt et kanban)
 - [ ] Zoom du navigateur à 200 % : rien ne se chevauche
 
+## 11. Clavier seul (story 7.2)
+
+- [ ] Sans souris, sur ordinateur : `/factures`, détail d'une facture (Entrée), « Ajouter un encaissement » (Entrée) : le focus arrive dans le champ « Montant », Échap ou « Annuler » referme
+- [ ] Même contrôle pour « Nouvelle facture », « Nouveau devis », « Ajouter un contact », « Nouvelle échéance », « Nouvelle version » d'une règle : le premier champ du formulaire est actif à l'ouverture
+- [ ] Un contour de focus est visible à chaque Tab, thème clair puis sombre
+- [ ] Lecteur d'écran (facultatif, VoiceOver) : à l'ouverture d'un formulaire, il lit le nom du premier champ
+
 ## Quand c'est fini
 
 Dis à Claude ce qui ne va pas : une ligne par défaut suffit (« page, appareil, thème, ce que tu vois »). Les limites déjà connues sont dans `_bmad-output/implementation-artifacts/deferred-work.md`.

@@ -7,7 +7,7 @@ import { closeSprint, deleteSprint, startSprint, updateSprint, type SprintAction
 import { SprintComposer } from "@/components/sprint-composer";
 import { SprintForm } from "@/components/sprint-form";
 import { StoryList } from "@/components/story-list";
-import { selectClass } from "@/components/form-helpers";
+import { FocusOnMount, selectClass } from "@/components/form-helpers";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
@@ -94,15 +94,17 @@ export function SprintBlock({
 
   if (mode === "edit") {
     return (
-      <SprintForm
-        idPrefix={`edit-sprint-${sprint.id}`}
-        action={updateSprint.bind(null, sprint.id)}
-        initial={{ name: sprint.name, goal: sprint.goal ?? "", start_date: sprint.start_date, end_date: sprint.end_date }}
-        submitLabel="Enregistrer les modifications"
-        datesLocked={sprint.status === "closed"}
-        onDone={closeMode}
-        onCancel={closeMode}
-      />
+      <FocusOnMount>
+        <SprintForm
+          idPrefix={`edit-sprint-${sprint.id}`}
+          action={updateSprint.bind(null, sprint.id)}
+          initial={{ name: sprint.name, goal: sprint.goal ?? "", start_date: sprint.start_date, end_date: sprint.end_date }}
+          submitLabel="Enregistrer les modifications"
+          datesLocked={sprint.status === "closed"}
+          onDone={closeMode}
+          onCancel={closeMode}
+        />
+      </FocusOnMount>
     );
   }
 

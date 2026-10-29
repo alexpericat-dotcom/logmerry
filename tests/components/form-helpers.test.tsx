@@ -6,7 +6,7 @@ import { afterEach, describe, mock, test } from "node:test";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { ErrorLine, ErrorSummary, focusField, selectClass, selectClassTruncate, useFormFields, useMoreFields } from "../../components/form-helpers.tsx";
+import { ErrorLine, ErrorSummary, FocusOnMount, focusField, selectClass, selectClassTruncate, useFormFields, useMoreFields } from "../../components/form-helpers.tsx";
 
 afterEach(cleanup);
 
@@ -131,5 +131,70 @@ describe("useMoreFields (« Plus de champs »)", () => {
     const { rerender } = render(<More errors={undefined} hidden={false} />);
     rerender(<More errors={{ title: "Obligatoire." }} hidden={false} />);
     assert.equal(expanded(), "false");
+  });
+});
+
+describe("FocusOnMount", () => {
+  test("au montage, le premier champ visible et actif reçoit le focus (pas un champ caché ni désactivé)", () => {
+    const { container } = render(
+      <FocusOnMount>
+        <form>
+          <input type="hidden" name="h" />
+          <input name="off" disabled />
+          <input name="premier" />
+          <input name="second" />
+        </form>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === container.querySelector('input[name="premier"]'));
+  });
+
+  test("un menu en premier reçoit aussi le focus ; sans champ, rien ne plante et le focus ne bouge pas", () => {
+    const first = render(
+      <FocusOnMount>
+        <select name="s">
+          <option>a</option>
+        </select>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === first.container.querySelector("select"));
+    cleanup();
+    render(
+      <FocusOnMount>
+        <p>aucun champ</p>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === document.body);
+  });
+
+  test("saute un champ en lecture seule, une case et un bouton : le premier vrai champ de saisie reçoit le focus ; une zone de texte compte", () => {
+    const { container } = render(
+      <FocusOnMount>
+        <form>
+          <input name="lecture" readOnly />
+          <input type="checkbox" name="case" />
+          <input type="submit" value="ok" />
+          <textarea name="texte" />
+        </form>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === container.querySelector("textarea"));
+  });
+
+  test("l'effet ne joue qu'au montage : un nouveau rendu ne reprend pas le focus à l'utilisateur", () => {
+    const view = (extra: string) => (
+      <FocusOnMount>
+        <form>
+          <input name="a" />
+          <input name="b" />
+          <p>{extra}</p>
+        </form>
+      </FocusOnMount>
+    );
+    const { container, rerender } = render(view("un"));
+    const b = container.querySelector<HTMLInputElement>('input[name="b"]')!;
+    b.focus();
+    rerender(view("deux"));
+    assert.ok(document.activeElement === b);
   });
 });
