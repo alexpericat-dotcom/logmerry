@@ -5,9 +5,9 @@ import { PageBanner } from "@/components/page-banner";
 import { completeDeadlineSeries, listDeadlines } from "@/lib/db/deadlines";
 import { listInvoices } from "@/lib/db/invoices";
 import { getProfile } from "@/lib/db/profile";
+import { calendarInvoiceInputs } from "@/lib/domain/calendar-panel";
 import { parseDisplay } from "@/lib/domain/deadline-boards";
 import { invoiceLines, parseDeadlineView, toConfirmLines } from "@/lib/domain/deadlines";
-import { invoiceBalance } from "@/lib/domain/payments";
 import { todayParis } from "@/lib/format";
 
 export const metadata = { title: "Calendrier · LogMerry" };
@@ -23,10 +23,7 @@ async function Deadlines({ searchParams }: { searchParams: SearchParams }) {
   // Les séries se complètent à la lecture (12 mois) ; on relit seulement si des lignes viennent d'être créées.
   const deadlines = (await completeDeadlineSeries(first, today)) > 0 ? await listDeadlines() : first;
   const lines = [
-    ...invoiceLines(
-      invoices.map((i) => ({ id: i.id, reference: i.reference, issued_on: i.issued_on, due_on: i.due_on, status: invoiceBalance(i, i.payments).status, mission: i.mission })),
-      today,
-    ),
+    ...invoiceLines(calendarInvoiceInputs(invoices), today),
     ...toConfirmLines(profile, deadlines),
   ];
   return <DeadlinesPanel deadlines={deadlines} lines={lines} view={view} display={display} today={today} />;
