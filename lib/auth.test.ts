@@ -75,9 +75,13 @@ test("garde d'accès : un préfixe sans barre n'est pas public (/authors, /auth-
   }
 });
 
-test("garde d'accès : /api/chat reste privé (sans session = connexion)", () => {
-  assert.deepEqual(accessDecision("/api/chat", false), to("/auth/login"));
-  assert.deepEqual(accessDecision("/api/chat", true), NEXT);
+test("garde d'accès : l'API sans session reçoit un refus (pas une redirection), avec session elle passe ; un faux ami d'/api est une page", () => {
+  for (const path of ["/api", "/api/chat", "/api/x/y"]) {
+    assert.deepEqual(accessDecision(path, false), { action: "unauthorized" }, path);
+    assert.deepEqual(accessDecision(path, true), NEXT, path);
+  }
+  for (const path of ["/apiary", "/api-x", "/API/chat"]) assert.deepEqual(accessDecision(path, false), to("/auth/login"), path);
+  assert.deepEqual(accessDecision("/auth/api/x", false), NEXT); // sous /auth : public, jamais une API
 });
 
 test("garde d'accès : le chemin d'une vraie adresse (`new URL`) est normalisé avant la décision ; ce qui reste étrange n'est jamais public", () => {

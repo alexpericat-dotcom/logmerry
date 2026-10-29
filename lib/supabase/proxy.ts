@@ -46,6 +46,7 @@ export async function updateSession(request: NextRequest) {
   // Hors `/auth` et `/auth/…`, sans session : connexion. La décision est dans `accessDecision` (testée).
   const pathname = request.nextUrl.pathname;
   const decision = accessDecision(pathname, !!user);
+  if (decision.action === "unauthorized") return NextResponse.json({ error: "Ta session a expiré. Recharge la page pour te reconnecter." }, { status: 401 });
   if (decision.action === "redirect") {
     const url = request.nextUrl.clone();
     url.pathname = decision.to;

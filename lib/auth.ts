@@ -7,18 +7,21 @@ export function safeNext(next: string | null | undefined): string {
   return next;
 }
 
-export type AccessDecision = { action: "next" } | { action: "redirect"; to: string };
+export type AccessDecision = { action: "next" } | { action: "redirect"; to: string } | { action: "unauthorized" };
 
 /** Pages d'authentification, publiques : `/auth` et tout ce qui est sous `/auth/`. */
+/** L'API : `/api` et tout ce qui est sous `/api/` (un faux ami comme `/apiary` n'en est pas). */
+const isApiPath = (pathname: string) => pathname === "/api" || pathname.startsWith("/api/");
+
 const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
 
 /**
  * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors des pages d'authentification
- * (`isAuthPath`) est renvoyé à la connexion ; le reste passe. Le chemin est celui de l'adresse, sans la requête.
+ * (`isAuthPath`) est renvoyé à la connexion, sauf l'API (`/api/…`) qui reçoit un refus 401 (JSON) : un `fetch` ne doit pas suivre une redirection vers une page HTML ; le reste passe. Le chemin est celui de l'adresse, sans la requête.
  */
 export function accessDecision(pathname: string, signedIn: boolean): AccessDecision {
   if (pathname === "/") return { action: "redirect", to: signedIn ? "/aujourd-hui" : "/auth/login" };
-  if (!signedIn && !isAuthPath(pathname)) return { action: "redirect", to: "/auth/login" };
+  if (!signedIn && !isAuthPath(pathname)) return isApiPath(pathname) ? { action: "unauthorized" } : { action: "redirect", to: "/auth/login" };
   return { action: "next" };
 }
 
