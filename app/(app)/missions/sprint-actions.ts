@@ -89,13 +89,15 @@ export async function updateSprint(id: string, _prev: SprintFormState, formData:
   });
 }
 
-/** Démarre un sprint planifié : un seul sprint « en cours » par mission (l'index unique de la base le garantit même avec deux onglets). */
+/** Démarre un sprint planifié : un seul sprint « en cours » par mission (l'index unique de la base le garantit même avec deux onglets). Passe aussi la mission « à planifier » en « en cours ». */
 export async function startSprint(id: string): Promise<SprintActionState> {
   const result = await withSession(async (supabase): Promise<"saved" | "not-found" | "already" | "not-planned" | "error"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("sprints").update({ status: "active" }).eq("id", id).eq("status", "planned").select("id, mission_id");
     if (error) return error.code === "23505" ? "already" : "error";
     if (data?.length) {
+      // Second temps : une mission « à planifier » devient « en cours ». Son échec ne défait pas le démarrage (rien n'est affiché, le statut se change à la main).
+      await supabase.from("missions").update({ status: "in_progress" }).eq("id", data[0].mission_id).eq("status", "planned");
       refresh(data[0].mission_id);
       return "saved";
     }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { HINT_MAX, TASKS_ADD_MAX, taskProgress, taskProgressLabel, validateHint, validateTaskBatch, validateTaskTitle } from "./tasks.ts";
+import { HINT_MAX, TASKS_ADD_MAX, showTaskProgress, taskProgress, taskProgressLabel, validateHint, validateTaskBatch, validateTaskTitle } from "./tasks.ts";
 
 test("titre : espaces retirés, vide ou nul seul refusé, 200 acceptés et 201 refusés (points de code)", () => {
   assert.deepEqual(validateTaskTitle("  écrire le mail  "), { ok: true, value: "écrire le mail" });
@@ -51,4 +51,13 @@ test("précision : 1 000 points de code acceptés, 1 001 refusés ; émojis comp
   assert.equal(validateHint("😀".repeat(HINT_MAX + 1)).ok, false);
   assert.equal(validateHint(" ".repeat(HINT_MAX)).ok, true);
   for (const bad of [5, {}, ["a"], true]) assert.equal(validateHint(bad).ok, false, String(bad));
+});
+
+test("compteur : masqué pour une story terminée et sans tâche, visible sinon (même à 0 tâche faite)", () => {
+  const some = taskProgress([{ done: false }, { done: false }]);
+  assert.equal(showTaskProgress("done", some), false);
+  assert.equal(showTaskProgress("todo", some), true);
+  assert.equal(showTaskProgress("in_progress", some), true);
+  assert.equal(showTaskProgress("todo", taskProgress([])), false);
+  assert.equal(showTaskProgress("done", taskProgress([])), false);
 });

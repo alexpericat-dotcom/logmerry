@@ -75,7 +75,7 @@ begin
   perform pg_temp.chk('accept_quote sur prospect', pg_temp.act(ua, format('select public.accept_quote(%L)', q1)), 'ok:1');
   select mission_id into m1 from public.quotes where id = q1;
   perform pg_temp.chk('devis accepté, mission liée', (select (status = 'accepted' and m1 is not null)::text from public.quotes where id = q1), 'true');
-  perform pg_temp.chk('mission « à planifier », titre daté', (select status || ' | ' || title from public.missions where id = m1), 'planned | Devis du 19/10/2026 — Cabinet Test');
+  perform pg_temp.chk('mission « à planifier », titre « client — devis du … »', (select status || ' | ' || title from public.missions where id = m1), 'planned | Cabinet Test — devis du 19/10/2026');
   perform pg_temp.chk('le prospect est devenu client', (select status::text from public.clients where id = ca), 'client');
   perform pg_temp.chk('accepter une 2e fois : même résultat', pg_temp.act(ua, format('select public.accept_quote(%L)', q1)), 'ok:1');
   perform pg_temp.chk('une seule mission créée (2 avec la première)', (select count(*)::text from public.missions where client_id = ca), '2');
@@ -88,7 +88,7 @@ begin
   insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q7, ua, cl, 100, 'sent', '2026-10-23');
   perform pg_temp.chk('accept_quote avec un nom de fiche de 200 caractères', pg_temp.act(ua, format('select public.accept_quote(%L)', q7)), 'ok:1');
   select mission_id into m2 from public.quotes where id = q7;
-  perform pg_temp.chk('titre de mission borné à 200 et préfixé', (select (char_length(title) <= 200 and title like 'Devis du 23/10/2026 — É"l''%')::text from public.missions where id = m2), 'true');
+  perform pg_temp.chk('titre de mission borné à 200, nom en tête, date en queue', (select (char_length(title) <= 200 and title like 'É"l''%' and title like '% — devis du 23/10/2026')::text from public.missions where id = m2), 'true');
 
   -- Refus
   insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q3, ua, ca, 7000, 'sent', '2026-10-20');

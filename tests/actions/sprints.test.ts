@@ -93,6 +93,29 @@ describe("startSprint", () => {
     assert.deepEqual(fake.revalidated, [PAGE]);
   });
 
+  test("la mission « à planifier » passe « en cours » : seulement depuis « planned », sur la mission du sprint", async () => {
+    routes(["sprints:update", { data: [{ id: SPRINT, mission_id: MISSION }] }]);
+    await startSprint(SPRINT);
+    const [op] = fake.on("missions", "update");
+    assert.deepEqual(op.payload, { status: "in_progress" });
+    assert.equal(filterValue(op, "eq", "id"), MISSION);
+    assert.equal(filterValue(op, "eq", "status"), "planned");
+  });
+
+  test("échec de la bascule de la mission : le sprint reste démarré, aucun message", async () => {
+    routes(["sprints:update", { data: [{ id: SPRINT, mission_id: MISSION }] }], ["missions:update", { error: { code: "XX000" } }]);
+    assert.deepEqual(await startSprint(SPRINT), {});
+    assert.deepEqual(fake.revalidated, [PAGE]);
+  });
+
+  test("démarrage refusé : la mission n'est jamais touchée", async () => {
+    routes(["sprints:update", { error: { code: "23505" } }]);
+    await startSprint(SPRINT);
+    routes(["sprints:select", { data: [{ id: SPRINT }] }]);
+    await startSprint(SPRINT);
+    assert.equal(fake.on("missions", "update").length, 0);
+  });
+
   test("un seul sprint en cours par mission (23505) ; sprint plus planifié ; sprint disparu ; autre erreur", async () => {
     routes(["sprints:update", { error: { code: "23505" } }]);
     const already = await startSprint(SPRINT);

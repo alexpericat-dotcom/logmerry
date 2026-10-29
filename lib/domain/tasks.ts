@@ -23,6 +23,9 @@ export function taskProgressLabel({ done, total }: TaskProgress): string {
   return `${done} sur ${total} ${total > 1 ? "tâches faites" : "tâche faite"}`;
 }
 
+/** Le compteur n'est pas affiché pour une story « terminée » (des tâches non cochées contrediraient son statut) ni sans tâche. */
+export const showTaskProgress = (storyStatus: string, { total }: TaskProgress): boolean => total > 0 && storyStatus !== "done";
+
 /** Lot de titres à ajouter d'un coup : un tableau de 1 à 50 titres valides, nettoyés ; sinon la première erreur. */
 export function validateTaskBatch(titles: unknown): { ok: true; value: string[] } | { ok: false; error: string } {
   if (!Array.isArray(titles) || titles.length === 0 || titles.length > TASKS_ADD_MAX) return { ok: false, error: "Aucune tâche à ajouter." };
