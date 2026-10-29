@@ -67,3 +67,8 @@ test("garde d'accès : pages de connexion publiques sans session, et avec", () =
     assert.deepEqual(accessDecision(path, true), NEXT, path);
   }
 });
+
+test("garde d'accès, FIGÉ TEL QUEL : les préfixes `/login` et `/auth` n'ont pas de barre finale, `/authors` et `/login-x` passent sans session (à resserrer : dette)", () => {
+  assert.deepEqual(accessDecision("/authors", false), NEXT);
+  assert.deepEqual(accessDecision("/login-x", false), NEXT);
+});

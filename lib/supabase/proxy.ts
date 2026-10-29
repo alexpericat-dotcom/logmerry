@@ -50,6 +50,7 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = decision.to;
     const redirectResponse = NextResponse.redirect(url);
+    // Comportement d'origine conservé : seule la redirection de `/` reprend les cookies rafraîchis (la garde renvoie à la connexion sans session).
     if (pathname === "/") supabaseResponse.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
     return redirectResponse;
   }

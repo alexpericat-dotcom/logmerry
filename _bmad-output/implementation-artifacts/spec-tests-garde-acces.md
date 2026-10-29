@@ -2,7 +2,7 @@
 title: 'Extraction et tests de la garde d''accès (proxy) et de la route /auth/confirm'
 type: 'chore'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'eba7cfb677c26798f0d5d5a8cb2499892a3dfb28'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -53,12 +53,12 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/auth.ts` -- ajouter `accessDecision(pathname, signedIn)` (`{ action: "next" }` ou `{ action: "redirect", to }`), code déplacé tel quel -- décision testable
-- [ ] `lib/auth.test.ts` -- cas de la matrice du proxy -- comportement figé
-- [ ] `lib/supabase/proxy.ts` -- appeler `accessDecision` ; cookies copiés sur la redirection de `/` comme avant -- même comportement
-- [ ] `tests/helpers/harness.ts` -- `fake.exchange` et `auth.exchangeCodeForSession` -- la route devient testable
-- [ ] `tests/actions/auth-confirm.test.ts` -- cas de la matrice de la route -- contrat figé
-- [ ] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- retirer « la route `/auth/confirm` et le garde du proxy » des fonctions à tester ; noter la règle des préfixes (`/authors`, `/login-x` passent sans session, sans effet aujourd'hui : aucune route de ce nom, la RLS protège les données)
+- [x] `lib/auth.ts` -- ajouter `accessDecision(pathname, signedIn)` (`{ action: "next" }` ou `{ action: "redirect", to }`), code déplacé tel quel -- décision testable
+- [x] `lib/auth.test.ts` -- cas de la matrice du proxy -- comportement figé
+- [x] `lib/supabase/proxy.ts` -- appeler `accessDecision` ; cookies copiés sur la redirection de `/` comme avant -- même comportement
+- [x] `tests/helpers/harness.ts` -- `fake.exchange` et `auth.exchangeCodeForSession` -- la route devient testable
+- [x] `tests/actions/auth-confirm.test.ts` -- cas de la matrice de la route -- contrat figé
+- [x] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- retirer « la route `/auth/confirm` et le garde du proxy » des fonctions à tester ; noter la règle des préfixes (`/authors`, `/login-x` passent sans session, sans effet aujourd'hui : aucune route de ce nom, la RLS protège les données)
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
@@ -68,9 +68,30 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `accessDecision` dans `lib/auth.ts` ; `updateSession` l'appelle, la copie des cookies reste réservée à la redirection de `/` (comportement d'origine). Harnais : `fake.exchange` et `auth.exchangeCodeForSession`, plus `next/server` en module vide (la route l'importe pour un type effacé, que Node ne résout pas sans extension). Cas ajoutés après relecture : caractères de contrôle dans `next`, `error: undefined`, `next` vide, caractérisation des préfixes. 4 + 8 tests nouveaux.
+- Écarts avec la spec : la doublure `next/server` (non prévue) ; le cas `evil.com` sans schéma ajouté à la matrice ; la caractérisation des préfixes figés (la spec disait seulement de ne pas les durcir).
+- Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre) ; six mutations détectées ; la copie des cookies et le câblage de `updateSession` (inversion de `!!user`) ne sont couverts par aucun test.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Caractères de contrôle dans `next` non testés côté route | medium | patch : `\r\n` et `\u0000` ajoutés |
+| 2 | Échange réussi avec `error: undefined` non testé (`!error` → `=== null` passerait) | medium | patch : test ajouté |
+| 3 | Test « lève ou client impossible » mêlait deux cas, sans vérifier l'échange tenté | medium | patch : deux tests, `codes` vérifié dans chacun |
+| 4 | Préfixes `/authors`, `/login-x` : aucun test ne les fige | medium | patch : test de caractérisation signalé « à resserrer » ; un futur durcissement devient une décision visible |
+| 5 | Câblage de `updateSession` (`!!user`, branche de redirection) sans test : une inversion passerait `npm test` | medium | defer : déjà dans la dette (exclu par la spec) ; remède : doublures de `@supabase/ssr` et `next/server` + `tests/actions/proxy.test.ts` ; filet actuel : RLS et contrôle d'Alex |
+| 6 | Copie des cookies liée à `pathname === "/"` hors de la décision | low | defer (dette) : comportement d'origine, commentaire ajouté |
+| 7 | Doublure `next/server` vide pourrait masquer un usage futur | low | rejeté : un import nommé d'un module sans export échoue bruyamment au chargement (pas `undefined`) |
+| 8 | `import type` dans la route éviterait la doublure | low | rejeté : modifier la route est hors du périmètre ; la doublure est documentée |
+| 9 | Faux `exchangeCodeForSession` plus pauvre que le vrai (`data`) | low | rejeté : la route ne lit que `error` |
+| 10 | Format du bloc de dette, ligne vide du journal | low | rejeté : même format que les autres entrées différées, les entrées du journal sont déjà séparées ainsi |
+| 11 | Spec périmée, écarts non consignés | low | patch (cette mise à jour) |
+| 12 | `matcher`, requête dans l'adresse, `code` très long non testés | low | rejeté : `matcher` et chemin sans requête déjà dans la dette ; code long sans effet |
 
 ## Verification
 
