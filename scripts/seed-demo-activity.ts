@@ -46,7 +46,7 @@ if (already.data?.length) {
 }
 
 // 1. Restes de tests : on retire dans l'ordre des dépendances (encaissements, factures, devis, missions, fiches).
-const junk = (col: string) => `${col}.like.%[essai-ui]%,${col}.like.%[isolation-test]%`; // marqueurs de test seulement (les missions « Devis du … » créées par un vrai envoi ne sont pas touchées)
+const junk = (col: string) => `${col}.like.%[essai-ui]%,${col}.like.%[isolation-test]%`; // marqueurs de test seulement (les missions « Client — devis du … » créées par un vrai envoi ne sont pas touchées)
 const junkClients = ok("lecture des fiches de test", await db.from("clients").select("id").or(junk("name")));
 const junkMissions = ok("lecture des missions de test", await db.from("missions").select("id").or(junk("title")));
 console.log(`${DRY ? "(à purger)" : "-"} ${junkClients.length} fiche(s) et ${junkMissions.length} mission(s) de test`);
