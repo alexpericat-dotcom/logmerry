@@ -9,4 +9,6 @@ for (const key of Object.getOwnPropertyNames(dom.window)) {
 for (const key of ["window", "document", "navigator"]) {
   Object.defineProperty(g, key, { configurable: true, value: key === "window" ? dom.window : (dom.window as never)[key] });
 }
+// React lit un <form> jsdom avec `new FormData(form)` : celui de Node refuse un formulaire jsdom, on utilise celui de jsdom.
+Object.defineProperty(g, "FormData", { configurable: true, value: (dom.window as never)["FormData"] });
 g.IS_REACT_ACT_ENVIRONMENT = true; // React : les mises à jour passent par act() (Testing Library s'en charge)
