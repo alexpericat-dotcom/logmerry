@@ -1,5 +1,5 @@
 import { dayFromNumber, dayNumber } from "./dates.ts";
-import { daysUntil, inView } from "./deadlines.ts";
+import { DEADLINE_CATEGORY_LABELS, daysUntil, inView, type CalendarLine, type DeadlineCategory } from "./deadlines.ts";
 
 /** Affichages du calendrier (`?affichage=`) : la liste reste celui par défaut. */
 export const DISPLAYS = ["liste", "kanban", "gantt"] as const;
@@ -66,6 +66,27 @@ export function ganttScale(dates: string[], today: string): GanttScale {
   const last = Math.max(dayNumber(all[all.length - 1]) + GANTT_PAD_DAYS, first + GANTT_MIN_DAYS);
   const days = last - first;
   return { start: dayFromNumber(first), end: dayFromNumber(last), days, position: (day) => Math.min(100, Math.max(0, ((dayNumber(day) - first) / days) * 100)) };
+}
+
+/** Une échéance faite figure au Gantt tant que sa date limite n'est pas plus ancienne que ce nombre de jours (l'axe reste lisible ; le reste est en Liste et en Kanban). */
+export const GANTT_DONE_DAYS = 30;
+
+/** Jalon du Gantt : `kind` « deadline » ouvre la fiche de l'échéance, « invoice » est un lien (`href`) vers les factures. */
+export type GanttMark = { key: string; title: string; due_on: string; level: Urgency; row: string; kind: "deadline" | "invoice"; href?: string };
+
+/**
+ * Jalons du Gantt : les échéances à faire (toute date), les échéances faites des `GANTT_DONE_DAYS` derniers jours ou à venir (niveau « faite »),
+ * et les lignes datées de factures. Le filtre de période (`inView`) a déjà été appliqué par l'appelant.
+ */
+export function ganttMarks(deadlines: { id: string; title: string; due_on: string; category: DeadlineCategory; done_at: string | null }[], lines: CalendarLine[], today: string): GanttMark[] {
+  const marks: GanttMark[] = [];
+  for (const d of deadlines) {
+    const done = d.done_at !== null;
+    if (done && daysUntil(d.due_on, today) < -GANTT_DONE_DAYS) continue;
+    marks.push({ key: d.id, title: d.title, due_on: d.due_on, level: urgency(d.due_on, done, today), row: DEADLINE_CATEGORY_LABELS[d.category], kind: "deadline" });
+  }
+  for (const l of lines) if (l.due_on) marks.push({ key: l.key, title: l.title, due_on: l.due_on, level: urgency(l.due_on, false, today), row: "Factures", kind: "invoice", href: l.href });
+  return marks;
 }
 
 /** Niveaux d'affichage de jalons sur une même ligne : un jalon va sur le premier niveau libre (sa place en pixels, plus la largeur de son intitulé, est la fin du niveau). */
