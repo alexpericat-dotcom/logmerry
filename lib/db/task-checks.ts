@@ -2,7 +2,7 @@ import type { Db } from "../supabase/server.ts";
 import { checkKey, type CheckTarget } from "../domain/cockpit/today.ts";
 
 /**
- * Cocher (`checked: true`) ou décocher une tâche du cockpit (règles 2 à 6) pour le jour `day` : LA seule écriture de cette coche,
+ * Cocher (`checked: true`) ou décocher une tâche du cockpit (règles 2 à 8) pour le jour `day` : LA seule écriture de cette coche,
  * partagée par l'action et par le test d'isolation. La facture, le profil et les règles ne sont jamais modifiés.
  * Idempotente : l'unicité (propriétaire, règle, source, plafond, seuil, jour) ignore un doublon, décocher une coche absente ne fait rien.
  */

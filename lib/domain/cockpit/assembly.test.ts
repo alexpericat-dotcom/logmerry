@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CeilingResult } from "../finance/ceilings.ts";
+import { todayTasks } from "./today.ts";
 import { bannerDescription, invoiceViews, missionsForCockpit, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "./assembly.ts";
 
 const TODAY = "2026-10-23";
@@ -100,4 +101,15 @@ test("missionsForCockpit : `invoiced` vrai dès qu'une facture existe pour la mi
     { id: "b", status: "done", title: "B", client_name: null, invoiced: false },
   ]);
   assert.deepEqual(missionsForCockpit([], [{ mission_id: "a" }]), []);
+});
+
+test("de la lecture au rappel : une mission terminée avec une facture n'a pas de tâche « Facturer », sans facture elle en a une", () => {
+  const missions = [
+    { id: "m1", status: "done", title: "Avec facture", client: { name: "Acme" } },
+    { id: "m2", status: "done", title: "Sans facture", client: { name: "Acme" } },
+  ];
+  const run = (invoices: { mission_id: string }[]) =>
+    todayTasks([], [], new Set(), [], [], null, [], missionsForCockpit(missions, invoices), [], "2026-10-29").filter((t) => t.rule === 8).map((t) => t.id);
+  assert.deepEqual(run([{ mission_id: "m1" }]), ["m2"]);
+  assert.deepEqual(run([]), ["m1", "m2"], "ordre par titre : « Avec facture » avant « Sans facture »");
 });

@@ -253,11 +253,14 @@ test("règle 8 : une facture enregistrée, un autre statut ou une information ab
   assert.equal(toInvoice([]).length, 0);
 });
 
-test("règle 8 : une tâche par mission, ordre stable ; fiche sans client et sans titre nommées", () => {
+test("règle 8 : une tâche par mission, ordre par titre puis identifiant ; mission sans client et sans titre nommée", () => {
   const t = toInvoice([doneNoInvoice("b"), doneNoInvoice("a", { client_name: null, title: undefined })]);
   assert.deepEqual(t.map((x) => x.id), ["a", "b"]);
   assert.equal(t[0].title, "Facturer la mission sans titre");
   assert.equal(t[0].context, "Sans client / sans titre");
+  // Le titre prime sur l'identifiant : « Alpha » (id z) avant « Zèbre » (id a) ; à titre égal, l'identifiant.
+  const byTitle = toInvoice([doneNoInvoice("a", { title: "Zèbre" }), doneNoInvoice("z", { title: "Alpha" }), doneNoInvoice("y", { title: "Alpha" })]);
+  assert.deepEqual(byTitle.map((x) => x.id), ["y", "z", "a"]);
 });
 
 test("règle 8 : coche du jour (clé de la mission) = barrée, tâche conservée, en bas de liste", () => {

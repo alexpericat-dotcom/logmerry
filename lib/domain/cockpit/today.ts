@@ -254,8 +254,9 @@ export function todayTasks(
       context: `${sp.mission.client_name ?? "Sans client"} / ${sp.mission.title} / ${sp.name}`,
     });
   }
-  for (const m of missions) {
-    if (m.status !== "done" || m.invoiced !== false) continue;
+  // Ordre : titre de la mission, puis identifiant (le rang dans `order` départage à date égale : toutes ont la date du jour).
+  const toInvoice = missions.filter((m) => m.status === "done" && m.invoiced === false).sort((a, b) => (a.title ?? "").localeCompare(b.title ?? "", "fr") || a.id.localeCompare(b.id));
+  for (const [i, m] of toInvoice.entries()) {
     tasks.push({
       rule: 8,
       id: m.id,
@@ -265,6 +266,7 @@ export function todayTasks(
       date: asOf,
       done: checked.has(checkKey(8, m.id)),
       missionId: m.id,
+      order: i,
       context: `${m.client_name ?? "Sans client"} / ${m.title ?? "sans titre"}`,
     });
   }

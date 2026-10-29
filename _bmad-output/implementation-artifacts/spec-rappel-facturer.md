@@ -68,4 +68,9 @@ route: 'dispatch'
 
 ## Review Triage Log
 
-(à remplir après les relecteurs)
+(29 octobre 2026, 3 relecteurs, 20 constats, aucun bloquant)
+
+Corrigés : ordre des missions « titre puis identifiant » (le code triait par identifiant seul : écart avec la spec, test avec titres inversés) ; test qui enchaîne la lecture (`missionsForCockpit`) et la règle (`todayTasks`) ; commentaire périmé de `task-checks.ts`.
+Reportés (dette) : lecture sans pagination (la base coupe en silence autour de 1 000 lignes : une facture dans la partie coupée ferait un faux rappel) ; ligne de `task_checks` orpheline quand une mission cochée est supprimée (comme les règles 2, 5 et 7) ; liste non plafonnée (vingt anciennes missions terminées « offertes » noieraient le cockpit : limite assumée) ; pas de test du composant de la ligne ni de la page ; script de démo sans retour arrière ; `invoiced` absent = aucun rappel (un futur appelant qui l'oublierait ne serait pas averti).
+Vérifié à l'exécution seulement après la migration : `test:isolation` (code 23514 pour une coche de règle 8 sans mission).
+Rejetés : la coche ne vaut que pour le jour (voulu, comme les autres règles) ; étiquette `LINKS["invoice-due"]` remplacée par le lien de la mission (sans effet).
