@@ -173,8 +173,7 @@ function TaskRow({ task, handle, onDeleted }: { task: TaskRecord; handle: ReactN
   );
 }
 
-/** Tâches d'une user story : liste réordonnable, case à cocher, modification et suppression sur place, ajout en bas. L'avancement ne change jamais le statut de la story. */
-/** `showProgress` : faux pour une story terminée (voir `showTaskProgress`). */
+/** Tâches d'une user story : liste réordonnable, case à cocher, modification et suppression sur place, ajout en bas. L'avancement ne change jamais le statut de la story. `showProgress` : faux pour une story terminée (voir `showTaskProgress`). */
 export function Tasks({ storyId, storyTitle, tasks, showProgress }: { storyId: string; storyTitle: string; tasks: TaskRecord[]; showProgress: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState("");

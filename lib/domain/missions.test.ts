@@ -109,7 +109,7 @@ test("tris par fin, client et statut ; départage par date de création ; accent
 const mk = (id: string, title: string, client: string | null) => ({ id, title, client: client === null ? null : { name: client } });
 
 test("recherche de missions : titre ou nom du client, casse et accents ignorés, tous les mots requis", () => {
-  const all = [mk("1", "Refonte du site", "Société Étoile"), mk("2", "Atelier n8n", "Dupont"), mk("3", "Devis du 18/10/2026 — Dupont", "Dupont")];
+  const all = [mk("1", "Refonte du site", "Société Étoile"), mk("2", "Atelier n8n", "Dupont"), mk("3", "Dupont — devis du 18/10/2026", "Dupont")];
   assert.deepEqual(matchMissions(all, "REFONTE").map((m) => m.id), ["1"]);
   assert.deepEqual(matchMissions(all, "etoile").map((m) => m.id), ["1"], "nom du client, sans accent");
   assert.deepEqual(matchMissions(all, "dupont atelier").map((m) => m.id), ["2"], "un mot dans le titre, l'autre dans le nom du client");

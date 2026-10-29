@@ -88,7 +88,7 @@ begin
   insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q7, ua, cl, 100, 'sent', '2026-10-23');
   perform pg_temp.chk('accept_quote avec un nom de fiche de 200 caractères', pg_temp.act(ua, format('select public.accept_quote(%L)', q7)), 'ok:1');
   select mission_id into m2 from public.quotes where id = q7;
-  perform pg_temp.chk('titre de mission borné à 200, nom en tête, date en queue', (select (char_length(title) <= 200 and title like 'É"l''%' and title like '% — devis du 23/10/2026')::text from public.missions where id = m2), 'true');
+  perform pg_temp.chk('titre de mission borné à 200, nom en tête, date en queue', (select (char_length(title) <= 200 and title like 'É"l''%' and title like '% — devis du 23/10/2026' and char_length(title) = 192)::text from public.missions where id = m2), 'true');
 
   -- Refus
   insert into public.quotes (id, owner_id, client_id, amount_ht_cents, status, sent_on) values (q3, ua, ca, 7000, 'sent', '2026-10-20');

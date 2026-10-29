@@ -97,7 +97,11 @@ export async function startSprint(id: string): Promise<SprintActionState> {
     if (error) return error.code === "23505" ? "already" : "error";
     if (data?.length) {
       // Second temps : une mission « à planifier » devient « en cours ». Son échec ne défait pas le démarrage (rien n'est affiché, le statut se change à la main).
-      await supabase.from("missions").update({ status: "in_progress" }).eq("id", data[0].mission_id).eq("status", "planned");
+      try {
+        await supabase.from("missions").update({ status: "in_progress" }).eq("id", data[0].mission_id).eq("status", "planned");
+      } catch {
+        // réseau coupé : le sprint est déjà démarré, on ne le présente pas comme un échec
+      }
       refresh(data[0].mission_id);
       return "saved";
     }

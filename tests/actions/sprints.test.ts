@@ -108,11 +108,24 @@ describe("startSprint", () => {
     assert.deepEqual(fake.revalidated, [PAGE]);
   });
 
-  test("démarrage refusé : la mission n'est jamais touchée", async () => {
+  test("exception pendant la bascule (réseau coupé) : le sprint reste démarré, la page est rafraîchie, aucun message", async () => {
+    routes(["sprints:update", { data: [{ id: SPRINT, mission_id: MISSION }] }], [
+      "missions:update",
+      () => {
+        throw new Error("fetch failed");
+      },
+    ]);
+    assert.deepEqual(await startSprint(SPRINT), {});
+    assert.deepEqual(fake.revalidated, [PAGE]);
+  });
+
+  test("démarrage refusé (sprint déjà en cours, plus planifié, disparu) : la mission n'est jamais touchée", async () => {
     routes(["sprints:update", { error: { code: "23505" } }]);
-    await startSprint(SPRINT);
+    assert.match((await startSprint(SPRINT)).message ?? "", /déjà en cours/);
     routes(["sprints:select", { data: [{ id: SPRINT }] }]);
-    await startSprint(SPRINT);
+    assert.match((await startSprint(SPRINT)).message ?? "", /ne peut plus être démarré/);
+    routes();
+    assert.match((await startSprint(SPRINT)).message ?? "", /n'existe plus/);
     assert.equal(fake.on("missions", "update").length, 0);
   });
 

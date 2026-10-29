@@ -64,4 +64,9 @@ route: 'dispatch'
 
 ## Review Triage Log
 
-(à remplir après les relecteurs)
+(29 octobre 2026, 3 relecteurs, 26 constats, aucun bloquant)
+
+Corrigés : exception pendant la bascule de la mission (le sprint démarré ne doit pas afficher « Démarrage impossible » : `try/catch` + test avec exception, la mutation « catch qui relance » est détectée) ; test « démarrage refusé » à trois cas avec leurs messages ; borne exacte du titre dans `quotes-lifecycle.sql` (192 caractères) ; JSDoc de `Tasks` fusionné ; fixture de `missions.test.ts` et commentaire de `seed-demo-activity.ts` au nouveau format.
+Reportés (dette) : câblage des compteurs (`story-list.tsx`, `tasks.tsx`) sans test de composant (`Tasks` demande de simuler actions, dnd-kit et IA ; la règle est testée en fonction pure) ; bascule sans trace quand la base renvoie une erreur ; missions déjà créées gardent l'ancien titre ; docs `parcours-demo.md` et `deferred-work.md` à mettre à jour après la fusion de la PR #83 (écart 4 conservé) ; `StoryStatus` plus strict que `string` pour `showTaskProgress`.
+Vérifié après la migration seulement : `tests/sql/quotes-lifecycle.sql` rejoué ; `test:isolation`.
+Rejetés : `routes()` cumulatif (il remplace la réponse) ; région `role="status"` vide (elle reste dans le DOM pour annoncer les changements) ; droits de `accept_quote` (`create or replace` les conserve) ; espace final du nom du client dans le titre (cosmétique).
