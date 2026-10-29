@@ -19,6 +19,7 @@ const LINKS = {
   "sprint-end": { href: "/missions", label: "Voir la mission" },
   "sprint-task": { href: "/missions", label: "Voir la mission" },
   pipeline: { href: "/missions", label: "Voir les missions" },
+  "invoice-due": { href: "/missions", label: "Voir la mission" },
 } as const;
 
 export const ALL_DONE = "Bravo, tu as fait toutes tes tâches du jour.";

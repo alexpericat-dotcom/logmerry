@@ -7,11 +7,12 @@ import { fieldState } from "../profile.ts";
 
 /** Tâche du jour du cockpit, calculée à la lecture (AD-5) : jamais stockée, tri unique règle → date → identifiant. */
 export type TodayTask = {
-  rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  /** 1 à 8 : les règles du PRD (FR-14) ; 9 : les tâches du sprint (pas une règle, jamais cochées ici). */
+  rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   /** Identifiant de la source (échéance ou facture) : une source, une tâche. Règle 3 : plafond et seuil ; règle 4 : « acre ». */
   id: string;
-  kind: "deadline" | "invoice" | "ceiling" | "acre" | "quote" | "pipeline" | "sprint-end" | "sprint-task";
-  /** Règles 7 et 8 : « Client / Mission / Sprint X » et la mission (lien). */
+  kind: "deadline" | "invoice" | "ceiling" | "acre" | "quote" | "pipeline" | "sprint-end" | "sprint-task" | "invoice-due";
+  /** Règles 7 et 8 et tâches du sprint : « Client / Mission (/ Sprint X) » et la mission (lien). */
   context?: string;
   missionId?: string;
   /** Départage à date égale, avant l'identifiant (ordre du sprint, des stories, des tâches). */
@@ -38,12 +39,12 @@ export type AcreProfile = Record<string, unknown> | null;
 
 export type MissingLine = { text: string; link: "/profil" | "/regles" };
 
-/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle), 5 (devis) ou 7 (sprint). */
-export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6 | 7; sourceId?: string; ceilingKey?: string; threshold?: number };
+/** Ce qui identifie une coche du jour : règle 2 (facture), 3 (plafond et seuil), 4 et 6 (rien d'autre que la règle), 5 (devis), 7 (sprint) ou 8 (mission à facturer). */
+export type CheckTarget = { rule: 2 | 3 | 4 | 5 | 6 | 7 | 8; sourceId?: string; ceilingKey?: string; threshold?: number };
 
 /** Cible de coche d'une tâche du cockpit ; `null` pour une échéance (sa coche vit dans `deadlines.done_at`). Ici, dans le domaine : le composant client l'importe. */
 export const targetOf = (t: TodayTask): CheckTarget | null =>
-  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : t.rule === 7 ? { rule: 7, sourceId: t.id } : null; // règle 8 (tâche de sprint) : la coche vit dans tasks.done
+  t.rule === 2 ? { rule: 2, sourceId: t.id } : t.rule === 3 ? { rule: 3, ceilingKey: t.ceilingKey, threshold: t.threshold } : t.rule === 4 ? { rule: 4 } : t.rule === 5 ? { rule: 5, sourceId: t.id } : t.rule === 6 ? { rule: 6 } : t.rule === 7 ? { rule: 7, sourceId: t.id } : t.rule === 8 ? { rule: 8, sourceId: t.id } : null; // règle 9 (tâche de sprint) : la coche vit dans tasks.done
 
 /** Clé de coche du jour : règle, source, plafond, seuil (cocher 90 % ne masque pas 100 %). */
 export const checkKey = (rule: number, sourceId?: string | null, ceilingKey?: string | null, threshold?: number | null) => `${rule}|${sourceId ?? ""}|${ceilingKey ?? ""}|${threshold ?? ""}`;
@@ -115,7 +116,7 @@ function sprintTasks(sprints: SprintWork[], asOf: string): SprintTasks {
       for (const t of [...st.tasks].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id))) {
         if (t.done && t.done_on !== asOf) continue;
         const list = t.done ? doneToday : open;
-        list.push({ rule: 8, id: t.id, kind: "sprint-task", title: t.title, reason, date: sp.end_date, done: t.done, context, missionId: sp.mission.id, order: list.length });
+        list.push({ rule: 9, id: t.id, kind: "sprint-task", title: t.title, reason, date: sp.end_date, done: t.done, context, missionId: sp.mission.id, order: list.length });
       }
     }
   }
@@ -131,7 +132,17 @@ export function sprintOverflow(sprints: SprintWork[], asOf: string): { count: nu
 
 /** Devis lu par les règles 5 et 6 ; `updated_on` = jour de Paris de `updated_at`. Seul « sent » compte. */
 export type QuoteInput = { id: string; status: string; client_id: string; client_name: string | null; mission_id: string | null; updated_on: string };
-export type MissionPipelineInput = { id: string; status: string };
+/**
+ * Mission lue par les règles 6 et 8. `invoiced` (au moins une facture enregistrée pour la mission) n'est donné que pour la règle 8 : sans lui (`undefined`),
+ * on ne sait pas, et aucun rappel de facturation n'est produit. `title` et `client_name` servent au texte de la tâche.
+ */
+export type MissionPipelineInput = { id: string; status: string; title?: string; client_name?: string | null; invoiced?: boolean };
+
+/**
+ * Ordre d'affichage des règles : la règle 8 (facturer) passe juste après la règle 2 (facture échue) : l'argent à encaisser, puis l'argent à facturer
+ * (décision d'Alex, 29 octobre 2026) ; les autres gardent leur numéro, les tâches du sprint (9) restent après toutes les règles.
+ */
+const PRIORITY: Record<TodayTask["rule"], number> = { 1: 1, 2: 2, 8: 2.5, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 9: 9 };
 
 const days = (n: number) => `${n} jour${n > 1 ? "s" : ""}`;
 
@@ -139,7 +150,8 @@ const days = (n: number) => `${n} jour${n > 1 ? "s" : ""}`;
  * Règle 1 : échéances saisies dans 0 à 3 jours (une échéance en retard relève du calendrier). Les faites restent, cochées.
  * Règle 2 : factures non soldées dont l'échéance est dépassée d'au moins 1 jour. `checked` : clés de coche du jour (`task_checks`, voir `checkKey`).
  * Règle 5 : devis « envoyé » sans modification depuis plus de 7 jours. Règle 6 : moins de 2 éléments au pipeline (missions à planifier ou en cours, devis envoyés ; un devis lié à une telle mission compte une fois).
- * Règle 7 : sprint en cours qui se termine dans 0 à 2 jours avec des stories non terminées. Après toutes les règles : tâches du sprint (rang 8, trois au plus).
+ * Règle 7 : sprint en cours qui se termine dans 0 à 2 jours avec des stories non terminées. Règle 8 : mission « terminée » sans aucune facture enregistrée.
+ * Après toutes les règles : tâches du sprint (rang 9, trois au plus).
  * Règle 3 : un plafond dont un seuil actif du profil est atteint (le plus haut seul, 100 % remplace 90 %). Règle 4 : fin d'ACRE estimée dans 0 à 31 jours.
  * Les tâches cochées descendent en bas ; l'ordre reste règle, date la plus proche, identifiant.
  */
@@ -242,6 +254,22 @@ export function todayTasks(
       context: `${sp.mission.client_name ?? "Sans client"} / ${sp.mission.title} / ${sp.name}`,
     });
   }
+  // Ordre : titre de la mission, puis identifiant (le rang dans `order` départage à date égale : toutes ont la date du jour).
+  const toInvoice = missions.filter((m) => m.status === "done" && m.invoiced === false).sort((a, b) => (a.title ?? "").localeCompare(b.title ?? "", "fr") || a.id.localeCompare(b.id));
+  for (const [i, m] of toInvoice.entries()) {
+    tasks.push({
+      rule: 8,
+      id: m.id,
+      kind: "invoice-due",
+      title: `Facturer la mission ${m.title ?? "sans titre"}`,
+      reason: "mission terminée, aucune facture enregistrée",
+      date: asOf,
+      done: checked.has(checkKey(8, m.id)),
+      missionId: m.id,
+      order: i,
+      context: `${m.client_name ?? "Sans client"} / ${m.title ?? "sans titre"}`,
+    });
+  }
   tasks.push(...sprintTasks(sprints, asOf).shown);
-  return tasks.sort((a, b) => Number(a.done) - Number(b.done) || a.rule - b.rule || a.date.localeCompare(b.date) || (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id));
+  return tasks.sort((a, b) => Number(a.done) - Number(b.done) || PRIORITY[a.rule] - PRIORITY[b.rule] || a.date.localeCompare(b.date) || (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id));
 }

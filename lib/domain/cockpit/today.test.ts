@@ -203,7 +203,7 @@ test("tâches du sprint : stories à faire, sprint planifié ou clos = rien", ()
 test("règle 7 : fin à J+2 avec des stories ouvertes = tâche avant les tâches du sprint ; J+3 ou tout terminé = rien", () => {
   const stories = [story("s1", "in_progress", 1, [task("t1", 1)]), story("s2", "todo", 2)];
   const t = sp([sprint("a", 2, stories)]);
-  assert.deepEqual(t.map((x) => [x.rule, x.reason]), [[7, "ton sprint se termine dans 2 jours, 2 stories non terminées"], [8, "dans ton sprint, qui se termine dans 2 jours"]]);
+  assert.deepEqual(t.map((x) => [x.rule, x.reason]), [[7, "ton sprint se termine dans 2 jours, 2 stories non terminées"], [9, "dans ton sprint, qui se termine dans 2 jours"]]);
   assert.equal(sp([sprint("a", 3, stories)]).filter((x) => x.rule === 7).length, 0);
   assert.equal(sp([sprint("a", 1, [story("s1", "done", 1)])]).filter((x) => x.rule === 7).length, 0);
   assert.equal(sp([sprint("a", 0, [story("s1", "todo", 1)])])[0].reason, "ton sprint se termine aujourd'hui, 1 story non terminée");
@@ -211,7 +211,7 @@ test("règle 7 : fin à J+2 avec des stories ouvertes = tâche avant les tâches
 
 test("fin dépassée : tâches du sprint avec « fin dépassée », pas de règle 7", () => {
   const t = sp([sprint("a", -1, [story("s1", "in_progress", 1, [task("t1", 1)]), story("s2", "todo", 2)])]);
-  assert.deepEqual(t.map((x) => [x.rule, x.reason]), [[8, "dans ton sprint, dont la fin est dépassée de 1 jour"]]);
+  assert.deepEqual(t.map((x) => [x.rule, x.reason]), [[9, "dans ton sprint, dont la fin est dépassée de 1 jour"]]);
 });
 
 test("tâche de sprint cochée aujourd'hui : reste, cochée, en bas, hors décompte ; faite un autre jour : disparaît", () => {
@@ -234,4 +234,47 @@ test("« N autres tâches » : le lien vise la mission de la première tâche ca
   const a = sprint("a", 5, [story("s", "in_progress", 1, [task("a1", 1), task("a2", 2), task("a3", 3)])]);
   const b = sprint("b", 9, [story("s", "in_progress", 1, [task("b1", 1), task("b2", 2)])]);
   assert.deepEqual(sprintOverflow([a, b], TODAY), { count: 2, missionId: "m-b" });
+});
+
+// ---- Règle 8 : mission terminée sans facture ----
+type M = { id: string; status: string; title?: string; client_name?: string | null; invoiced?: boolean };
+const toInvoice = (missions: M[], checked: string[] = [], invoices: Inv[] = []) => todayTasks([], invoices, new Set(checked), [], [], null, [], missions, [], TODAY).filter((x) => x.rule === 8);
+const doneNoInvoice = (id: string, over: Partial<M> = {}): M => ({ id, status: "done", title: `Mission ${id}`, client_name: "Acme", invoiced: false, ...over });
+
+test("règle 8 : mission terminée sans facture = tâche « Facturer la mission … » avec son motif et son contexte", () => {
+  const t = toInvoice([doneNoInvoice("m1")]);
+  assert.deepEqual(t.map((x) => [x.kind, x.title, x.reason, x.context, x.missionId, x.done]), [["invoice-due", "Facturer la mission Mission m1", "mission terminée, aucune facture enregistrée", "Acme / Mission m1", "m1", false]]);
+});
+
+test("règle 8 : une facture enregistrée, un autre statut ou une information absente ne déclenchent rien", () => {
+  assert.equal(toInvoice([doneNoInvoice("a", { invoiced: true })]).length, 0, "facture enregistrée");
+  for (const status of ["planned", "in_progress", "cancelled"]) assert.equal(toInvoice([doneNoInvoice(status, { status })]).length, 0, status);
+  assert.equal(toInvoice([doneNoInvoice("x", { invoiced: undefined })]).length, 0, "on ne sait pas : rien");
+  assert.equal(toInvoice([]).length, 0);
+});
+
+test("règle 8 : une tâche par mission, ordre par titre puis identifiant ; mission sans client et sans titre nommée", () => {
+  const t = toInvoice([doneNoInvoice("b"), doneNoInvoice("a", { client_name: null, title: undefined })]);
+  assert.deepEqual(t.map((x) => x.id), ["a", "b"]);
+  assert.equal(t[0].title, "Facturer la mission sans titre");
+  assert.equal(t[0].context, "Sans client / sans titre");
+  // Le titre prime sur l'identifiant : « Alpha » (id z) avant « Zèbre » (id a) ; à titre égal, l'identifiant.
+  const byTitle = toInvoice([doneNoInvoice("a", { title: "Zèbre" }), doneNoInvoice("z", { title: "Alpha" }), doneNoInvoice("y", { title: "Alpha" })]);
+  assert.deepEqual(byTitle.map((x) => x.id), ["y", "z", "a"]);
+});
+
+test("règle 8 : coche du jour (clé de la mission) = barrée, tâche conservée, en bas de liste", () => {
+  const t = todayTasks([], [], new Set([checkKey(8, "a")]), [], [], null, [], [doneNoInvoice("a"), doneNoInvoice("b")], [], TODAY).filter((x) => x.rule === 8);
+  assert.deepEqual(t.map((x) => [x.id, x.done]), [["b", false], ["a", true]]);
+});
+
+test("règle 8 : juste après la règle 2 (facture échue) et avant les plafonds, l'ACRE, les devis et le sprint", () => {
+  const all = todayTasks([dl("e", "2026-10-26")], [inv("f", "2026-10-22")], new Set(), [], [], null, [quote("q", day(8))], [doneNoInvoice("m1"), ...FULL], [], TODAY); // FULL : pipeline rempli, pas de règle 6
+  assert.deepEqual(all.map((x) => x.rule), [1, 2, 8, 5]);
+});
+
+test("coche de la règle 8 : la cible est la mission ; une tâche de sprint (règle 9) n'a pas de coche du jour", () => {
+  const [t] = toInvoice([doneNoInvoice("m1")]);
+  assert.deepEqual(targetOf(t), { rule: 8, sourceId: "m1" });
+  assert.equal(targetOf({ ...t, rule: 9 }), null);
 });

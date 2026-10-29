@@ -14,6 +14,7 @@
     "test:proposals": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/proposals-run.ts",
     "seed:demo": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo.ts",
     "seed:backlog": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-backlog.ts",
+    "seed:to-invoice": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-to-invoice.ts",
     "seed:activity": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-activity.ts",
     "test:retrieval": "node --import ./tests/helpers/register.mjs --test \"tests/retrieval/*.test.ts\"",
     "test:components": "node --import ./tests/helpers/register-components.mjs --test \"tests/components/*.test.tsx\"",

@@ -18,7 +18,7 @@ import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
 import { PENDING_QUOTES_HREF } from "@/lib/domain/clients";
-import { bannerDescription, invoiceViews, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "@/lib/domain/cockpit/assembly";
+import { bannerDescription, invoiceViews, missionsForCockpit, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "@/lib/domain/cockpit/assembly";
 import { cockpitKpis, deadlineDaysOfMonth, upcomingDeadlines } from "@/lib/domain/cockpit/overview";
 import { draftSummary } from "@/lib/domain/cockpit/summary";
 import { sprintOverflow, todayMissing, todayTasks } from "@/lib/domain/cockpit/today";
@@ -47,7 +47,7 @@ async function Tasks() {
     rules,
     profile,
     quotesWithParisDay(quotes),
-    missions,
+    missionsForCockpit(missions, invoices),
     sprints,
     today,
   );
