@@ -15,7 +15,6 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 
-
 import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { indexNote } from "@/app/(app)/notes/indexing";

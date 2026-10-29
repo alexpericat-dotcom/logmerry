@@ -22,6 +22,7 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 
 ## 3. Données et comportement (priorité moyenne)
 - **Deux acceptations de devis simultanées** : la sérialisation repose sur `select … for update` dans `accept_quote`, aucun test à deux connexions ne la prouve.
+- **Statut d'une story** : le formulaire d'édition ne distingue pas « statut re-choisi à l'identique » de « statut intact » (comparaison de valeurs avec `initial_status`) : si un autre onglet a changé le statut, choisir exprès la valeur d'ouverture n'est pas écrit (cas rare ; remède : un indicateur « touché » posé par le menu). `initial_status` vient du client (sans risque : la story est celle du compte, la RLS fait foi).
 - **Règles et profil** : `usableRule` ne relance pas `parseParams` sur la ligne lue ; `missingFields` ne signale pas statut et catégorie préremplis (les règles exigeront « Confirmé » ou `unconfirmedInputs`, AD-5).
 - **Cockpit** :
   - une source en échec fait tomber toute la page ;

@@ -22,9 +22,9 @@ export function testAccount(who: "A" | "B"): { email: string; password: string }
   return { email, password };
 }
 
-const needEnv = (name: string) => {
+const needEnv = (name: string, failurePrefix = "") => {
   const value = process.env[name];
-  if (!value) throw new Error(`Variable manquante : ${name} (voir .env.local et .env.test.local)`);
+  if (!value) throw new Error(`${failurePrefix}variable manquante : ${name} (voir .env.local et .env.test.local)`);
   return value;
 };
 
@@ -34,7 +34,7 @@ const needEnv = (name: string) => {
  */
 export async function signInTestAccount(who: "A" | "B", failurePrefix = "") {
   const { email, password } = testAccount(who);
-  const client = createClient(needEnv("NEXT_PUBLIC_SUPABASE_URL"), needEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
+  const client = createClient(needEnv("NEXT_PUBLIC_SUPABASE_URL", failurePrefix), needEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", failurePrefix), { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.auth.signInWithPassword({ email, password });
   if (error || !data.user) throw new Error(`${failurePrefix}connexion impossible pour compte de test ${who} : ${error?.message ?? "pas d'utilisateur"}`);
   return { client, userId: data.user.id };

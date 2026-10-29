@@ -2,7 +2,7 @@
 title: 'Dette, lot A : correctifs rapides'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'cbf7427b1efac3e7e2a3445c662a541688b557f0'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -49,12 +49,12 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/domain/palette.ts`, `palette.test.ts` -- `?.` + test -- (1)
-- [ ] `story-form.tsx`, `story-actions.ts`, `stories.test.ts` -- champ caché `initial_status` quand `initial` existe ; `updateStory` n'écrit le statut que s'il a changé ; trois cas (intact, changé, sans `initial_status`) -- (2)
-- [ ] `ceilings.ts`, `payments.ts` et leurs tests -- `== null` ; cas `undefined` -- (3)
-- [ ] `tests/isolation.test.ts` -- lire le `created_at` de la réponse, dater la question une seconde avant -- (4)
-- [ ] `tests/helpers/accounts.ts` et les six fichiers -- `signInTestAccount(who)` (client Supabase connecté, identifiant de l'utilisateur) -- (5)
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus (garder `usableRule` et `missingFields`)
+- [x] `lib/domain/palette.ts`, `palette.test.ts` -- `?.` + test -- (1)
+- [x] `story-form.tsx`, `story-actions.ts`, `stories.test.ts` -- champ caché `initial_status` quand `initial` existe ; `updateStory` n'écrit le statut que s'il a changé ; trois cas (intact, changé, sans `initial_status`) -- (2)
+- [x] `ceilings.ts`, `payments.ts` et leurs tests -- `== null` ; cas `undefined` -- (3)
+- [x] `tests/isolation.test.ts` -- lire le `created_at` de la réponse, dater la question une seconde avant -- (4)
+- [x] `tests/helpers/accounts.ts` et les six fichiers -- `signInTestAccount(who)` (client Supabase connecté, identifiant de l'utilisateur) -- (5)
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus (garder `usableRule` et `missingFields`)
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
@@ -65,9 +65,27 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- (1) `palette.ts` : `e.key?.toLowerCase()`, type `key: string | undefined`. (2) `story-form.tsx` : champ caché `initial_status` figé à l'ouverture (`useState`) ; `story-actions.ts` : le statut n'est écrit que s'il diffère. (3) `== null` à quatre endroits (`ceilings.ts`, `payments.ts` deux fois, `quotes.ts` : la spec n'en citait que deux, même défaut). (4) `isolation.test.ts` : question datée depuis le `created_at` de la réponse. (5) `signInTestAccount` (`accounts.ts`), six fichiers.
+- Écarts : message de connexion unifié (« …connexion impossible pour compte de test X : … », préfixe de chaque fichier conservé, y compris pour une variable manquante) ; `tests/components/story-form.test.tsx` ajouté après relecture (le champ caché n'était vérifié par aucun test), avec une doublure de `useRouter` dans le chargeur des composants.
+- Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre) ; en réel `test:isolation` 127/127 et `test:leak` 18/18 (dont `purge`) ; `test:rag` et `test:proposals` : type-check seulement. Mutations : (1) 1, (2) 3 + 2 sur le formulaire, (3) 4.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Champ caché `initial_status` et son figement sans test (le retirer ou le rendre « vivant » passait) | medium | patch : `story-form.test.tsx` ; deux mutations détectées |
+| 2 | Variable manquante : le préfixe « TEST NON CONCLUANT » était perdu | medium | patch : `needEnv` reçoit le préfixe |
+| 3 | Re-choisir exprès la valeur d'ouverture n'est pas écrit (comparaison de valeurs) | low | defer : limite inhérente, ajoutée à la dette (avec la note sur `initial_status` venu du client) |
+| 4 | Assertion en double dans `quotes.test.ts` | low | patch : retirée |
+| 5 | Le formulaire resterait monté après une sauvegarde réussie, `initialStatus` figé | false | `state.ok` appelle `onDone` : le formulaire se ferme (et après une erreur, rien n'a été écrit : figé à raison) |
+| 6 | `signInTestAccount` non exercé hors des scripts réels | false | `purge.test.ts` est dans `test:leak` (18/18) ; seuls `rag-run` et `proposals-run` sont type-checkés |
+| 7 | Autres `tax_cents === null` (affichages) | low | rejeté : lignes lues en base, `null` garanti ; hors du contrat des fonctions du domaine corrigées |
+| 8 | `mA.data!` sans assertion, wrappers `signIn` d'une ligne, doubles lignes vides, journal | low | rejeté (cosmétique) ; doubles lignes vides corrigées |
+| 9 | Spec périmée, Code Map sans `quotes.ts` | low | patch (cette mise à jour) |
 
 ## Verification
 
