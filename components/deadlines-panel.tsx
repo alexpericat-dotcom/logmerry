@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
 import { DISPLAYS, DISPLAY_LABELS, calendarHref, type Display } from "@/lib/domain/deadline-boards";
-import { DEADLINE_VIEWS, DEADLINE_VIEW_LABELS, groupDeadlines, inView, type CalendarLine, type DeadlineView } from "@/lib/domain/deadlines";
+import { calendarSections, overdueText } from "@/lib/domain/calendar-panel";
+import { DEADLINE_VIEWS, DEADLINE_VIEW_LABELS, type CalendarLine, type DeadlineView } from "@/lib/domain/deadlines";
 
 export const CALENDAR_DESCRIPTION = "Tes obligations administratives, chacune avec sa date et son lien officiel. Ce n'est pas un agenda : pas de rendez-vous, seulement ce que tu dois faire avant une date.";
 
@@ -47,11 +48,7 @@ export function DeadlinesPanel({ deadlines, lines, view, display, today }: { dea
     document.getElementById(sectionId)?.focus({ preventScroll: true });
   }, []);
   // Story 5.1b : la vue filtre les échéances stockées et les lignes datées ; « À confirmer » (sans date) n'est que dans « Toutes ».
-  const visible = deadlines.filter((d) => inView(view, { due_on: d.due_on, done: d.done_at !== null }, today));
-  const datedLines = lines.filter((l) => l.due_on !== null && inView(view, { due_on: l.due_on, done: false }, today));
-  const undatedLines = view === "toutes" ? lines.filter((l) => l.due_on === null) : [];
-  const { overdue, upcoming, done: finished } = groupDeadlines(visible, today);
-  const overdueCount = groupDeadlines(deadlines, today).overdue.length + lines.filter((l) => l.due_on !== null && l.due_on < today).length;
+  const { visible, datedLines, undatedLines, overdue, upcoming, finished, overdueLines, upcomingLines, overdueCount, show, upcomingEmpty } = calendarSections(deadlines, lines, view, today);
 
   const section = (id: string, title: string, rows: DeadlineRecord[], extra: CalendarLine[], emptyText: string) => {
     const list: Entry[] = [
@@ -95,7 +92,7 @@ export function DeadlinesPanel({ deadlines, lines, view, display, today }: { dea
       </PageBanner>
       <div className={cn("flex flex-col gap-6", display === "liste" && "max-w-3xl")}>
         <p className="text-sm font-semibold">
-          {overdueCount === 0 ? "Rien en retard." : `${overdueCount} élément${overdueCount > 1 ? "s" : ""} en retard (échéances et factures).`}
+          {overdueText(overdueCount)}
         </p>
         <p role="status" className="sr-only">
           {announce}
@@ -105,9 +102,9 @@ export function DeadlinesPanel({ deadlines, lines, view, display, today }: { dea
         {display === "gantt" && <DeadlineGantt deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
         {display === "liste" && (
           <>
-          {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
-          {view !== "retard" && section("deadlines-upcoming", "À venir", upcoming, datedLines.filter((l) => (l.due_on as string) >= today), deadlines.length === 0 && lines.length === 0 ? "Aucune échéance pour l'instant." : "Rien à venir.")}
-          {view === "toutes" && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
+          {show.overdue && section("deadlines-overdue", "En retard", overdue, overdueLines, "Rien en retard.")}
+          {show.upcoming && section("deadlines-upcoming", "À venir", upcoming, upcomingLines, upcomingEmpty)}
+          {show.done && section("deadlines-done", "Faites", finished, [], "Aucune échéance faite.")}
           </>
         )}
         {view === "toutes" && undatedLines.length > 0 && (

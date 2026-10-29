@@ -18,19 +18,13 @@ import { Input } from "@/components/ui/input";
 import { CLIENT_ORIGIN_LABELS } from "@/lib/domain/clients";
 import { NOTE_TYPE_LABELS } from "@/lib/domain/notes";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
+import { GROUP_LABELS, enterAction, isPaletteShortcut, itemHref, nextActive, paletteItems, paletteNav, paletteOptionId, startsGroup, statusText, type PaletteItem } from "@/lib/domain/palette";
 import { SEARCH_MAX, normalizeQuery } from "@/lib/domain/search";
 import { cn } from "@/lib/utils";
 
 const DELAY_MS = 200;
 
-/** Une ligne de résultat : une note, une fiche ou une mission ; l'ordre de la liste est celui de la navigation au clavier. */
-type Item =
-  | { kind: "note"; id: string; note: SearchResult }
-  | { kind: "client"; id: string; client: ClientHit }
-  | { kind: "mission"; id: string; mission: MissionHit };
-const ROUTES = { note: "notes", client: "clients", mission: "missions" } as const;
-const GROUPS = { note: "Notes", client: "Clients", mission: "Missions" } as const;
-const optionId = (item: Item) => `search-${item.kind}-${item.id}`;
+type Item = PaletteItem<SearchResult, ClientHit, MissionHit>;
 
 /** Bouton « Rechercher » + palette ⌘K / Ctrl+K (<dialog> natif : piège de focus, Échap et retour du focus). */
 export function SearchPalette({ labelClass }: { labelClass: string }) {
@@ -50,12 +44,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (
-        e.isComposing ||
-        e.key.toLowerCase() !== "k" ||
-        !(e.metaKey || e.ctrlKey)
-      )
-        return;
+      if (!isPaletteShortcut(e)) return;
       e.preventDefault();
       if (!dialog.current?.open) open();
     };
@@ -93,42 +82,11 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   // Les résultats ne valent que pour la saisie à laquelle ils répondent.
   const done = !!q && answered === q;
-  const shown = useMemo<Item[]>(
-    () =>
-      done
-        ? [
-            ...results.map((note): Item => ({
-              kind: "note",
-              id: note.id,
-              note,
-            })),
-            ...clients.map((client): Item => ({
-              kind: "client",
-              id: client.id,
-              client,
-            })),
-            ...missions.map((mission): Item => ({
-              kind: "mission",
-              id: mission.id,
-              mission,
-            })),
-          ]
-        : [],
-    [done, results, clients, missions],
-  );
+  const shown = useMemo<Item[]>(() => paletteItems(done, results, clients, missions), [done, results, clients, missions]);
 
   // Entrée « Demander à l'assistant » en tête dès qu'une requête est saisie ; les résultats suivent.
-  const hasAssistant = !!q;
-  const total = (hasAssistant ? 1 : 0) + shown.length;
-  const current = Math.min(active, Math.max(total - 1, 0)); // l'index peut être périmé quand les résultats changent
-  const activeResult = hasAssistant ? shown[current - 1] : shown[current];
-  const activeId = !total
-    ? undefined
-    : hasAssistant && current === 0
-      ? "search-assistant"
-      : activeResult
-        ? optionId(activeResult)
-        : undefined;
+  const nav = paletteNav(q, shown, active);
+  const { hasAssistant, total, current, activeId } = nav;
 
   useEffect(() => {
     if (activeId)
@@ -137,7 +95,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   const choose = (item: Item) => {
     dialog.current?.close();
-    router.push(`/${ROUTES[item.kind]}/${item.id}`);
+    router.push(itemHref(item));
   };
 
   const askAssistant = () => {
@@ -147,18 +105,17 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
 
   const onInputKey = (e: React.KeyboardEvent) => {
     if (e.nativeEvent.isComposing || !total) return;
-    if (e.key === "ArrowDown") setActive((current + 1) % total);
-    else if (e.key === "ArrowUp") setActive((current - 1 + total) % total);
+    const next = nextActive(e.key, current, total);
+    if (next !== null) setActive(next);
     else if (e.key === "Enter") {
-      if (hasAssistant && current === 0) askAssistant();
-      else if (activeResult) choose(activeResult);
+      const action = enterAction(nav);
+      if (action?.type === "assistant") askAssistant();
+      else if (action) choose(action.item);
     } else return;
     e.preventDefault();
   };
 
-  const status = done
-    ? (message ?? (shown.length ? "" : "Aucun résultat"))
-    : "";
+  const status = statusText(done, message, shown.length);
 
   return (
     <>
@@ -228,10 +185,10 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
           )}
           {shown.map((item, i) => {
             const index = hasAssistant ? i + 1 : i;
-            const group = GROUPS[item.kind];
-            const firstOfGroup = i === 0 || shown[i - 1].kind !== item.kind;
+            const group = GROUP_LABELS[item.kind];
+            const firstOfGroup = startsGroup(shown, i);
             return (
-              <Fragment key={optionId(item)}>
+              <Fragment key={paletteOptionId(item)}>
                 {firstOfGroup && (
                   <li
                     role="presentation"
@@ -241,7 +198,7 @@ export function SearchPalette({ labelClass }: { labelClass: string }) {
                   </li>
                 )}
                 <li
-                  id={optionId(item)}
+                  id={paletteOptionId(item)}
                   role="option"
                   aria-selected={index === current}
                   onClick={() => choose(item)}
