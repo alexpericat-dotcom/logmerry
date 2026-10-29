@@ -68,3 +68,10 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - source_spec: none
   summary: Extraire et tester l'index de la palette ⌘K (`components/search-palette.tsx` : assemblage des lignes, navigation au clavier, texte d'état, raccourci) et la composition du panneau du calendrier (`components/deadlines-panel.tsx` : filtrage par vue, lignes datées ou non, compteur « en retard », découpage retard / à venir ; mappage facture → ligne dans `app/(app)/calendrier/page.tsx`).
   evidence: scindé de la spec d'accès (garde du proxy et route `/auth/confirm`, 29 octobre 2026) : deux PR indépendantes ; même méthode que `lib/domain/cockpit/assembly.ts`, avec contrôle visuel d'Alex.
+
+- source_spec: spec-parcours-demo.md
+  summary: Écarts relevés au déroulé du parcours de démo (29 octobre 2026), à trancher avec Alex avant d'agir : (1) démarrer un sprint laisse la mission « À planifier » (passage « En cours » à la main) ; (2) une story passée « Terminée » garde ses tâches à « 0 sur N faites » (rien n'est coché, aucun avertissement) ; (3) passer la mission « Terminée » ne prévient pas quand des stories restent à faire ; (4) le titre automatique de la mission d'un devis accepté (« Devis du JJ/MM/AAAA — Nom ») est peu parlant.
+  evidence: déroulé réel sur le compte A, `docs/parcours-demo.md` ; aucun de ces points n'est une erreur : ce sont des choix de l'application à confirmer.
+- source_spec: spec-parcours-demo.md
+  summary: Mesure de vitesse sur le déploiement (story 7.4, « moins de 3 secondes ») non faite : relevé en développement à chaud seulement (0,4 à 1,5 s par page). Reste du compte A : client, mission, devis et facture « [isolation-test] Prospect devis » laissés par un test d'isolation (à supprimer ou à faire nettoyer par le test).
+  evidence: la production demande une session connectée que l'assistant ne peut pas ouvrir (identifiants de test non lus par principe).
