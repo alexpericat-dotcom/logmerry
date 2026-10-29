@@ -22,7 +22,7 @@ import type { SprintRecord } from "@/lib/db/sprints";
 import type { TaskRecord } from "@/lib/db/tasks";
 import type { StoryRecord } from "@/lib/db/user-stories";
 import { SPRINT_STATUS_LABELS, acceptsStories } from "@/lib/domain/sprints";
-import { taskProgress, taskProgressLabel } from "@/lib/domain/tasks";
+import { showTaskProgress, taskProgress, taskProgressLabel } from "@/lib/domain/tasks";
 import { STORY_STATUSES, STORY_STATUS_LABELS, storySentence, type StoryStatus } from "@/lib/domain/user-stories";
 
 function DeleteStory({ story, taskCount, onCancel, onDeleted }: { story: StoryRecord; taskCount: number; onCancel: () => void; onDeleted: () => void }) {
@@ -126,7 +126,7 @@ export function StoryItem({
           <span className="line-clamp-2 min-w-0 break-words font-semibold">{story.title}</span>
         </button>
         <div className="ml-auto flex shrink-0 items-center gap-2 max-md:pl-11">
-          {progress.total > 0 && (
+          {showTaskProgress(status, progress) && (
             <span className="whitespace-nowrap text-xs text-muted-foreground" title={taskProgressLabel(progress)}>
               <span aria-hidden="true">{progress.done}/{progress.total} tâches</span>
               <span className="sr-only">{taskProgressLabel(progress)}</span>
@@ -229,7 +229,7 @@ export function StoryItem({
             {currentSprint?.status === "closed" && <span className="text-xs text-muted-foreground">Sprint clos : la story n&apos;en sort plus.</span>}
           </div>
           <StoryReview storyId={story.id} storyTitle={story.title} />
-          <Tasks storyId={story.id} storyTitle={story.title} tasks={tasks} />
+          <Tasks storyId={story.id} storyTitle={story.title} tasks={tasks} showProgress={showTaskProgress(status, progress)} />
           {mode === "view" && (
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-filet pt-3">
               <Button ref={editButton} type="button" variant="outline" size="sm" onClick={() => setMode("edit")}>

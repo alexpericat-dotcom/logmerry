@@ -70,8 +70,8 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
   evidence: scindé de la spec d'accès (garde du proxy et route `/auth/confirm`, 29 octobre 2026) : deux PR indépendantes ; même méthode que `lib/domain/cockpit/assembly.ts`, avec contrôle visuel d'Alex.
 
 - source_spec: spec-parcours-demo.md
-  summary: Écarts relevés au déroulé du parcours de démo (29 octobre 2026), à trancher avec Alex avant d'agir : (1) démarrer un sprint laisse la mission « À planifier » (passage « En cours » à la main) ; (2) une story passée « Terminée » garde ses tâches à « 0 sur N faites » (rien n'est coché, aucun avertissement) ; (3) passer la mission « Terminée » ne prévient pas quand des stories restent à faire ; (4) le titre automatique de la mission d'un devis accepté (« Devis du JJ/MM/AAAA — Nom ») est peu parlant.
-  evidence: déroulé réel sur le compte A, `docs/parcours-demo.md` ; aucun de ces points n'est une erreur : ce sont des choix de l'application à confirmer.
+  summary: Passer une mission « Terminée » ne prévient pas quand des stories restent à faire (écart 4 du déroulé du parcours de démo, 29 octobre 2026) ; les trois autres écarts (mission « En cours » au démarrage d'un sprint, compteur d'une story terminée, titre de la mission d'un devis accepté) sont corrigés par `spec-parcours-ecarts.md`.
+  evidence: Alex ne sait pas s'il veut cet avertissement ; piste : une ligne d'information non bloquante dans le formulaire de la mission (« 3 stories ne sont pas terminées »).
 - source_spec: spec-parcours-demo.md
-  summary: Mesure de vitesse sur le déploiement (story 7.4, « moins de 3 secondes ») non faite : relevé en développement à chaud seulement (0,4 à 1,5 s par page). Reste du compte A : client, mission, devis et facture « [isolation-test] Prospect devis » laissés par un test d'isolation (à supprimer ou à faire nettoyer par le test).
+  summary: Mesure de vitesse sur le déploiement (story 7.4, « moins de 3 secondes ») non faite : relevé en développement à chaud seulement (0,4 à 1,5 s par page). Les restes « [isolation-test] » du compte A ont été supprimés le 29 octobre 2026 ; à vérifier si un test d'isolation en recrée (il en avait laissé).
   evidence: la production demande une session connectée que l'assistant ne peut pas ouvrir (identifiants de test non lus par principe).
