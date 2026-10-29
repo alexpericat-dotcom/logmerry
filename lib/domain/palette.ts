@@ -13,7 +13,7 @@ export const itemHref = (item: { kind: Kind; id: string }) => `/${ROUTES[item.ki
 export const startsGroup = (shown: { kind: string }[], i: number) => i === 0 || shown[i - 1].kind !== shown[i].kind;
 
 /** ⌘K ou Ctrl+K (majuscule comprise), hors saisie en composition (IME). */
-export const isPaletteShortcut = (e: { isComposing: boolean; key: string; metaKey: boolean; ctrlKey: boolean }) => !e.isComposing && e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
+export const isPaletteShortcut = (e: { isComposing: boolean; key: string | undefined; metaKey: boolean; ctrlKey: boolean }) => !e.isComposing && e.key?.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
 
 /** Les résultats ne valent que pour la saisie à laquelle ils répondent (`done`) : notes, puis fiches, puis missions. */
 export function paletteItems<N extends { id: string }, C extends { id: string }, M extends { id: string }>(done: boolean, notes: N[], clients: C[], missions: M[]): PaletteItem<N, C, M>[] {
