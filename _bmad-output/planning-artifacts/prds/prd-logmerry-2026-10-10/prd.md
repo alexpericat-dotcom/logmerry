@@ -159,8 +159,8 @@ Le propriétaire crée et suit des prospects, clients et contacts, avec un statu
 
 #### FR-22 : Suivi de devis
 Le propriétaire suit un devis rattaché à une mission ou à un prospect. **Conséquences (testables) :**
-- Champs : montant et date d'envoi obligatoires ; statut « envoyé » (par défaut), « accepté » ou « refusé » ; remarque facultative.
-- Statut « accepté » (18 octobre) : pour un devis lié à une **mission existante**, rien d'autre ne change ; pour un devis lié à un **prospect**, le prospect passe en **client** et une **mission est créée automatiquement** (client, statut « en cours », titre automatique « Devis du JJ/MM/AAAA — Nom du client », modifiable ensuite comme toute mission). Statut « refusé » : la tâche correspondante disparaît du cockpit.
+- Champs : montant obligatoire ; date d'envoi demandée au moment de l'envoi (30 octobre 2026) ; quatre statuts : « brouillon » (par défaut, hors cockpit : il ne compte nulle part), « envoyé », « accepté » ou « refusé » ; remarque facultative. Un brouillon se supprime mais ne se refuse pas ; un devis envoyé reste modifiable ; un devis accepté ou refusé est figé et définitif ; un devis envoyé, accepté ou refusé ne se supprime jamais (décisions du 18 octobre 2026, story 3.6).
+- Statut « accepté » (18 octobre) : pour un devis lié à une **mission existante**, rien d'autre ne change ; pour un devis lié à un **prospect**, le prospect passe en **client** et une **mission est créée automatiquement** (client, statut « en cours », titre automatique « Nom du client — devis du JJ/MM/AAAA » (30 octobre 2026 : ordre corrigé d'après le code livré), modifiable ensuite comme toute mission). Statut « refusé » : la tâche correspondante disparaît du cockpit.
 - La règle 5 de FR-14 (devis sans réponse depuis 7 jours) s'appuie sur ce suivi : seul un devis au statut « envoyé » la déclenche.
 - Aucun document de devis n'est produit (FR-18 reste un non-objectif).
 
