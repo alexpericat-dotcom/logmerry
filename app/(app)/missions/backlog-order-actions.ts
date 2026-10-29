@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { orderWithClaude } from "@/lib/ai/backlog-order";
 import { renumber } from "@/lib/db/renumber";
 import { applyOrderToSlots, backlogUnchanged, buildOrderMessage, moves, orderSources, pickOrderable, sameOrder, verifyOrder } from "@/lib/domain/backlog-order";
@@ -59,6 +61,8 @@ export async function proposeBacklogOrder(missionId: string, hint: string): Prom
 
     const clientName = mission.data.client?.name ?? "";
     const input = { missionTitle: mission.data.title as string, clientName, stories: sent, sprintTitles, hint: text };
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: Record<string, unknown>;
     try {
       raw = await orderWithClaude(buildOrderMessage(input));

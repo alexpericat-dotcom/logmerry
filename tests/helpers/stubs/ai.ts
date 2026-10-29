@@ -19,6 +19,7 @@ export const proposeWithClaude = async (...args: unknown[]) => answer("propose",
 export const proposeTasksWithClaude = async (...args: unknown[]) => answer("tasks", args) as unknown[];
 export const reviewWithClaude = async (...args: unknown[]) => answer("review", args) as Record<string, unknown>;
 export const writePromptWithClaude = async (...args: unknown[]) => answer("prompt", args) as string;
+export const askClaude = async (...args: unknown[]) => answer("ask", args, true) as { answer: string; citations: string[] };
 export const summarizeWithClaude = async (...args: unknown[]) => answer("summary", args) as string;
 
 export const EMBEDDING_MODEL = "mistral-embed";

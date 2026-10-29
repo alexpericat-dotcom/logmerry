@@ -14,6 +14,8 @@ import {
 } from "@/lib/domain/notes";
 import { validateLink, type LinkErrors, type NoteLink } from "@/lib/domain/note-link";
 import { indexNote } from "@/app/(app)/notes/indexing";
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { createClient } from "@/lib/supabase/server";
 import type { Db } from "@/lib/supabase/server";
 
@@ -85,7 +87,8 @@ async function resolveLink(supabase: Db, link: NoteLink): Promise<string | null 
 
 type WriteOutcome = "saved" | "not-found" | "client-gone" | "error";
 /** `id` : la note enregistrée, à indexer. */
-type WriteResult = { outcome: WriteOutcome; id?: string };
+/** `skipIndex` : titre et texte inchangés et déjà indexée : rien à réindexer (pas d'appel à Mistral). */
+type WriteResult = { outcome: WriteOutcome; id?: string; skipIndex?: boolean };
 
 /** Session, validation, écriture. `write` dit si la base a enregistré, si la note n'existe plus ou si elle a échoué. */
 async function save(
@@ -104,7 +107,8 @@ async function save(
     if (clientId === "error") return { outcome: "error" as WriteOutcome };
     const written = await write(supabase, checked.value, clientId);
     // La note est enregistrée : l'indexation ne peut plus faire échouer la sauvegarde.
-    if (written.outcome === "saved" && written.id) await indexNote(supabase, written.id, checked.value);
+    // Plafond d'appels à l'IA atteint : la note reste « en attente » et sera reprise par l'indexation en lot.
+    if (written.outcome === "saved" && written.id && !written.skipIndex && (await consumeAiQuota(supabase)) === "ok") await indexNote(supabase, written.id, checked.value);
     return { outcome: written.outcome as WriteOutcome };
   });
 
@@ -141,13 +145,18 @@ export async function updateNote(
 ): Promise<NoteFormState> {
   return save(readValues(formData), async (supabase, value, clientId) => {
     if (!isUuid(id)) return { outcome: "not-found" };
+    // Titre et texte inchangés sur une note déjà indexée (ex. seule la fiche liée change) : pas de réindexation.
+    const before = await supabase.from("notes").select("title, body, index_status").eq("id", id).maybeSingle();
+    if (before.error) return { outcome: "error" };
+    if (!before.data) return { outcome: "not-found" };
+    const unchanged = before.data.title === value.title && before.data.body === value.body && before.data.index_status === "indexed";
     const { data, error } = await supabase
       .from("notes")
-      .update({ ...value, client_id: clientId, index_status: "pending" })
+      .update({ ...value, client_id: clientId, ...(unchanged ? {} : { index_status: "pending" }) })
       .eq("id", id)
       .select("id");
     if (error) return { outcome: "error" };
-    return data?.length ? { outcome: "saved", id } : { outcome: "not-found" };
+    return data?.length ? { outcome: "saved", id, skipIndex: unchanged } : { outcome: "not-found" };
   }, backTo(formData));
 }
 
@@ -176,17 +185,20 @@ export type RetryState = { message?: string };
 
 /** Relance l'indexation d'une de mes notes (état « échec »). */
 export async function retryIndexing(id: string): Promise<RetryState> {
-  const result = await withSession(async (supabase): Promise<"indexed" | "failed" | "not-found"> => {
+  const result = await withSession(async (supabase): Promise<"indexed" | "failed" | "not-found" | "minute" | "day" | "error"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("notes").select("title, body").eq("id", id).maybeSingle();
     if (error) return "failed"; // erreur de lecture : pas une note supprimée
     if (!data) return "not-found";
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return quota;
     return indexNote(supabase, id, data);
   });
 
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed") return { message: "Indexation impossible pour le moment. Réessaie." };
   if (result.value === "not-found") return { message: NOT_FOUND };
+  if (result.value === "minute" || result.value === "day" || result.value === "error") return { message: quotaMessage(result.value) };
   revalidatePath("/notes");
   revalidatePath("/a-faire");
   revalidatePath("/aujourd-hui");

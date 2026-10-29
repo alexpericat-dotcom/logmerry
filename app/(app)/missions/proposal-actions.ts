@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { proposeWithClaude } from "@/lib/ai/story-proposals";
 import { notesForProposal } from "@/lib/db/proposal-notes";
 import { isUuid } from "@/lib/domain/notes";
@@ -44,6 +46,8 @@ export async function proposeStories(missionId: string, brief: string, noteIds: 
     const clientName = mission.data.client?.name ?? "";
 
     const message = buildProposalMessage({ missionTitle: mission.data.title, clientName, brief: text, notes: kept, existingTitles });
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return { ok: false, error: quotaMessage(quota) };
     let raw: unknown[];
     try {
       raw = await proposeWithClaude(message, withTasks === true);

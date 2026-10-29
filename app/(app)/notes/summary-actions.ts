@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { consumeAiQuota } from "@/lib/ai/quota";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { summarizeWithClaude } from "@/lib/ai/summary";
 import { isUuid } from "@/lib/domain/notes";
 import { SummaryRejected } from "@/lib/domain/summary";
@@ -32,7 +34,10 @@ export async function summarizeNote(id: string): Promise<SummaryState> {
       if (error) throw new Error(`lecture ${error.code ?? ""}`.trim());
       if (!data) state = { ok: false, error: "Cette note n'existe plus." };
       else if (!data.body.trim()) state = { ok: false, error: "Cette note n'a pas de texte à résumer." };
-      else state = { ok: true, summary: await summarizeWithClaude(data) };
+      else {
+        const quota = await consumeAiQuota(supabase);
+        state = quota !== "ok" ? { ok: false, error: quotaMessage(quota) } : { ok: true, summary: await summarizeWithClaude(data) };
+      }
     }
   } catch (e) {
     // Journal sans contenu de note ni clé : seulement la nature de l'échec.

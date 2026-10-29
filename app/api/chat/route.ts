@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { askClaude } from "@/lib/ai/chat";
+import { consumeAiQuota } from "@/lib/ai/quota";
 import { retrieveChunks } from "@/lib/db/retrieval";
 import { saveExchange } from "@/lib/db/history";
+import { quotaMessage } from "@/lib/domain/ai-quota";
 import { AnswerRejected } from "@/lib/domain/citations";
 import { answerQuestion } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
@@ -22,6 +24,10 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.getClaims();
     if (error || !data?.claims) return NextResponse.json({ error: "Connecte-toi pour utiliser l'assistant." }, { status: 401 });
+
+    // Plafond d'appels à l'IA par compte : refus avant tout appel à Mistral ou à Claude.
+    const quota = await consumeAiQuota(supabase);
+    if (quota !== "ok") return NextResponse.json({ error: quotaMessage(quota) }, { status: quota === "error" ? 503 : 429 });
 
     // Claude ne renvoie que des identifiants : le texte des sources vient des extraits lus en base, pas du modèle.
     const result = await answerQuestion(question, {
