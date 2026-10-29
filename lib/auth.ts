@@ -7,6 +7,18 @@ export function safeNext(next: string | null | undefined): string {
   return next;
 }
 
+export type AccessDecision = { action: "next" } | { action: "redirect"; to: string };
+
+/**
+ * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; hors `/login` et `/auth`, sans session, on est renvoyé à la connexion ;
+ * le reste passe. Le chemin est celui de l'adresse, sans la requête.
+ */
+export function accessDecision(pathname: string, signedIn: boolean): AccessDecision {
+  if (pathname === "/") return { action: "redirect", to: signedIn ? "/aujourd-hui" : "/auth/login" };
+  if (!signedIn && !pathname.startsWith("/login") && !pathname.startsWith("/auth")) return { action: "redirect", to: "/auth/login" };
+  return { action: "next" };
+}
+
 export type AuthFieldError = {
   field: "email" | "password" | null;
   message: string;

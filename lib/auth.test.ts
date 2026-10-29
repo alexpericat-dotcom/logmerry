@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   INVALID_CREDENTIALS_MESSAGE,
+  accessDecision,
   frenchAuthError,
   safeNext,
   validateEmail,
@@ -43,4 +44,31 @@ test("champs vides ou mal formés : message qui nomme le champ", () => {
   assert.equal(validateEmail("a@b.fr"), null);
   assert.match(validateNewPassword("court")!, /12 caractères/);
   assert.equal(validateNewPassword("un-mot-de-passe-long"), null);
+});
+
+const to = (to: string) => ({ action: "redirect", to });
+const NEXT = { action: "next" };
+
+test("garde d'accès : la racine mène au cockpit (connecté) ou à la connexion", () => {
+  assert.deepEqual(accessDecision("/", true), to("/aujourd-hui"));
+  assert.deepEqual(accessDecision("/", false), to("/auth/login"));
+});
+
+test("garde d'accès : page privée sans session = connexion, avec session = passe", () => {
+  for (const path of ["/clients", "/missions/abc", "/aujourd-hui", "/notes/nouvelle"]) {
+    assert.deepEqual(accessDecision(path, false), to("/auth/login"), path);
+    assert.deepEqual(accessDecision(path, true), NEXT, path);
+  }
+});
+
+test("garde d'accès : pages de connexion publiques sans session, et avec", () => {
+  for (const path of ["/auth/login", "/auth/confirm", "/auth/error", "/auth/forgot-password", "/auth/update-password", "/login"]) {
+    assert.deepEqual(accessDecision(path, false), NEXT, path);
+    assert.deepEqual(accessDecision(path, true), NEXT, path);
+  }
+});
+
+test("garde d'accès, FIGÉ TEL QUEL : les préfixes `/login` et `/auth` n'ont pas de barre finale, `/authors` et `/login-x` passent sans session (à resserrer : dette)", () => {
+  assert.deepEqual(accessDecision("/authors", false), NEXT);
+  assert.deepEqual(accessDecision("/login-x", false), NEXT);
 });
