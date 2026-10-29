@@ -6,6 +6,7 @@ import { resolve as base } from "./ts-hooks.mjs";
 const STUBS = {
   "next/cache": "stubs/next-cache.ts",
   "next/navigation": "stubs/next-navigation.ts",
+  "next/server": "stubs/next-server.ts",
   "@/lib/supabase/server": "stubs/supabase-server.ts",
   "@/lib/ai/backlog-order": "stubs/ai.ts",
   "@/lib/ai/sprint-composition": "stubs/ai.ts",

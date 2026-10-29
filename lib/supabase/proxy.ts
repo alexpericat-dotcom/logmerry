@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { accessDecision } from "@/lib/auth";
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -41,24 +43,15 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   // La première page est la connexion : `/` redirige ici (avant tout rendu) vers le cockpit si on est connecté, vers la connexion sinon.
-  if (request.nextUrl.pathname === "/") {
+  // Hors `/login` et `/auth`, sans session : connexion. La décision est dans `accessDecision` (testée).
+  const pathname = request.nextUrl.pathname;
+  const decision = accessDecision(pathname, !!user);
+  if (decision.action === "redirect") {
     const url = request.nextUrl.clone();
-    url.pathname = user ? "/aujourd-hui" : "/auth/login";
+    url.pathname = decision.to;
     const redirectResponse = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+    if (pathname === "/") supabaseResponse.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
     return redirectResponse;
-  }
-
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

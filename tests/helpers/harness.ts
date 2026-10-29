@@ -43,6 +43,8 @@ export const fake = {
   indexed: [] as string[],
   /** Ce que renvoie la doublure d'`indexNote`. */
   indexResult: "indexed" as "indexed" | "failed",
+  /** Échange du code de confirmation (`/auth/confirm`) : codes reçus, et réponse (une `Error` posée est levée, comme une panne réseau). */
+  exchange: { codes: [] as string[], reply: { error: null } as { error: unknown } | Error },
   /** `createClient()` lève (réseau, cookies) : l'action doit répondre « échec », pas planter. */
   failCreate: false,
   claims: { sub: "00000000-0000-4000-8000-000000000001" } as Record<string, unknown> | null,
@@ -55,6 +57,7 @@ export const fake = {
     this.ai = { calls: [], replies: {} };
     this.indexed = [];
     this.indexResult = "indexed";
+    this.exchange = { codes: [], reply: { error: null } };
     this.failCreate = false;
     this.claims = { sub: "00000000-0000-4000-8000-000000000001" };
     this.respond = () => ({ data: [], error: null });
@@ -185,6 +188,11 @@ export const client = {
     });
   },
   auth: {
+    exchangeCodeForSession: async (code: string) => {
+      fake.exchange.codes.push(code);
+      if (fake.exchange.reply instanceof Error) throw fake.exchange.reply;
+      return fake.exchange.reply;
+    },
     getClaims: async () => (fake.claims ? { data: { claims: fake.claims }, error: null } : { data: null, error: { message: "no session" } }),
     getUser: async () => (fake.claims ? { data: { user: { id: fake.claims.sub } }, error: null } : { data: { user: null }, error: { message: "no session" } }),
   },
