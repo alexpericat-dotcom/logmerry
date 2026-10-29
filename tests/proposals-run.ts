@@ -8,9 +8,7 @@
  * Code de sortie 1 si un scénario échoue. Hors de `npm test` (réseau, identifiants, clé Anthropic dans .env.local).
  */
 
-import { createClient } from "@supabase/supabase-js";
-
-import { testAccount } from "./helpers/accounts.ts";
+import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { proposeWithClaude } from "@/lib/ai/story-proposals";
 import { writePromptWithClaude } from "@/lib/ai/prompt-generation";
@@ -29,19 +27,7 @@ import { buildTaskMessage, taskSources, verifyTaskProposals, type StoryForTasks 
 
 const PREFIX = "[essai-ia]";
 
-function env(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`Variable manquante : ${name} (voir .env.local et .env.test.local)`);
-  return value;
-}
-
-async function signIn(who: "A" | "B") {
-  const { email, password } = testAccount(who);
-  const client = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(`Connexion impossible pour compte de test ${who} : ${error.message}`);
-  return client;
-}
+const signIn = async (who: "A" | "B") => (await signInTestAccount(who)).client;
 
 const BRIEF = `L'association Les Petits Débrouillards organise des ateliers de vacances pour les enfants. Aujourd'hui les inscriptions arrivent par e-mail et dans un tableur partagé :
 on perd des demandes et on ne sait pas qui a payé. Ils voudraient un outil simple pour suivre les inscriptions par atelier, relancer les familles qui n'ont pas payé,

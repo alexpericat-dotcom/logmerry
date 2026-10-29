@@ -61,7 +61,7 @@ export function validateQuoteInput(input: QuoteInput, sentRequired: boolean): { 
 }
 
 /** Montant TTC : seulement si la taxe est connue (sinon `null`, on n'invente rien). */
-export const totalCents = (q: { amount_ht_cents: number; tax_cents: number | null }): number | null => (q.tax_cents === null ? null : q.amount_ht_cents + q.tax_cents);
+export const totalCents = (q: { amount_ht_cents: number; tax_cents: number | null }): number | null => (q.tax_cents == null ? null : q.amount_ht_cents + q.tax_cents);
 
 /** Centimes → « 1 250,50 € » (espace insécable de la locale française). */
 export const formatCents = (cents: number): string => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);

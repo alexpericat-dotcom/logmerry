@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import type { StoryFormState, StoryFormValues } from "@/app/(app)/missions/story-actions";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,8 @@ export function StoryForm({
   );
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? EMPTY;
+  // Le statut reçu à l'ouverture, figé : l'action ne l'écrit que s'il a été changé dans ce formulaire (sinon un changement fait ailleurs, par le menu de statut, serait annulé).
+  const [initialStatus] = useState(initial?.status);
   const errors = state.errors ?? {};
   const title = useRef<HTMLInputElement>(null);
 
@@ -66,6 +68,7 @@ export function StoryForm({
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-4 rounded-md border border-primary/30 bg-primary/10 p-4">
+      {initialStatus !== undefined && <input type="hidden" name="initial_status" value={initialStatus} />}
       <div className="grid gap-2">
         <Label htmlFor={`${idPrefix}-title`}>Je veux… (obligatoire)</Label>
         <Input {...field("title")} ref={title} aria-required="true" autoComplete="off" placeholder="voir où en est chaque inscription" />

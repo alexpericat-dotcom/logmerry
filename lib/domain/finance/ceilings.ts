@@ -109,7 +109,7 @@ function oneCeiling(key: CeilingKey, rules: RuleRow[], profile: CeilingProfile, 
   const period = { kind: params.period, ...ceilingPeriod(params.period, asOf) };
   const counted = payments.filter((p) => p.received_on >= period.from && p.received_on <= period.to);
   const consumedCents = counted.reduce((sum, p) => sum + p.amount_ht_cents + (params.basis === "incl_tax" ? (p.tax_cents ?? 0) : 0), 0);
-  const paymentsMissingTax = params.basis === "incl_tax" ? counted.filter((p) => p.tax_cents === null).length : 0;
+  const paymentsMissingTax = params.basis === "incl_tax" ? counted.filter((p) => p.tax_cents == null).length : 0;
   const percent = Math.floor((consumedCents * 100) / params.amount);
   const active = [...new Set(profile?.alert_thresholds ?? [])].filter((t) => (THRESHOLDS as readonly number[]).includes(t)).sort((a, b) => a - b);
   const reached = active.filter((t) => percent >= t);

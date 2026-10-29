@@ -1,3 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+
 /**
  * Comptes FICTIFS des tests qui écrivent dans la vraie base (isolation, fuites, purge, essais réels) : `TEST_A_*` et `TEST_B_*` dans `.env.test.local`.
  * Ils sont distincts du compte de démonstration (`DEMO_A_*`, celui qu'on regarde dans l'application) : ces tests laissent des lignes qu'une règle de la base
@@ -18,4 +20,22 @@ export function testAccount(who: "A" | "B"): { email: string; password: string }
   if (demos.includes(email)) throw new Error(`Le compte de test ${who} (${email}) est un compte de démonstration : crée des comptes de test séparés.`);
   if (who === "B" && email === clean(process.env.TEST_A_EMAIL)) throw new Error("Les comptes de test A et B sont identiques : l'isolation entre deux comptes ne serait pas testée.");
   return { email, password };
+}
+
+const needEnv = (name: string, failurePrefix = "") => {
+  const value = process.env[name];
+  if (!value) throw new Error(`${failurePrefix}variable manquante : ${name} (voir .env.local et .env.test.local)`);
+  return value;
+};
+
+/**
+ * Se connecte à la vraie base avec le compte de TEST A ou B (jamais le compte de démonstration : `testAccount` refuse). Un seul endroit pour tous les tests
+ * et scripts qui écrivent dans la vraie base. `failurePrefix` ouvre le message d'échec (ex. « TEST NON CONCLUANT : »). Rend le client connecté et l'identifiant du compte.
+ */
+export async function signInTestAccount(who: "A" | "B", failurePrefix = "") {
+  const { email, password } = testAccount(who);
+  const client = createClient(needEnv("NEXT_PUBLIC_SUPABASE_URL", failurePrefix), needEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", failurePrefix), { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error || !data.user) throw new Error(`${failurePrefix}connexion impossible pour compte de test ${who} : ${error?.message ?? "pas d'utilisateur"}`);
+  return { client, userId: data.user.id };
 }

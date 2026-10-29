@@ -75,7 +75,7 @@ export type InvoiceBalance = {
  * Taxe de la facture inconnue : on compare le hors taxe encaissé au hors taxe de la facture.
  */
 export function invoiceBalance(invoice: InvoiceAmounts, payments: PaymentAmounts[]): InvoiceBalance {
-  const basis = invoice.tax_cents === null ? "ht" : "ttc";
+  const basis = invoice.tax_cents == null ? "ht" : "ttc"; // `== null` : une taxe indéfinie vaut une taxe inconnue (jamais zéro)
   const dueCents = invoice.amount_ht_cents + (invoice.tax_cents ?? 0);
   const paidCents = payments.reduce((sum, p) => sum + p.amount_ht_cents + (basis === "ttc" ? (p.tax_cents ?? 0) : 0), 0);
   const status: InvoiceStatus = payments.length === 0 ? "unpaid" : paidCents >= dueCents ? "paid" : "partial";
@@ -86,7 +86,7 @@ export function invoiceBalance(invoice: InvoiceAmounts, payments: PaymentAmounts
     paidCents,
     remainingCents: Math.max(0, dueCents - paidCents),
     overpaidCents: Math.max(0, paidCents - dueCents),
-    paymentsMissingTax: basis === "ttc" ? payments.filter((p) => p.tax_cents === null).length : 0,
+    paymentsMissingTax: basis === "ttc" ? payments.filter((p) => p.tax_cents == null).length : 0,
   };
 }
 

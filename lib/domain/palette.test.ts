@@ -23,6 +23,7 @@ test("raccourci : ⌘K, Ctrl+K, majuscule K ; pas k seul, ni ⌘J, ni saisie en 
   assert.equal(isPaletteShortcut(key("k")), false);
   assert.equal(isPaletteShortcut(key("j", { metaKey: true })), false);
   assert.equal(isPaletteShortcut(key("k", { metaKey: true, isComposing: true })), false);
+  assert.equal(isPaletteShortcut({ isComposing: false, key: undefined, metaKey: true, ctrlKey: false }), false); // keydown sans `key` (autoremplissage) : pas d'exception
 });
 
 test("navigation avec requête : l'assistant est en tête, les lignes suivent ; total = lignes + 1", () => {

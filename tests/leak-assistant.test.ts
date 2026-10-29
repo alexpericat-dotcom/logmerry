@@ -15,7 +15,7 @@ import { after, before, describe, test } from "node:test";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { testAccount } from "./helpers/accounts.ts";
+import { signInTestAccount } from "./helpers/accounts.ts";
 
 import { indexNote } from "@/app/(app)/notes/indexing";
 import { askClaude } from "@/lib/ai/chat";
@@ -38,13 +38,7 @@ const newClient = () =>
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-async function signIn(who: "A" | "B") {
-  const { email, password } = testAccount(who);
-  const client = newClient();
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
-  if (error || !data.user) throw new Error(`${NON_CONCLUANT}connexion impossible pour compte de test ${who} : ${error?.message ?? "?"}`);
-  return { client, userId: data.user.id };
-}
+const signIn = (who: "A" | "B") => signInTestAccount(who, NON_CONCLUANT);
 type Account = Awaited<ReturnType<typeof signIn>>;
 type Who = "A" | "B";
 const OTHER = { A: "B", B: "A" } as const;

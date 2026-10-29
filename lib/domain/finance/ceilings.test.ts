@@ -215,3 +215,10 @@ test("revue : un montant de plafond qui n'est pas un entier sûr est refusé (ja
     assert.equal(missing(micro([ceilingRule({}, { amount_cents })], profile(), [])).reason, "params_invalid", String(amount_cents));
   }
 });
+
+test("taxe d'encaissement indéfinie (et non `null`) : même signalement « minimum » que `null`", () => {
+  const incl = ceilingRule({}, { amount_cents: eur(10000), tax_basis: "incl_tax" });
+  const undef = { received_on: "2026-04-01", amount_ht_cents: eur(3000) } as unknown as CeilingPayment; // `tax_cents` absent
+  const g = gauge(micro([incl], profile(), [pay("2026-03-01", 4000, 800), undef]));
+  assert.deepEqual([g.consumedCents, g.minimum, g.paymentsMissingTax], [eur(7800), true, 1]);
+});
