@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CeilingResult } from "../finance/ceilings.ts";
-import { bannerDescription, invoiceViews, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "./assembly.ts";
+import { bannerDescription, invoiceViews, missionsForCockpit, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "./assembly.ts";
 
 const TODAY = "2026-10-23";
 const inv = (id: string, due_on: string, payments: { amount_ht_cents: number; tax_cents: number | null }[] = [], amount_ht_cents = 10_000) =>
@@ -88,4 +88,16 @@ test("plafond le plus avancé : parmi les « ok » seulement, le plus haut pourc
   assert.equal(topCeiling([missing("m")]), undefined);
   assert.equal(topCeiling([]), undefined);
   assert.equal((topCeiling([ok("a", 50), ok("b", 50)]) as { key: string }).key, "a");
+});
+
+test("missionsForCockpit : `invoiced` vrai dès qu'une facture existe pour la mission (quel que soit son statut), client et titre repris", () => {
+  const missions = [
+    { id: "a", status: "done", title: "A", client: { name: "Acme" } },
+    { id: "b", status: "done", title: "B", client: null },
+  ];
+  assert.deepEqual(missionsForCockpit(missions, [{ mission_id: "a" }, { mission_id: "a" }, { mission_id: "zzz" }]), [
+    { id: "a", status: "done", title: "A", client_name: "Acme", invoiced: true },
+    { id: "b", status: "done", title: "B", client_name: null, invoiced: false },
+  ]);
+  assert.deepEqual(missionsForCockpit([], [{ mission_id: "a" }]), []);
 });

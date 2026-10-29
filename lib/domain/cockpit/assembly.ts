@@ -2,7 +2,7 @@ import { todayParis } from "../../format.ts";
 import { isOverdue } from "../invoices.ts";
 import { invoiceBalance, type InvoiceAmounts, type InvoiceStatus, type PaymentAmounts } from "../payments.ts";
 import type { CeilingResult } from "../finance/ceilings.ts";
-import type { SprintWork } from "./today.ts";
+import type { MissionPipelineInput, SprintWork } from "./today.ts";
 
 /** Facture lue avec ses encaissements : de quoi calculer son statut. */
 type InvoiceWithPayments = InvoiceAmounts & { id: string; reference: string | null; due_on: string; mission: unknown; payments: PaymentAmounts[] };
@@ -54,4 +54,13 @@ export function bannerDescription(total: number, done: number): string {
 /** Plafond calculé (hors « paramètre manquant ») le plus avancé ; à égalité, le premier de la liste. */
 export function topCeiling(ceilings: CeilingResult[]) {
   return ceilings.flatMap((c) => (c.status === "ok" ? [c] : [])).sort((a, b) => b.percent - a.percent)[0];
+}
+
+/**
+ * Les missions sous la forme que lit `todayTasks` : avec leur titre, le nom de leur client et `invoiced` (au moins une facture enregistrée pour la mission,
+ * quel que soit son statut), de quoi produire le rappel « Facturer » de la règle 8.
+ */
+export function missionsForCockpit(missions: { id: string; status: string; title: string; client: { name: string } | null }[], invoices: { mission_id: string }[]): MissionPipelineInput[] {
+  const invoiced = new Set(invoices.map((i) => i.mission_id));
+  return missions.map((m) => ({ id: m.id, status: m.status, title: m.title, client_name: m.client?.name ?? null, invoiced: invoiced.has(m.id) }));
 }
