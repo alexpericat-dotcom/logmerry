@@ -46,10 +46,11 @@ test("jour de Paris : 22 h 30 UTC le 23 octobre est le 24 à Paris ; autres cham
   const sprints = sprintsWithParisDay([
     {
       id: "s1", name: "Sprint 1", end_date: "2026-10-30", mission: { id: "m1", title: "Mission", client_name: null },
-      stories: [{ id: "st1", status: "in_progress", position: 1, tasks: [{ id: "t1", title: "Tâche", done: true, position: 1, updated_at: "2026-10-23T22:30:00Z" }] }],
+      stories: [{ id: "st1", status: "in_progress", position: 1, tasks: [{ id: "t1", title: "Tâche", done: true, position: 1, done_at: "2026-10-23T22:30:00Z" }, { id: "t2", title: "À faire", done: false, position: 2, done_at: null }] }],
     },
   ]);
   assert.equal(sprints[0].stories[0].tasks[0].done_on, "2026-10-24");
+  assert.equal(sprints[0].stories[0].tasks[1].done_on, ""); // pas faite : aucun jour
   assert.equal(sprints[0].stories[0].tasks[0].title, "Tâche");
   assert.equal(sprints[0].mission.title, "Mission");
   const [q] = quotesWithParisDay([{ id: "q1", status: "sent", updated_at: "2026-10-23T22:30:00Z" }]);

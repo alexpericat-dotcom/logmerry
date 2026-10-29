@@ -2457,7 +2457,53 @@ describe("isolation de la lecture des sprints en cours (cockpit) entre deux comp
     assert.deepEqual(mine.map((s) => s.name), [`${NAME} actif`], "le sprint planifié est absent");
     assert.deepEqual(mine[0].mission, { id: m, title: NAME, client_name: NAME });
     assert.equal(mine[0].stories[0].status, "in_progress");
-    assert.deepEqual(mine[0].stories[0].tasks.map((t) => [t.title, t.done, typeof t.updated_at]), [["tâche", false, "string"]]);
+    assert.deepEqual(mine[0].stories[0].tasks.map((t) => [t.title, t.done, t.done_at]), [["tâche", false, null]]);
     assert.equal((await listActiveSprintWork(b.client)).filter((s) => s.name.startsWith(NAME)).length, 0, "B ne voit rien de A");
+  });
+
+  test("done_at est posé par la base : cocher le remplit, renommer ne le change pas, décocher le vide, l'API ne peut pas le forger", async () => {
+    const client = await a.client.from("clients").insert({ name: `${NAME} done_at`, origin: "demo" }).select("id").single();
+    assert.ifError(client.error);
+    const mission = await a.client.from("missions").insert({ client_id: client.data!.id, title: `${NAME} done_at` }).select("id").single();
+    assert.ifError(mission.error);
+    const story = await a.client.from("user_stories").insert({ mission_id: mission.data!.id, title: `${NAME} done_at story`, position: 1 }).select("id").single();
+    assert.ifError(story.error);
+    const row = async (id: string) => {
+      const r = await a.client.from("tasks").select("done, done_at, title, updated_at").eq("id", id).single();
+      assert.ifError(r.error);
+      return r.data!;
+    };
+    const FORGED = "2000-01-01T00:00:00Z";
+
+    const created = await a.client.from("tasks").insert({ story_id: story.data!.id, title: "t1", position: 1 }).select("id").single();
+    assert.ifError(created.error);
+    const id = created.data!.id;
+    assert.equal((await row(id)).done_at, null, "nouvelle tâche : pas faite, pas de date");
+
+    assert.ifError((await a.client.from("tasks").update({ done: true }).eq("id", id)).error);
+    const ticked = await row(id);
+    const doneAt = ticked.done_at;
+    assert.ok(doneAt && Date.parse(doneAt) > Date.parse("2020-01-01"), "cochée : date posée par la base");
+    assert.equal(Date.parse(doneAt), Date.parse(ticked.updated_at), "même instruction, même `now()` de la base (jamais l'horloge locale)");
+
+    assert.ifError((await a.client.from("tasks").update({ title: "t1 renommée" }).eq("id", id)).error);
+    const renamed = await row(id);
+    assert.deepEqual([renamed.title, renamed.done_at], ["t1 renommée", doneAt], "renommer ne change pas done_at");
+    assert.ok(Date.parse(renamed.updated_at) > Date.parse(doneAt), "alors que updated_at, lui, a bougé (c'était l'ancien défaut du cockpit)");
+
+    assert.ifError((await a.client.from("tasks").update({ done_at: FORGED }).eq("id", id)).error);
+    assert.equal((await row(id)).done_at, doneAt, "done_at forgé sur une tâche faite : ignoré");
+
+    assert.ifError((await a.client.from("tasks").update({ done: false }).eq("id", id)).error);
+    const unticked = await row(id);
+    assert.deepEqual([unticked.done, unticked.done_at, unticked.title], [false, null, "t1 renommée"], "décochée : date effacée");
+
+    assert.ifError((await a.client.from("tasks").update({ done: true, done_at: FORGED }).eq("id", id)).error);
+    const again = (await row(id)).done_at;
+    assert.ok(again && Date.parse(again) > Date.parse("2020-01-01"), "cochée avec une date forgée : la base pose la sienne");
+
+    const forgedInsert = await a.client.from("tasks").insert({ story_id: story.data!.id, title: "t2", position: 2, done: true, done_at: FORGED }).select("id, done_at").single();
+    assert.ifError(forgedInsert.error);
+    assert.ok(Date.parse(forgedInsert.data!.done_at!) > Date.parse("2020-01-01"), "insertion avec date forgée : la base pose la sienne");
   });
 });
