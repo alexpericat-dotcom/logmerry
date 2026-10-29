@@ -13,6 +13,9 @@ const STUBS = {
   // Server Actions : on teste les composants, pas les actions (testées dans tests/actions).
   "@/app/(app)/calendrier/actions": new URL("./stubs/calendrier-actions.ts", import.meta.url).href,
   "@/app/(app)/factures/payment-actions": new URL("./stubs/payment-actions.ts", import.meta.url).href,
+  "@/app/(app)/factures/actions": new URL("./stubs/invoice-actions.ts", import.meta.url).href,
+  "@/app/(app)/clients/quote-actions": new URL("./stubs/quote-actions.ts", import.meta.url).href,
+  "@/app/(app)/regles/actions": new URL("./stubs/rule-actions.ts", import.meta.url).href,
 };
 
 /** Les imports faits depuis `node_modules` gardent la résolution de Node : ts-hooks.mjs résout tout paquet depuis la racine, ce qui donnerait à jsdom

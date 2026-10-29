@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createInvoice } from "@/app/(app)/factures/actions";
 import { FocusOnMount } from "@/components/form-helpers";
@@ -40,6 +40,16 @@ export function InvoicesPanel({
     newRef.current?.scrollIntoView({ block: "center" });
   }, []);
   const done = useCallback(() => setCreating(false), []);
+  // À la fermeture du formulaire (annuler ou envoi réussi), le focus revient au bouton « Nouvelle facture ».
+  const wasCreating = useRef(false);
+  useEffect(() => {
+    if (!creating && wasCreating.current) {
+      // Même précaution que pour la suppression : sans `preventScroll`, le bouton se calerait sous l'en-tête fixe.
+      newRef.current?.focus({ preventScroll: true });
+      newRef.current?.scrollIntoView({ block: "center" });
+    }
+    wasCreating.current = creating;
+  }, [creating]);
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">

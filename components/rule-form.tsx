@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { createRule, type RuleFormState } from "@/app/(app)/regles/actions";
 import { ErrorLine, ErrorSummary, FocusOnMount, selectClass } from "@/components/form-helpers";
@@ -31,12 +31,19 @@ export function RuleForm({ ruleKey, initialParams, hasVersions }: { ruleKey: str
   // Les erreurs et le message d'une réponse déjà vue à l'ouverture ne reviennent pas quand on rouvre le formulaire.
   const [dismissed, setDismissed] = useState<RuleFormState | null>(null);
   const current = state === dismissed ? ({} as RuleFormState) : state;
+  // À la fermeture (annuler, Échap, enregistrement), le focus revient au bouton d'ouverture.
+  const openButton = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (!open && wasOpen.current) openButton.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   if (!open)
     return (
       <div className="flex flex-col gap-1">
         <div>
-          <Button size="sm" variant="outline" onClick={() => { setParams(initialParams); setDismissed(state); setOpen(true); }}>
+          <Button ref={openButton} size="sm" variant="outline" onClick={() => { setParams(initialParams); setDismissed(state); setOpen(true); }}>
             {hasVersions ? "Nouvelle version" : "Saisir la règle"}
           </Button>
         </div>
