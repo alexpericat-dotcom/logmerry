@@ -122,6 +122,28 @@ describe("updateStory / setStoryStatus", () => {
     assert.equal((await updateStory("x", {}, form(VALID))).gone, true);
   });
 
+  test("modifier, statut intact (égal à `initial_status`) : le statut n'est pas écrit, un changement fait par le menu entre-temps reste", async () => {
+    routes(["user_stories:update", { data: [{ id: STORY, mission_id: MISSION }] }], ["missions:select", { data: [{ client_id: CLIENT }] }]);
+    assert.deepEqual(await updateStory(STORY, {}, form({ ...VALID, status: "todo", initial_status: "todo", title: "Nouveau titre" })), { ok: true });
+    const payload = fake.on("user_stories", "update")[0].payload as Record<string, unknown>;
+    assert.equal(payload.title, "Nouveau titre");
+    assert.ok(!("status" in payload), "aucun `status` dans la mise à jour");
+  });
+
+  test("modifier, statut changé dans le formulaire : il est écrit ; sans `initial_status` (ancien formulaire) : écrit comme avant ; statut invalide : refusé sans requête", async () => {
+    routes(["user_stories:update", { data: [{ id: STORY, mission_id: MISSION }] }], ["missions:select", { data: [{ client_id: CLIENT }] }]);
+    await updateStory(STORY, {}, form({ ...VALID, status: "done", initial_status: "todo" }));
+    assert.equal((fake.on("user_stories", "update")[0].payload as Record<string, unknown>).status, "done");
+    fake.reset();
+    routes(["user_stories:update", { data: [{ id: STORY, mission_id: MISSION }] }], ["missions:select", { data: [{ client_id: CLIENT }] }]);
+    await updateStory(STORY, {}, form({ ...VALID, status: "in_progress" }));
+    assert.equal((fake.on("user_stories", "update")[0].payload as Record<string, unknown>).status, "in_progress");
+    fake.reset();
+    const r = await updateStory(STORY, {}, form({ ...VALID, status: "archivée", initial_status: "archivée" }));
+    assert.ok(r.errors?.status);
+    assert.equal(fake.on("user_stories", "update").length, 0);
+  });
+
   test("changer le statut : seul le statut est écrit ; statut inconnu refusé sans requête ; story disparue : écran rechargé", async () => {
     routes(["user_stories:update", { data: [{ id: STORY, mission_id: MISSION }] }], ["missions:select", { data: [{ client_id: CLIENT }] }]);
     assert.deepEqual(await setStoryStatus(STORY, "done"), {});

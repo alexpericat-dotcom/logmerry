@@ -146,10 +146,17 @@ export async function addStoryWithTasks(missionId: string, taskTitles: string[],
   });
 }
 
+/**
+ * Enregistre le formulaire d'édition. Le statut n'est écrit que s'il a été changé dans le formulaire (différent de `initial_status`, celui reçu à l'ouverture) :
+ * sinon un changement fait entre-temps par le menu de statut serait annulé. Sans `initial_status` (ancien formulaire), le statut est écrit comme avant.
+ */
 export async function updateStory(id: string, _prev: StoryFormState, formData: FormData): Promise<StoryFormState> {
-  return save(readValues(formData), async (supabase, value) => {
+  const values = readValues(formData);
+  const statusUntouched = formData.get("initial_status") === values.status;
+  return save(values, async (supabase, value) => {
     if (!isUuid(id)) return { outcome: "not-found" };
-    const { data, error } = await supabase.from("user_stories").update(value).eq("id", id).select("id, mission_id");
+    const { status: _status, ...withoutStatus } = value;
+    const { data, error } = await supabase.from("user_stories").update(statusUntouched ? withoutStatus : value).eq("id", id).select("id, mission_id");
     if (error) return { outcome: "error" };
     return data?.length ? { outcome: "saved", missionId: data[0].mission_id } : { outcome: "not-found" };
   });
