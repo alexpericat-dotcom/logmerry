@@ -22,7 +22,7 @@ const cancelButton = () => screen.getByRole("button", { name: "Annuler" });
 describe("ConfirmPanel", () => {
   test("ouverture : « Annuler » a le focus (le choix sûr), le groupe porte le nom donné", () => {
     setup();
-    assert.equal(document.activeElement, cancelButton());
+    assert.ok(document.activeElement === cancelButton());
     assert.ok(screen.getByRole("group", { name: "Supprimer la facture F-1" }));
   });
 
@@ -62,7 +62,7 @@ describe("ConfirmPanel", () => {
     await b.user.click(cancelButton());
     assert.equal(b.onCancel.mock.callCount(), 0);
     assert.equal(cancelButton().getAttribute("aria-disabled"), "true");
-    assert.equal(document.activeElement, cancelButton()); // jamais `disabled` : le focus ne se perd pas
+    assert.ok(document.activeElement === cancelButton()); // jamais `disabled` : le focus ne se perd pas
   });
 
   test("confirmer (onConfirm) : appelé une fois ; pendant l'action, libellé « en cours », aria-disabled, aucun appel", async () => {

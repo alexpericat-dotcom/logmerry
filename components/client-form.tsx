@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import type { ClientFormState } from "@/app/(app)/clients/actions";
+import { ErrorSummary, selectClass, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,49 +25,36 @@ type Props = {
   cancelHref?: string;
 };
 
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 
 export function ClientForm({ action, initial, submitLabel, cancelHref = "/clients" }: Props) {
   const [state, formAction, pending] = useActionState<ClientFormState, FormData>(action, {});
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? { name: "", status: "prospect", origin: "" };
-  const { name: nameError, status: statusError, origin: originError } = state.errors ?? {};
 
-  const field = (id: string, error: string | undefined) => ({
-    id,
-    name: id,
-    "aria-invalid": error ? (true as const) : undefined,
-    "aria-describedby": error ? `${id}-error` : undefined,
-  });
-  const errorLine = (id: string, error: string | undefined) =>
-    error && (
-      <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
-        {error}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(undefined, state.errors ?? {});
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-6">
+      <ErrorSummary errors={state.errors ?? {}} token={state} />
       <div className="grid gap-2">
         <Label htmlFor="name">Nom (obligatoire)</Label>
-        <Input {...field("name", nameError)} defaultValue={values.name} aria-required="true" autoComplete="off" />
-        {errorLine("name", nameError)}
+        <Input {...field("name")} defaultValue={values.name} aria-required="true" autoComplete="off" />
+        {errorLine("name")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="status">Statut</Label>
-        <select {...field("status", statusError)} defaultValue={values.status} className={selectClass}>
+        <select {...field("status")} defaultValue={values.status} className={selectClass}>
           {CLIENT_STATUSES.map((s: ClientStatus) => (
             <option key={s} value={s}>
               {CLIENT_STATUS_LABELS[s]}
             </option>
           ))}
         </select>
-        {errorLine("status", statusError)}
+        {errorLine("status")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="origin">Origine (obligatoire)</Label>
-        <select {...field("origin", originError)} defaultValue={values.origin} aria-required="true" className={selectClass}>
+        <select {...field("origin")} defaultValue={values.origin} aria-required="true" className={selectClass}>
           <option value="" disabled>
             Choisis une origine
           </option>
@@ -76,7 +64,7 @@ export function ClientForm({ action, initial, submitLabel, cancelHref = "/client
             </option>
           ))}
         </select>
-        {errorLine("origin", originError)}
+        {errorLine("origin")}
       </div>
       {state.message && (
         <p role="alert" className="text-sm text-destructive">

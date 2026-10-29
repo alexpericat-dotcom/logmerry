@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 
 import type { DeadlineFormState } from "@/app/(app)/calendrier/actions";
+import { ErrorSummary, selectClassTruncate as selectClass, useFormFields, useMoreFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { DEADLINE_CATEGORIES, DEADLINE_CATEGORY_LABELS, DEADLINE_PRIORITIES, DEADLINE_PRIORITY_LABELS, DEADLINE_RECURRENCES, DEADLINE_RECURRENCE_LABELS, type DeadlineInput } from "@/lib/domain/deadlines";
 import { submitWith } from "@/lib/submit-with";
 
-const selectClass =
-  "flex h-9 w-full truncate rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 export function DeadlineForm({
   idPrefix,
@@ -40,21 +39,10 @@ export function DeadlineForm({
   }, [state.saved, onDone]);
   const values = state.values ?? initial;
   const e = state.errors ?? {};
-  const [more, setMore] = useState(!!values.note || !!values.recurrence);
-  const showMore = more || !!e.note || !!e.recurrence; // une erreur ne reste jamais cachée
+  // « Plus de champs » : une erreur qui arrive dans un champ replié l'ouvre ; le bouton peut ensuite le refermer.
+  const [showMore, setMore] = useMoreFields(!!values.note || !!values.recurrence, state.errors, !!e.note || !!e.recurrence);
   const id = (name: string) => `${idPrefix}-${name}`;
-  const field = (name: keyof DeadlineInput) => ({
-    id: id(name),
-    name,
-    "aria-invalid": e[name] ? (true as const) : undefined,
-    "aria-describedby": e[name] ? `${id(name)}-error` : undefined,
-  });
-  const errorLine = (name: keyof DeadlineInput) =>
-    e[name] && (
-      <p id={`${id(name)}-error`} role="alert" className="text-sm text-destructive">
-        {e[name]}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, e);
 
   return (
     <form
@@ -67,6 +55,7 @@ export function DeadlineForm({
       }}
       className="flex max-w-2xl flex-col gap-4 rounded-md border bg-card p-3"
     >
+      <ErrorSummary errors={e} prefix={idPrefix} token={state} reveal={() => setMore(true)} />
       <div className="grid items-start gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor={id("title")}>Titre (obligatoire)</Label>

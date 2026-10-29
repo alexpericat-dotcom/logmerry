@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 
 import type { NoteFormState, NoteFormValues } from "@/app/(app)/notes/actions";
+import { ErrorSummary, selectClass } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,8 +29,6 @@ type Props = {
   listFilter?: NotesListFilter;
 };
 
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 const EMPTY: NoteFormValues = { title: "", body: "", type: "note", client_id: "", new_name: "", new_origin: "" };
 
 export function NoteForm({ action, initial, clients, submitLabel, listFilter = NO_NOTES_FILTER }: Props) {
@@ -54,6 +53,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-6">
+      <ErrorSummary errors={state.errors} token={state} />
       {listFilter.type && <input type="hidden" name="list_type" value={listFilter.type} />}
       {listFilter.draft && <input type="hidden" name="list_statut" value="brouillon" />}
       <div className="grid gap-2">
@@ -67,7 +67,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
           aria-describedby={titleError ? "title-error" : undefined}
         />
         {titleError && (
-          <p id="title-error" role="alert" className="text-sm text-destructive">
+          <p id="title-error" className="text-sm text-destructive">
             {titleError}
           </p>
         )}
@@ -89,7 +89,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
           ))}
         </select>
         {typeError && (
-          <p id="type-error" role="alert" className="text-sm text-destructive">
+          <p id="type-error" className="text-sm text-destructive">
             {typeError}
           </p>
         )}
@@ -116,7 +116,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
           <option value={NEW_CLIENT}>+ Nouvelle fiche…</option>
         </select>
         {linkError && (
-          <p id="client_id-error" role="alert" className="text-sm text-destructive">
+          <p id="client_id-error" className="text-sm text-destructive">
             {linkError}
           </p>
         )}
@@ -137,7 +137,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
               aria-describedby={newNameError ? "new_name-error" : undefined}
             />
             {newNameError && (
-              <p id="new_name-error" role="alert" className="text-sm text-destructive">
+              <p id="new_name-error" className="text-sm text-destructive">
                 {newNameError}
               </p>
             )}
@@ -180,7 +180,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
               ))}
             </select>
             {newOriginError && (
-              <p id="new_origin-error" role="alert" className="text-sm text-destructive">
+              <p id="new_origin-error" className="text-sm text-destructive">
                 {newOriginError}
               </p>
             )}
@@ -198,7 +198,7 @@ export function NoteForm({ action, initial, clients, submitLabel, listFilter = N
           aria-describedby={bodyError ? "body-error" : undefined}
         />
         {bodyError && (
-          <p id="body-error" role="alert" className="text-sm text-destructive">
+          <p id="body-error" className="text-sm text-destructive">
             {bodyError}
           </p>
         )}

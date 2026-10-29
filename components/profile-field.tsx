@@ -4,6 +4,7 @@ import { CheckCircle2, CircleDashed, CircleDot, Pencil } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import { saveProfile, type ProfileFormState } from "@/app/(app)/profil/actions";
+import { selectClass } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +13,6 @@ import { OTHER, OTHER_MAX, FREE_TEXT_MAX, THRESHOLDS, displayValue, fieldState, 
 import { formatDateTime } from "@/lib/format";
 import { submitWith } from "@/lib/submit-with";
 
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 /** État d'un champ : icône et mot, jamais la couleur seule. */
 export function ConfirmationState({ state, confirmedAt }: { state: FieldState; confirmedAt: string | null }) {

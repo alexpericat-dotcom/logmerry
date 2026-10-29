@@ -4,14 +4,13 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 
 import type { StoryFormState, StoryFormValues } from "@/app/(app)/missions/story-actions";
+import { ErrorSummary, selectClass, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { STORY_POINTS, STORY_STATUSES, STORY_STATUS_LABELS } from "@/lib/domain/user-stories";
 
-export const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 type Values = StoryFormValues;
 const EMPTY: Values = { title: "", role: "", benefit: "", acceptance_criteria: "", points: "", status: "todo" };
@@ -55,19 +54,11 @@ export function StoryForm({
   }, [state.gone, router]);
   useEffect(() => title.current?.focus(), []);
 
-  const field = (key: keyof Values) => {
-    const id = `${idPrefix}-${key}`;
-    return { id, name: key, defaultValue: values[key], "aria-invalid": errors[key] ? (true as const) : undefined, "aria-describedby": errors[key] ? `${id}-error` : undefined };
-  };
-  const errorLine = (key: keyof Values) =>
-    errors[key] && (
-      <p id={`${idPrefix}-${key}-error`} role="alert" className="text-sm text-destructive">
-        {errors[key]}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(idPrefix, errors, values);
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-4 rounded-md border border-primary/30 bg-primary/10 p-4">
+      <ErrorSummary errors={errors} prefix={idPrefix} token={state} />
       {initialStatus !== undefined && <input type="hidden" name="initial_status" value={initialStatus} />}
       <div className="grid gap-2">
         <Label htmlFor={`${idPrefix}-title`}>Je veux… (obligatoire)</Label>
