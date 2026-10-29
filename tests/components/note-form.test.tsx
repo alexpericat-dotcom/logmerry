@@ -3,7 +3,8 @@ import "../helpers/dom.ts";
 import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { NoteForm } from "../../components/note-form.tsx";
 
@@ -33,5 +34,18 @@ describe("NoteForm : retour sur la liste filtrée", () => {
     assert.equal(hidden(container, "list_type"), null);
     assert.equal(hidden(container, "list_statut"), null);
     assert.equal(annuler(), "/notes");
+  });
+});
+
+describe("NoteForm : erreurs", () => {
+  test("envoi refusé : récapitulatif avec le focus et lien vers le champ en erreur", async () => {
+    const user = userEvent.setup();
+    const refuse = async () => ({ errors: { title: "Saisis le titre." } });
+    render(<NoteForm action={refuse} clients={[]} submitLabel="Enregistrer" />);
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() => assert.ok(screen.getByText("1 erreur à corriger")));
+    assert.ok(document.activeElement === screen.getByRole("group"));
+    await user.click(screen.getByRole("link", { name: "Saisis le titre." }));
+    await waitFor(() => assert.equal(document.activeElement?.id, "title"));
   });
 });

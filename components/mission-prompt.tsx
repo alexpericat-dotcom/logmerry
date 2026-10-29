@@ -4,7 +4,7 @@ import { Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { generateMissionPrompt } from "@/app/(app)/missions/prompt-actions";
-import { selectClass } from "@/components/story-form";
+import { selectClass } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";

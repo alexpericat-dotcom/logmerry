@@ -7,7 +7,7 @@ import { closeSprint, deleteSprint, startSprint, updateSprint, type SprintAction
 import { SprintComposer } from "@/components/sprint-composer";
 import { SprintForm } from "@/components/sprint-form";
 import { StoryList } from "@/components/story-list";
-import { selectClass } from "@/components/story-form";
+import { selectClass } from "@/components/form-helpers";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";

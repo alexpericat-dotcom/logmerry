@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import type { MissionFormState, MissionFormValues } from "@/app/(app)/missions/actions";
+import { ErrorSummary, selectClass, useFormFields } from "@/components/form-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,30 +20,18 @@ type Props = {
   cancelHref: string;
 };
 
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
 
 export function MissionForm({ action, initial, clients = [], fixedClient, submitLabel, cancelHref }: Props) {
   const [state, formAction, pending] = useActionState<MissionFormState, FormData>(action, {});
   // Après une erreur, les valeurs renvoyées par l'action l'emportent sur les valeurs initiales.
   const values = state.values ?? initial ?? { client_id: "", title: "", status: "in_progress", start_date: "", end_date: "" };
   const e = state.errors ?? {};
-  const field = (id: string, error: string | undefined) => ({
-    id,
-    name: id,
-    "aria-invalid": error ? (true as const) : undefined,
-    "aria-describedby": error ? `${id}-error` : undefined,
-  });
-  const errorLine = (id: string, error: string | undefined) =>
-    error && (
-      <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
-        {error}
-      </p>
-    );
+  const { field, errorLine } = useFormFields(undefined, e);
   const sorted = [...clients].sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-6">
+      <ErrorSummary errors={e} token={state} />
       {fixedClient ? (
         <div className="grid gap-1">
           <span className="text-sm font-medium">Client</span>
@@ -57,7 +46,7 @@ export function MissionForm({ action, initial, clients = [], fixedClient, submit
               Crée d&apos;abord une fiche client ou prospect, <Link href="/clients/nouvelle" className="underline underline-offset-4">dans l&apos;onglet Clients</Link>.
             </p>
           ) : (
-            <select {...field("client_id", e.client_id)} defaultValue={values.client_id} aria-required="true" className={selectClass}>
+            <select {...field("client_id")} defaultValue={values.client_id} aria-required="true" className={selectClass}>
               <option value="" disabled>
                 Choisis un client
               </option>
@@ -68,35 +57,35 @@ export function MissionForm({ action, initial, clients = [], fixedClient, submit
               ))}
             </select>
           )}
-          {errorLine("client_id", e.client_id)}
+          {errorLine("client_id")}
         </div>
       )}
       <div className="grid gap-2">
         <Label htmlFor="title">Titre (obligatoire)</Label>
-        <Input {...field("title", e.title)} defaultValue={values.title} aria-required="true" autoComplete="off" />
-        {errorLine("title", e.title)}
+        <Input {...field("title")} defaultValue={values.title} aria-required="true" autoComplete="off" />
+        {errorLine("title")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="status">Statut</Label>
-        <select {...field("status", e.status)} defaultValue={values.status} className={selectClass}>
+        <select {...field("status")} defaultValue={values.status} className={selectClass}>
           {MISSION_STATUSES.map((s) => (
             <option key={s} value={s}>
               {MISSION_STATUS_LABELS[s]}
             </option>
           ))}
         </select>
-        {errorLine("status", e.status)}
+        {errorLine("status")}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="start_date">Date de début</Label>
-          <Input {...field("start_date", e.start_date)} type="date" defaultValue={values.start_date} />
-          {errorLine("start_date", e.start_date)}
+          <Input {...field("start_date")} type="date" defaultValue={values.start_date} />
+          {errorLine("start_date")}
         </div>
         <div className="grid gap-2">
           <Label htmlFor="end_date">Date de fin</Label>
-          <Input {...field("end_date", e.end_date)} type="date" defaultValue={values.end_date} />
-          {errorLine("end_date", e.end_date)}
+          <Input {...field("end_date")} type="date" defaultValue={values.end_date} />
+          {errorLine("end_date")}
         </div>
       </div>
       {state.message && (

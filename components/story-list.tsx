@@ -9,7 +9,8 @@ import { useActionState, useCallback, useEffect, useId, useOptimistic, useRef, u
 
 import { deleteStory, setStoryStatus, setStorySprint, updateStory, type StoryActionState } from "@/app/(app)/missions/story-actions";
 import { Row } from "@/components/sortable-list";
-import { StoryForm, selectClass } from "@/components/story-form";
+import { selectClass } from "@/components/form-helpers";
+import { StoryForm } from "@/components/story-form";
 import { StoryReview } from "@/components/story-review";
 import { Badge } from "@/components/ui/badge";
 import { Tasks } from "@/components/tasks";
