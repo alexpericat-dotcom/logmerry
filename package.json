@@ -5,7 +5,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --test \"lib/**/*.test.ts\" && npm run test:actions && npm run test:components",
+    "test": "node --test \"lib/**/*.test.ts\" && npm run test:actions && npm run test:retrieval && npm run test:components",
     "test:actions": "node --import ./tests/helpers/register-actions.mjs --test \"tests/actions/*.test.ts\"",
     "test:isolation": "node --env-file=.env.local --env-file=.env.test.local --test tests/isolation.test.ts",
     "test:leak": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs --test-concurrency=1 --test tests/leak-search.test.ts tests/leak-assistant.test.ts tests/purge.test.ts",
@@ -14,6 +14,7 @@
     "test:proposals": "node --env-file=.env.local --env-file=.env.test.local --import ./tests/helpers/register.mjs tests/proposals-run.ts",
     "seed:demo": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo.ts",
     "seed:activity": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-activity.ts",
+    "test:retrieval": "node --import ./tests/helpers/register.mjs --test \"tests/retrieval/*.test.ts\"",
     "test:components": "node --import ./tests/helpers/register-components.mjs --test \"tests/components/*.test.tsx\""
   },
   "dependencies": {
