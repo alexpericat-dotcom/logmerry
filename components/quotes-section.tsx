@@ -309,6 +309,13 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
 export function QuotesSection({ clientId, clientStatus, quotes, missions, today }: { clientId: string; clientStatus: "prospect" | "client"; quotes: QuoteItem[]; missions: MissionOption[]; today: string }) {
   const [creating, setCreating] = useState(false);
   const close = () => setCreating(false);
+  // Le formulaire remplace le bouton : à sa fermeture, le focus revient au bouton « Nouveau devis ».
+  const newButton = useRef<HTMLButtonElement>(null);
+  const wasCreating = useRef(false);
+  useEffect(() => {
+    if (!creating && wasCreating.current) newButton.current?.focus();
+    wasCreating.current = creating;
+  }, [creating]);
   return (
     <section aria-labelledby="quotes-title" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -316,7 +323,7 @@ export function QuotesSection({ clientId, clientStatus, quotes, missions, today 
           Devis
         </h2>
         {!creating && (
-          <Button type="button" variant="outline" size="sm" onClick={() => setCreating(true)}>
+          <Button ref={newButton} type="button" variant="outline" size="sm" onClick={() => setCreating(true)}>
             Nouveau devis
           </Button>
         )}
