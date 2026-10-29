@@ -111,3 +111,11 @@ test("avertissement avant enregistrement : trop-perçu que ferait l'encaissement
   const unknownTax = overpaymentIfSaved({ amount_ht_cents: 100000, tax_cents: null }, [], { amount_ht: "1000,01", tax: "999" });
   assert.equal(unknownTax, 1, "taxe de la facture inconnue : seul le hors taxe compte");
 });
+
+test("taxe indéfinie (et non `null`) = taxe inconnue : encaissement signalé, facture comptée hors taxe", () => {
+  const undefPayment = { amount_ht_cents: 100000 } as unknown as { amount_ht_cents: number; tax_cents: number | null };
+  assert.equal(invoiceBalance(inv, [undefPayment]).paymentsMissingTax, 1);
+  const undefInvoice = { amount_ht_cents: 100000 } as unknown as { amount_ht_cents: number; tax_cents: number | null };
+  const b = invoiceBalance(undefInvoice, [pay(100000, null)]);
+  assert.deepEqual([b.basis, b.dueCents, b.status], ["ht", 100000, "paid"]);
+});

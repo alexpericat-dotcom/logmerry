@@ -65,6 +65,8 @@ test("total : seulement si la taxe est connue", () => {
   assert.equal(totalCents({ amount_ht_cents: 1000, tax_cents: 200 }), 1200);
   assert.equal(totalCents({ amount_ht_cents: 1000, tax_cents: 0 }), 1000);
   assert.equal(totalCents({ amount_ht_cents: 1000, tax_cents: null }), null);
+  assert.equal(totalCents({ amount_ht_cents: 1000 } as unknown as { amount_ht_cents: number; tax_cents: number | null }), null); // indéfini = inconnu, jamais NaN
+  assert.equal(totalCents({ amount_ht_cents: 1000, tax_cents: null }), null);
 });
 
 test("affichage et préremplissage d'un montant font l'aller-retour", () => {
