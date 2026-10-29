@@ -2,7 +2,7 @@
 title: 'Resserrer les préfixes publics de la garde d''accès'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '505cbf6150b97f9da11a2f866b7a98205ba5ae46'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -47,10 +47,10 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/auth.ts` -- public = `pathname === "/auth" || pathname.startsWith("/auth/")` ; commentaire à jour -- plus de faux amis
-- [ ] `lib/auth.test.ts` -- remplacer le test de caractérisation et celui des pages publiques selon la matrice -- règle figée telle que décidée
-- [ ] `lib/supabase/proxy.ts` -- commentaire seulement
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les préfixes de la dette
+- [x] `lib/auth.ts` -- public = `pathname === "/auth" || pathname.startsWith("/auth/")` ; commentaire à jour -- plus de faux amis
+- [x] `lib/auth.test.ts` -- remplacer le test de caractérisation et celui des pages publiques selon la matrice -- règle figée telle que décidée
+- [x] `lib/supabase/proxy.ts` -- commentaire seulement
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les préfixes de la dette
 
 **Acceptance Criteria:**
 - Given `npm test`, then les tests de la matrice passent et aucun autre test ne change.
@@ -60,9 +60,27 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `isAuthPath` (chemin exact `/auth` ou sous `/auth/`) dans `lib/auth.ts` ; `/login` retiré (aucune route) ; commentaire de `proxy.ts` à jour. Tests : pages publiques (dont `/auth`, `/auth/`, `/auth/login/`), faux amis et `/login` et casse, `/api/chat` privé, chemin d'une vraie adresse par `new URL` (`..`, requête, `//auth/login`, `/%61uth/login`).
+- Mutations détectées (5) : retour à `startsWith("/auth")` ; retrait de `/auth/` ; retrait de l'égalité `/auth` ; `/login` de nouveau public ; comparaison insensible à la casse. Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre).
+- Non fait : contrôle navigateur (Alex).
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Chemins normalisés (`..`, `//auth/login`, `/%61uth/login`, requête) non testés | medium | patch : test par `new URL(...).pathname` |
+| 2 | `/auth/login/` (barre finale) non testé | low | patch : ajouté aux pages publiques |
+| 3 | Spec périmée, mutations non listées | low | patch (cette mise à jour) |
+| 4 | Commentaire de `accessDecision` illisible | low | patch : raccourci |
+| 5 | Dette : note « résolu » dans un fichier de points ouverts | low | patch : retirée |
+| 6 | Test `/api/chat` fige une redirection 307 plutôt qu'un 401 JSON | low | rejeté (comportement d'origine, la garde ne change pas) ; noté dans la dette comme question à décider |
+| 7 | Nouvelle entrée de dette (câblage de `updateSession`) hors de la demande de la spec | low | rejeté : déjà notée la veille, simple regroupement de l'entrée |
+| 8 | Suivi du contrôle `/auth/confirm` → `/auth/update-password` au premier vrai e-mail | low | rejeté : déjà dans la dette (section 1, lien de réinitialisation) |
+| 9 | Câblage de `updateSession`, cookies, `matcher` non testés | low | defer : déjà dans la dette |
 
 ## Verification
 

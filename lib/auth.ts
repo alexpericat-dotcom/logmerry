@@ -13,9 +13,8 @@ export type AccessDecision = { action: "next" } | { action: "redirect"; to: stri
 const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
 
 /**
- * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors `/auth` (le chemin exact) et `/auth/…`
- * est renvoyé à la connexion (`/authors` ne l'est pas : un préfixe sans barre n'est pas public) ; le reste passe.
- * Le chemin est celui de l'adresse, sans la requête.
+ * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors des pages d'authentification
+ * (`isAuthPath`) est renvoyé à la connexion ; le reste passe. Le chemin est celui de l'adresse, sans la requête.
  */
 export function accessDecision(pathname: string, signedIn: boolean): AccessDecision {
   if (pathname === "/") return { action: "redirect", to: signedIn ? "/aujourd-hui" : "/auth/login" };

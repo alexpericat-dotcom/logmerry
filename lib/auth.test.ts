@@ -62,7 +62,7 @@ test("garde d'accès : page privée sans session = connexion, avec session = pas
 });
 
 test("garde d'accès : pages de connexion publiques sans session, et avec", () => {
-  for (const path of ["/auth", "/auth/", "/auth/login", "/auth/confirm", "/auth/error", "/auth/forgot-password", "/auth/update-password"]) {
+  for (const path of ["/auth", "/auth/", "/auth/login", "/auth/login/", "/auth/confirm", "/auth/error", "/auth/forgot-password", "/auth/update-password"]) {
     assert.deepEqual(accessDecision(path, false), NEXT, path);
     assert.deepEqual(accessDecision(path, true), NEXT, path);
   }
@@ -78,4 +78,12 @@ test("garde d'accès : un préfixe sans barre n'est pas public (/authors, /auth-
 test("garde d'accès : /api/chat reste privé (sans session = connexion)", () => {
   assert.deepEqual(accessDecision("/api/chat", false), to("/auth/login"));
   assert.deepEqual(accessDecision("/api/chat", true), NEXT);
+});
+
+test("garde d'accès : le chemin d'une vraie adresse (`new URL`) est normalisé avant la décision ; ce qui reste étrange n'est jamais public", () => {
+  const path = (url: string) => new URL(url, "http://localhost").pathname;
+  assert.deepEqual(accessDecision(path("/auth/../clients?x=1"), false), to("/auth/login")); // `..` résolu : /clients, requête retirée
+  assert.deepEqual(accessDecision(path("/auth/login?next=/clients"), false), NEXT); // la requête ne compte pas
+  assert.deepEqual(accessDecision(path("//auth/login"), false), to("/auth/login")); // double barre : pas un chemin /auth/
+  assert.deepEqual(accessDecision(path("/%61uth/login"), false), to("/auth/login")); // encodé : jamais public (redirigé vers la vraie page de connexion)
 });
