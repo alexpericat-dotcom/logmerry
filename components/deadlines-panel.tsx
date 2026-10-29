@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createDeadline, type DeadlineFormState } from "@/app/(app)/calendrier/actions";
 import { CalendarLineRow } from "@/components/calendar-line-row";
 import { DeadlineForm } from "@/components/deadline-form";
+import { FocusOnMount } from "@/components/form-helpers";
 import { DeadlineGantt } from "@/components/deadline-gantt";
 import { DeadlineKanban } from "@/components/deadline-kanban";
 import { DeadlineRow } from "@/components/deadline-row";
@@ -104,7 +105,11 @@ export function DeadlinesPanel({ deadlines, lines, view, display, today }: { dea
         <p role="status" className="sr-only">
           {announce}
         </p>
-        {creating && <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />}
+        {creating && (
+          <FocusOnMount>
+            <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />
+          </FocusOnMount>
+        )}
         {display === "kanban" && <DeadlineKanban deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
         {display === "gantt" && <DeadlineGantt deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
         {display === "liste" && (

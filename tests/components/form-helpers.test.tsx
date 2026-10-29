@@ -6,7 +6,7 @@ import { afterEach, describe, mock, test } from "node:test";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { ErrorLine, ErrorSummary, focusField, selectClass, selectClassTruncate, useFormFields, useMoreFields } from "../../components/form-helpers.tsx";
+import { ErrorLine, ErrorSummary, FocusOnMount, focusField, selectClass, selectClassTruncate, useFormFields, useMoreFields } from "../../components/form-helpers.tsx";
 
 afterEach(cleanup);
 
@@ -131,5 +131,48 @@ describe("useMoreFields (« Plus de champs »)", () => {
     const { rerender } = render(<More errors={undefined} hidden={false} />);
     rerender(<More errors={{ title: "Obligatoire." }} hidden={false} />);
     assert.equal(expanded(), "false");
+  });
+});
+
+describe("FocusOnMount", () => {
+  test("au montage, le premier champ visible et actif reçoit le focus (pas un champ caché ni désactivé)", () => {
+    const { container } = render(
+      <FocusOnMount>
+        <form>
+          <input type="hidden" name="h" />
+          <input name="off" disabled />
+          <input name="premier" />
+          <input name="second" />
+        </form>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === container.querySelector('input[name="premier"]'));
+  });
+
+  test("un menu ou une zone de texte en premier reçoit aussi le focus ; sans champ, rien ne plante et le focus ne bouge pas", () => {
+    const first = render(
+      <FocusOnMount>
+        <select name="s">
+          <option>a</option>
+        </select>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === first.container.querySelector("select"));
+    cleanup();
+    render(
+      <FocusOnMount>
+        <p>aucun champ</p>
+      </FocusOnMount>,
+    );
+    assert.ok(document.activeElement === document.body);
+  });
+
+  test("l'enveloppe n'a aucun effet de mise en page (display: contents)", () => {
+    const { container } = render(
+      <FocusOnMount>
+        <p>x</p>
+      </FocusOnMount>,
+    );
+    assert.ok((container.firstElementChild as HTMLElement).className.includes("contents"));
   });
 });

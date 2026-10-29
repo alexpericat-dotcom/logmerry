@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import { createInvoice } from "@/app/(app)/factures/actions";
+import { FocusOnMount } from "@/components/form-helpers";
 import { InvoiceForm, type MissionChoice, type QuoteChoice } from "@/components/invoice-form";
 import { InvoiceRow } from "@/components/invoice-row";
 import { Button } from "@/components/ui/button";
@@ -54,17 +55,19 @@ export function InvoicesPanel({
         {announce}
       </p>
       {creating && (
-        <InvoiceForm
-          idPrefix={`new-${missionId || "all"}`}
-          action={createInvoice}
-          initial={{ mission_id: missionId, quote_id: "", amount_ht: "", tax: "", due_on: "", issued_on: "", reference: "", note: "" }}
-          missions={missions}
-          quotes={quotes}
-          lockedMissionId={missionId || undefined}
-          submitLabel="Créer la facture"
-          onDone={done}
-          onCancel={done}
-        />
+        <FocusOnMount>
+          <InvoiceForm
+            idPrefix={`new-${missionId || "all"}`}
+            action={createInvoice}
+            initial={{ mission_id: missionId, quote_id: "", amount_ht: "", tax: "", due_on: "", issued_on: "", reference: "", note: "" }}
+            missions={missions}
+            quotes={quotes}
+            lockedMissionId={missionId || undefined}
+            submitLabel="Créer la facture"
+            onDone={done}
+            onCancel={done}
+          />
+        </FocusOnMount>
       )}
       {missions.length === 0 && <p className="text-sm text-muted-foreground">Crée d&apos;abord une mission : une facture se rattache toujours à une mission.</p>}
       {invoices.length === 0 ? (

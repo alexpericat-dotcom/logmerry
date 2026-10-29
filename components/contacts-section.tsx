@@ -15,6 +15,7 @@ import {
   type ContactDeleteState,
 } from "@/app/(app)/clients/contact-actions";
 import { ContactForm } from "@/components/contact-form";
+import { FocusOnMount } from "@/components/form-helpers";
 import { ConfirmPanel } from "@/components/confirm-panel";
 import { Button } from "@/components/ui/button";
 import type { ContactRecord } from "@/lib/db/contacts";
@@ -224,13 +225,15 @@ export function ContactsSection({
         </ul>
       )}
       {adding ? (
-        <ContactForm
-          idPrefix="add"
-          action={addContact.bind(null, clientId)}
-          submitLabel="Ajouter le contact"
-          onDone={done}
-          onCancel={done}
-        />
+        <FocusOnMount>
+          <ContactForm
+            idPrefix="add"
+            action={addContact.bind(null, clientId)}
+            submitLabel="Ajouter le contact"
+            onDone={done}
+            onCancel={done}
+          />
+        </FocusOnMount>
       ) : (
         <Button
           ref={addButton}

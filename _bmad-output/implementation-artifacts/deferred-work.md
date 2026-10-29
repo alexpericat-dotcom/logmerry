@@ -75,3 +75,7 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - source_spec: spec-parcours-demo.md
   summary: Mesure de vitesse sur le déploiement (story 7.4, « moins de 3 secondes ») non faite : relevé en développement à chaud seulement (0,4 à 1,5 s par page). Les restes « [isolation-test] » du compte A ont été supprimés le 29 octobre 2026 ; à vérifier si un test d'isolation en recrée (il en avait laissé).
   evidence: la production demande une session connectée que l'assistant ne peut pas ouvrir (identifiants de test non lus par principe).
+
+- source_spec: spec-accessibilite-parcours.md
+  summary: Suites de l'audit d'accessibilité (29 octobre 2026) : (1) le focus ne revient pas au bouton qui a ouvert un formulaire après « Annuler » ou un envoi, pour factures, devis et règles (contacts, calendrier, sprint, story le font) ; (2) liens d'en-tête de colonne « Nom », « Statut », « Origine » étroits sur téléphone (44 px de haut, 25 à 40 de large) ; (3) anneau de focus des champs de 1 px ; (4) `FocusOnMount` et son branchement dans les sept conteneurs ne sont couverts que par le test du composant et un contrôle sur le build, pas par un test par conteneur ; (5) lecture réelle au lecteur d'écran, glisser-déposer au toucher et parcours complet au clavier sans souris restent des contrôles d'Alex ; (6) titre de page en thème clair sous 3:1 : correction de couleur à décider (options A à C du rapport).
+  evidence: `docs/audit-accessibilite.md`.

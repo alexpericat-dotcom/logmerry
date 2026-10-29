@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { createPayment, deletePayment, updatePayment } from "@/app/(app)/factures/payment-actions";
 import { ConfirmPanel } from "@/components/confirm-panel";
-import { focusField } from "@/components/form-helpers";
+import { FocusOnMount, focusField } from "@/components/form-helpers";
 import { PaymentForm } from "@/components/payment-form";
 import { Button } from "@/components/ui/button";
 import type { PaymentRecord } from "@/lib/db/invoices";
@@ -135,7 +135,9 @@ export function InvoicePayments({ invoiceId, invoice, payments, balance, today }
         </ul>
       )}
       {adding ? (
-        <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty }} invoice={invoice} others={payments} today={today} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
+        <FocusOnMount>
+          <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty }} invoice={invoice} others={payments} today={today} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
+        </FocusOnMount>
       ) : (
         <Button ref={addRef} type="button" size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
           Ajouter un encaissement
