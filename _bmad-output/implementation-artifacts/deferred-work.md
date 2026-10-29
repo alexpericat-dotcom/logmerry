@@ -68,3 +68,10 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - source_spec: none
   summary: Extraire et tester l'index de la palette ⌘K (`components/search-palette.tsx` : assemblage des lignes, navigation au clavier, texte d'état, raccourci) et la composition du panneau du calendrier (`components/deadlines-panel.tsx` : filtrage par vue, lignes datées ou non, compteur « en retard », découpage retard / à venir ; mappage facture → ligne dans `app/(app)/calendrier/page.tsx`).
   evidence: scindé de la spec d'accès (garde du proxy et route `/auth/confirm`, 29 octobre 2026) : deux PR indépendantes ; même méthode que `lib/domain/cockpit/assembly.ts`, avec contrôle visuel d'Alex.
+
+- source_spec: spec-parcours-demo.md
+  summary: Passer une mission « Terminée » ne prévient pas quand des stories restent à faire (écart 4 du déroulé du parcours de démo, 29 octobre 2026) ; les trois autres écarts (mission « En cours » au démarrage d'un sprint, compteur d'une story terminée, titre de la mission d'un devis accepté) sont corrigés par `spec-parcours-ecarts.md`.
+  evidence: Alex ne sait pas s'il veut cet avertissement ; piste : une ligne d'information non bloquante dans le formulaire de la mission (« 3 stories ne sont pas terminées »).
+- source_spec: spec-parcours-demo.md
+  summary: Mesure de vitesse sur le déploiement (story 7.4, « moins de 3 secondes ») non faite : relevé en développement à chaud seulement (0,4 à 1,5 s par page). Les restes « [isolation-test] » du compte A ont été supprimés le 29 octobre 2026 ; à vérifier si un test d'isolation en recrée (il en avait laissé).
+  evidence: la production demande une session connectée que l'assistant ne peut pas ouvrir (identifiants de test non lus par principe).
