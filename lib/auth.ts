@@ -7,18 +7,24 @@ export function safeNext(next: string | null | undefined): string {
   return next;
 }
 
-export type AccessDecision = { action: "next" } | { action: "redirect"; to: string };
+/** Refus 401 de l'API sans session (proxy), et message du chat quand il reçoit ce refus : un seul texte. */
+export const SESSION_EXPIRED = "Ta session a expiré. Recharge la page pour te reconnecter.";
+
+export type AccessDecision = { action: "next" } | { action: "redirect"; to: string } | { action: "unauthorized" };
 
 /** Pages d'authentification, publiques : `/auth` et tout ce qui est sous `/auth/`. */
 const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
 
+/** L'API : `/api` et tout ce qui est sous `/api/` (un faux ami comme `/apiary` n'en est pas). */
+const isApiPath = (pathname: string) => pathname === "/api" || pathname.startsWith("/api/");
+
 /**
  * Garde du proxy : `/` mène au cockpit (connecté) ou à la connexion ; sans session, tout chemin hors des pages d'authentification
- * (`isAuthPath`) est renvoyé à la connexion ; le reste passe. Le chemin est celui de l'adresse, sans la requête.
+ * (`isAuthPath`) est renvoyé à la connexion, sauf l'API (`/api/…`) qui reçoit un refus 401 (JSON) : un `fetch` ne doit pas suivre une redirection vers une page HTML ; le reste passe. Le chemin est celui de l'adresse, sans la requête.
  */
 export function accessDecision(pathname: string, signedIn: boolean): AccessDecision {
   if (pathname === "/") return { action: "redirect", to: signedIn ? "/aujourd-hui" : "/auth/login" };
-  if (!signedIn && !isAuthPath(pathname)) return { action: "redirect", to: "/auth/login" };
+  if (!signedIn && !isAuthPath(pathname)) return isApiPath(pathname) ? { action: "unauthorized" } : { action: "redirect", to: "/auth/login" };
   return { action: "next" };
 }
 

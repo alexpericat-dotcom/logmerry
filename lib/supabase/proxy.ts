@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { accessDecision } from "@/lib/auth";
+import { SESSION_EXPIRED, accessDecision } from "@/lib/auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -46,6 +46,7 @@ export async function updateSession(request: NextRequest) {
   // Hors `/auth` et `/auth/…`, sans session : connexion. La décision est dans `accessDecision` (testée).
   const pathname = request.nextUrl.pathname;
   const decision = accessDecision(pathname, !!user);
+  if (decision.action === "unauthorized") return NextResponse.json({ error: SESSION_EXPIRED }, { status: 401 });
   if (decision.action === "redirect") {
     const url = request.nextUrl.clone();
     url.pathname = decision.to;

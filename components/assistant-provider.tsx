@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
 import { purgeHistory } from "@/app/(app)/history-actions";
+import { CHAT_GENERIC_ERROR, chatErrorMessage } from "@/lib/domain/chat-flow";
 import type { HistoryMessage, StoredSource } from "@/lib/domain/history";
 
 export type AssistantMessage = { id: string; role: "user" | "assistant"; text: string; sources?: StoredSource[] };
@@ -33,7 +34,6 @@ export function useAssistant(): Assistant {
   return ctx;
 }
 
-const GENERIC_ERROR = "L'assistant n'a pas pu répondre pour le moment.";
 const TIMEOUT_MS = 70_000; // un peu plus que les 60 s de Claude côté serveur
 
 /** État de l'assistant au niveau de la zone privée : la conversation survit au changement de page ; l'historique enregistré est relu au chargement. */
@@ -85,11 +85,11 @@ export function AssistantProvider({
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       const json = (await res.json().catch(() => null)) as { answer?: string; sources?: StoredSource[]; error?: string } | null;
-      if (!res.ok || !json?.answer) throw new Error(json?.error ?? GENERIC_ERROR);
+      if (!res.ok || !json?.answer) throw new Error(chatErrorMessage(res.status, json));
       const answer = json.answer;
       setMessages((m) => [...m, { id: `local-${nextId.current++}`, role: "assistant", text: answer, sources: Array.isArray(json.sources) ? json.sources : [] }]);
     } catch (e) {
-      setError(e instanceof Error && e.name !== "TimeoutError" && e.message ? e.message : GENERIC_ERROR);
+      setError(e instanceof Error && e.name !== "TimeoutError" && e.message ? e.message : CHAT_GENERIC_ERROR);
       // Saisie conservée, sans écraser ce que j'ai tapé entre-temps.
       setDraft((d) => (d.trim() ? d : question));
     } finally {

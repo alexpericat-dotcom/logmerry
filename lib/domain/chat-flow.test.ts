@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AnswerRejected } from "./citations.ts";
-import { NOT_FOUND, answerQuestion, isRefusal, offersDraftNote, type ChunkLike } from "./chat-flow.ts";
+import { CHAT_GENERIC_ERROR, NOT_FOUND, SESSION_EXPIRED, answerQuestion, chatErrorMessage, isRefusal, offersDraftNote, type ChunkLike } from "./chat-flow.ts";
 
 const chunk = (id: string, content = `texte ${id}`): ChunkLike => ({ id, noteId: `n-${id}`, title: `Note ${id}`, content });
 
@@ -79,4 +79,15 @@ test("le bouton « note à documenter » : refus fixe ou réponse sans source ; 
   assert.equal(offersDraftNote({ role: "assistant", text: "- Le prospect veut des quittances.", sources: [{}] }), false);
   assert.equal(offersDraftNote({ role: "assistant", text: "Réponse sans information de sources." }), false);
   assert.equal(offersDraftNote({ role: "user", text: NOT_FOUND, sources: [] }), false);
+});
+
+test("message d'erreur du chat : 401 = session expirée (même avec un message du serveur) ; sinon le message du serveur ; sinon le message général", () => {
+  assert.equal(chatErrorMessage(401, null), SESSION_EXPIRED);
+  assert.equal(chatErrorMessage(401, { error: "Connecte-toi pour utiliser l'assistant." }), SESSION_EXPIRED);
+  assert.equal(chatErrorMessage(502, { error: "Réponse non vérifiée." }), "Réponse non vérifiée.");
+  assert.equal(chatErrorMessage(502, null), CHAT_GENERIC_ERROR);
+  assert.equal(chatErrorMessage(200, {}), CHAT_GENERIC_ERROR);
+  assert.equal(chatErrorMessage(500, { error: "" }), CHAT_GENERIC_ERROR);
+  assert.equal(chatErrorMessage(500, { error: "  " }), CHAT_GENERIC_ERROR); // message blanc : jamais affiché
+  assert.equal(chatErrorMessage(500, { error: 42 }), CHAT_GENERIC_ERROR);
 });
