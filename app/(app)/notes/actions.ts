@@ -123,7 +123,8 @@ async function save(
 }
 
 /** Retour sur la liste d'où l'on vient : le filtre est relu (types connus, brouillons), jamais une adresse reçue. */
-const backTo = (formData: FormData) => notesListHref(parseListFilter(formData.get("list_type") as string | null, formData.get("list_statut") as string | null));
+const text = (v: unknown) => (typeof v === "string" ? v : null); // une valeur de formulaire peut être un fichier, un argument d'action un objet : seul un texte est relu
+const backTo = (formData: FormData) => notesListHref(parseListFilter(text(formData.get("list_type")), text(formData.get("list_statut"))));
 
 export async function createNote(_prev: NoteFormState, formData: FormData): Promise<NoteFormState> {
   // owner_id vient de la base (default auth.uid()) ; la RLS refuse tout autre propriétaire.
@@ -168,7 +169,7 @@ export async function deleteNote(id: string, list?: { type?: string | null; draf
   revalidatePath("/notes");
   revalidatePath("/a-faire");
   revalidatePath("/aujourd-hui");
-  redirect(notesListHref(parseListFilter(list?.type, list?.draft ? "brouillon" : null)));
+  redirect(notesListHref(parseListFilter(text(list?.type), list?.draft === true ? "brouillon" : null)));
 }
 
 export type RetryState = { message?: string };

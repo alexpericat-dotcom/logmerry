@@ -15,9 +15,9 @@ const action = async () => ({});
 const date = (c: HTMLElement) => c.querySelector<HTMLInputElement>('input[name="received_on"]');
 
 describe("PaymentForm : date d'encaissement", () => {
-  test("nouvel encaissement : la date du jour (Paris, donnée par le serveur) est préremplie et c'est aussi la date maximale", () => {
+  test("nouvel encaissement (date vide) : la date du jour (Paris, donnée par le serveur) est préremplie et c'est aussi la date maximale", () => {
     const { container } = render(
-      <PaymentForm idPrefix="n" action={action} initial={{ invoice_id: "i", amount_ht: "", tax: "", received_on: "2026-10-29", note: "" }} invoice={INVOICE} others={[]} today="2026-10-29" submitLabel="Enregistrer" onDone={noop} onCancel={noop} />,
+      <PaymentForm idPrefix="n" action={action} initial={{ invoice_id: "i", amount_ht: "", tax: "", received_on: "", note: "" }} invoice={INVOICE} others={[]} today="2026-10-29" submitLabel="Enregistrer" onDone={noop} onCancel={noop} />,
     );
     assert.equal(date(container)?.value, "2026-10-29");
     assert.equal(date(container)?.max, "2026-10-29");

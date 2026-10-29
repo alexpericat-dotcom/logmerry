@@ -105,11 +105,20 @@ describe("retour sur la liste filtrée (createNote, updateNote, deleteNote)", ()
     }
   });
 
+  test("note disparue ou écriture en échec avec un filtre : message, aucune redirection", async () => {
+    fake.respond = () => ({ data: [] });
+    assert.match((await updateNote(ID, {}, form({ ...VALID, list_type: "procedure" }))).message ?? "", /note n'existe plus/);
+    fake.respond = () => ({ error: { code: "XX000" } });
+    assert.match((await updateNote(ID, {}, form({ ...VALID, list_type: "procedure" }))).message ?? "", /Enregistrement impossible/);
+  });
+
   test("supprimer : retour sur le filtre (type, brouillons) ; valeur inconnue : /notes", async () => {
     ok();
     await assert.rejects(() => deleteNote(ID, { type: "template" }), redirectsTo("/notes?type=template"));
     await assert.rejects(() => deleteNote(ID, { draft: true }), redirectsTo("/notes?statut=brouillon"));
     await assert.rejects(() => deleteNote(ID, { type: "https://evil.example" }), redirectsTo("/notes"));
+    await assert.rejects(() => deleteNote(ID, { type: "faq", draft: true }), redirectsTo("/notes?statut=brouillon")); // les brouillons l'emportent
+    await assert.rejects(() => deleteNote(ID, { type: { toString: () => "faq" } as unknown as string }), redirectsTo("/notes")); // un objet n'est jamais relu
     await assert.rejects(() => deleteNote(ID), redirectsTo("/notes"));
   });
 });

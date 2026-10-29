@@ -112,5 +112,5 @@ test("adresses de la liste et requête suivie par une note : jamais autre chose 
   assert.equal(notesFilterQuery({ type: null, draft: false }), "");
   assert.equal(notesFilterQuery({ type: "faq", draft: false }), "?type=faq");
   assert.equal(notesFilterQuery({ type: null, draft: true }), "?statut=brouillon");
-  for (const t of ["note", "procedure", "template", "faq"] as const) assert.equal(notesListHref(parseListFilter(notesFilterQuery({ type: t, draft: false }).slice(6), undefined)), `/notes?type=${t}`);
+  for (const t of ["note", "procedure", "template", "faq"] as const) assert.equal(notesListHref(parseListFilter(new URLSearchParams(notesFilterQuery({ type: t, draft: false })).get("type"), undefined)), `/notes?type=${t}`);
 });

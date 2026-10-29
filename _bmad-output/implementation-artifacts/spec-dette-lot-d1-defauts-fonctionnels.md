@@ -2,7 +2,7 @@
 title: 'Dette, lot D1 : six défauts fonctionnels'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'ee0f20372ffae95bf2ba64a0fca0d90d7ddfebe4'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -75,11 +75,27 @@ review_loop_iteration: 0
 ## Implementation Notes
 
 - (1) `parseListFilter`, `notesListHref`, `notesFilterQuery` dans `lib/domain/notes.ts` ; les cartes, « Créer une note », le détail, la création, `NoteForm` (champs cachés `list_type` et `list_statut` : `type` est déjà le champ du type de la note), `DeleteNote` et les actions (`backTo`, `deleteNote(id, list)`) relisent le filtre par les analyseurs existants. (2) `selectableMissions` (`missions.ts`), liste du devis filtrée ; la page de la fiche passe `status`. (3) `missionDeletionNotice` ; la page de modification lit `listSprints`. (4) `mergeReview` : champs non cochés remplacés par une valeur neutre avant validation. (5) `setDndError("")` à `onDragStart`. (6) `today` passe de `InvoiceRow` à `PaymentForm` (valeur par défaut, `max`) ; serveur inchangé (refuse déjà une date future).
-- Le sélecteur « Mission » d'une facture n'a pas le même défaut (champ obligatoire, on facture une mission terminée) : laissé tel quel. Tests : 16 domaine, 3 actions, 2 composants ; huit mutations détectées (le point 5, visuel, n'en a pas).
+- Le sélecteur « Mission » d'une facture n'a pas le même défaut (champ obligatoire, on facture une mission terminée) : laissé tel quel. Tests après relecture : 5 de domaine (notes 2, missions 2, relecture 1), 5 d'actions, 4 de composants (`PaymentForm` 2, `NoteForm` 3 dont un par filtre) ; dix mutations détectées (le point 5, visuel, n'en a pas). La date du jour par défaut est posée DANS `PaymentForm` (date vide) pour être testée ; `InvoicePayments` ne fait que passer `today`.
 
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Câblage du filtre des notes (champs cachés, « Annuler ») sans test : les actions étaient testées à la main | medium | patch : `note-form.test.tsx` (3 cas), doublure de `next/link` dans le chargeur ; deux mutations détectées |
+| 2 | Date du jour par défaut posée dans `InvoicePayments`, non testée | medium | patch : le défaut est posé dans `PaymentForm` (date vide), testé |
+| 3 | `formData.get(...) as string` et `list.type` de l'action traités comme des textes alors que ce peut être un fichier ou un objet | medium | patch : `text()` ne relit que des textes ; tests (objet, fichier non relus) |
+| 4 | Cas d'actions manquants : mise à jour d'une note disparue ou en échec avec un filtre, type et brouillons ensemble | low | patch |
+| 5 | `slice(6)` fragile dans un test | low | patch : `URLSearchParams` |
+| 6 | Autres entrées vers une note (fiche client, À faire…) sans filtre ; date et `max` périmés après minuit ; filtre de missions seulement à l'affichage ; composants non rendus | low | defer : voulu ou accepté, noté dans la dette (« Suites du lot D1 ») |
+| 7 | `mergeReview` : valeur neutre `"-"`, règles entre champs, écriture des champs non cochés | false | `validateStoryInput` n'a aucune règle entre champs (lu) ; seuls les champs cochés sont renvoyés ; un test passe avec titre et rôle invalides en base |
+| 8 | Date `max` pour des encaissements « du futur » déjà en base ; mission liée supprimée | false | le serveur refuse les dates futures ; une mission liée à un devis ne peut pas être supprimée (clé étrangère) |
+| 9 | `listSprints` charge les lignes pour compter ; phrase « Ses sprints… » ; tâches non citées | low | rejeté (coût négligeable, la page lève déjà sur erreur ; cosmétique) |
+| 10 | Test du glisser-déposer | low | defer : dnd-kit difficile à simuler ; dette |
+| 11 | Spec : décomptes de tests, journal de triage vide | low | patch (cette mise à jour) |
 
 ## Verification
 

@@ -131,7 +131,7 @@ export function InvoicePayments({ invoiceId, invoice, payments, balance, today }
         </ul>
       )}
       {adding ? (
-        <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty, received_on: today }} invoice={invoice} others={payments} today={today} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
+        <PaymentForm idPrefix={`new-${invoiceId}`} action={createPayment.bind(null, invoiceId)} initial={{ invoice_id: invoiceId, ...empty }} invoice={invoice} others={payments} today={today} submitLabel="Enregistrer l'encaissement" onDone={done} onCancel={done} />
       ) : (
         <Button ref={addRef} type="button" size="sm" variant="outline" className="self-start" onClick={() => setAdding(true)}>
           Ajouter un encaissement
