@@ -22,14 +22,14 @@ export function invoiceViews<I extends InvoiceWithPayments>(invoices: I[], today
   return { forTasks, rows };
 }
 
-type SprintTaskRow = Omit<SprintWork["stories"][number]["tasks"][number], "done_on"> & { updated_at: string };
+type SprintTaskRow = Omit<SprintWork["stories"][number]["tasks"][number], "done_on"> & { done_at: string | null };
 type SprintRow = Omit<SprintWork, "stories"> & { stories: (Omit<SprintWork["stories"][number], "tasks"> & { tasks: SprintTaskRow[] })[] };
 
-/** Sprints actifs avec, pour chaque tâche, le jour de Paris de sa dernière modification (`done_on`). */
+/** Sprints actifs avec, pour chaque tâche, le jour de Paris où elle a été faite (`done_on`, d'après `done_at` : vide si elle n'est pas faite). */
 export function sprintsWithParisDay(rows: SprintRow[]): SprintWork[] {
   return rows.map((sp) => ({
     ...sp,
-    stories: sp.stories.map((st) => ({ ...st, tasks: st.tasks.map((t) => ({ ...t, done_on: todayParis(new Date(t.updated_at)) })) })),
+    stories: sp.stories.map((st) => ({ ...st, tasks: st.tasks.map((t) => ({ ...t, done_on: t.done_at ? todayParis(new Date(t.done_at)) : "" })) })),
   }));
 }
 

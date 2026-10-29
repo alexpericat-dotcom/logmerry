@@ -2,7 +2,7 @@
 title: 'Dette, lot C : migrations (done_at des tâches, index, suppression de compte)'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '0bd47df7dadc4c3db831e4ae8ad560666e670c3b'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -136,7 +136,13 @@ end $$;
 
 ## Implementation Notes
 
+- Migrations 1 (`tasks_done_at`, avec le déclencheur d'`updated_at` suspendu pendant la reprise) et 2 (`message_citations_indexes`) appliquées par Alex le 29 octobre et vérifiées au catalogue (lecture seule) ; types : trois lignes `done_at` dans `tasks` (même format que le fichier). **La migration 3 (`missions.client_id` en `NO ACTION`) n'est PAS appliquée et son fichier est retiré** : voir le Spec Change Log.
+- Code : `lib/db/sprint-work.ts` lit `done_at` ; `sprintsWithParisDay` calcule `done_on` depuis `done_at` (vide si non faite) ; l'action `setTaskDone` est inchangée.
+- Vérifié : `npm test`, `tsc`, lint, `test:isolation` 128/128 (dont le nouveau test réel de `done_at`), `next build` en copie propre ; mutation de `done_on` détectée.
+
 ## Spec Change Log
+
+- 29 octobre 2026, essai de suppression de compte (script annulé par lui-même, lancé par Alex) : « OK » AVANT la migration 3, sur le jeu minimal (fiche et mission) puis sur le jeu complet (profil, fiche, mission, devis, facture, encaissement, sprint, story, tâche, note, message, citation). L'hypothèse de la spec (la cascade échoue à cause de `RESTRICT`) n'est pas démontrée : la migration 3 est abandonnée, la contrainte reste en `RESTRICT`. Évité : appliquer un changement de schéma pour un défaut jamais observé. À garder : le script d'essai (dans la spec) pour revérifier avant la purge de la base, au passage à l'outil pro.
 
 ## Review Triage Log
 
