@@ -2469,7 +2469,7 @@ describe("isolation de la lecture des sprints en cours (cockpit) entre deux comp
     const story = await a.client.from("user_stories").insert({ mission_id: mission.data!.id, title: `${NAME} done_at story`, position: 1 }).select("id").single();
     assert.ifError(story.error);
     const row = async (id: string) => {
-      const r = await a.client.from("tasks").select("done, done_at, title").eq("id", id).single();
+      const r = await a.client.from("tasks").select("done, done_at, title, updated_at").eq("id", id).single();
       assert.ifError(r.error);
       return r.data!;
     };
@@ -2481,18 +2481,22 @@ describe("isolation de la lecture des sprints en cours (cockpit) entre deux comp
     assert.equal((await row(id)).done_at, null, "nouvelle tâche : pas faite, pas de date");
 
     assert.ifError((await a.client.from("tasks").update({ done: true }).eq("id", id)).error);
-    const doneAt = (await row(id)).done_at;
+    const ticked = await row(id);
+    const doneAt = ticked.done_at;
     assert.ok(doneAt && Date.parse(doneAt) > Date.parse("2020-01-01"), "cochée : date posée par la base");
+    assert.equal(Date.parse(doneAt), Date.parse(ticked.updated_at), "même instruction, même `now()` de la base (jamais l'horloge locale)");
 
     assert.ifError((await a.client.from("tasks").update({ title: "t1 renommée" }).eq("id", id)).error);
     const renamed = await row(id);
     assert.deepEqual([renamed.title, renamed.done_at], ["t1 renommée", doneAt], "renommer ne change pas done_at");
+    assert.ok(Date.parse(renamed.updated_at) > Date.parse(doneAt), "alors que updated_at, lui, a bougé (c'était l'ancien défaut du cockpit)");
 
     assert.ifError((await a.client.from("tasks").update({ done_at: FORGED }).eq("id", id)).error);
     assert.equal((await row(id)).done_at, doneAt, "done_at forgé sur une tâche faite : ignoré");
 
     assert.ifError((await a.client.from("tasks").update({ done: false }).eq("id", id)).error);
-    assert.deepEqual(await row(id), { done: false, done_at: null, title: "t1 renommée" }, "décochée : date effacée");
+    const unticked = await row(id);
+    assert.deepEqual([unticked.done, unticked.done_at, unticked.title], [false, null, "t1 renommée"], "décochée : date effacée");
 
     assert.ifError((await a.client.from("tasks").update({ done: true, done_at: FORGED }).eq("id", id)).error);
     const again = (await row(id)).done_at;

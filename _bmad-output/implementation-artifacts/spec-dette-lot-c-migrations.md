@@ -2,7 +2,7 @@
 title: 'Dette, lot C : migrations (done_at des tâches, index, suppression de compte)'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-review'
+status: 'done'
 baseline_commit: '0bd47df7dadc4c3db831e4ae8ad560666e670c3b'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -38,6 +38,8 @@ review_loop_iteration: 0
 | Index | recherche par `note_id` ou `chunk_id` | plan d'exécution par index (tables de test petites : existence des index vérifiée au catalogue) | N/A |
 
 ## SQL des migrations (à montrer à Alex ; aucun n'est appliqué sans son accord)
+
+> **Mise à jour du 29 octobre : seules les migrations 1 et 2 ont été appliquées. La migration 3 est ABANDONNÉE** (voir le Spec Change Log) ; les passages qui la concernent ci-dessous sont conservés pour mémoire et ne sont plus à exécuter.
 
 `supabase/migrations/20261029100000_tasks_done_at.sql`
 ```sql
@@ -121,17 +123,17 @@ end $$;
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `supabase/migrations/*` -- créer les trois fichiers -- schéma versionné
-- [ ] (Alex) appliquer la migration 1, confirmer ; puis la 2 ; puis lancer l'essai de suppression (attendu : ECHEC), appliquer la 3, relancer l'essai (attendu : OK) -- jamais appliqué par moi
-- [ ] `lib/supabase/database.types.ts` -- régénérer après chaque migration, `tsc` -- types fidèles
-- [ ] `lib/db/sprint-work.ts`, `assembly.ts`, `assembly.test.ts` -- cockpit sur `done_at` -- fin des réapparitions
-- [ ] `tests/isolation.test.ts` -- cas de la matrice côté base -- comportement prouvé en réel
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
+- [x] `supabase/migrations/*` -- créer les trois fichiers -- schéma versionné
+- [x] (Alex) appliquer la migration 1, confirmer ; puis la 2 ; puis lancer l'essai de suppression : **OK avant la 3 → migration 3 abandonnée** -- jamais appliqué par moi
+- [x] `lib/supabase/database.types.ts` -- régénérer après chaque migration, `tsc` -- types fidèles
+- [x] `lib/db/sprint-work.ts`, `assembly.ts`, `assembly.test.ts` -- cockpit sur `done_at` -- fin des réapparitions
+- [x] `tests/isolation.test.ts` -- cas de la matrice côté base -- comportement prouvé en réel
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
 
 **Acceptance Criteria:**
 - Given les migrations appliquées, when `npm run test:isolation` tourne, then tous les tests passent (127 + les nouveaux).
 - Given `npm test`, `tsc --noEmit`, `npm run lint` et `next build` (copie propre), then sans erreur.
-- Given l'essai de suppression de compte, then ECHEC avant la migration 3 et OK après.
+- Given l'essai de suppression de compte, then (résultat obtenu : OK dès avant la migration 3, qui est donc abandonnée).
 - Given le cockpit, then une tâche de sprint faite avant aujourd'hui et renommée aujourd'hui n'est plus listée « faite aujourd'hui » (contrôle d'Alex).
 
 ## Implementation Notes
@@ -146,13 +148,28 @@ end $$;
 
 ## Review Triage Log
 
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Spec périmée : migration 3 et son critère « ECHEC puis OK » encore listés | medium | patch : renvois « abandonnée » dans le SQL, les tâches, les critères et la vérification |
+| 2 | Assertions de `done_at` faibles (« pas la date forgée » seulement) | medium | patch : `done_at` égal à `updated_at` à la coche (même `now()` de la base), `updated_at` qui bouge au renommage |
+| 3 | Script d'essai de suppression enfermé dans une spec archivée | medium | patch : `docs/verification-suppression-de-compte.sql` (jeu minimal et complet), lié depuis la dette |
+| 4 | Traces des retraits du lot C absentes de la dette ; « impossible » trop fort pour les positions | low | patch |
+| 5 | Les scripts de démo créeraient des tâches « faites » datées d'aujourd'hui | false | `seed-demo*.ts` ne créent aucune tâche (recherche sans résultat) |
+| 6 | Tests non nettoyés après coup | false | le `after(cleanup)` du bloc supprime par préfixe `NAME` : les lignes du nouveau test commencent par ce préfixe |
+| 7 | `done` nullable, `done_at` forgé, `coalesce`, fenêtres de migration, `if not exists`, `concurrently`, retour arrière | low | rejeté : `done` est `not null` ; migrations appliquées une fois, table de quelques lignes ; le déclencheur couvre insertion et mise à jour |
+| 8 | `done_on: ""` comme sentinelle ; date invalide | low | rejeté : seule `done` décide dans `today.ts` ; la base garantit des horodatages valides |
+| 9 | Catalogue (index, contrainte, déclencheur) non testé dans `isolation.test.ts` ; reprise de données non testée | low | rejeté : PostgREST ne lit pas `pg_catalog` ; vérifié au catalogue le 29 octobre (journal) ; aucune tâche faite à reprendre |
+| 10 | `test:isolation` hors CI | low | rejeté : motif existant du dépôt (comptes réels), cité en dette |
+
 ## Verification
 
 **Commands:**
 - `npm test` -- expected: tous les lots passent
 - `npx tsc --noEmit && npm run lint` -- expected: sans erreur
 - `npm run test:isolation` -- expected: tous les tests passent, nouveaux compris (comptes de test réels)
-- Catalogue (lecture) -- expected: `tasks_done_at_matches_done`, trigger `tasks_done_at`, deux index `message_citations_*_idx`, `missions_client_id_fkey` en `no action`
+- Catalogue (lecture) -- expected: `tasks_done_at_matches_done`, trigger `tasks_done_at`, deux index `message_citations_*_idx` (vérifié le 29 octobre) ; `missions_client_id_fkey` reste en `RESTRICT` (migration 3 abandonnée)
 - `next build` dans une copie propre -- expected: passe
 
 **Manual checks (if no CLI):**
