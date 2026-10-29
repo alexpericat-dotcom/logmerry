@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { canAcceptQuote, canDeleteQuote, canEditQuote, canRefuseQuote, canSendQuote, centsToInput, formatCents, QUOTE_STATUS_LABELS, totalCents, type QuoteStatus } from "@/lib/domain/quotes";
+import { selectableMissions } from "@/lib/domain/missions";
 import { formatDate } from "@/lib/format";
 
 export type QuoteItem = {
@@ -31,7 +32,7 @@ export type QuoteItem = {
   sent_on: string | null;
   status: QuoteStatus;
 };
-type MissionOption = { id: string; title: string };
+type MissionOption = { id: string; title: string; status: string };
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:h-11 md:text-sm";
@@ -122,7 +123,7 @@ function QuoteForm({
           <Label htmlFor={id("mission_id")}>Mission liée (facultatif)</Label>
           <select {...field("mission_id", e.mission_id)} defaultValue={values.mission_id} className={selectClass}>
             <option value="">Aucune</option>
-            {missions.map((m) => (
+            {selectableMissions(missions, values.mission_id).map((m) => (
               <option key={m.id} value={m.id}>
                 {m.title}
               </option>

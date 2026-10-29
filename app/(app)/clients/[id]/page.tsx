@@ -68,7 +68,7 @@ async function ClientView({ params }: { params: Promise<{ id: string }> }) {
           </ul>
         )}
       </section>
-      <QuotesSection clientId={id} clientStatus={client.status} quotes={quotes} missions={missions.map((m) => ({ id: m.id, title: m.title }))} today={parisToday()} />
+      <QuotesSection clientId={id} clientStatus={client.status} quotes={quotes} missions={missions.map((m) => ({ id: m.id, title: m.title, status: m.status }))} today={parisToday()} />
       <section aria-labelledby="notes-title" className="flex flex-col gap-3">
         <h2 id="notes-title" className="text-lg font-semibold">
           Notes

@@ -7,7 +7,10 @@ import ts from "typescript";
 
 import { resolve as appResolve } from "./ts-hooks.mjs";
 
-const STUBS = { "next/navigation": new URL("./stubs/next-navigation-client.ts", import.meta.url).href };
+const STUBS = {
+  "next/navigation": new URL("./stubs/next-navigation-client.ts", import.meta.url).href,
+  "next/link": new URL("./stubs/next-link.tsx", import.meta.url).href,
+};
 
 /** Les imports faits depuis `node_modules` gardent la résolution de Node : ts-hooks.mjs résout tout paquet depuis la racine, ce qui donnerait à jsdom
  *  la mauvaise version de `lru-cache` (la sienne est imbriquée). */

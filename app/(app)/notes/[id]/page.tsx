@@ -10,13 +10,17 @@ import { NoteForm } from "@/components/note-form";
 import { RetryIndexing } from "@/components/retry-indexing";
 import { listAllClients } from "@/lib/db/clients";
 import { getNote } from "@/lib/db/notes";
-import { isUuid } from "@/lib/domain/notes";
+import { isUuid, parseListFilter } from "@/lib/domain/notes";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Modifier la note · LogMerry" };
 
-async function EditNote({ params }: { params: Promise<{ id: string }> }) {
+type SearchParams = Promise<{ type?: string | string[]; statut?: string | string[] }>;
+
+async function EditNote({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: SearchParams }) {
   const { id } = await params;
+  const query = await searchParams;
+  const listFilter = parseListFilter(query.type, query.statut);
   if (!isUuid(id)) notFound();
   const note = await getNote(id);
   if (!note) notFound();
@@ -40,16 +44,17 @@ async function EditNote({ params }: { params: Promise<{ id: string }> }) {
         initial={{ title: note.title, body: note.body, type: note.type, client_id: note.client_id ?? "", new_name: "", new_origin: "" }}
         clients={clients}
         submitLabel="Enregistrer les modifications"
+        listFilter={listFilter}
       />
-      <DeleteNote id={id} />
+      <DeleteNote id={id} listFilter={listFilter} />
     </div>
   );
 }
 
-export default function NotePage({ params }: { params: Promise<{ id: string }> }) {
+export default function NotePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: SearchParams }) {
   return (
     <Suspense fallback={<p className="text-muted-foreground">Chargement…</p>}>
-      <EditNote params={params} />
+      <EditNote params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

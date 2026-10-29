@@ -178,7 +178,9 @@ export function mergeReview(
   for (const f of picked) {
     if (current[f] !== base[f] || (f === "points" && current.points !== "")) return { ok: false, error: "Cette story a changé entre-temps. Relance la relecture.", changed: true };
   }
-  const merged = { ...current, ...Object.fromEntries(picked.map((f) => [f, chosen[f] as string])) } as FieldValues;
+  // Seuls les champs cochés sont validés (et écrits) : les autres, déjà en base, prennent une valeur neutre pour que leur état n'ait aucun effet sur le message.
+  const neutral = Object.fromEntries(REVIEW_FIELDS.filter((f) => !picked.includes(f)).map((f) => [f, f === "title" ? "-" : ""]));
+  const merged = { ...current, ...neutral, ...Object.fromEntries(picked.map((f) => [f, chosen[f] as string])) } as FieldValues;
   const checked = validateStoryInput({ ...merged, status });
   if (!checked.ok) return { ok: false, error: Object.values(checked.errors)[0] ?? "Valeurs invalides." };
   const v = checked.value;

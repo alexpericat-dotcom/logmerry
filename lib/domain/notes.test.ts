@@ -11,6 +11,9 @@ import {
   draftTitle,
   DRAFT_TITLE_PREFIX,
   validateNoteInput,
+  notesFilterQuery,
+  notesListHref,
+  parseListFilter,
 } from "./notes.ts";
 
 test("titre vide ou d'espaces : refusé avec un message qui nomme le titre", () => {
@@ -89,4 +92,25 @@ test("titre d'une note à documenter : préfixe et question, espaces réduits, 2
   assert.equal([...long].length, TITLE_MAX);
   assert.ok(long.startsWith(DRAFT_TITLE_PREFIX) && long.endsWith("…"));
   assert.ok(validateNoteInput({ type: "note", title: long, body: "" }).ok, "le titre passe la validation d'une note");
+});
+
+test("filtre de la liste : relu par les analyseurs existants, valeurs connues seulement ; brouillons avant type", () => {
+  assert.deepEqual(parseListFilter("procedure", undefined), { type: "procedure", draft: false });
+  assert.deepEqual(parseListFilter(undefined, "brouillon"), { type: null, draft: true });
+  assert.deepEqual(parseListFilter("faq", "brouillon"), { type: null, draft: true });
+  assert.deepEqual(parseListFilter(["template", "x"], null), { type: "template", draft: false });
+  for (const bad of ["<script>", "https://evil.example", "/notes?x=1", "PROCEDURE", "", "procedure ", null, undefined]) {
+    assert.deepEqual(parseListFilter(bad, bad), { type: null, draft: false }, String(bad));
+  }
+  assert.deepEqual(parseListFilter(undefined, "Brouillon"), { type: null, draft: false });
+});
+
+test("adresses de la liste et requête suivie par une note : jamais autre chose que `/notes` et un filtre connu", () => {
+  assert.equal(notesListHref({ type: null, draft: false }), "/notes");
+  assert.equal(notesListHref({ type: "procedure", draft: false }), "/notes?type=procedure");
+  assert.equal(notesListHref({ type: null, draft: true }), "/notes?statut=brouillon");
+  assert.equal(notesFilterQuery({ type: null, draft: false }), "");
+  assert.equal(notesFilterQuery({ type: "faq", draft: false }), "?type=faq");
+  assert.equal(notesFilterQuery({ type: null, draft: true }), "?statut=brouillon");
+  for (const t of ["note", "procedure", "template", "faq"] as const) assert.equal(notesListHref(parseListFilter(new URLSearchParams(notesFilterQuery({ type: t, draft: false })).get("type"), undefined)), `/notes?type=${t}`);
 });

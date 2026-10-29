@@ -7,6 +7,7 @@ import { MissionForm } from "@/components/mission-form";
 import { PageBanner } from "@/components/page-banner";
 import { countInvoicesForMission } from "@/lib/db/invoices";
 import { getMission } from "@/lib/db/missions";
+import { listSprints } from "@/lib/db/sprints";
 import { countQuotesForMission } from "@/lib/db/quotes";
 import { storyProgressByMission } from "@/lib/db/user-stories";
 import { invoicesRefusal } from "@/lib/domain/invoices";
@@ -20,7 +21,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
   if (!isUuid(id)) notFound();
   const mission = await getMission(id);
   if (!mission) notFound();
-  const [progress, quoteCount, invoiceCount] = await Promise.all([storyProgressByMission([id]), countQuotesForMission(id), countInvoicesForMission(id)]);
+  const [progress, quoteCount, invoiceCount, sprints] = await Promise.all([storyProgressByMission([id]), countQuotesForMission(id), countInvoicesForMission(id), listSprints(id)]);
   const storyCount = progress[id]?.total ?? 0;
 
   return (
@@ -39,7 +40,7 @@ async function EditMission({ params }: { params: Promise<{ id: string }> }) {
           {invoiceCount > 0 ? invoicesRefusal(invoiceCount) : MISSION_QUOTE_REFUSAL}
         </p>
       ) : (
-        <DeleteMission id={id} storyCount={storyCount} />
+        <DeleteMission id={id} storyCount={storyCount} sprintCount={sprints.length} />
       )}
     </div>
   );

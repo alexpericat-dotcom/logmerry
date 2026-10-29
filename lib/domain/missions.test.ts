@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { matchMissions, countLabel, missionsHref, missionsRefusal, nextDir, parseMissionView, validateMissionInput, viewMissions, type MissionRow } from "./missions.ts";
+import { matchMissions, countLabel, missionDeletionNotice, missionsHref, selectableMissions, missionsRefusal, nextDir, parseMissionView, validateMissionInput, viewMissions, type MissionRow } from "./missions.ts";
 
 const CLIENT = "11111111-2222-3333-4444-555555555555";
 const ok = { client_id: CLIENT, title: "Audit", status: "in_progress", start_date: "", end_date: "" };
@@ -138,4 +138,27 @@ test("recherche de missions : titre qui commence, puis titre qui contient, puis 
 test("recherche de missions : une mission sans client lisible se trouve par son titre", () => {
   assert.deepEqual(matchMissions([mk("1", "Orpheline", null)], "orph").map((m) => m.id), ["1"]);
   assert.deepEqual(matchMissions([mk("1", "Orpheline", null)], "x"), []);
+});
+
+test("mission liée à un devis : seulement les missions ouvertes, plus celle déjà liée (même terminée)", () => {
+  const all = [
+    { id: "a", status: "planned" },
+    { id: "b", status: "in_progress" },
+    { id: "c", status: "done" },
+    { id: "d", status: "cancelled" },
+  ];
+  assert.deepEqual(selectableMissions(all, "").map((m) => m.id), ["a", "b"]);
+  assert.deepEqual(selectableMissions(all, "c").map((m) => m.id), ["a", "b", "c"]);
+  assert.deepEqual(selectableMissions(all, "d").map((m) => m.id), ["a", "b", "d"]);
+  assert.deepEqual(selectableMissions([], "x"), []);
+});
+
+test("confirmation de suppression d'une mission : stories et sprints, pluriels français, rien si rien", () => {
+  assert.equal(missionDeletionNotice(0, 0), null);
+  assert.equal(missionDeletionNotice(1, 0), "Son backlog sera supprimé aussi : 1 user story.");
+  assert.equal(missionDeletionNotice(3, 0), "Son backlog sera supprimé aussi : 3 user stories.");
+  assert.equal(missionDeletionNotice(3, 1), "Son backlog sera supprimé aussi : 3 user stories, 1 sprint.");
+  assert.equal(missionDeletionNotice(1, 2), "Son backlog sera supprimé aussi : 1 user story, 2 sprints.");
+  assert.equal(missionDeletionNotice(0, 2), "Ses sprints seront supprimés aussi : 2 sprints.");
+  assert.equal(missionDeletionNotice(0, 1), "Ses sprints seront supprimés aussi : 1 sprint.");
 });

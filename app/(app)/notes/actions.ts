@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import {
   draftTitle,
   isUuid,
+  notesListHref,
+  parseListFilter,
   validateNoteInput,
   type NoteErrors,
   type NoteValues,
@@ -89,6 +91,7 @@ type WriteResult = { outcome: WriteOutcome; id?: string };
 async function save(
   values: NoteFormValues,
   write: (supabase: Db, value: NoteValues, clientId: string | null) => Promise<WriteResult>,
+  back: string,
 ): Promise<NoteFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateNoteInput(values);
@@ -116,15 +119,19 @@ async function save(
   revalidatePath("/notes");
   revalidatePath("/a-faire");
   revalidatePath("/aujourd-hui");
-  redirect("/notes");
+  redirect(back);
 }
+
+/** Retour sur la liste d'où l'on vient : le filtre est relu (types connus, brouillons), jamais une adresse reçue. */
+const text = (v: unknown) => (typeof v === "string" ? v : null); // une valeur de formulaire peut être un fichier, un argument d'action un objet : seul un texte est relu
+const backTo = (formData: FormData) => notesListHref(parseListFilter(text(formData.get("list_type")), text(formData.get("list_statut"))));
 
 export async function createNote(_prev: NoteFormState, formData: FormData): Promise<NoteFormState> {
   // owner_id vient de la base (default auth.uid()) ; la RLS refuse tout autre propriétaire.
   return save(readValues(formData), async (supabase, value, clientId) => {
     const { data, error } = await supabase.from("notes").insert({ ...value, client_id: clientId }).select("id").single();
     return error ? { outcome: "error" } : { outcome: "saved", id: data.id };
-  });
+  }, backTo(formData));
 }
 
 export async function updateNote(
@@ -141,10 +148,11 @@ export async function updateNote(
       .select("id");
     if (error) return { outcome: "error" };
     return data?.length ? { outcome: "saved", id } : { outcome: "not-found" };
-  });
+  }, backTo(formData));
 }
 
-export async function deleteNote(id: string): Promise<DeleteState> {
+/** `list` : le filtre de la liste d'où l'on vient (relu par `parseListFilter`, jamais utilisé tel quel). */
+export async function deleteNote(id: string, list?: { type?: string | null; draft?: boolean }): Promise<DeleteState> {
   const result = await withSession(async (supabase): Promise<WriteOutcome> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("notes").delete().eq("id", id).select("id");
@@ -161,7 +169,7 @@ export async function deleteNote(id: string): Promise<DeleteState> {
   revalidatePath("/notes");
   revalidatePath("/a-faire");
   revalidatePath("/aujourd-hui");
-  redirect("/notes");
+  redirect(notesListHref(parseListFilter(text(list?.type), list?.draft === true ? "brouillon" : null)));
 }
 
 export type RetryState = { message?: string };
