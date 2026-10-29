@@ -23,7 +23,7 @@ Pages non mesurées : connexion, assistant (panneau), panneaux IA (stories, tâc
 | # | Constat | Gravité | Suite |
 |---|---------|---------|-------|
 | 1 | **Le focus tombait sur la page** à l'ouverture d'un formulaire, parce que le bouton qui l'ouvrait disparaissait. Touchés : « Nouvelle facture » (liste et mission), « Ajouter un encaissement », « Nouveau devis », « Ajouter un contact », « Nouvelle version » d'une règle ; et les formulaires de modification d'une facture, d'un encaissement, d'une échéance, d'un sprint, d'un devis, d'un contact, d'une story. « Nouvelle échéance » laissait le focus sur le bouton. WCAG 2.4.3. | élevée | **corrigé** : `FocusOnMount` (`components/form-helpers.tsx`) ; 14 boutons contrôlés sur le build, un seul cas hors mesure (modification d'une story, d'un devis et d'un contact : bouton non trouvé par le script, couverts par le même composant, non contrôlés au navigateur) |
-| 2 | **Titre de page orange sur bleu pâle : 2,73:1** pour 3:1 exigé (grand texte), thème clair, toutes les pages. Le titre a une ombre cyan décorative. | moyenne | **décision d'Alex** (options ci-dessous) ; non modifié |
+| 2 | **Titre de page orange sur bleu pâle : 2,73:1** pour 3:1 exigé (grand texte), thème clair, toutes les pages. Le titre a une ombre cyan décorative. | moyenne | **corrigé** (option A choisie par Alex) : `--display` passe de `#E4600B` à `#C44A00` (`app/globals.css`, `DESIGN.md`), 3,77:1 au pire point du bandeau |
 | 3 | Après « Annuler » ou un envoi, le focus ne revient pas au bouton d'ouverture (factures, devis, règles). | faible | dette |
 | 4 | Liens d'en-tête de colonne « Nom », « Statut », « Origine » : 44 px de haut, 25 à 40 px de large (téléphone). | faible | dette (le projet vise 44 px ; WCAG 2.1 n'impose pas de taille) |
 | 5 | Anneau de focus des champs : trait de 1 px, visible et contrasté mais fin. | faible | dette, à juger à l'usage |
@@ -37,7 +37,7 @@ Pages non mesurées : connexion, assistant (panneau), panneaux IA (stories, tâc
 - **Bouton de détail d'une facture « avant » ses liens sur téléphone** : centré verticalement dans la ligne ; l'ordre réel est titre, liens, montant, bouton.
 - **Contour de focus « faible » du champ de recherche des notes (sombre)** : contour transparent (mode contrastes forcés) ; l'anneau réel est un trait orange à fort contraste.
 
-## Proposition pour le constat 2 (à décider par Alex)
+## Décision pour le constat 2 (option A retenue par Alex le 29 octobre 2026)
 
 Seul le **titre de page en thème clair** est sous le seuil. Couleur actuelle : orange `rgb(228, 96, 11)`. Contrastes mesurés contre le point le plus clair du fond (`rgb(207, 230, 245)`) :
 
