@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DeadlineRecord } from "@/lib/db/deadlines";
 import { DISPLAYS, DISPLAY_LABELS, calendarHref, type Display } from "@/lib/domain/deadline-boards";
-import { calendarSections, overdueText } from "@/lib/domain/calendar-panel";
+import { calendarSections, overdueText, viewChangeAnnouncement } from "@/lib/domain/calendar-panel";
 import { DEADLINE_VIEWS, DEADLINE_VIEW_LABELS, type CalendarLine, type DeadlineView } from "@/lib/domain/deadlines";
 
 export const CALENDAR_DESCRIPTION = "Tes obligations administratives, chacune avec sa date et son lien officiel. Ce n'est pas un agenda : pas de rendez-vous, seulement ce que tu dois faire avant une date.";
@@ -28,6 +28,13 @@ const byDate = (a: Entry, b: Entry) => a.date.localeCompare(b.date) || a.key.loc
 export function DeadlinesPanel({ deadlines, lines, view, display, today }: { deadlines: DeadlineRecord[]; lines: CalendarLine[]; view: DeadlineView; display: Display; today: string }) {
   const [creating, setCreating] = useState(false);
   const [announce, setAnnounce] = useState("");
+  // Changer d'affichage ou de période est une navigation : rien ne le dit à un lecteur d'écran. Ajustement pendant le rendu (jamais d'effet) : la page ne
+  // s'annonce pas à son premier rendu, puisque `seen` part de la vue courante.
+  const [seen, setSeen] = useState({ view, display });
+  if (seen.view !== view || seen.display !== display) {
+    setSeen({ view, display });
+    setAnnounce(viewChangeAnnouncement(seen, { view, display }) ?? "");
+  }
   const newRef = useRef<HTMLButtonElement>(null);
   const wasCreating = useRef(false);
   const done = useCallback(() => setCreating(false), []);

@@ -1,4 +1,5 @@
-import { groupDeadlines, inView, type CalendarLine, type DeadlineView } from "./deadlines.ts";
+import { DISPLAY_LABELS, type Display } from "./deadline-boards.ts";
+import { DEADLINE_VIEW_LABELS, groupDeadlines, inView, type CalendarLine, type DeadlineView } from "./deadlines.ts";
 import { invoiceBalance, type InvoiceAmounts, type InvoiceStatus, type PaymentAmounts } from "./payments.ts";
 
 type DeadlineRow = { id: string; due_on: string; created_at: string; done_at: string | null };
@@ -40,4 +41,13 @@ type InvoiceForLines = InvoiceAmounts & { id: string; reference: string | null; 
 /** Factures sous la forme que `invoiceLines` attend, avec leur statut (solde calculé une fois par facture). */
 export function calendarInvoiceInputs<I extends InvoiceForLines>(invoices: I[]): { id: string; reference: string | null; issued_on: string | null; due_on: string; status: InvoiceStatus; mission: I["mission"] }[] {
   return invoices.map((i) => ({ id: i.id, reference: i.reference, issued_on: i.issued_on, due_on: i.due_on, status: invoiceBalance(i, i.payments).status, mission: i.mission }));
+}
+
+/** Annonce vocale d'un changement d'affichage ou de période du calendrier ; `null` si rien n'a changé (jamais d'annonce au premier rendu) ; les deux changent ensemble (bouton précédent) : les deux sont dites. */
+export function viewChangeAnnouncement(prev: { view: DeadlineView; display: Display }, next: { view: DeadlineView; display: Display }): string | null {
+  const parts = [
+    ...(next.display !== prev.display ? [`Affichage : ${DISPLAY_LABELS[next.display]}`] : []),
+    ...(next.view !== prev.view ? [`Période : ${DEADLINE_VIEW_LABELS[next.view]}`] : []),
+  ];
+  return parts.length ? parts.join(". ") : null;
 }

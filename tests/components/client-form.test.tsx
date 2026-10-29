@@ -22,8 +22,8 @@ describe("ClientForm", () => {
       assert.equal(el?.getAttribute("aria-invalid"), null);
       assert.equal(el?.getAttribute("aria-describedby"), null);
     }
-    assert.equal(container.querySelector('[role="group"]'), null);
-    assert.equal(container.querySelector('[id$="-error"]'), null);
+    assert.ok(container.querySelector('[role="group"]') === null);
+    assert.ok(container.querySelector('[id$="-error"]') === null);
   });
 
   test("envoi refusé : récapitulatif « 2 erreurs » avec le focus, erreurs en ligne reliées aux champs, sans role=alert", async () => {
@@ -54,6 +54,6 @@ describe("ClientForm", () => {
     render(<ClientForm action={async () => ({ message: "Échec du serveur." })} submitLabel="Créer" />);
     await user.click(screen.getByRole("button", { name: "Créer" }));
     await waitFor(() => assert.equal(screen.getByRole("alert").textContent, "Échec du serveur."));
-    assert.equal(screen.queryByRole("group"), null);
+    assert.ok(screen.queryByRole("group") === null);
   });
 });

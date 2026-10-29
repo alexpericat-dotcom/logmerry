@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const AXIS_PX = 960; // largeur de l'axe, fixe : les niveaux des jalons sont calculés dessus ; le diagramme défile horizontalement au-delà de l'écran
 const LABEL_PX = 220; // place d'un losange et de son intitulé avant le jalon suivant d'une même ligne
 const CATEGORY_PX = 144; // colonne des catégories
-const LANE_PX = 26;
+// Hauteur d'un niveau de jalons : 26 px, 44 px au téléphone (cible tactile de la règle du projet) ; posée en `--lane-px` sur la ligne (classes écrites en toutes lettres pour Tailwind).
 
 type Row = { label: string; marks: (GanttMark & { left: number; lane: number })[]; lanes: number };
 
@@ -104,7 +104,7 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
                 <div className="shrink-0 p-2 text-sm font-semibold" style={{ width: CATEGORY_PX }}>
                   {row.label}
                 </div>
-                <div className="relative shrink-0" style={{ width: AXIS_PX + LABEL_PX, height: row.lanes * LANE_PX + 12 }}>
+                <div className="relative shrink-0 [--lane-px:26px] max-md:[--lane-px:44px]" style={{ width: AXIS_PX + LABEL_PX, height: `calc(var(--lane-px) * ${row.lanes} + 12px)` }}>
                   <span aria-hidden="true" className="absolute inset-y-0 w-px bg-foreground/60" style={{ left: todayLeft }} />
                   <ul aria-label={`Échéances : ${row.label}`}>
                   {row.marks.map((m) => {
@@ -118,12 +118,12 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
                       </>
                     );
                     const cls = "absolute flex items-center gap-1.5";
-                    const style = { left: m.left, top: m.lane * LANE_PX + 6, maxWidth: LABEL_PX - 12 };
+                    const style = { left: m.left, top: `calc(var(--lane-px) * ${m.lane} + 6px)`, maxWidth: LABEL_PX - 12 };
                     const open = m.kind === "deadline" && m.key === selectedId;
                     return (
                       <li key={m.key} className={cls} style={style} title={`${m.title} · ${formatDate(m.due_on)} · ${URGENCY_LABELS[m.level]}`}>
                         {m.href ? (
-                          <Link href={m.href} className="flex min-h-6 items-center gap-1.5 underline-offset-4 hover:underline">
+                          <Link href={m.href} className="flex min-h-6 max-md:min-h-11 items-center gap-1.5 underline-offset-4 hover:underline">
                             {text}
                           </Link>
                         ) : (
@@ -136,7 +136,7 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
                             aria-expanded={open}
                             aria-controls={open ? "gantt-record" : undefined}
                             onClick={() => setOpenId(open ? null : m.key)}
-                            className="flex min-h-6 items-center gap-1.5 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                            className="flex min-h-6 max-md:min-h-11 items-center gap-1.5 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                           >
                             {text}
                           </button>
@@ -153,7 +153,9 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
       </div>
       <p className="text-xs text-muted-foreground">Le trait gris marque aujourd&apos;hui. Clique sur un jalon d&apos;échéance pour ouvrir sa fiche : modifier, cocher ou supprimer.</p>
       {selected && (
-        <section id="gantt-record" aria-labelledby="gantt-record-title" className="flex max-w-3xl flex-col gap-2">
+        // Échap ferme la fiche (le focus revient au jalon) ; une confirmation ou une modification ouverte la capte avant (`preventDefault`), donc la fiche reste. Pendant un envoi elles
+        // ne la captent plus (bouton désactivé) : on n'écarte pas la fiche sous les yeux d'une action en cours. Pas de fermeture non plus pendant une composition (IME).
+        <section id="gantt-record" aria-labelledby="gantt-record-title" className="flex max-w-3xl flex-col gap-2" onKeyDown={(e) => e.key === "Escape" && !e.defaultPrevented && !e.nativeEvent.isComposing && !e.currentTarget.querySelector('[aria-disabled="true"], :disabled') && close()}>
           <div className="flex items-center justify-between gap-2">
             <h3 id="gantt-record-title" tabIndex={-1} className="text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
               Fiche de l&apos;échéance
