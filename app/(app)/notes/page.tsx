@@ -12,9 +12,11 @@ import {
   NOTE_TYPES,
   NOTE_TYPE_LABELS,
   excerpt,
+  notesFilterQuery,
   parseStatusFilter,
   parseTypeFilter,
   type NoteType,
+  type NotesListFilter,
 } from "@/lib/domain/notes";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -89,10 +91,10 @@ function Filters({
   );
 }
 
-function CreateNoteButton() {
+function CreateNoteButton({ filter }: { filter: NotesListFilter }) {
   return (
     <Button asChild size="lg" className="shrink-0">
-      <Link href="/notes/nouvelle">Créer une note</Link>
+      <Link href={`/notes/nouvelle${notesFilterQuery(filter)}`}>Créer une note</Link>
     </Button>
   );
 }
@@ -103,7 +105,7 @@ async function NotesBanner({ searchParams }: { searchParams: SearchParams }) {
   const draftOnly = parseStatusFilter(params.statut) === "draft";
   const type = draftOnly ? null : parseTypeFilter(params.type);
   return (
-    <PageBanner title="Notes" actions={<CreateNoteButton />}>
+    <PageBanner title="Notes" actions={<CreateNoteButton filter={{ type, draft: draftOnly }} />}>
       <Filters current={type} draftOnly={draftOnly} />
     </PageBanner>
   );
@@ -138,7 +140,7 @@ async function NotesList({ searchParams }: { searchParams: SearchParams }) {
           <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
             <h2 className="min-w-0 break-words font-semibold">
               <Link
-                href={`/notes/${note.id}`}
+                href={`/notes/${note.id}${notesFilterQuery({ type, draft: draftOnly })}`}
                 className="underline-offset-4 hover:underline max-md:inline-block max-md:min-h-11 max-md:py-2.5"
               >
                 {note.title}

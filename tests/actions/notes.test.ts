@@ -86,6 +86,34 @@ describe("updateNote", () => {
   });
 });
 
+describe("retour sur la liste filtrée (createNote, updateNote, deleteNote)", () => {
+  const ok = () => {
+    fake.respond = () => ({ data: [{ id: ID }] });
+  };
+
+  test("enregistrer : retour sur le filtre d'où l'on vient (type, brouillons), relu côté serveur", async () => {
+    ok();
+    await assert.rejects(() => createNote({}, form({ ...VALID, list_type: "procedure" })), redirectsTo("/notes?type=procedure"));
+    await assert.rejects(() => updateNote(ID, {}, form({ ...VALID, list_statut: "brouillon" })), redirectsTo("/notes?statut=brouillon"));
+    await assert.rejects(() => updateNote(ID, {}, form({ ...VALID, list_type: "faq", list_statut: "brouillon" })), redirectsTo("/notes?statut=brouillon"));
+  });
+
+  test("filtre falsifié : retour sur /notes, jamais l'adresse reçue", async () => {
+    ok();
+    for (const bad of ["https://evil.example", "//evil.example", "/clients", "<script>", "procedure&x=1", "PROCEDURE"]) {
+      await assert.rejects(() => createNote({}, form({ ...VALID, list_type: bad, list_statut: bad })), redirectsTo("/notes"), bad);
+    }
+  });
+
+  test("supprimer : retour sur le filtre (type, brouillons) ; valeur inconnue : /notes", async () => {
+    ok();
+    await assert.rejects(() => deleteNote(ID, { type: "template" }), redirectsTo("/notes?type=template"));
+    await assert.rejects(() => deleteNote(ID, { draft: true }), redirectsTo("/notes?statut=brouillon"));
+    await assert.rejects(() => deleteNote(ID, { type: "https://evil.example" }), redirectsTo("/notes"));
+    await assert.rejects(() => deleteNote(ID), redirectsTo("/notes"));
+  });
+});
+
 describe("deleteNote", () => {
   test("suppression filtrée sur l'identifiant, relue, trois pages revalidées, retour à la liste", async () => {
     fake.respond = () => ({ data: [{ id: ID }] });

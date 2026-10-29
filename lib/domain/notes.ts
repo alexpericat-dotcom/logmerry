@@ -32,6 +32,28 @@ export function parseTypeFilter(value: string | string[] | undefined): NoteType 
   return parseNoteType(Array.isArray(value) ? value[0] : value);
 }
 
+/** Filtre de la liste des notes : un type, ou les brouillons (jamais les deux). */
+export type NotesListFilter = { type: NoteType | null; draft: boolean };
+export const NO_NOTES_FILTER: NotesListFilter = { type: null, draft: false };
+
+/** Filtre relu d'une adresse ou d'un formulaire : seules les valeurs connues passent (jamais une adresse libre). Les brouillons l'emportent sur le type. */
+export function parseListFilter(type: string | string[] | null | undefined, statut: string | string[] | null | undefined): NotesListFilter {
+  const draft = parseStatusFilter(statut ?? undefined) === "draft";
+  return { type: draft ? null : parseTypeFilter(type ?? undefined), draft };
+}
+
+/** Adresse de la liste pour ce filtre (retour après « Annuler », enregistrement ou suppression). */
+export function notesListHref(f: NotesListFilter): string {
+  if (f.draft) return "/notes?statut=brouillon";
+  return f.type ? `/notes?type=${f.type}` : "/notes";
+}
+
+/** Requête à ajouter à l'adresse d'une note (ou de la création) pour que le filtre de la liste la suive : vide sans filtre. */
+export function notesFilterQuery(f: NotesListFilter): string {
+  if (f.draft) return "?statut=brouillon";
+  return f.type ? `?type=${f.type}` : "";
+}
+
 export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }

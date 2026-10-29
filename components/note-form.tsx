@@ -16,7 +16,7 @@ import {
   type ClientStatus,
 } from "@/lib/domain/clients";
 import { NEW_CLIENT } from "@/lib/domain/note-link";
-import { NOTE_TYPES, NOTE_TYPE_LABELS } from "@/lib/domain/notes";
+import { NO_NOTES_FILTER, NOTE_TYPES, NOTE_TYPE_LABELS, notesListHref, type NotesListFilter } from "@/lib/domain/notes";
 
 type Props = {
   action: (state: NoteFormState, formData: FormData) => Promise<NoteFormState>;
@@ -24,13 +24,15 @@ type Props = {
   /** Mes fiches, pour le champ « Lié à ». */
   clients: { id: string; name: string; status: ClientStatus }[];
   submitLabel: string;
+  /** Filtre de la liste d'où l'on vient : « Annuler » et la redirection y reviennent (relu par le serveur). */
+  listFilter?: NotesListFilter;
 };
 
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-background max-md:h-11 px-3 py-1 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
 const EMPTY: NoteFormValues = { title: "", body: "", type: "note", client_id: "", new_name: "", new_origin: "" };
 
-export function NoteForm({ action, initial, clients, submitLabel }: Props) {
+export function NoteForm({ action, initial, clients, submitLabel, listFilter = NO_NOTES_FILTER }: Props) {
   // `sent` compte les envois : il sert de clé au menu « Lié à » (voir plus bas).
   const [state, formAction, pending] = useActionState<NoteFormState & { sent?: number }, FormData>(
     async (prev, formData) => ({ ...(await action(prev, formData)), sent: (prev.sent ?? 0) + 1 }),
@@ -52,6 +54,8 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
 
   return (
     <form action={formAction} noValidate className="flex max-w-2xl flex-col gap-6">
+      {listFilter.type && <input type="hidden" name="list_type" value={listFilter.type} />}
+      {listFilter.draft && <input type="hidden" name="list_statut" value="brouillon" />}
       <div className="grid gap-2">
         <Label htmlFor="title">Titre (obligatoire)</Label>
         <Input
@@ -208,7 +212,7 @@ export function NoteForm({ action, initial, clients, submitLabel }: Props) {
         <Button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </Button>
-        <Link href="/notes" className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
+        <Link href={notesListHref(listFilter)} className="text-sm underline underline-offset-4 max-md:inline-flex max-md:min-h-11 max-md:items-center">
           Annuler
         </Link>
       </div>
