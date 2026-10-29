@@ -2,7 +2,7 @@
 title: 'Extraction de l''assemblage de la page cockpit'
 type: 'refactor'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'b9574e03ead8200040bceb1bdc7ab03feb0da84e'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -47,10 +47,10 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/domain/cockpit/assembly.ts` -- `invoiceViews`, `sprintsWithParisDay`, `quotesWithParisDay`, `taskProgress`, `bannerDescription`, `topCeiling` -- code déplacé tel quel
-- [ ] `lib/domain/cockpit/assembly.test.ts` -- une ligne de test par ligne de la matrice -- comportement figé avant que la page l'appelle
-- [ ] `app/(app)/aujourd-hui/page.tsx` -- remplacer le code en ligne par les appels -- même rendu
-- [ ] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- retirer « l'assemblage de la page cockpit… » de la liste des fonctions à extraire et `invoiceBalance` « calculé deux fois » côté cockpit ; noter le reste
+- [x] `lib/domain/cockpit/assembly.ts` -- `invoiceViews`, `sprintsWithParisDay`, `quotesWithParisDay`, `taskProgress`, `bannerDescription`, `topCeiling` -- code déplacé tel quel
+- [x] `lib/domain/cockpit/assembly.test.ts` -- une ligne de test par ligne de la matrice -- comportement figé avant que la page l'appelle
+- [x] `app/(app)/aujourd-hui/page.tsx` -- remplacer le code en ligne par les appels -- même rendu
+- [x] `docs/journal.md`, `_bmad-output/implementation-artifacts/deferred-work.md` -- retirer « l'assemblage de la page cockpit… » de la liste des fonctions à extraire et `invoiceBalance` « calculé deux fois » côté cockpit ; noter le reste
 
 **Acceptance Criteria:**
 - Given les matrices ci-dessus, when `npm test` tourne, then les nouveaux tests passent et les anciens sont inchangés.
@@ -60,9 +60,28 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `assembly.ts` : six fonctions, code déplacé tel quel ; `bannerDescription` et `topCeiling` reprennent le texte et le tri de la page. La page n'importe plus `isOverdue`, `invoiceBalance` ni `SprintWork`. Après relecture : 8 tests.
+- Vérifié : `npm test` (anciens tests inchangés), `tsc`, lint, `next build` en copie propre ; six mutations (arrondi, pluriel, filtre « ok », jour de Paris, « échue », ordre du plafond) détectées.
+- Non fait : contrôle visuel de `/aujourd-hui` (à faire par Alex).
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | `invoiceViews` : fixtures sans taxe connue, sans trop-perçu, sans référence nulle | medium | patch : test ajouté (taxe connue, trop-perçu, référence nulle) |
+| 2 | Jour de Paris : changement d'heure du 25 octobre 2026 non testé | medium | patch : test ajouté (3 instants) |
+| 3 | Dette : « coches du jour » effacées sans trace | low | patch : précision ajoutée (aucune logique en ligne, `listTaskChecks` passé tel quel) |
+| 4 | Spec périmée (statut, tâches, journaux vides) | low | patch (cette mise à jour) |
+| 5 | Date invalide (`updated_at`) fait lever `RangeError` | low | rejeté : la base type la colonne `timestamptz` non nulle ; l'ancien code en ligne se comportait pareil, refactor sans changement de comportement |
+| 6 | `bannerDescription` avec `done > total` donne un nombre négatif | low | rejeté : `done` est un sous-ensemble de `total` (calculé par `taskProgress` sur les mêmes tâches) |
+| 7 | `percent` `NaN` fausse le tri de `topCeiling` | low | rejeté : `percent` est calculé par `computeCeilings` (entier), pas atteignable |
+| 8 | `payments` nul fait lever `TypeError` | low | rejeté : `listInvoices` renvoie toujours un tableau ; même comportement qu'avant |
+| 9 | Aucun test ne compte les appels de `invoiceBalance` | low | rejeté : propriété d'efficacité sans effet sur le résultat |
+| 10 | Typage lâche des tests de `topCeiling`, paramètres `(total, done)` interchangeables, import sur une longue ligne | low | rejeté (cosmétique ; les imports de la page sont déjà longs) |
 
 ## Verification
 
