@@ -102,7 +102,7 @@ export function DeadlinesPanel({ deadlines, lines, view, display, today }: { dea
         </p>
         {creating && <DeadlineForm idPrefix="new" action={create} initial={empty} submitLabel="Créer l'échéance" onDone={done} onCancel={done} canRecur />}
         {display === "kanban" && <DeadlineKanban deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
-        {display === "gantt" && <DeadlineGantt deadlines={visible} lines={datedLines} today={today} />}
+        {display === "gantt" && <DeadlineGantt deadlines={visible} lines={datedLines} today={today} onChanged={changed} />}
         {display === "liste" && (
           <>
           {(view === "toutes" || view === "retard") && section("deadlines-overdue", "En retard", overdue, datedLines.filter((l) => (l.due_on as string) < today), "Rien en retard.")}
