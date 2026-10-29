@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CLIENT_NAME_MAX, clientsHref, countLabel, nextDir, parseClientView, validateClientInput, matchClients, viewClients, type ClientRow } from "./clients.ts";
+import { CLIENT_NAME_MAX, PENDING_QUOTES_HREF, clientsHref, countLabel, nextDir, parseClientView, validateClientInput, matchClients, viewClients, type ClientRow } from "./clients.ts";
 
 test("création : nom et origine obligatoires, nom nettoyé", () => {
   const ok = validateClientInput({ name: "  Atelier Brume \u0000 ", status: "prospect", origin: "demo" });
@@ -21,9 +21,9 @@ test("nom trop long refusé au décompte en points de code (comme la base)", () 
 });
 
 test("adresse de la liste : filtres connus gardés, valeurs inconnues ignorées, tri par défaut = création récente d'abord", () => {
-  assert.deepEqual(parseClientView({}), { statut: null, origine: null, tri: "creee", ordre: "desc" });
-  assert.deepEqual(parseClientView({ statut: "client", origine: "demo", tri: "nom", ordre: "desc" }), { statut: "client", origine: "demo", tri: "nom", ordre: "desc" });
-  assert.deepEqual(parseClientView({ statut: "x", origine: "y", tri: "inconnu", ordre: "asc" }), { statut: null, origine: null, tri: "creee", ordre: "desc" });
+  assert.deepEqual(parseClientView({}), { statut: null, origine: null, devis: false, tri: "creee", ordre: "desc" });
+  assert.deepEqual(parseClientView({ statut: "client", origine: "demo", tri: "nom", ordre: "desc" }), { statut: "client", origine: "demo", devis: false, tri: "nom", ordre: "desc" });
+  assert.deepEqual(parseClientView({ statut: "x", origine: "y", tri: "inconnu", ordre: "asc" }), { statut: null, origine: null, devis: false, tri: "creee", ordre: "desc" });
   assert.equal(parseClientView({ tri: "toString" }).tri, "creee", "pas de clé héritée de Object");
   assert.equal(parseClientView({ tri: "nom" }).ordre, "asc");
 });
@@ -66,6 +66,20 @@ test("filtres : statut, origine, les deux ; le total ignore les filtres ; aucun 
   assert.equal(ids(viewClients(ROWS, parseClientView({ origine: "friend" })).rows), "4");
   const both = viewClients(ROWS, parseClientView({ statut: "client", origine: "demo" }));
   assert.deepEqual([both.rows.length, both.total], [0, 4]);
+});
+
+test("filtre « devis en attente » : adresse ?devis=attente, valeur inconnue ignorée, combiné aux autres filtres, sans fiche = vide", () => {
+  assert.equal(parseClientView({ devis: "attente" }).devis, true);
+  assert.equal(parseClientView({ devis: "xyz" }).devis, false);
+  assert.equal(parseClientView({ devis: ["attente", "x"] }).devis, true);
+  assert.equal(clientsHref(parseClientView({ devis: "attente" })), "/clients?devis=attente");
+  assert.equal(clientsHref({ ...parseClientView({ statut: "prospect", devis: "attente" }), devis: false }), "/clients?statut=prospect", "retirer le filtre");
+  assert.equal(PENDING_QUOTES_HREF, "/clients?devis=attente", "la tuile du cockpit mène au filtre");
+  const withQuote = new Set(["2", "4"]);
+  assert.equal(ids(viewClients(ROWS, parseClientView({ devis: "attente" }), withQuote).rows), "4,2");
+  assert.equal(ids(viewClients(ROWS, parseClientView({ devis: "attente", statut: "prospect" }), withQuote).rows), "2");
+  assert.equal(viewClients(ROWS, parseClientView({ devis: "attente" }), new Set()).rows.length, 0);
+  assert.equal(ids(viewClients(ROWS, parseClientView({})).rows), ids(viewClients(ROWS, parseClientView({}), withQuote).rows), "sans le filtre, l'ensemble des devis est sans effet");
 });
 
 test("tri par nom : alphabétique, accents et casse ignorés (« école » entre Coopérative et Zélie), les deux sens", () => {

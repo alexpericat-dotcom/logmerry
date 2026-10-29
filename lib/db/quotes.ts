@@ -47,3 +47,14 @@ export async function listSentQuotes(): Promise<{ id: string; status: QuoteStatu
   if (error) throw new Error("Impossible de charger les devis envoyés.");
   return data.map(({ client, ...q }) => ({ ...q, client_name: client?.name ?? null }));
 }
+
+/**
+ * Mes devis envoyés avec montant, taxe et date d'envoi, pour la pastille de la liste des fiches (même définition que `listSentQuotes` : statut `sent`).
+ * ponytail : sans pagination, PostgREST coupe en silence à 1 000 lignes ; `.range()` par lots si les devis envoyés approchent ce nombre.
+ */
+export async function listSentQuoteAmounts(): Promise<{ client_id: string; amount_ht_cents: number; tax_cents: number | null; sent_on: string | null }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("quotes").select("client_id, amount_ht_cents, tax_cents, sent_on").eq("status", "sent").order("sent_on", { ascending: true, nullsFirst: false }).order("id");
+  if (error) throw new Error("Impossible de charger les devis envoyés.");
+  return data;
+}

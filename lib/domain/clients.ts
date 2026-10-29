@@ -45,18 +45,19 @@ export function validateClientInput(input: ClientInput): { ok: true; value: Clie
 export const CLIENT_SORT_COLUMNS = { nom: "name", statut: "status", origine: "origin", creee: "created_at" } as const;
 export type ClientSortKey = keyof typeof CLIENT_SORT_COLUMNS;
 export type SortDir = "asc" | "desc";
-export type ClientView = { statut: ClientStatus | null; origine: ClientOrigin | null; tri: ClientSortKey; ordre: SortDir };
+/** `devis` : seulement les fiches qui ont au moins un devis envoyé (adresse `?devis=attente`). */
+export type ClientView = { statut: ClientStatus | null; origine: ClientOrigin | null; devis: boolean; tri: ClientSortKey; ordre: SortDir };
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
 /** Lit l'adresse de la liste ; toute valeur inconnue est ignorée (tri par défaut : date de création, récent d'abord). */
-export function parseClientView(params: { statut?: string | string[]; origine?: string | string[]; tri?: string | string[]; ordre?: string | string[] }): ClientView {
+export function parseClientView(params: { statut?: string | string[]; origine?: string | string[]; devis?: string | string[]; tri?: string | string[]; ordre?: string | string[] }): ClientView {
   const tri = first(params.tri);
   const sortKnown = tri !== undefined && Object.hasOwn(CLIENT_SORT_COLUMNS, tri);
   const key = sortKnown ? (tri as ClientSortKey) : "creee";
   const dirParam = first(params.ordre);
   const dir: SortDir = sortKnown ? (dirParam === "desc" ? "desc" : "asc") : "desc";
-  return { statut: parseClientStatus(first(params.statut)), origine: parseClientOrigin(first(params.origine)), tri: key, ordre: dir };
+  return { statut: parseClientStatus(first(params.statut)), origine: parseClientOrigin(first(params.origine)), devis: first(params.devis) === "attente", tri: key, ordre: dir };
 }
 
 /** Adresse de la liste pour une vue (les valeurs par défaut ne s'écrivent pas). */
@@ -64,6 +65,7 @@ export function clientsHref(view: Partial<ClientView>): string {
   const q = new URLSearchParams();
   if (view.statut) q.set("statut", view.statut);
   if (view.origine) q.set("origine", view.origine);
+  if (view.devis) q.set("devis", "attente");
   if (view.tri && !(view.tri === "creee" && view.ordre !== "asc")) {
     q.set("tri", view.tri);
     q.set("ordre", view.ordre ?? "asc");
@@ -71,6 +73,9 @@ export function clientsHref(view: Partial<ClientView>): string {
   const s = q.toString();
   return s ? `/clients?${s}` : "/clients";
 }
+
+/** Où mène la tuile « Devis » du cockpit : les fiches qui ont un devis envoyé. */
+export const PENDING_QUOTES_HREF = clientsHref({ devis: true });
 
 /** Sens du prochain clic sur un en-tête : croissant d'abord, puis inversé si la colonne est déjà triée. */
 export const nextDir = (view: ClientView, key: ClientSortKey): SortDir => (view.tri === key && view.ordre === "asc" ? "desc" : "asc");
@@ -98,10 +103,11 @@ function sortValue(row: ClientRow, key: ClientSortKey): string {
  * calculé sur la même lecture que la liste (jamais deux chiffres de deux requêtes).
  * ponytail : tout en mémoire, suffisant pour quelques dizaines de fiches ; pagination côté base au-delà de 1 000.
  */
-export function viewClients<T extends ClientRow>(all: T[], view: ClientView): { rows: T[]; total: number } {
+/** `withSentQuote` : identifiants des fiches qui ont un devis envoyé (filtre `devis`). */
+export function viewClients<T extends ClientRow>(all: T[], view: ClientView, withSentQuote: ReadonlySet<string> = new Set()): { rows: T[]; total: number } {
   const dir = view.ordre === "asc" ? 1 : -1;
   const rows = all
-    .filter((c) => (!view.statut || c.status === view.statut) && (!view.origine || c.origin === view.origine))
+    .filter((c) => (!view.statut || c.status === view.statut) && (!view.origine || c.origin === view.origine) && (!view.devis || withSentQuote.has(c.id)))
     .sort((a, b) => {
       const primary = view.tri === "creee" ? (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0) : collator.compare(sortValue(a, view.tri), sortValue(b, view.tri));
       return dir * primary || (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0); // à égalité : la plus récente d'abord

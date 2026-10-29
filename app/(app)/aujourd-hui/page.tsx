@@ -17,6 +17,7 @@ import { listActiveSprintWork } from "@/lib/db/sprint-work";
 import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
+import { PENDING_QUOTES_HREF } from "@/lib/domain/clients";
 import { bannerDescription, invoiceViews, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "@/lib/domain/cockpit/assembly";
 import { cockpitKpis, deadlineDaysOfMonth, upcomingDeadlines } from "@/lib/domain/cockpit/overview";
 import { draftSummary } from "@/lib/domain/cockpit/summary";
@@ -72,7 +73,7 @@ async function Tasks() {
             <KpiTile href="/clients?statut=client" icon={Users} tone="teal" label="Clients" value={kpis.clients} hint="fiches clients" />
             <KpiTile href="/clients?statut=prospect" icon={Target} tone="violet" label="Prospects" value={kpis.prospects} hint="à convaincre" />
             <KpiTile href="/missions?statut=en-cours" icon={Briefcase} tone="orange" label="Missions" value={kpis.missionsInProgress} hint={`missions en cours, ${kpis.missionsPlanned} à planifier`} />
-            <KpiTile href="/clients" icon={FileText} tone="pink" label="Devis" value={kpis.quotesSent} hint="devis envoyés, en attente de réponse" />
+            <KpiTile href={PENDING_QUOTES_HREF} icon={FileText} tone="pink" label="Devis" value={kpis.quotesSent} hint="devis envoyés, en attente de réponse" />
             <KpiTile href="/factures" icon={Receipt} tone="yellow" label="Factures" value={kpis.invoicesToCollect} hint={kpis.invoicesOverdue ? `à encaisser, dont ${kpis.invoicesOverdue} échue${kpis.invoicesOverdue > 1 ? "s" : ""}` : "à encaisser, aucune échue"} alert={kpis.invoicesOverdue ? `${kpis.invoicesOverdue} échue${kpis.invoicesOverdue > 1 ? "s" : ""}` : undefined} />
             <KpiTile href="/calendrier" icon={CalendarClock} tone="teal" label="Échéances" value={kpis.deadlinesThisWeek} hint="échéances des 7 prochains jours" />
           </div>
