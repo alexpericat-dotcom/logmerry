@@ -17,6 +17,7 @@ export function PaymentForm({
   initial,
   invoice,
   others,
+  today,
   submitLabel,
   onDone,
   onCancel,
@@ -27,6 +28,8 @@ export function PaymentForm({
   /** Montants de la facture et autres encaissements (sans celui qu'on modifie) : pour avertir d'un trop-perçu avant l'enregistrement. */
   invoice: InvoiceAmounts;
   others: PaymentAmounts[];
+  /** Jour de Paris donné par le serveur : plus grande date d'encaissement acceptée (le serveur refuse déjà une date future). */
+  today: string;
   submitLabel: string;
   onDone: () => void;
   onCancel: () => void;
@@ -81,7 +84,7 @@ export function PaymentForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={id("received_on")}>Date d&apos;encaissement (obligatoire)</Label>
-          <Input {...field("received_on")} type="date" defaultValue={values.received_on} aria-required="true" />
+          <Input {...field("received_on")} type="date" max={today} defaultValue={values.received_on} aria-required="true" />
           {errorLine("received_on")}
         </div>
         <div className="grid gap-2 sm:col-span-2">

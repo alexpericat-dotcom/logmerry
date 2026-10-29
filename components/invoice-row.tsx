@@ -176,7 +176,7 @@ export function InvoiceRow({
             )}
           </p>
           {invoice.note && <p className="whitespace-pre-line text-sm text-muted-foreground">{invoice.note}</p>}
-          <InvoicePayments invoiceId={invoice.id} invoice={invoice} payments={invoice.payments} balance={balance} />
+          <InvoicePayments invoiceId={invoice.id} invoice={invoice} payments={invoice.payments} balance={balance} today={today} />
 
           {mode === "view" && (
             <div ref={actionsRef} className="flex flex-wrap gap-2">

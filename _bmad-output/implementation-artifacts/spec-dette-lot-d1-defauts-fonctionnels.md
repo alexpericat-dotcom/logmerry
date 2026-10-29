@@ -2,7 +2,7 @@
 title: 'Dette, lot D1 : six défauts fonctionnels'
 type: 'bugfix'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: 'ee0f20372ffae95bf2ba64a0fca0d90d7ddfebe4'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -58,13 +58,13 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/domain/notes.ts` + tests, `notes/page.tsx`, `[id]/page.tsx`, `nouvelle/page.tsx`, `note-form.tsx`, `delete-note.tsx`, `notes/actions.ts` + `tests/actions/notes.test.ts` -- (1) filtre conservé, relu côté serveur -- retour sur la liste filtrée
-- [ ] `quotes-section.tsx`, `clients/[id]/page.tsx`, domaine + tests -- (2) missions ouvertes + mission déjà liée
-- [ ] `delete-mission.tsx`, page de modification de mission, domaine + tests -- (3) stories et sprints dans la confirmation
-- [ ] `story-review.ts` + tests -- (4) erreurs des seuls champs cochés
-- [ ] `backlog.tsx` -- (5) erreur effacée à la saisie
-- [ ] `payment-form.tsx`, `invoice-payments.tsx`, `invoice-row.tsx` -- (6) date du jour et `max`
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
+- [x] `lib/domain/notes.ts` + tests, `notes/page.tsx`, `[id]/page.tsx`, `nouvelle/page.tsx`, `note-form.tsx`, `delete-note.tsx`, `notes/actions.ts` + `tests/actions/notes.test.ts` -- (1) filtre conservé, relu côté serveur -- retour sur la liste filtrée
+- [x] `quotes-section.tsx`, `clients/[id]/page.tsx`, domaine + tests -- (2) missions ouvertes + mission déjà liée
+- [x] `delete-mission.tsx`, page de modification de mission, domaine + tests -- (3) stories et sprints dans la confirmation
+- [x] `story-review.ts` + tests -- (4) erreurs des seuls champs cochés
+- [x] `backlog.tsx` -- (5) erreur effacée à la saisie
+- [x] `payment-form.tsx`, `invoice-payments.tsx`, `invoice-row.tsx` -- (6) date du jour et `max`
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
@@ -73,6 +73,9 @@ review_loop_iteration: 0
 - Given l'application : filtrer les notes sur « Procédures », ouvrir une note, « Annuler », enregistrer, supprimer : retour sur « Procédures » (contrôle d'Alex).
 
 ## Implementation Notes
+
+- (1) `parseListFilter`, `notesListHref`, `notesFilterQuery` dans `lib/domain/notes.ts` ; les cartes, « Créer une note », le détail, la création, `NoteForm` (champs cachés `list_type` et `list_statut` : `type` est déjà le champ du type de la note), `DeleteNote` et les actions (`backTo`, `deleteNote(id, list)`) relisent le filtre par les analyseurs existants. (2) `selectableMissions` (`missions.ts`), liste du devis filtrée ; la page de la fiche passe `status`. (3) `missionDeletionNotice` ; la page de modification lit `listSprints`. (4) `mergeReview` : champs non cochés remplacés par une valeur neutre avant validation. (5) `setDndError("")` à `onDragStart`. (6) `today` passe de `InvoiceRow` à `PaymentForm` (valeur par défaut, `max`) ; serveur inchangé (refuse déjà une date future).
+- Le sélecteur « Mission » d'une facture n'a pas le même défaut (champ obligatoire, on facture une mission terminée) : laissé tel quel. Tests : 16 domaine, 3 actions, 2 composants ; huit mutations détectées (le point 5, visuel, n'en a pas).
 
 ## Spec Change Log
 

@@ -171,7 +171,10 @@ export function Backlog({ missionId, stories, tasks, notes, sprints, today }: { 
     onDragCancel: ({ active: a }) => `Déplacement annulé : « ${titleOf(a.id)} » reste dans ${drag ? listName(findList(drag.start, String(a.id)) ?? BACKLOG) : "sa liste"}.`,
   };
 
-  const onDragStart = ({ active: a }: DragStartEvent) => updateDrag({ id: String(a.id), lists: shownLists, start: shownLists });
+  const onDragStart = ({ active: a }: DragStartEvent) => {
+    setDndError(""); // l'erreur du déplacement précédent disparaît dès qu'on en saisit un autre
+    updateDrag({ id: String(a.id), lists: shownLists, start: shownLists });
+  };
   const onDragOver = ({ active: a, over }: DragOverEvent) => {
     const drag = dragRef.current;
     if (!drag || !over) return;
