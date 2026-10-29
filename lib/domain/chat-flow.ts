@@ -20,6 +20,15 @@ export function isRefusal(text: string): boolean {
   return t === NOT_FOUND || t === LEGACY_NOT_FOUND;
 }
 
+export const CHAT_GENERIC_ERROR = "L'assistant n'a pas pu répondre pour le moment.";
+export const SESSION_EXPIRED = "Ta session a expiré. Recharge la page pour te reconnecter.";
+
+/** Message affiché quand `/api/chat` n'a pas donné de réponse : session expirée (401), sinon le message du serveur, sinon le message général. */
+export function chatErrorMessage(status: number, json: { error?: unknown } | null): string {
+  if (status === 401) return SESSION_EXPIRED;
+  return typeof json?.error === "string" && json.error ? json.error : CHAT_GENERIC_ERROR;
+}
+
 /** Extrait envoyé au modèle : son texte vient de la base (jamais du modèle). */
 export type ChunkLike = { id: string; noteId: string; title: string; content: string };
 export type Source = ChunkLike;
