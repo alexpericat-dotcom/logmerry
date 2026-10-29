@@ -9,7 +9,7 @@ import { useActionState, useCallback, useEffect, useId, useOptimistic, useRef, u
 
 import { deleteStory, setStoryStatus, setStorySprint, updateStory, type StoryActionState } from "@/app/(app)/missions/story-actions";
 import { Row } from "@/components/sortable-list";
-import { selectClass } from "@/components/form-helpers";
+import { FocusOnMount, selectClass } from "@/components/form-helpers";
 import { StoryForm } from "@/components/story-form";
 import { StoryReview } from "@/components/story-review";
 import { Badge } from "@/components/ui/badge";
@@ -92,21 +92,23 @@ export function StoryItem({
 
   if (mode === "edit") {
     return (
-      <StoryForm
-        idPrefix={`edit-${story.id}`}
-        action={updateStory.bind(null, story.id)}
-        initial={{
-          title: story.title,
-          role: story.role ?? "",
-          benefit: story.benefit ?? "",
-          acceptance_criteria: story.acceptance_criteria ?? "",
-          points: story.points === null ? "" : String(story.points),
-          status: story.status,
-        }}
-        submitLabel="Enregistrer les modifications"
-        onDone={close}
-        onCancel={close}
-      />
+      <FocusOnMount>
+        <StoryForm
+          idPrefix={`edit-${story.id}`}
+          action={updateStory.bind(null, story.id)}
+          initial={{
+            title: story.title,
+            role: story.role ?? "",
+            benefit: story.benefit ?? "",
+            acceptance_criteria: story.acceptance_criteria ?? "",
+            points: story.points === null ? "" : String(story.points),
+            status: story.status,
+          }}
+          submitLabel="Enregistrer les modifications"
+          onDone={close}
+          onCancel={close}
+        />
+      </FocusOnMount>
     );
   }
 

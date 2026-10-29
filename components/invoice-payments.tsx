@@ -45,17 +45,19 @@ function PaymentRow({ invoiceId, invoice, others, payment, today, onDeleted }: {
   if (mode === "edit") {
     return (
       <li>
-        <PaymentForm
-          idPrefix={`edit-${payment.id}`}
-          action={updatePayment.bind(null, payment.id, invoiceId)}
-          initial={{ invoice_id: invoiceId, amount_ht: centsToInput(payment.amount_ht_cents), tax: payment.tax_cents === null ? "" : centsToInput(payment.tax_cents), received_on: payment.received_on, note: payment.note ?? "" }}
-          invoice={invoice}
-          others={others}
-          today={today}
-          submitLabel="Enregistrer"
-          onDone={back}
-          onCancel={back}
-        />
+        <FocusOnMount>
+          <PaymentForm
+            idPrefix={`edit-${payment.id}`}
+            action={updatePayment.bind(null, payment.id, invoiceId)}
+            initial={{ invoice_id: invoiceId, amount_ht: centsToInput(payment.amount_ht_cents), tax: payment.tax_cents === null ? "" : centsToInput(payment.tax_cents), received_on: payment.received_on, note: payment.note ?? "" }}
+            invoice={invoice}
+            others={others}
+            today={today}
+            submitLabel="Enregistrer"
+            onDone={back}
+            onCancel={back}
+          />
+        </FocusOnMount>
       </li>
     );
   }

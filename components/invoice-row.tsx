@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 
 import { deleteInvoice, updateInvoice } from "@/app/(app)/factures/actions";
 import { ConfirmPanel } from "@/components/confirm-panel";
+import { FocusOnMount } from "@/components/form-helpers";
 import { InvoiceForm, type MissionChoice, type QuoteChoice } from "@/components/invoice-form";
 import { InvoicePayments } from "@/components/invoice-payments";
 import { Badge } from "@/components/ui/badge";
@@ -76,26 +77,28 @@ export function InvoiceRow({
   if (mode === "edit") {
     return (
       <li>
-        <InvoiceForm
-          idPrefix={`edit-${invoice.id}`}
-          action={updateInvoice.bind(null, invoice.id)}
-          initial={{
-            mission_id: invoice.mission_id,
-            quote_id: invoice.quote_id ?? "",
-            amount_ht: centsToInput(invoice.amount_ht_cents),
-            tax: invoice.tax_cents === null ? "" : centsToInput(invoice.tax_cents),
-            due_on: invoice.due_on,
-            issued_on: invoice.issued_on ?? "",
-            reference: invoice.reference ?? "",
-            note: invoice.note ?? "",
-          }}
-          missions={missions}
-          quotes={quotes}
-          lockedMissionId={lockedMissionId}
-          submitLabel="Enregistrer"
-          onDone={back}
-          onCancel={back}
-        />
+        <FocusOnMount>
+          <InvoiceForm
+            idPrefix={`edit-${invoice.id}`}
+            action={updateInvoice.bind(null, invoice.id)}
+            initial={{
+              mission_id: invoice.mission_id,
+              quote_id: invoice.quote_id ?? "",
+              amount_ht: centsToInput(invoice.amount_ht_cents),
+              tax: invoice.tax_cents === null ? "" : centsToInput(invoice.tax_cents),
+              due_on: invoice.due_on,
+              issued_on: invoice.issued_on ?? "",
+              reference: invoice.reference ?? "",
+              note: invoice.note ?? "",
+            }}
+            missions={missions}
+            quotes={quotes}
+            lockedMissionId={lockedMissionId}
+            submitLabel="Enregistrer"
+            onDone={back}
+            onCancel={back}
+          />
+        </FocusOnMount>
       </li>
     );
   }

@@ -2,7 +2,7 @@
 title: 'Accessibilité des parcours principaux (story 7.2) : audit au clavier, aux contrastes et aux libellés, puis corrections'
 type: 'chore'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'in-review'
 route: 'dispatch'
 ---
 
@@ -50,16 +50,20 @@ route: 'dispatch'
 
 ## Tasks & Acceptance
 
-- [ ] Audit Lighthouse (accessibilité) des pages du périmètre, clair et sombre, ordinateur et 400 px.
-- [ ] Parcours clavier des trois parcours, avec relevé des blocages et des focus invisibles.
-- [ ] Mesure des contrastes du texte rendu, thèmes clair et sombre.
-- [ ] `docs/audit-accessibilite.md` : tableau des constats avec gravité et correctif.
-- [ ] Corrections des défauts bloquants et simples (un commit chacun, tests quand c'est faisable) ; contrastes à valider avec Alex.
-- [ ] Journal, dette, 3 relecteurs sur les correctifs ; `npm test`, `tsc`, lint, `next build` en copie propre.
+- [x] Audit Lighthouse (accessibilité) : 5 pages en ordinateur seulement (écart : pas de 400 px ni toutes les pages, voir les limites du rapport).
+- [x] Parcours clavier : focus visible et ouverture des formulaires sur toutes les pages mesurées ; parcours touche par touche sur UJ-5 seulement (écart : UJ-1 et UJ-4 restent à Alex).
+- [x] Mesure des contrastes du texte rendu, thèmes clair et sombre.
+- [x] `docs/audit-accessibilite.md` : tableau des constats avec gravité et correctif.
+- [x] Corrections des défauts bloquants et simples (un commit chacun, tests quand c'est faisable) ; contrastes à valider avec Alex.
+- [x] Journal, dette, 3 relecteurs sur les correctifs ; `npm test`, `tsc`, lint, `next build` en copie propre.
 - [ ] Contrôle d'Alex : parcours au clavier seul sur son poste, lecteur d'écran (facultatif).
 
 **Acceptation :** les trois parcours se font au clavier seul sans blocage ; chaque champ de formulaire a son libellé ; le rapport liste ce qui reste (avec motif) ; aucun contraste de texte courant sous 4,5:1 sans décision écrite d'Alex.
 
 ## Review Triage Log
 
-(à remplir)
+(29 octobre 2026, 3 relecteurs, 32 constats, aucun bloquant)
+
+Corrigés : formulaires de **modification** en place (facture, encaissement, échéance, sprint, devis, contact, story) qui perdaient aussi le focus (constat Edge Case Hunter, confirmé au navigateur : 4 cas perdus, tous corrigés) ; `FocusOnMount` saute un champ en lecture seule, une case, un bouton, et essaie le champ suivant si le premier ne prend pas le focus ; tests : champ en lecture seule, zone de texte, non-reprise du focus à un nouveau rendu (le test sur `className` jugé tautologique est retiré) ; rapport réécrit pour ne dire que ce qui est étayé (listes nominales par mesure, « 100 » sur les 5 pages Lighthouse, 7 boutons dans la dette de départ, limites de méthode, un seul parcours clavier touche par touche), scripts versionnés dans `docs/audit-accessibilite-scripts.md`.
+Reportés (dette) : retour du focus après « Annuler » pour factures, devis, règles ; liens d'en-tête de colonne étroits ; anneau de focus de 1 px ; câblage de `FocusOnMount` sans test par conteneur ; formulaire de modification d'une proposition d'histoire IA non enveloppé (il est précédé d'un éditeur de tâches, le focus y est géré par la carte) ; `scrollIntoView` centré sur les longs formulaires au téléphone avec le clavier virtuel ; parcours UJ-1 et UJ-4 touche par touche.
+Rejetés : `scrollIntoView` après `preventScroll` (voulu : pas de saut, puis centrage doux, comme `focusField`) ; focus volé au chargement (aucun formulaire n'est affiché à l'arrivée, vérifié par les `useState(false)` et sur le build) ; formulaires d'ajout de story et de sprint sans focus (ils en ont un, vérifié sur le build) ; ordre des imports dans `deadlines-panel.tsx` (le lint passe).

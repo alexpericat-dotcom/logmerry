@@ -149,7 +149,7 @@ describe("FocusOnMount", () => {
     assert.ok(document.activeElement === container.querySelector('input[name="premier"]'));
   });
 
-  test("un menu ou une zone de texte en premier reçoit aussi le focus ; sans champ, rien ne plante et le focus ne bouge pas", () => {
+  test("un menu en premier reçoit aussi le focus ; sans champ, rien ne plante et le focus ne bouge pas", () => {
     const first = render(
       <FocusOnMount>
         <select name="s">
@@ -167,12 +167,34 @@ describe("FocusOnMount", () => {
     assert.ok(document.activeElement === document.body);
   });
 
-  test("l'enveloppe n'a aucun effet de mise en page (display: contents)", () => {
+  test("saute un champ en lecture seule, une case et un bouton : le premier vrai champ de saisie reçoit le focus ; une zone de texte compte", () => {
     const { container } = render(
       <FocusOnMount>
-        <p>x</p>
+        <form>
+          <input name="lecture" readOnly />
+          <input type="checkbox" name="case" />
+          <input type="submit" value="ok" />
+          <textarea name="texte" />
+        </form>
       </FocusOnMount>,
     );
-    assert.ok((container.firstElementChild as HTMLElement).className.includes("contents"));
+    assert.ok(document.activeElement === container.querySelector("textarea"));
+  });
+
+  test("l'effet ne joue qu'au montage : un nouveau rendu ne reprend pas le focus à l'utilisateur", () => {
+    const view = (extra: string) => (
+      <FocusOnMount>
+        <form>
+          <input name="a" />
+          <input name="b" />
+          <p>{extra}</p>
+        </form>
+      </FocusOnMount>
+    );
+    const { container, rerender } = render(view("un"));
+    const b = container.querySelector<HTMLInputElement>('input[name="b"]')!;
+    b.focus();
+    rerender(view("deux"));
+    assert.ok(document.activeElement === b);
   });
 });

@@ -11,9 +11,17 @@ import { errorSummaryItems, fieldProps, summaryTitle } from "@/lib/form";
 export function FocusOnMount({ children }: { children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const first = box.current?.querySelector<HTMLElement>("input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])");
-    first?.focus({ preventScroll: true });
-    first?.scrollIntoView?.({ block: "center" });
+    // Premier champ de saisie qui accepte vraiment le focus (un champ en lecture seule, une case ou un champ masqué est sauté).
+    const fields = box.current?.querySelectorAll<HTMLElement>(
+      "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled]):not([readonly])",
+    );
+    for (const field of fields ?? []) {
+      field.focus({ preventScroll: true }); // pas de saut brutal ; le centrage doux suit, comme dans `focusField`
+      if (document.activeElement === field) {
+        field.scrollIntoView?.({ block: "center" });
+        return;
+      }
+    }
   }, []);
   return (
     <div ref={box} className="contents">

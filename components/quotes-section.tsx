@@ -186,15 +186,17 @@ function QuoteRow({ quote, missions, clientStatus, today }: { quote: QuoteItem; 
   if (mode === "edit") {
     return (
       <li>
-        <QuoteForm
-          idPrefix={`edit-${quote.id}`}
-          action={updateQuote.bind(null, quote.id)}
-          initial={{ amount_ht: centsToInput(quote.amount_ht_cents), tax: quote.tax_cents === null ? "" : centsToInput(quote.tax_cents), sent_on: quote.sent_on ?? "", mission_id: quote.mission_id ?? "" }}
-          missions={missions}
-          submitLabel="Enregistrer"
-          onDone={back}
-          onCancel={back}
-        />
+        <FocusOnMount>
+          <QuoteForm
+            idPrefix={`edit-${quote.id}`}
+            action={updateQuote.bind(null, quote.id)}
+            initial={{ amount_ht: centsToInput(quote.amount_ht_cents), tax: quote.tax_cents === null ? "" : centsToInput(quote.tax_cents), sent_on: quote.sent_on ?? "", mission_id: quote.mission_id ?? "" }}
+            missions={missions}
+            submitLabel="Enregistrer"
+            onDone={back}
+            onCancel={back}
+          />
+        </FocusOnMount>
       </li>
     );
   }

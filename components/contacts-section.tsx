@@ -60,20 +60,22 @@ function ContactItem({ contact }: { contact: ContactRecord }) {
   if (mode === "edit") {
     return (
       <li className="md:col-span-2">
-        <ContactForm
-          idPrefix={`edit-${contact.id}`}
-          action={updateContact.bind(null, contact.id)}
-          initial={{
-            name: contact.name,
-            job_title: contact.job_title ?? "",
-            email: contact.email ?? "",
-            phone: contact.phone ?? "",
-            address: contact.address ?? "",
-          }}
-          submitLabel="Enregistrer les modifications"
-          onDone={close}
-          onCancel={close}
-        />
+        <FocusOnMount>
+          <ContactForm
+            idPrefix={`edit-${contact.id}`}
+            action={updateContact.bind(null, contact.id)}
+            initial={{
+              name: contact.name,
+              job_title: contact.job_title ?? "",
+              email: contact.email ?? "",
+              phone: contact.phone ?? "",
+              address: contact.address ?? "",
+            }}
+            submitLabel="Enregistrer les modifications"
+            onDone={close}
+            onCancel={close}
+          />
+        </FocusOnMount>
       </li>
     );
   }
