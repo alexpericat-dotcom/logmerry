@@ -3,7 +3,7 @@
  * npm run seed:demo           écrit les règles manquantes
  * npm run seed:demo -- --dry  affiche ce qui serait écrit, sans rien écrire
  *
- * Les valeurs sont FICTIVES : celles qu'Alex a écrites le 23 octobre 2026 (collées d'une recherche sur des blogs, jamais vérifiées à une source officielle).
+ * Les valeurs sont FICTIVES : celles qu'Alex a écrites le 23 octobre 2026 (collées d'une recherche sur des blogs, jamais vérifiées à une source officielle), plus un délai de bascule de TVA inventé le 29 octobre.
  * Elles passent par `create_rule_version` avec le statut « essai » et la source « DEMO » : jamais « vérifiée », jamais dans le compte réel.
  * Idempotent : une règle d'essai déjà en vigueur pour la même clé est laissée telle quelle (une règle d'essai ne se supprime pas par l'API).
  * Se connecte avec la clé PUBLIQUE (jamais service_role) ; refuse un compte hors @example.com. Identifiants : .env.test.local (ignoré par git).
@@ -31,7 +31,8 @@ const DEMO_RULES: Demo[] = [
   { key: "ceiling_vat_tolerance", params: { amount_cents: EUR(41250), period: "calendar_year", revenue_category: "Prestations de services", tax_basis: "excl_tax" }, description: NOTE },
   { key: "acre_duration", params: { months: 12 }, description: `${NOTE} Deux sources ne disent pas la même chose (12 mois, ou jusqu'à la fin du 3e trimestre civil suivant le début d'activité).` },
   { key: "first_year_prorata", params: { day_basis: 365 }, description: `${NOTE} Le 365 est déduit d'un exemple, aucune source ne l'énonce comme règle.` },
-  // Pas de règle d'essai pour la bascule de TVA : aucun délai n'a été trouvé, il reste vide plutôt qu'inventé (décision d'Alex).
+  // Bascule de TVA : aucun délai n'a été trouvé ; valeur INVENTÉE pour la démonstration, à la demande d'Alex du 29 octobre 2026 (elle remplace sa décision du 23 octobre de la laisser vide).
+  { key: "vat_switch", params: { delay: 1, unit: "months" }, description: `${NOTE} Délai INVENTÉ pour la démonstration : aucune source n'a été trouvée.` },
 ];
 
 const email = env("DEMO_A_EMAIL");
