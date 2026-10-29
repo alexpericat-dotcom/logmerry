@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { DeadlineRow } from "@/components/deadline-row";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,15 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
   const all = ganttMarks(deadlines, lines, today);
   const groups = new Map<string, GanttMark[]>();
   for (const m of all) groups.set(m.row, [...(groups.get(m.row) ?? []), m]);
-  // La fiche n'existe que si son jalon est encore sur l'axe (supprimée, ou sortie de la vue ou de la fenêtre : elle disparaît ; le focus va au titre, voir `DeadlineRow`).
-  const selected = openId && all.some((m) => m.key === openId) ? deadlines.find((d) => d.id === openId) : undefined;
+  // La fiche suit l'échéance dans `deadlines` (déjà filtrée par la vue) : marquée faite en vue « Toutes », elle reste (« Rouvrir ») même si son jalon sort de la fenêtre des
+  // 30 jours ; supprimée, ou sortie de la vue, elle disparaît (le focus va au titre : voir `DeadlineRow`). L'identifiant d'une fiche disparue est oublié.
+  const selected = openId ? deadlines.find((d) => d.id === openId) : undefined;
+  if (openId && !selected) setOpenId(null);
+  const selectedId = selected?.id;
+  // À l'ouverture, le focus va au titre de la fiche (sous un diagramme large : sur téléphone, le défilement suit le focus) ; « Fermer » le rend au jalon.
+  useEffect(() => {
+    if (selectedId) document.getElementById("gantt-record-title")?.focus();
+  }, [selectedId]);
   const title = (
     <h2 id="gantt-title" tabIndex={-1} className="text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
       Axe du temps
@@ -51,7 +58,7 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
   const close = () => {
     const id = openId;
     setOpenId(null);
-    if (id) requestAnimationFrame(() => buttons.current.get(id)?.focus());
+    if (id) requestAnimationFrame(() => (buttons.current.get(id) ?? document.getElementById("gantt-title"))?.focus());
   };
   const scale = ganttScale(all.map((m) => m.due_on), today);
   const ticks = monthTicks(scale);
@@ -112,7 +119,7 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
                     );
                     const cls = "absolute flex items-center gap-1.5";
                     const style = { left: m.left, top: m.lane * LANE_PX + 6, maxWidth: LABEL_PX - 12 };
-                    const open = m.key === openId && !!selected;
+                    const open = m.kind === "deadline" && m.key === selectedId;
                     return (
                       <li key={m.key} className={cls} style={style} title={`${m.title} · ${formatDate(m.due_on)} · ${URGENCY_LABELS[m.level]}`}>
                         {m.href ? (
@@ -148,7 +155,7 @@ export function DeadlineGantt({ deadlines, lines, today, onChanged }: { deadline
       {selected && (
         <section id="gantt-record" aria-labelledby="gantt-record-title" className="flex max-w-3xl flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <h3 id="gantt-record-title" className="text-sm font-semibold">
+            <h3 id="gantt-record-title" tabIndex={-1} className="text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
               Fiche de l&apos;échéance
             </h3>
             <Button type="button" size="sm" variant="outline" onClick={close}>

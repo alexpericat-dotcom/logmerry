@@ -2,7 +2,7 @@
 title: 'Gantt : échéances faites visibles et jalon qui ouvre sa fiche'
 type: 'feature'
 created: '2026-10-29'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '924314dbfbc7aa8882733e5877a36ee431bb6002'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -53,11 +53,11 @@ review_loop_iteration: 0
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `lib/domain/deadline-boards.ts` -- `GANTT_DONE_DAYS`, `ganttMarks` (faites gardées dans la fenêtre, niveau « done », jalon d'échéance = fiche, ligne de facture = lien) -- règle testée hors du composant
-- [ ] `lib/domain/deadline-boards.test.ts` -- une ligne de test par ligne de la matrice qui relève du domaine (faite récente / ancienne / future, à faire, facture, tri) -- comportement figé
-- [ ] `components/deadline-gantt.tsx` -- jalons depuis `ganttMarks` ; bouton `aria-expanded` pour une échéance, lien pour une facture ; fiche sous le diagramme (`DeadlineRow`) avec « Fermer » ; titre « Axe du temps » (`tabIndex={-1}`) ; focus rendu comme dans la matrice ; commentaire et pied de page à jour -- décisions d'Alex
-- [ ] `components/deadlines-panel.tsx` -- passer `onChanged` au gantt -- annonce et focus
-- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer l'entrée du gantt
+- [x] `lib/domain/deadline-boards.ts` -- `GANTT_DONE_DAYS`, `ganttMarks` (faites gardées dans la fenêtre, niveau « done », jalon d'échéance = fiche, ligne de facture = lien) -- règle testée hors du composant
+- [x] `lib/domain/deadline-boards.test.ts` -- une ligne de test par ligne de la matrice qui relève du domaine (faite récente / ancienne / future, à faire, facture, tri) -- comportement figé
+- [x] `components/deadline-gantt.tsx` -- jalons depuis `ganttMarks` ; bouton `aria-expanded` pour une échéance, lien pour une facture ; fiche sous le diagramme (`DeadlineRow`) avec « Fermer » ; titre « Axe du temps » (`tabIndex={-1}`) ; focus rendu comme dans la matrice ; commentaire et pied de page à jour -- décisions d'Alex
+- [x] `components/deadlines-panel.tsx` -- passer `onChanged` au gantt -- annonce et focus
+- [x] `docs/journal.md`, `deferred-work.md` -- journal ; retirer l'entrée du gantt
 
 **Acceptance Criteria:**
 - Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
@@ -67,9 +67,31 @@ review_loop_iteration: 0
 
 ## Implementation Notes
 
+- `ganttMarks` et `GANTT_DONE_DAYS` dans `lib/domain/deadline-boards.ts` ; `DeadlineGantt` devient client : jalon d'échéance = bouton `aria-expanded`, jalon de facture = lien, fiche (`DeadlineRow`, `sectionId="gantt-title"`) sous le diagramme avec « Fermer », titre « Axe du temps » ; `DeadlinesPanel` passe `onChanged`. Aucune modification de `DeadlineRow`, des actions ni de `inView`.
+- Écart avec la spec, voulu : la fiche suit l'échéance dans `deadlines` (déjà filtrée par la vue) et non son jalon ; marquée faite en vue « Toutes », elle reste (« Rouvrir ») même si une échéance de plus de 30 jours quitte l'axe, comme la matrice le dit. Ajouts : le focus va au titre de la fiche à l'ouverture (`tabIndex={-1}`), repli du focus de « Fermer » sur le titre « Axe du temps ».
+- Vérifié : `npm test`, `tsc`, lint, `next build` (copie propre) ; 6 mutations de `ganttMarks` plus celle de la ligne de catégorie détectées. Composant non testé : contrôle d'Alex.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Trois relecteurs (Blind Hunter, Edge Case Hunter, Verification Gap).
+
+| # | Constat | Verdict | Preuve / route |
+|---|---------|---------|----------------|
+| 1 | Vieille échéance marquée faite en vue « Toutes » : le jalon sort de la fenêtre et la fiche disparaît, contre la matrice | medium | patch : la fiche suit `deadlines`, plus le jalon |
+| 2 | `openId` périmé : la fiche pouvait se rouvrir seule si l'échéance revient | medium | patch : identifiant oublié quand l'échéance n'est plus dans `deadlines` |
+| 3 | « Fermer » : focus perdu si le jalon n'est plus là | low | patch : repli sur « Axe du temps » |
+| 4 | Aucun focus ni défilement à l'ouverture (fiche loin du clic, surtout sur téléphone) | medium | patch : focus sur le titre de la fiche |
+| 5 | Ligne de catégorie (`row`) jamais vérifiée : une mutation passait ; fixtures en `as never` | medium | patch : test à deux catégories, types réels |
+| 6 | Collision possible d'identifiants jalon de facture / échéance | low | patch : `open` exige `kind === "deadline"` |
+| 7 | Cible tactile des jalons (24 px) | low | defer : déjà dans la dette, libellé élargi |
+| 8 | Composant du gantt sans test | low | defer : dette (demande des doublures des actions du calendrier) |
+| 9 | Échap ne ferme pas la fiche | low | defer : dette ; Échap est aussi lu par `ConfirmPanel` à l'intérieur de la fiche |
+| 10 | Une échéance faite très lointaine étire l'axe (`ganttScale`) | low | rejeté : cas rare (faite longtemps à l'avance), l'axe est borné et défile |
+| 11 | « Barré » non vérifié dans le diff | false | le style `line-through` du niveau « done » existe dans le code inchangé du composant |
+| 12 | `title` en double du nom accessible | low | rejeté : motif déjà en place avant ce changement |
+| 13 | Espace avant le point dans la dette ; spec périmée ; réponse « mission » non consignée au journal | low | patch |
 
 ## Verification
 

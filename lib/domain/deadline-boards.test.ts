@@ -75,13 +75,18 @@ test("calendarHref : période et affichage se gardent ; les valeurs par défaut 
   assert.equal(calendarHref("semaine", "kanban"), "/calendrier?vue=semaine&affichage=kanban");
 });
 
-const dl = (id: string, due_on: string, done = false) => ({ id, title: `Échéance ${id}`, due_on, category: "tax" as never, done_at: done ? "2026-10-20T10:00:00Z" : null });
+const dl = (id: string, due_on: string, done = false, category: "tax" | "vat" = "tax") => ({ id, title: `Échéance ${id}`, due_on, category, done_at: done ? "2026-10-20T10:00:00Z" : null });
 const line = (key: string, due_on: string | null, kind: CalendarLine["kind"] = "invoice_issue"): CalendarLine => ({ kind, key, title: `Ligne ${key}`, due_on, href: "/factures", detail: "" });
 const keys = (marks: { key: string }[]) => marks.map((m) => m.key);
 
 test("gantt : une échéance à faire figure toujours (toute date), avec son niveau d'urgence et la fiche pour action", () => {
   const marks = ganttMarks([dl("a", "2026-01-05"), dl("b", "2026-10-28"), dl("c", "2027-06-01")], [], TODAY);
   assert.deepEqual(marks.map((m) => [m.key, m.level, m.kind]), [["a", "overdue", "deadline"], ["b", "urgent", "deadline"], ["c", "later", "deadline"]]);
+});
+
+test("gantt : chaque échéance va sur la ligne de sa catégorie (libellé français), les factures sur « Factures »", () => {
+  const marks = ganttMarks([dl("a", "2026-11-01", false, "tax"), dl("b", "2026-11-02", false, "vat")], [line("f", "2026-11-03")], TODAY);
+  assert.deepEqual(marks.map((m) => [m.key, m.row]), [["a", "Fiscale"], ["b", "TVA"], ["f", "Factures"]]);
 });
 
 test("gantt : une échéance faite figure si sa date limite est dans les 30 derniers jours ou à venir, grise (« faite »)", () => {
