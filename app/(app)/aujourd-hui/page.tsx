@@ -17,13 +17,12 @@ import { listActiveSprintWork } from "@/lib/db/sprint-work";
 import { listSentQuotes } from "@/lib/db/quotes";
 import { listRules } from "@/lib/db/rules";
 import { listTaskChecks } from "@/lib/db/task-checks";
+import { bannerDescription, invoiceViews, quotesWithParisDay, sprintsWithParisDay, taskProgress, topCeiling } from "@/lib/domain/cockpit/assembly";
 import { cockpitKpis, deadlineDaysOfMonth, upcomingDeadlines } from "@/lib/domain/cockpit/overview";
 import { draftSummary } from "@/lib/domain/cockpit/summary";
-import { sprintOverflow, todayMissing, todayTasks, type SprintWork } from "@/lib/domain/cockpit/today";
+import { sprintOverflow, todayMissing, todayTasks } from "@/lib/domain/cockpit/today";
 import { computeCeilings } from "@/lib/domain/finance/ceilings";
 import { collectedRevenue, monthlyRevenue } from "@/lib/domain/finance/revenue";
-import { isOverdue } from "@/lib/domain/invoices";
-import { invoiceBalance } from "@/lib/domain/payments";
 import { formatCents } from "@/lib/domain/quotes";
 import { todayParis } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -36,40 +35,32 @@ async function Tasks() {
   const [deadlines, invoices, rules, profile, payments, quotes, missions, sprintRows, clients, drafts] = await Promise.all([listDeadlines(), listInvoices(), listRules(), getProfile(), listPaymentsForCeilings(), listSentQuotes(), listAllMissions(), createClient().then(listActiveSprintWork), listAllClients(), listDraftTypes().catch(() => [])]); // la ligne de synthèse est secondaire : sa lecture en échec ne bloque pas le cockpit
   const today = todayParis(); // après les données dynamiques : Next.js refuse de lire l'horloge avant (prérendu)
   const checked = await listTaskChecks(await createClient(), today);
-  const sprints: SprintWork[] = sprintRows.map((sp) => ({
-    ...sp,
-    stories: sp.stories.map((st) => ({ ...st, tasks: st.tasks.map((t) => ({ ...t, done_on: todayParis(new Date(t.updated_at)) })) })), // jour de Paris de la dernière modification
-  }));
+  const sprints = sprintsWithParisDay(sprintRows);
+  const invoiceView = invoiceViews(invoices, today);
   const ceilings = computeCeilings(rules, profile, payments, today);
   const tasks = todayTasks(
     deadlines,
-    invoices.map((i) => ({ id: i.id, reference: i.reference, due_on: i.due_on, status: invoiceBalance(i, i.payments).status, mission: i.mission })),
+    invoiceView.forTasks,
     checked,
     ceilings,
     rules,
     profile,
-    quotes.map((q) => ({ ...q, updated_on: todayParis(new Date(q.updated_at)) })), // jour de Paris de la dernière modification
+    quotesWithParisDay(quotes),
     missions,
     sprints,
     today,
   );
   const overflow = sprintOverflow(sprints, today);
   const missing = todayMissing(ceilings, rules, profile, today);
-  const done = tasks.filter((t) => t.done).length;
-  const taskPercent = tasks.length ? Math.round((done * 100) / tasks.length) : 0;
-  const invoiceRows = invoices.map((i) => {
-    const status = invoiceBalance(i, i.payments).status;
-    return { status, overdue: isOverdue(i.due_on, today, status) };
-  });
-  const kpis = cockpitKpis({ clients, missions, quotes, invoices: invoiceRows, deadlines }, today);
+  const { done, percent: taskPercent } = taskProgress(tasks);
+  const kpis = cockpitKpis({ clients, missions, quotes, invoices: invoiceView.rows, deadlines }, today);
   const upcoming = upcomingDeadlines(deadlines, today, 5);
   const deadlineDays = deadlineDaysOfMonth(deadlines, today);
   const revenue = collectedRevenue(payments, today);
   const months = monthlyRevenue(payments, today);
-  const top = ceilings.flatMap((c) => (c.status === "ok" ? [c] : [])).sort((a, b) => b.percent - a.percent)[0];
+  const top = topCeiling(ceilings);
   const draftLine = draftSummary(drafts);
-  const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-  const description = tasks.length ? `${plural(tasks.length - done, "tâche à faire", "tâches à faire")} aujourd'hui, ${done} déjà faite${done > 1 ? "s" : ""}.` : "Rien à faire pour aujourd'hui.";
+  const description = bannerDescription(tasks.length, done);
   return (
     <>
       <PageBanner
