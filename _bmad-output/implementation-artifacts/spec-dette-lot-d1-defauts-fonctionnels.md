@@ -1,0 +1,93 @@
+---
+title: 'Dette, lot D1 : six défauts fonctionnels'
+type: 'bugfix'
+created: '2026-10-29'
+status: 'in-progress'
+baseline_commit: 'ee0f20372ffae95bf2ba64a0fca0d90d7ddfebe4'
+route: 'dispatch'
+review_loop_iteration: 0
+---
+
+<frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">
+
+## Intent
+
+**Problem:** six points de `deferred-work.md` (section 5), vérifiés dans le code : (1) le filtre `?type=` ou `?statut=brouillon` de `/notes` est perdu : le détail d'une note, « Annuler » et les redirections d'enregistrement et de suppression renvoient tous vers `/notes` nu ; (2) la liste « Mission liée » d'un devis propose aussi les missions terminées et annulées ; (3) la confirmation de suppression d'une mission dit combien de stories partent avec elle, pas combien de sprints ; (4) `mergeReview` valide la story entière : une erreur d'un champ **non coché** (déjà en base) bloque ou trompe ; (5) le message d'erreur du glisser-déposer ne disparaît qu'au déplacement suivant (au dépôt), pas dès qu'on saisit une autre story ; (6) le champ « Date d'encaissement » n'a ni valeur par défaut ni `max` (le serveur refuse déjà une date future : vérifié, `validatePaymentInput`).
+
+**Approach:** un petit commit par point. (1) le filtre voyage dans l'adresse (`/notes/<id>?type=…`, `/notes/nouvelle?type=…`) et dans un champ caché, **relu côté serveur par les analyseurs existants** (`parseTypeFilter`, `parseStatusFilter`) : jamais d'adresse libre, donc pas de redirection ouverte ; (2) liste filtrée aux missions ouvertes (planifiée, en cours) plus la mission déjà liée ; (3) phrase de suppression avec stories **et** sprints, pluriels français ; (4) seules les erreurs des champs cochés comptent ; (5) l'erreur est effacée à la saisie d'une story ; (6) date du jour de Paris par défaut (donnée par le serveur), `max` = ce jour. Le serveur ne change que pour (1) et (4).
+
+## Boundaries & Constraints
+
+**Always:** aucune adresse de retour n'est prise telle quelle d'un formulaire : seuls les filtres `type` (valeur de la liste des types) et `statut=brouillon` sont acceptés ; une valeur inconnue retombe sur `/notes` ; le rendu de la liste des notes et ses filtres ne changent pas ; une mission déjà liée à un devis reste dans la liste de ce devis même si elle est terminée ; la règle serveur sur la date d'encaissement reste celle de `validatePaymentInput` ; aucune dépendance, aucune migration.
+
+**Never:** modifier l'action `createPayment`/`updatePayment` ou `validatePaymentInput` (pas de règle nouvelle) ; ajouter un paramètre `retour` libre ; toucher à la logique de déplacement (`moveStory`, `reorderStories`) ; changer la forme de la liste « Mission liée » de la facture (le sélecteur de mission d'une facture n'est pas dans ce lot : il est dans `invoice-form.tsx`, à examiner seulement s'il a le même défaut, sinon le laisser tel quel et le dire).
+
+## I/O & Edge-Case Matrix
+
+| Scenario | Input / State | Expected Output / Behavior | Error Handling |
+|----------|--------------|---------------------------|----------------|
+| Retour filtré | liste `/notes?type=procedure`, ouvrir une note, « Annuler » / enregistrer / supprimer | retour sur `/notes?type=procedure` | N/A |
+| Retour brouillons | liste `/notes?statut=brouillon` | retour sur `/notes?statut=brouillon` | N/A |
+| Sans filtre | liste `/notes` | retour sur `/notes` | N/A |
+| Filtre falsifié | `?type=<script>` ou `type=https://evil` dans l'adresse ou le champ caché | retour sur `/notes` | jamais l'adresse reçue |
+| Création | « Créer une note » depuis un filtre | « Annuler » et enregistrement reviennent au même filtre | N/A |
+| Mission liée, ouverte | missions planifiée / en cours | proposées | N/A |
+| Mission liée, close | mission terminée ou annulée, non liée | absente de la liste | N/A |
+| Mission liée, déjà liée | devis lié à une mission terminée | cette mission reste proposée (et sélectionnée) | N/A |
+| Suppression de mission | N stories, M sprints (0 à plusieurs) | « Son backlog sera supprimé aussi : 3 user stories, 1 sprint. » ; rien si 0 et 0 ; « 1 user story » au singulier ; sprints seuls (0 story) : « 2 sprints » | N/A |
+| Relecture IA | champ non coché invalide déjà en base | pas d'erreur (seuls les champs cochés sont validés et écrits) | un champ coché invalide : erreur de CE champ |
+| Relecture IA | rien coché | « Coche au moins un champ à appliquer. » (inchangé) | N/A |
+| Glisser-déposer | erreur affichée, nouvelle story saisie | message effacé dès la saisie | N/A |
+| Date d'encaissement | nouvel encaissement / modification d'un encaissement | date du jour (Paris) par défaut / valeur existante ; `max` = jour de Paris | une date future saisie à la main : refus du serveur (inchangé) |
+
+</frozen-after-approval>
+
+## Code Map
+
+- `lib/domain/notes.ts` -- `parseTypeFilter`, `parseStatusFilter` (existants) ; ajouter `notesListHref(filter)` et `parseListFilter(type, statut)` (pure, testée).
+- `app/(app)/notes/page.tsx` -- liens des cartes (`/notes/${id}`) et « Créer une note » : ajouter le filtre courant ; `[id]/page.tsx` et `nouvelle/page.tsx` : lire `searchParams`, passer le filtre au formulaire et à `DeleteNote`.
+- `components/note-form.tsx` (champ caché, lien « Annuler », l. 211), `components/delete-note.tsx` -- reçoivent le filtre.
+- `app/(app)/notes/actions.ts` -- `save` (`redirect("/notes")`, l. 119), `deleteNote` (l. 164) : relire le filtre du formulaire (ou de l'argument) par `parseListFilter` ; `tests/actions/notes.test.ts`.
+- `components/quotes-section.tsx` (l. 122-130 : liste ; `missions` des `QuoteRow` et du formulaire d'ajout), `app/(app)/clients/[id]/page.tsx` (l. 71 : ne passe que `id` et `title` : ajouter `status`) -- `selectableMissions(missions, currentId)` dans `lib/domain/quotes.ts` (ou missions.ts), testée.
+- `components/delete-mission.tsx` (`storyCount`), `app/(app)/missions/[id]/modifier/page.tsx` (l. 24, 42 : `storyCount` ; sprints : `listSprints` existe dans `lib/db/sprints.ts`) -- `missionDeletionNotice(stories, sprints)` dans `lib/domain/missions.ts`, testée.
+- `lib/domain/story-review.ts` (`mergeReview`, l. 170-190) et `story-review.test.ts` -- filtrer les erreurs de `validateStoryInput` sur les champs cochés.
+- `components/backlog.tsx` (`onDragStart` l. 174, `setDndError` l. 95, 202-215) -- effacer l'erreur à la saisie.
+- `components/payment-form.tsx` (l. 84), `invoice-payments.tsx` (`empty`, l. 14, l. 96, 133), `invoice-row.tsx` (a déjà `today`, l. 30-37) -- passer `today` ; valeur par défaut et `max`.
+- `_bmad-output/implementation-artifacts/deferred-work.md` (section 5) -- retirer les points résolus.
+
+## Tasks & Acceptance
+
+**Execution:**
+- [ ] `lib/domain/notes.ts` + tests, `notes/page.tsx`, `[id]/page.tsx`, `nouvelle/page.tsx`, `note-form.tsx`, `delete-note.tsx`, `notes/actions.ts` + `tests/actions/notes.test.ts` -- (1) filtre conservé, relu côté serveur -- retour sur la liste filtrée
+- [ ] `quotes-section.tsx`, `clients/[id]/page.tsx`, domaine + tests -- (2) missions ouvertes + mission déjà liée
+- [ ] `delete-mission.tsx`, page de modification de mission, domaine + tests -- (3) stories et sprints dans la confirmation
+- [ ] `story-review.ts` + tests -- (4) erreurs des seuls champs cochés
+- [ ] `backlog.tsx` -- (5) erreur effacée à la saisie
+- [ ] `payment-form.tsx`, `invoice-payments.tsx`, `invoice-row.tsx` -- (6) date du jour et `max`
+- [ ] `docs/journal.md`, `deferred-work.md` -- journal ; retirer les points résolus
+
+**Acceptance Criteria:**
+- Given `npm test`, then les nouveaux tests passent et les anciens sont inchangés.
+- Given une mutation (accepter un filtre inconnu, rediriger vers `/notes` nu, ne plus filtrer les missions closes, oublier la mission déjà liée, pluriel ou sprint oublié, valider les champs non cochés), when les tests tournent, then au moins un échoue.
+- Given `tsc --noEmit`, `npm run lint` et `next build` (copie propre), then sans erreur.
+- Given l'application : filtrer les notes sur « Procédures », ouvrir une note, « Annuler », enregistrer, supprimer : retour sur « Procédures » (contrôle d'Alex).
+
+## Implementation Notes
+
+## Spec Change Log
+
+## Review Triage Log
+
+## Verification
+
+**Commands:**
+- `npm test` -- expected: tous les lots passent
+- `npx tsc --noEmit && npm run lint` -- expected: sans erreur
+- Mutations à la main -- expected: un test échoue à chaque fois, puis restauration
+- `next build` dans une copie propre -- expected: passe
+
+**Manual checks (if no CLI):**
+- `/notes` filtrée (Procédures, puis Brouillons) : ouvrir une note, Annuler / Enregistrer / Supprimer : retour au même filtre ; créer une note depuis un filtre.
+- Fiche d'un client avec une mission terminée : elle n'est pas proposée dans « Mission liée » d'un nouveau devis ; un devis déjà lié à elle la garde.
+- Modifier une mission qui a des stories et des sprints : la confirmation les compte.
+- Facture : « Ajouter un encaissement » : la date du jour est préremplie et une date future est refusée.
