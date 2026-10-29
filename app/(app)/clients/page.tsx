@@ -1,3 +1,4 @@
+import { FileText } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -5,8 +6,10 @@ import { ClientStatusBadge } from "@/components/client-status";
 import { DataTable, type Column } from "@/components/data-table";
 import { FilterChips } from "@/components/filter-chips";
 import { PageBanner } from "@/components/page-banner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listAllClients, type ClientRecord } from "@/lib/db/clients";
+import { listSentQuoteAmounts } from "@/lib/db/quotes";
 import {
   CLIENT_ORIGINS,
   CLIENT_ORIGIN_LABELS,
@@ -19,15 +22,18 @@ import {
   viewClients,
   type ClientSortKey,
 } from "@/lib/domain/clients";
+import { sentQuoteBadge } from "@/lib/domain/quotes";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata = { title: "Clients · LogMerry" };
 
-type SearchParams = Promise<{ statut?: string | string[]; origine?: string | string[]; tri?: string | string[]; ordre?: string | string[] }>;
+type SearchParams = Promise<{ statut?: string | string[]; origine?: string | string[]; devis?: string | string[]; tri?: string | string[]; ordre?: string | string[] }>;
 
 async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
   const view = parseClientView(await searchParams);
-  const { rows, total } = viewClients(await listAllClients(), view);
+  const [clients, sentQuotes] = await Promise.all([listAllClients(), listSentQuoteAmounts()]);
+  const quotesByClient = Map.groupBy(sentQuotes, (q) => q.client_id);
+  const { rows, total } = viewClients(clients, view, new Set(quotesByClient.keys()));
 
   const createButton = (
     <Button asChild size="lg" className="shrink-0">
@@ -58,7 +64,28 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
         </Link>
       ),
     },
-    { key: "statut", label: "Statut", sortHref: sortHref("statut"), render: (c) => <ClientStatusBadge status={c.status} /> },
+    {
+      key: "statut",
+      label: "Statut",
+      sortHref: sortHref("statut"),
+      render: (c) => {
+        const quotes = quotesByClient.get(c.id);
+        const badge = quotes && sentQuoteBadge(quotes);
+        return (
+          <span className="flex flex-wrap items-center gap-1.5">
+            <ClientStatusBadge status={c.status} />
+            {badge && (
+              // `relative` : la pastille passe au-dessus du lien étendu de la ligne, pour que le survol l'atteigne.
+              <Badge variant="warning" className="relative" title={badge.details.join("\n")}>
+                <FileText size={11} aria-hidden="true" />
+                {badge.label}
+                <span className="sr-only"> : {badge.details.join(" ; ")}</span>
+              </Badge>
+            )}
+          </span>
+        );
+      },
+    },
     { key: "origine", label: "Origine", sortHref: sortHref("origine"), render: (c) => CLIENT_ORIGIN_LABELS[c.origin] },
     { key: "creee", label: "Créée le", sortHref: sortHref("creee"), align: "right", hideOnMobile: true, render: (c) => formatDateTime(c.created_at) },
   ];
@@ -66,20 +93,23 @@ async function ClientsList({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
       <PageBanner title="Clients" className="self-stretch" actions={createButton}>
-        <FilterChips
-          label="Filtrer par statut"
-          items={[
-            { label: "Tous", href: clientsHref({ ...view, statut: null }), active: view.statut === null },
-            ...CLIENT_STATUSES.map((s) => ({ label: CLIENT_STATUS_FILTER_LABELS[s], href: clientsHref({ ...view, statut: s }), active: view.statut === s })),
-          ]}
-        />
-        <FilterChips
-          label="Filtrer par origine"
-          items={[
-            { label: "Toutes origines", href: clientsHref({ ...view, origine: null }), active: view.origine === null },
-            ...CLIENT_ORIGINS.map((o) => ({ label: CLIENT_ORIGIN_LABELS[o], href: clientsHref({ ...view, origine: o }), active: view.origine === o })),
-          ]}
-        />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <FilterChips
+            label="Filtrer par statut"
+            items={[
+              { label: "Tous", href: clientsHref({ ...view, statut: null }), active: view.statut === null },
+              ...CLIENT_STATUSES.map((s) => ({ label: CLIENT_STATUS_FILTER_LABELS[s], href: clientsHref({ ...view, statut: s }), active: view.statut === s })),
+            ]}
+          />
+          <FilterChips label="Filtrer par devis" items={[{ label: "Devis en attente", href: clientsHref({ ...view, devis: !view.devis }), active: view.devis }]} />
+          <FilterChips
+            label="Filtrer par origine"
+            items={[
+              { label: "Toutes origines", href: clientsHref({ ...view, origine: null }), active: view.origine === null },
+              ...CLIENT_ORIGINS.map((o) => ({ label: CLIENT_ORIGIN_LABELS[o], href: clientsHref({ ...view, origine: o }), active: view.origine === o })),
+            ]}
+          />
+        </div>
       </PageBanner>
       <p role="status" className="text-sm text-muted-foreground">
         {countLabel(rows.length, total)}

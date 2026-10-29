@@ -1,3 +1,4 @@
+import { formatDate } from "../format.ts";
 import { isDay } from "./missions.ts";
 import { isUuid } from "./notes.ts";
 
@@ -76,3 +77,16 @@ export const quotesRefusal = (n: number) =>
     : `Cette fiche a ${n} devis : un devis envoyé, refusé ou accepté se garde, donc la fiche aussi (un brouillon se supprime d'abord).`;
 
 export const MISSION_QUOTE_REFUSAL = "Cette mission est liée à un devis : le devis se garde, donc la mission aussi.";
+
+/**
+ * Pastille « Devis envoyé » d'une fiche : le texte visible et une ligne par devis (montant HT, TTC seulement si la taxe est connue, date d'envoi ou
+ * « à confirmer » : on n'invente rien).
+ */
+export function sentQuoteBadge(quotes: { amount_ht_cents: number; tax_cents: number | null; sent_on: string | null }[]): { label: string; details: string[] } {
+  const details = quotes.map((q) => {
+    const total = totalCents(q);
+    const amount = `${formatCents(q.amount_ht_cents)} HT${total === null ? "" : `, ${formatCents(total)} TTC`}`;
+    return `${amount}, ${q.sent_on ? `envoyé le ${formatDate(q.sent_on)}` : "date d'envoi à confirmer"}`;
+  });
+  return { label: quotes.length > 1 ? `${quotes.length} devis envoyés` : "Devis envoyé", details };
+}

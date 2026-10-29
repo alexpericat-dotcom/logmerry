@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { quotesRefusal, MISSION_QUOTE_REFUSAL, canAcceptQuote, canDeleteQuote, canEditQuote, canRefuseQuote, canSendQuote, centsToInput, formatCents, parseAmountToCents, totalCents, validateQuoteInput, QUOTE_AMOUNT_MAX_CENTS } from "./quotes.ts";
+import { quotesRefusal, MISSION_QUOTE_REFUSAL, canAcceptQuote, canDeleteQuote, canEditQuote, canRefuseQuote, canSendQuote, centsToInput, formatCents, parseAmountToCents, totalCents, validateQuoteInput, QUOTE_AMOUNT_MAX_CENTS, sentQuoteBadge } from "./quotes.ts";
 
 const ok = { amount_ht: "1 250,50", tax: "250,10", sent_on: "2026-10-19", mission_id: "" };
 
@@ -88,4 +89,32 @@ test("refus de suppression : fiche avec devis (singulier, pluriel) et mission li
   assert.match(quotesRefusal(1), /1 devis : un devis envoyé/);
   assert.match(quotesRefusal(3), /3 devis : un devis envoyé/);
   assert.match(MISSION_QUOTE_REFUSAL, /liée à un devis/);
+});
+
+const nbsp = (t: string) => t.replace(/[\u202f\u00a0]/g, " ");
+
+test("pastille « Devis envoyé » : HT, TTC seulement si la taxe est connue, date ou « à confirmer »", () => {
+  const one = sentQuoteBadge([{ amount_ht_cents: 120000, tax_cents: 24000, sent_on: "2026-10-12" }]);
+  assert.equal(one.label, "Devis envoyé");
+  assert.deepEqual(one.details.map(nbsp), ["1 200,00 € HT, 1 440,00 € TTC, envoyé le 12 oct. 2026"]);
+  const unknown = sentQuoteBadge([{ amount_ht_cents: 120000, tax_cents: null, sent_on: null }]);
+  assert.deepEqual(unknown.details.map(nbsp), ["1 200,00 € HT, date d'envoi à confirmer"]);
+  assert.ok(!unknown.details[0].includes("TTC"), "jamais de TTC sans taxe connue");
+  const zeroTax = sentQuoteBadge([{ amount_ht_cents: 5000, tax_cents: 0, sent_on: "2026-10-01" }]);
+  assert.ok(nbsp(zeroTax.details[0]).includes("50,00 € TTC"), "une taxe de 0 est connue");
+});
+
+test("pastille « Devis envoyé » : plusieurs devis = pluriel et une ligne par devis", () => {
+  const many = sentQuoteBadge([
+    { amount_ht_cents: 100, tax_cents: null, sent_on: "2026-10-01" },
+    { amount_ht_cents: 200, tax_cents: null, sent_on: "2026-10-02" },
+  ]);
+  assert.equal(many.label, "2 devis envoyés");
+  assert.equal(many.details.length, 2);
+});
+
+test("la lecture des devis en attente filtre sur le statut `sent` (même définition que la tuile du cockpit)", () => {
+  const src = readFileSync(new URL("../db/quotes.ts", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("export async function listSentQuoteAmounts"));
+  assert.match(body, /\.eq\("status", "sent"\)/);
 });
