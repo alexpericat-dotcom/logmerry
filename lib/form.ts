@@ -19,7 +19,7 @@ export function fieldProps(prefix: string | undefined, key: string, error: strin
 /** Plusieurs descriptions pour `aria-describedby` (l'erreur ET l'aide d'un champ) : les identifiants absents sont ignorés ; rien = `undefined`. */
 export const describedBy = (...ids: (string | false | null | undefined)[]) => ids.filter(Boolean).join(" ") || undefined;
 
-/** Les erreurs de champ à lister dans le récapitulatif, dans l'ordre des clés ; les messages vides sont ignorés. */
+/** Les erreurs de champ à lister dans le récapitulatif, dans l'ordre des clés de l'objet renvoyé par le serveur (pas forcément celui des champs à l'écran) ; les messages vides sont ignorés. */
 export function errorSummaryItems(
   errors: Record<string, string | undefined> | undefined,
   prefix?: string,

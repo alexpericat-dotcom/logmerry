@@ -84,3 +84,9 @@ review_loop_iteration: 0
 - Nouveau client sans nom, nouvelle échéance sans date, nouvel encaissement sans montant, facture sans mission : le récapitulatif s'affiche en tête avec le focus ; cliquer un lien met le focus sur le champ ; corriger et enregistrer ferme le formulaire.
 - Facture ou échéance : une erreur dans un champ de « Plus de champs » ouvre le bloc ; le bouton le referme.
 - Au clavier : Tab depuis le récapitulatif atteint les liens, Entrée sur un lien atteint le champ ; lecteur d'écran : le récapitulatif est annoncé une fois (pas aussi chaque erreur en ligne).
+
+## Review Triage Log (29 octobre 2026, 3 relecteurs)
+
+Corrigés : id du titre du récapitulatif en double entre formulaires sans préfixe (`useId`) ; commentaire d'ordre des erreurs (ordre du serveur) ; piège de `useMoreFields` documenté (passer `state.errors`, jamais `state.errors ?? {}`) ; test du message général (`role="alert"`, hors récapitulatif).
+Reportés (dette) : lien du récapitulatif mort quand le champ n'existe pas (mission avec client fixé, paramètre de règle masqué, panneau « nouveau client » de la note refermé : le message reste lisible dans le récapitulatif) ; ordre des liens = ordre du serveur ; pas de test du récapitulatif pour mission, contact, story, sprint, devis, facture, règle (`idOf` des règles), ni du repli et de la taxe de la facture.
+Rejetés : retrait de `role="alert"` des lignes en ligne (décision de la spec, revue F-17 : le focus annonce) ; `rAF` non annulé (`?.` suffit) ; `aria-describedby` vers une ligne absente (identique à avant) ; `FormData` de jsdom ; ouverture de « Plus de champs » au clic d'une erreur visible (inoffensif).

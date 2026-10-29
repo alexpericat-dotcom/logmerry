@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
 
 import { errorSummaryItems, fieldProps, summaryTitle } from "@/lib/form";
 
@@ -43,6 +43,7 @@ export function focusField(id: string) {
 export function ErrorSummary({ errors, prefix, token, reveal, idOf }: { errors: Record<string, string | undefined> | undefined; prefix?: string; token: unknown; reveal?: (key: string) => void; idOf?: (key: string) => string }) {
   const items = errorSummaryItems(errors, prefix, idOf);
   const box = useRef<HTMLDivElement>(null);
+  const titleId = `${useId()}-title`; // unique même avec plusieurs formulaires sans préfixe sur la page
   const count = items.length;
   useEffect(() => {
     if (count > 0) box.current?.focus();
@@ -53,7 +54,6 @@ export function ErrorSummary({ errors, prefix, token, reveal, idOf }: { errors: 
     reveal?.(key);
     requestAnimationFrame(() => focusField(id));
   };
-  const titleId = `${prefix ?? "form"}-error-summary-title`;
   return (
     <div ref={box} tabIndex={-1} role="group" aria-labelledby={titleId} className="rounded-md border border-destructive p-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
       <p id={titleId} className="font-semibold text-destructive">

@@ -48,4 +48,12 @@ describe("ClientForm", () => {
     await user.click(screen.getByRole("link", { name: "Choisis l'origine." }));
     await waitFor(() => assert.equal(document.activeElement?.id, "origin"));
   });
+
+  test("message général du serveur : reste role=alert et n'entre pas dans le récapitulatif", async () => {
+    const user = userEvent.setup();
+    render(<ClientForm action={async () => ({ message: "Échec du serveur." })} submitLabel="Créer" />);
+    await user.click(screen.getByRole("button", { name: "Créer" }));
+    await waitFor(() => assert.equal(screen.getByRole("alert").textContent, "Échec du serveur."));
+    assert.equal(screen.queryByRole("group"), null);
+  });
 });
