@@ -40,7 +40,7 @@ export function LivePreview({ url, title, poster, auto, label }: { url: string; 
           referrerPolicy="no-referrer"
           loading="lazy"
           style={{ width: WIDTH, height: HEIGHT, transform: `scale(${scale})` }}
-          className="absolute left-0 top-0 origin-top-left border-0 bg-white"
+          className="absolute left-0 top-0 origin-top-left border-0 bg-card"
         />
       ) : (
         <>
