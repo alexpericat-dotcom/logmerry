@@ -26,3 +26,22 @@ export function inventedNumbers(answer: string, knownTexts: string[]): string[] 
   const known = new Set(knownTexts.flatMap(numbersIn));
   return [...new Set(numbersIn(answer))].filter((n) => (n.includes(".") || Number(n) >= 10) && !known.has(n));
 }
+
+/**
+ * Adresse web ou e-mail dans un texte : `http(s)://`, `www.`, un autre schéma qui s'ouvre au clic (`javascript:`, `data:`, `ftp:`, `mailto:`), une adresse sans schéma
+ * (`//hote/chemin`) ou un e-mail. Filtre de bonne volonté, pas une garantie : un nom de domaine nu ou une adresse écrite « x [at] y » passent. La réponse n'est affichée
+ * qu'en texte brut (aucun lien cliquable) : ce contrôle écarte surtout une adresse inventée ou poussée par une note piégée.
+ */
+const LINK = /(?:https?:\/\/|www\.|(?:javascript|vbscript|data|ftp|mailto):|(?<![\w:/])\/\/)[^\s<>"')\]»…’”]+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+/giu;
+
+/** Forme comparable d'une adresse : sans point final, schéma `http(s)://`, `www.` ni barre finale, en minuscules (« http://www.X.fr/ » et « https://x.fr » sont la même adresse). */
+const canonical = (link: string) =>
+  link.toLowerCase().replace(/[.,;:!?»…’”]+$/, "").replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "");
+
+const linksIn = (text: string) => (text.match(LINK) ?? []).map(canonical).filter(Boolean);
+
+/** Adresses web et e-mails de la réponse qui ne figurent, comme adresses entières, dans aucun des textes fournis (extraits et question) : des liens inventés, tronqués ou injectés. */
+export function inventedLinks(answer: string, knownTexts: string[]): string[] {
+  const known = new Set(knownTexts.flatMap(linksIn));
+  return [...new Set(linksIn(answer))].filter((l) => !known.has(l));
+}

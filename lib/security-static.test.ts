@@ -137,3 +137,11 @@ describe("code : secrets", () => {
     assert.deepEqual(clients.filter((f) => /from "@\/lib\/ai\/|from "@\/lib\/domain\/ai-config"/.test(read(f))), []);
   });
 });
+
+describe("migrations : droits d'`anon`", () => {
+  test("`anon` n'a aucun droit sur les tables de `public`, ni par défaut sur les futures (lot D)", () => {
+    assert.ok(/revoke all on all tables in schema public from anon/i.test(sql));
+    assert.ok(/alter default privileges for role postgres in schema public revoke all on tables from anon/i.test(sql));
+    assert.ok(/alter default privileges for role postgres in schema public revoke execute on functions from public, anon/i.test(sql));
+  });
+});

@@ -9,7 +9,7 @@ import { AssistantSources } from "@/components/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { offersDraftNote } from "@/lib/domain/chat-flow";
+import { NO_SOURCE_NOTICE, offersDraftNote, showsNoSourceNotice } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 
 /** Panneau « Assistant » : non modal, après `main`, il réduit la largeur de la page sans la recouvrir (plein écran sous 1 024 px). */
@@ -124,6 +124,7 @@ export function AssistantPanel() {
                 <span className="sr-only">{m.role === "user" ? "Toi : " : "Assistant : "}</span>
                 <span className="whitespace-pre-wrap">{m.text}</span>
                 {m.sources && <AssistantSources sources={m.sources} />}
+                {showsNoSourceNotice(m) && <p className="mt-1 text-xs text-muted-foreground">{NO_SOURCE_NOTICE}</p>}
                 {refusedQuestion && <AssistantDraftButton question={refusedQuestion} />}
               </li>
             );

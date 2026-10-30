@@ -146,16 +146,13 @@ describe("isolation des notes entre deux comptes fictifs", () => {
   test("sans connexion, aucune note n'est visible ni créable", async () => {
     const anon = newClient();
     const read = await anon.from("notes").select("id");
-    assert.ifError(read.error);
-    assert.deepEqual(read.data, []);
+    assert.equal(read.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const insert = await anon.from("notes").insert({ title: `${PREFIX} anonyme` });
     assert.equal(insert.error?.code, "42501", "refus par la RLS attendu");
     const update = await anon.from("notes").update({ title: `${PREFIX} anonyme` }).eq("id", noteA.id).select("id");
-    assert.ifError(update.error);
-    assert.deepEqual(update.data, []);
+    assert.equal(update.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const del = await anon.from("notes").delete().eq("id", noteA.id).select("id");
-    assert.ifError(del.error);
-    assert.deepEqual(del.data, []);
+    assert.equal(del.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
   });
 
   test("modifier sa note met à jour updated_at (déclencheur)", async () => {
@@ -256,8 +253,7 @@ describe("isolation des notes entre deux comptes fictifs", () => {
 
     const anon = newClient();
     const anonRead = await anon.from("note_chunks").select("id");
-    assert.ifError(anonRead.error);
-    assert.deepEqual(anonRead.data, []);
+    assert.equal(anonRead.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const anonWrite = await anon.from("note_chunks").insert({ ...chunk, chunk_index: 2 });
     assert.equal(anonWrite.error?.code, "42501");
 
@@ -443,8 +439,7 @@ describe("isolation des notes entre deux comptes fictifs", () => {
     const delB = await b.client.from("messages").delete().eq("id", mA.data!.id).select("id");
     assert.equal(delB.data?.length ?? 0, 0, "B ne supprime pas le message de A");
     const anon = await newClient().from("messages").select("id");
-    assert.ifError(anon.error);
-    assert.deepEqual(anon.data, []);
+    assert.equal(anon.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
   });
 });
 
@@ -1333,8 +1328,7 @@ describe("isolation des devis entre deux comptes fictifs", () => {
   test("sans connexion : rien de visible ni de créable, accept_quote refusée", async () => {
     const anon = newClient();
     const read = await anon.from("quotes").select("id");
-    assert.ifError(read.error);
-    assert.deepEqual(read.data, []);
+    assert.equal(read.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const write = await anon.from("quotes").insert({ client_id: clientA.id, amount_ht_cents: 100 });
     assert.equal(write.error?.code, "42501");
     const accept = await anon.rpc("accept_quote", { p_quote_id: quoteA.id });
@@ -1472,7 +1466,7 @@ describe("isolation du profil professionnel entre deux comptes fictifs", () => {
   test("sans connexion : rien de visible ni de créable", async () => {
     const anon = newClient();
     const read = await anon.from("professional_profile").select("owner_id");
-    assert.deepEqual(read.data ?? [], []);
+    assert.equal(read.error?.code, "42501"); // lot D : migration 20261030120000_revoke_anon_tables.sql requise
     const ins = await anon.from("professional_profile").insert({});
     assert.equal(ins.error?.code, "42501");
   });
@@ -1691,7 +1685,7 @@ describe("isolation des règles réglementaires entre deux comptes fictifs", () 
     assert.ifError(demo.error);
     const anon = newClient();
     const read = await anon.from("regulatory_rules").select("id");
-    assert.deepEqual(read.data ?? [], []);
+    assert.equal(read.error?.code, "42501"); // lot D : migration 20261030120000_revoke_anon_tables.sql requise
     const call = await anon.rpc("create_rule_version", { p_rule_key: KEY, p_activity_category: "bnc", p_effective_from: "2031-01-01", p_params: {}, p_source: SRC, p_verified_on: "2026-10-01", p_revalidate_after: "2027-10-01" });
     assert.ok(call.error);
     const guard = await a.client.rpc("regulatory_rules_guard");
@@ -1812,8 +1806,7 @@ describe("isolation des factures entre deux comptes fictifs", () => {
   test("sans connexion : rien de visible ni de créable", async () => {
     const anon = newClient();
     const read = await anon.from("invoices").select("id");
-    assert.ifError(read.error);
-    assert.deepEqual(read.data, []);
+    assert.equal(read.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const write = await anon.from("invoices").insert(base());
     assert.equal(write.error?.code, "42501");
   });
@@ -1963,8 +1956,7 @@ describe("isolation des encaissements entre deux comptes fictifs", () => {
   test("sans connexion : rien de visible ni de créable", async () => {
     const anon = newClient();
     const read = await anon.from("payments").select("id");
-    assert.ifError(read.error);
-    assert.deepEqual(read.data, []);
+    assert.equal(read.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const write = await anon.from("payments").insert(base());
     assert.equal(write.error?.code, "42501");
   });
@@ -2086,8 +2078,7 @@ describe("isolation des échéances entre deux comptes fictifs", () => {
     assert.equal(stolen.error?.code, "23514", "le propriétaire ne change pas : le déclencheur refuse avant la RLS");
     const anon = newClient();
     const read = await anon.from("deadlines").select("id");
-    assert.ifError(read.error);
-    assert.deepEqual(read.data, []);
+    assert.equal(read.error?.code, "42501"); // lot D : si ce test échoue, la migration 20261030120000_revoke_anon_tables.sql n'est pas appliquée
     const write = await anon.from("deadlines").insert(base());
     assert.equal(write.error?.code, "42501");
   });
@@ -2330,7 +2321,7 @@ describe("isolation des coches de tâches (task_checks) entre deux comptes ficti
     const forged = await a.client.from("task_checks").insert({ rule_no: 2, source_id: SOURCE, period_start: "2026-10-24", owner_id: b.userId });
     assert.equal(forged.error?.code, "42501");
     const anon = newClient();
-    assert.deepEqual((await anon.from("task_checks").select("id")).data, []);
+    assert.equal((await anon.from("task_checks").select("id")).error?.code, "42501");
     assert.equal((await anon.from("task_checks").insert({ rule_no: 2, source_id: SOURCE, period_start: DAY })).error?.code, "42501");
   });
 
