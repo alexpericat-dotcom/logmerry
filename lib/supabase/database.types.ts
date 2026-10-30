@@ -929,6 +929,14 @@ export type Database = {
         }[];
       };
       pp_thresholds_ok: { Args: { t: number[] }; Returns: boolean };
+      rls_audit: {
+        Args: never;
+        Returns: {
+          policy_count: number;
+          rls_enabled: boolean;
+          table_name: string;
+        }[];
+      };
       rule_version_is_mine: {
         Args: {
           p_activity_category: string;

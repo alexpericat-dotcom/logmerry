@@ -2580,3 +2580,20 @@ describe("plafond d'appels à l'IA (ai_calls, consume_ai_quota) : isolation et v
     assert.equal((await anon.from("ai_calls").insert({ owner_id: a.userId })).error?.code, "42501");
   });
 });
+
+describe("sécurité par ligne de la base RÉELLE (rls_audit) : aucune table oubliée, même créée à la main", () => {
+  // Complète `lib/security-static.test.ts`, qui ne lit que les migrations : une table créée dans l'éditeur SQL sans migration, ou une politique supprimée à la main, n'y apparaîtrait pas.
+  test("chaque table de `public` a la sécurité par ligne activée et au moins une politique", async () => {
+    const a = await signIn("A");
+    const { data: rows, error } = await a.client.rpc("rls_audit");
+    assert.ifError(error);
+    const data = rows as { table_name: string; rls_enabled: boolean; policy_count: number }[];
+    assert.ok(data!.length >= 17, `${data!.length} tables vues : l'audit passerait à vide`);
+    for (const t of ["notes", "note_chunks", "messages", "ai_calls"]) assert.ok(data!.some((r) => r.table_name === t), t);
+    assert.deepEqual(data!.filter((t) => !t.rls_enabled || t.policy_count < 1).map((t) => `${t.table_name} (rls ${t.rls_enabled}, ${t.policy_count} politique(s))`), []);
+  });
+
+  test("sans connexion, la fonction est refusée", async () => {
+    assert.equal((await newClient().rpc("rls_audit")).error?.code, "42501");
+  });
+});

@@ -1,0 +1,79 @@
+name: Isolation (base réelle)
+
+# Rejoue chaque nuit la suite d'isolation contre la vraie base (deux comptes fictifs @example.com, clé PUBLIQUE de Supabase) : une régression de la sécurité par
+# ligne que la CI des PR ne voit pas (elle n'a ni base ni clé) serait détectée en moins de 24 h. Jamais déclenché par une PR : les secrets ne sont pas exposés.
+# Secrets à créer dans GitHub (Settings, Secrets and variables, Actions) : SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, TEST_A_EMAIL, TEST_A_PASSWORD, TEST_B_EMAIL,
+# TEST_B_PASSWORD. Pour le test de fuite de l'assistant (manuel, appelle Claude et Mistral, coûte quelques centimes) : ANTHROPIC_API_KEY, MISTRAL_API_KEY, AI_CHAT_MODEL.
+on:
+  workflow_dispatch:
+    inputs:
+      leak:
+        description: "Lancer aussi test:leak (appelle Claude et Mistral)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17 3 * * *"
+
+concurrency:
+  group: isolation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  isolation:
+    # Un fork n'a pas les secrets : le job y échouerait chaque nuit pour rien.
+    if: ${{ !github.event.repository.fork }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Préparer les variables d'environnement (secrets du dépôt, jamais écrits dans le journal)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          TEST_A_EMAIL: ${{ secrets.TEST_A_EMAIL }}
+          TEST_A_PASSWORD: ${{ secrets.TEST_A_PASSWORD }}
+          TEST_B_EMAIL: ${{ secrets.TEST_B_EMAIL }}
+          TEST_B_PASSWORD: ${{ secrets.TEST_B_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AI_CHAT_MODEL: ${{ secrets.AI_CHAT_MODEL }}
+          WANT_LEAK: ${{ github.event_name == 'workflow_dispatch' && inputs.leak }}
+        run: |
+          required="SUPABASE_URL SUPABASE_PUBLISHABLE_KEY TEST_A_EMAIL TEST_A_PASSWORD TEST_B_EMAIL TEST_B_PASSWORD"
+          if [ "$WANT_LEAK" = "true" ]; then required="$required ANTHROPIC_API_KEY MISTRAL_API_KEY AI_CHAT_MODEL"; fi
+          for v in $required; do
+            if [ -z "${!v}" ]; then echo "::error::Secret manquant : $v (voir l'en-tête de .github/workflows/isolation.yml)"; exit 1; fi
+          done
+          # `node --env-file` lit les valeurs entre guillemets doubles telles quelles (un « # » ou un « $ » n'y est pas spécial) ; un guillemet, une barre oblique inverse ou un retour à la ligne les casseraient.
+          for v in $required ANTHROPIC_API_KEY MISTRAL_API_KEY AI_CHAT_MODEL; do
+            case "${!v}" in
+              *'"'* | *'\'* | *$'\n'*) echo "::error::Le secret $v contient un guillemet double, une barre oblique inverse ou un retour à la ligne : change sa valeur."; exit 1 ;;
+            esac
+          done
+          {
+            printf 'NEXT_PUBLIC_SUPABASE_URL="%s"\n' "$SUPABASE_URL"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="%s"\n' "$SUPABASE_PUBLISHABLE_KEY"
+            printf 'ANTHROPIC_API_KEY="%s"\n' "$ANTHROPIC_API_KEY"
+            printf 'MISTRAL_API_KEY="%s"\n' "$MISTRAL_API_KEY"
+            printf 'AI_CHAT_MODEL="%s"\n' "$AI_CHAT_MODEL"
+          } > .env.local
+          {
+            printf 'TEST_A_EMAIL="%s"\n' "$TEST_A_EMAIL"
+            printf 'TEST_A_PASSWORD="%s"\n' "$TEST_A_PASSWORD"
+            printf 'TEST_B_EMAIL="%s"\n' "$TEST_B_EMAIL"
+            printf 'TEST_B_PASSWORD="%s"\n' "$TEST_B_PASSWORD"
+          } > .env.test.local
+      - run: npm run test:isolation
+      - name: Test de fuite de l'assistant (manuel seulement)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.leak }}
+        run: npm run test:leak
