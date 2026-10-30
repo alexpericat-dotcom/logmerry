@@ -2638,6 +2638,23 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
     assert.equal((await a.client.from("realisations").select("id").eq("id", rA.id).maybeSingle()).data, null);
   });
 
+  test("publication : avec l'accord elle passe (date posée par la base, non forgeable) ; retirer l'accord la dépublie d'office ; sans accord elle reste refusée", async () => {
+    const r = await a.client.from("realisations").insert({ title: `${PREFIX} publiable`, description: "d", origin: "demo", client_consent: true, published: true, published_at: "2000-01-01T00:00:00Z" }).select("id, published, published_at").single();
+    assert.ifError(r.error);
+    assert.equal(r.data!.published, true);
+    assert.ok(Date.now() - new Date(r.data!.published_at!).getTime() < 60_000, "published_at posée par la base, pas par le client");
+    const before = r.data!.published_at;
+    const again = await a.client.from("realisations").update({ title: `${PREFIX} publiable bis`, published_at: "2001-01-01T00:00:00Z" }).eq("id", r.data!.id).select("published_at").single();
+    assert.equal(again.data!.published_at, before, "une modification ne déplace pas la date de publication");
+    const off = await a.client.from("realisations").update({ client_consent: false }).eq("id", r.data!.id).select("published, published_at").single();
+    assert.ifError(off.error);
+    assert.deepEqual(off.data, { published: false, published_at: null });
+    const noConsent = await a.client.from("realisations").update({ published: true }).eq("id", r.data!.id).select("id");
+    assert.ok(noConsent.error, "publier sans accord refusé");
+    const forged = await a.client.from("realisations").insert({ title: `${PREFIX} forgée`, description: "d", origin: "demo", published_at: "2000-01-01T00:00:00Z" }).select("published_at").single();
+    assert.equal(forged.data!.published_at, null, "non publiée : pas de date");
+  });
+
   test("sans connexion : aucun droit sur la table", async () => {
     const anon = newClient();
     assert.equal((await anon.from("realisations").select("id")).error?.code, "42501");

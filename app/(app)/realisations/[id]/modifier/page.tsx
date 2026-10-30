@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { updateRealisation } from "@/app/(app)/realisations/actions";
+import { PublicationControl } from "@/components/publication-control";
 import { DeleteRealisation } from "@/components/delete-realisation";
 import { PageBanner } from "@/components/page-banner";
 import { RealisationForm } from "@/components/realisation-form";
@@ -30,10 +31,12 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
           client_sector: r.client_sector ?? "",
           result_figure: r.result_figure ?? "",
           link_url: r.link_url ?? "",
+          client_consent: r.client_consent ? "on" : "",
           stack: r.stack.join(", "),
         }}
         submitLabel="Enregistrer les modifications"
       />
+      <PublicationControl id={id} published={r.published} consent={r.client_consent} />
       <DeleteRealisation id={id} />
     </div>
   );

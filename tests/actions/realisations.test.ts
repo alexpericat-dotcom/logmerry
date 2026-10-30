@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import { createRealisation, deleteRealisation, updateRealisation } from "../../app/(app)/realisations/actions.ts";
-import { fake, filterValue, form, redirectsTo, withHarness } from "../helpers/harness.ts";
+import { createRealisation, deleteRealisation, setRealisationPublication, updateRealisation } from "../../app/(app)/realisations/actions.ts";
+import { fake, filterValue, form, redirectsTo, routes, withHarness } from "../helpers/harness.ts";
 
 const ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
@@ -18,12 +18,13 @@ describe("createRealisation / updateRealisation", () => {
     assert.equal(payload.title, "Assistant RAG");
     assert.deepEqual(payload.stack, ["Next.js", "Supabase"]);
     assert.equal(payload.client_name, null);
-    // Le propriétaire vient de la base ; accord et publication ne passent jamais par ce formulaire (6.2).
-    for (const key of ["owner_id", "published", "published_at", "client_consent"]) assert.equal(key in payload, false, key);
+    // Le propriétaire vient de la base ; la publication ne passe jamais par ce formulaire. Sans case cochée, l'accord est faux.
+    for (const key of ["owner_id", "published", "published_at"]) assert.equal(key in payload, false, key);
+    assert.equal(payload.client_consent, false);
     assert.deepEqual(fake.revalidated, ["/realisations"]);
   });
 
-  const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie", link_url: "https://exemple.fr/" };
+  const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie", link_url: "https://exemple.fr/", client_consent: "on" };
   const FULL_PAYLOAD = {
     title: "Assistant RAG",
     description: "Un assistant qui cite ses sources.",
@@ -32,6 +33,7 @@ describe("createRealisation / updateRealisation", () => {
     client_sector: "Artisanat",
     result_figure: "-30 % de saisie",
     link_url: "https://exemple.fr/",
+    client_consent: true,
     stack: ["Next.js", "Supabase"],
   };
 
@@ -49,7 +51,8 @@ describe("createRealisation / updateRealisation", () => {
   test("champs forgés (publié, accord, propriétaire) ignorés", async () => {
     await assert.rejects(() => createRealisation({}, form({ ...VALID, published: "true", client_consent: "on", owner_id: "x" })), redirectsTo("/realisations"));
     const payload = fake.on("realisations", "insert")[0].payload as Record<string, unknown>;
-    for (const key of ["owner_id", "published", "client_consent"]) assert.equal(key in payload, false, key);
+    for (const key of ["owner_id", "published", "published_at"]) assert.equal(key in payload, false, key);
+    assert.equal(payload.client_consent, true, "« on » est la seule valeur qui coche l'accord");
   });
 
   test("saisie invalide : erreurs par champ et valeurs rendues, aucune requête", async () => {
@@ -67,11 +70,17 @@ describe("createRealisation / updateRealisation", () => {
 
   test("modification : filtre sur l'identifiant, relue, retour à la liste", async () => {
     fake.respond = () => ({ data: [{ id: ID }] });
-    await assert.rejects(() => updateRealisation(ID, {}, form(VALID)), redirectsTo("/realisations"));
+    await assert.rejects(() => updateRealisation(ID, {}, form({ ...VALID, client_consent: "on" })), redirectsTo("/realisations"));
     const [op] = fake.on("realisations", "update");
     assert.equal(filterValue(op, "eq", "id"), ID);
     assert.equal(op.returning, true);
-    assert.equal("published" in (op.payload as object), false);
+    assert.equal("published" in (op.payload as object), false, "avec l'accord coché, la publication n'est pas touchée");
+  });
+
+  test("modification sans accord coché : dépubliée d'office ; avec accord, la publication n'est pas touchée", async () => {
+    fake.respond = () => ({ data: [{ id: ID }] });
+    await assert.rejects(() => updateRealisation(ID, {}, form(VALID)), redirectsTo("/realisations"));
+    assert.equal((fake.on("realisations", "update")[0].payload as Record<string, unknown>).published, false);
   });
 
   test("modification : réalisation disparue ou identifiant invalide = « n'existe plus »", async () => {
@@ -79,6 +88,45 @@ describe("createRealisation / updateRealisation", () => {
     fake.reset();
     assert.match((await updateRealisation("x", {}, form(VALID))).message ?? "", /n'existe plus/);
     assert.equal(fake.ops.length, 0);
+  });
+});
+
+describe("setRealisationPublication", () => {
+  test("publier : filtre sur l'identifiant ET sur l'accord coché, rien d'autre n'est écrit", async () => {
+    fake.respond = () => ({ data: [{ id: ID }] });
+    assert.deepEqual(await setRealisationPublication(ID, true), {});
+    const [op] = fake.on("realisations", "update");
+    assert.deepEqual(op.payload, { published: true });
+    assert.equal(filterValue(op, "eq", "id"), ID);
+    assert.equal(filterValue(op, "eq", "client_consent"), true);
+    assert.ok(fake.revalidated.includes("/realisations"));
+  });
+
+  test("publier sans accord : aucune ligne touchée mais la fiche existe → message clair", async () => {
+    routes(["realisations:update", { data: [] }], ["realisations:select", { data: { id: ID } }]);
+    assert.match((await setRealisationPublication(ID, true)).message ?? "", /accord du client/);
+    assert.deepEqual(fake.revalidated, []);
+  });
+
+  test("publier une fiche disparue ou d'un identifiant invalide : « n'existe plus »", async () => {
+    assert.match((await setRealisationPublication(ID, true)).message ?? "", /n'existe plus/);
+    fake.reset();
+    assert.match((await setRealisationPublication("x", true)).message ?? "", /n'existe plus/);
+    assert.equal(fake.ops.length, 0);
+  });
+
+  test("retirer de la publication : pas de filtre sur l'accord", async () => {
+    fake.respond = () => ({ data: [{ id: ID }] });
+    assert.deepEqual(await setRealisationPublication(ID, false), {});
+    const [op] = fake.on("realisations", "update");
+    assert.deepEqual(op.payload, { published: false });
+    assert.equal(filterValue(op, "eq", "client_consent"), undefined);
+  });
+
+  test("erreur de la base : message, rien de revalidé", async () => {
+    fake.respond = () => ({ error: { code: "XX000" } });
+    assert.match((await setRealisationPublication(ID, true)).message ?? "", /Changement impossible/);
+    assert.deepEqual(fake.revalidated, []);
   });
 });
 

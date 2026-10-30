@@ -25,6 +25,8 @@ export type RealisationInput = {
   client_sector: string;
   result_figure: string;
   link_url: string;
+  /** Case à cocher : « on » si cochée, vide sinon. */
+  client_consent: string;
   /** Étiquettes séparées par des virgules. */
   stack: string;
 };
@@ -36,6 +38,7 @@ export type RealisationValues = {
   client_sector: string | null;
   result_figure: string | null;
   link_url: string | null;
+  client_consent: boolean;
   stack: string[];
 };
 export type RealisationErrors = Partial<Record<keyof RealisationInput, string>>;
@@ -52,6 +55,9 @@ const clean = (s: string) =>
     .trim();
 // Même décompte que char_length côté base (points de code, pas unités UTF-16).
 const length = (s: string) => [...s].length;
+
+/** Pourquoi « Publier » est refusé, ou null s'il est permis (l'accord du client est le seul critère de cette story). */
+export const publicationBlock = (r: { client_consent: boolean }): string | null => (r.client_consent ? null : "Coche l'accord du client avant de publier.");
 
 /** Adresse de la page en ligne : https seulement, sans identifiants, sans espace ; renvoie l'adresse telle que saisie (pas réécrite) ou null. */
 export function parsePublicLink(text: string): string | null {
@@ -103,5 +109,5 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   else if (stack.some((t) => length(t) > REALISATION_TAG_MAX)) errors.stack = `Chaque étiquette doit faire ${REALISATION_TAG_MAX} caractères au plus.`;
 
   if (Object.keys(errors).length > 0 || !origin) return { ok: false, errors };
-  return { ok: true, value: { title, description, origin, client_name, client_sector, result_figure, link_url, stack } };
+  return { ok: true, value: { title, description, origin, client_name, client_sector, result_figure, link_url, client_consent: input.client_consent === "on", stack } };
 }

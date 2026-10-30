@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isUuid } from "@/lib/domain/notes";
-import { validateRealisationInput, type RealisationErrors, type RealisationInput, type RealisationValues } from "@/lib/domain/realisations";
+import { publicationBlock, validateRealisationInput, type RealisationErrors, type RealisationInput, type RealisationValues } from "@/lib/domain/realisations";
 import type { Db } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
@@ -31,6 +31,7 @@ const readValues = (formData: FormData): RealisationInput => ({
   client_sector: text(formData, "client_sector"),
   result_figure: text(formData, "result_figure"),
   link_url: text(formData, "link_url"),
+  client_consent: text(formData, "client_consent") === "on" ? "on" : "",
   stack: text(formData, "stack"),
 });
 
@@ -66,10 +67,40 @@ export async function createRealisation(_prev: RealisationFormState, formData: F
 export async function updateRealisation(id: string, _prev: RealisationFormState, formData: FormData): Promise<RealisationFormState> {
   return save(readValues(formData), async (supabase, value) => {
     if (!isUuid(id)) return "not-found";
-    const { data, error } = await supabase.from("realisations").update(value).eq("id", id).select("id");
+    // Retirer l'accord d'une réalisation publiée la dépublie (la base le fait aussi) ; sans changement d'accord, la publication ne bouge pas.
+    const patch = value.client_consent ? value : { ...value, published: false };
+    const { data, error } = await supabase.from("realisations").update(patch).eq("id", id).select("id");
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
   });
+}
+
+export type PublicationState = { message?: string };
+
+/** « Publier » (refusé sans l'accord du client, par l'action puis par la base) ou « Retirer de la publication ». */
+export async function setRealisationPublication(id: string, publish: boolean): Promise<PublicationState> {
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent"> => {
+    if (!isUuid(id)) return "not-found";
+    // Publier ne touche que les lignes dont l'accord est coché : l'accord est relu par la base, pas pris sur la foi de l'écran.
+    let query = supabase.from("realisations").update({ published: publish }).eq("id", id);
+    if (publish) query = query.eq("client_consent", true);
+    const { data, error } = await query.select("id");
+    if (error) return "error";
+    if (data?.length) return "saved";
+    if (!publish) return "not-found";
+    const exists = await supabase.from("realisations").select("id").eq("id", id).maybeSingle();
+    if (exists.error) return "error";
+    return exists.data ? "no-consent" : "not-found";
+  });
+
+  if (result.status === "signed-out") redirect("/auth/login");
+  if (result.status === "failed" || result.value === "error") return { message: "Changement impossible pour le moment. Réessaie." };
+  if (result.value === "no-consent") return { message: publicationBlock({ client_consent: false }) ?? undefined };
+  if (result.value === "not-found") return { message: NOT_FOUND };
+
+  revalidatePath("/realisations");
+  revalidatePath(`/realisations/${id}/modifier`);
+  return {};
 }
 
 export async function deleteRealisation(id: string): Promise<DeleteRealisationState> {

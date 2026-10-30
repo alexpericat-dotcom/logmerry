@@ -28,6 +28,10 @@ route: 'dispatch'
 4. **Chiffre de résultat** : texte libre court (« -30 % de temps de saisie »), pas un nombre, pour éviter tout calcul ou affichage de montant.
 5. **Titre de page et ordre** : `/portfolio`, plus récentes d'abord (`published_at`), une carte par réalisation avec sa pastille d'origine ; pas de page de détail au MVP.
 
+## Renégociation du 30 octobre 2026 (après la fusion de la 6.1)
+
+Décision d'Alex : le portfolio doit être **très visuel et très professionnel, avec un effet « waouh »**, et la page doit aussi décrire **ce qu'il sait faire, comment se passe une mission avec un client et ce qu'il lui apporte**. Réponses : images d'abord (décision 1 inversée), style de l'identité LogMerry (titres pixel, dégradé, ombres dures), textes rédigés par moi puis validés par lui, formules nommées **sans prix**. Nouvel ordre : **6.2** publication et accord (sans image) → **6.3** captures d'écran (stockage, texte alternatif obligatoire, ancienne « 6.4 ») → **6.4** page publique `/portfolio` complète : accroche, « Ce que je fais » (formules), « Comment ça se passe » (déroulé d'une mission), « Ce que j'apporte », réalisations avec captures, contact. Le lien de la page en ligne d'une réalisation (`link_url`, https seulement) est déjà livré. **Encore à fournir par Alex avant la 6.4** : nom public (vérification de marque en cours, CLAUDE.md), adresse du `mailto:` (décision 2 jamais tranchée), photo ou pas, ville ou zone, et la relecture des textes. Les textes de la page sont des données de la page (fichier de contenu relu par Alex), pas des promesses inventées : aucun tarif, aucun délai ni garantie chiffrée sans son accord.
+
 ## I/O & Edge-Case Matrix
 
 | Scénario | État | Comportement attendu |
