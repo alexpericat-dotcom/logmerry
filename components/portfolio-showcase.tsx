@@ -30,7 +30,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
     <PortfolioImage src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} sizes="(min-width: 1024px) 58vw, 100vw" priority={index === 0} />
   ) : (
     // Sans capture : un aplat de marque avec le titre, pour que la carte ne soit jamais vide (remplacé par l'aperçu en direct quand le site est en ligne).
-    <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase dark:font-sans dark:normal-case">
+    <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase [overflow-wrap:anywhere] dark:font-sans dark:normal-case">
       {card.title}
     </div>
   );
@@ -38,7 +38,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
   return (
     <li className="reveal grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-12">
       <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
-        <BrowserFrame host={link ? new URL(link).host : undefined}>{link ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
+        <BrowserFrame host={link ? new URL(link).host : undefined}>{link ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover && index === 0} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
         {more.length > 0 && (
           <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {more.map((image) => (

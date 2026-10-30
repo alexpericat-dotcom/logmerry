@@ -71,3 +71,15 @@ test("lien externe : https seul, sans identifiants, espace ni caractère de cont
   assert.equal(safeHttpsLink("https://ateliernovav3.lovable.app/"), "https://ateliernovav3.lovable.app/");
   for (const bad of [null, "", "http://x.fr", "javascript:alert(1)", "https://user:mdp@x.fr", "https://x.fr/a b", "https://x.fr/\u0007", "//x.fr", "x.fr", "data:text/html,x"]) assert.equal(safeHttpsLink(bad), null, String(bad));
 });
+
+import { isSameOrigin } from "./portfolio.ts";
+
+test("aperçu en direct : une adresse de la même origine que la page est refusée (le sandbox ne protégerait plus rien) ; illisible = refusée", () => {
+  assert.equal(isSameOrigin("https://logmerry.app/auth/login", "https://logmerry.app"), true);
+  assert.equal(isSameOrigin("https://logmerry.app:443/x", "https://logmerry.app"), true);
+  assert.equal(isSameOrigin("https://ateliernovav3.lovable.app/", "https://logmerry.app"), false);
+  assert.equal(isSameOrigin("https://sous.logmerry.app/", "https://logmerry.app"), false, "sous-domaine : autre origine");
+  assert.equal(isSameOrigin("http://logmerry.app/", "https://logmerry.app"), false, "autre protocole : autre origine");
+  assert.equal(isSameOrigin("pas une adresse", "https://logmerry.app"), true);
+  assert.equal(isSameOrigin("https://x.fr", "pas une origine"), true);
+});

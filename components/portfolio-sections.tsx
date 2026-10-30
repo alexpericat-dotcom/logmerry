@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
+import { MotionToggle } from "@/components/motion-toggle";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { mailtoHref } from "@/lib/domain/portfolio";
@@ -43,6 +44,7 @@ export function PortfolioHeader() {
               {label}
             </a>
           ))}
+          <MotionToggle />
           <ThemeSwitcher />
           <Button asChild size="sm">
             <a href={contactHref}>{CONTACT.button}</a>
@@ -56,15 +58,15 @@ export function PortfolioHeader() {
 /** Décor pixel : formes qui flottent doucement, ignorées des lecteurs d'écran. */
 function PixelDecor() {
   const shapes = [
-    "left-[4%] top-[12%] size-10 bg-[hsl(var(--tone-teal))]",
-    "left-[44%] top-[8%] size-6 bg-[hsl(var(--tone-yellow))]",
-    "left-[40%] bottom-[10%] size-8 bg-[hsl(var(--tone-pink))]",
-    "right-[3%] bottom-[8%] size-12 bg-[hsl(var(--tone-violet))]",
+    "left-[1.5%] top-[10%] size-10 bg-[hsl(var(--tone-teal))]",
+    "right-[1.5%] top-[9%] size-8 bg-[hsl(var(--tone-yellow))]",
+    "left-[1.5%] bottom-[9%] size-8 bg-[hsl(var(--tone-pink))]",
+    "right-[1.5%] bottom-[8%] size-12 bg-[hsl(var(--tone-violet))]",
   ];
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       {shapes.map((s, i) => (
-        <span key={s} style={{ animationDelay: `${i * -1.6}s` }} className={`float-slow absolute rounded-sm border opacity-80 shadow-hard ${s} max-md:hidden`} />
+        <span key={s} style={{ animationDelay: `${i * -1.6}s` }} className={`float-slow absolute rounded-sm border opacity-80 shadow-hard ${s} max-xl:hidden`} />
       ))}
     </div>
   );
@@ -133,9 +135,12 @@ export function PortfolioMarquee() {
     </ul>
   );
   return (
-    <div role="region" aria-label="Outils mobilisés" className="marquee overflow-hidden border-b bg-muted/40 py-5">
+    <div className="marquee overflow-hidden border-b bg-muted/40 py-5">
+      {/* Deux moitiés identiques de deux rangées : la boucle (−50 %) reste pleine même sur un très grand écran. Seule la première rangée est lue par les lecteurs d'écran. */}
       <div className="marquee-track flex w-max">
         {row(false)}
+        {row(true)}
+        {row(true)}
         {row(true)}
       </div>
     </div>
@@ -147,7 +152,7 @@ export function PortfolioLever() {
     <section aria-labelledby="lever-title" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} />
       <div className="reveal grid gap-5 lg:grid-cols-2">
-        <p className="flex items-center rounded-lg border border-dashed bg-muted/40 p-6 text-xl text-muted-foreground line-through decoration-[hsl(var(--destructive))] decoration-2 md:text-2xl">{LEVER.before}</p>
+        <p className="flex items-center rounded-lg border border-dashed p-6 text-xl text-muted-foreground line-through decoration-[hsl(var(--destructive))] decoration-2 md:text-2xl">{LEVER.before}</p>
         <p className="rounded-lg border bg-[hsl(var(--tone-yellow))] p-6 text-xl font-bold text-[hsl(235_47%_20%)] shadow-hard md:text-2xl">{LEVER.after}</p>
       </div>
       <p className="reveal mt-6 max-w-3xl text-lg text-muted-foreground">{LEVER.note}</p>
@@ -180,7 +185,8 @@ export function PortfolioProcess() {
               </span>
               <h3 className="text-xl font-semibold">{s.title}</h3>
               <p className="text-muted-foreground">{s.text}</p>
-              {i < PROCESS.steps.length - 1 && <ArrowRight aria-hidden="true" size={20} className="absolute right-5 top-6 hidden text-muted-foreground lg:block [&:nth-child(3n)]:hidden" />}
+              {/* Flèche vers l'étape suivante : seulement sur la grille à trois colonnes, et pas en bout de ligne (étapes 3 et 6). */}
+              {(i + 1) % 3 !== 0 && <ArrowRight aria-hidden="true" size={20} className="absolute right-5 top-6 hidden text-muted-foreground lg:block" />}
             </li>
           ))}
         </ol>

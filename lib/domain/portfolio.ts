@@ -46,6 +46,15 @@ export function safeHttpsLink(value: string | null): string | null {
   }
 }
 
+/** Vrai si l'adresse est de la même origine que la page : un aperçu dans un cadre `allow-same-origin` y aurait accès à la session du visiteur. Une adresse illisible compte comme « même origine » (refus). */
+export function isSameOrigin(url: string, pageOrigin: string): boolean {
+  try {
+    return new URL(url).origin === new URL(pageOrigin).origin;
+  } catch {
+    return true;
+  }
+}
+
 /** Les plus récemment publiées d'abord ; chaque carte reçoit ses captures dans l'ordre d'ajout. */
 export function buildCards(items: PublicRealisation[], images: PublicImage[]): PublicCard[] {
   const byItem = Map.groupBy(images, (i) => i.realisation_id);

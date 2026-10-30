@@ -319,3 +319,15 @@ html:has(#contenu) {
     flex-wrap: wrap;
   }
 }
+
+/* Pause des animations en boucle, choisie par le visiteur (bouton de l'en-tête de la page publique, WCAG 2.2.2). */
+html[data-motion="paused"] .marquee-track,
+html[data-motion="paused"] .pipe-dot,
+html[data-motion="paused"] .float-slow {
+  animation-play-state: paused !important;
+}
+@media print {
+  .marquee-track {
+    width: auto !important;
+  }
+}
