@@ -39,8 +39,14 @@ export type RealisationErrors = Partial<Record<keyof RealisationInput, string>>;
 
 export const parseRealisationOrigin = (value: unknown): RealisationOrigin | null => REALISATION_ORIGINS.find((o) => o === value) ?? null;
 
-// Postgres refuse le caractère nul dans un texte.
-const clean = (s: string) => s.replaceAll("\u0000", "").trim();
+// Postgres refuse le caractère nul ; un champ texte envoie « \r\n » (deux caractères) là où l'on compte un saut de ligne ; les espaces de largeur nulle
+// ne se voient pas : un titre qui n'en contient que serait un lien sans nom.
+const clean = (s: string) =>
+  s
+    .replaceAll("\u0000", "")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
 // Même décompte que char_length côté base (points de code, pas unités UTF-16).
 const length = (s: string) => [...s].length;
 

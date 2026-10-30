@@ -2616,6 +2616,28 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
     assert.equal(still.data!.published, false);
   });
 
+  test("A modifie et supprime sa propre réalisation (tous les champs, quatre origines, 12 étiquettes) ; B n'y change rien ; A ne la donne pas à B", async () => {
+    const full = { title: `${PREFIX} complète`, description: "d", origin: "friend", client_name: "Atelier", client_sector: "Artisanat", result_figure: "-30 %", stack: Array.from({ length: 12 }, (_, i) => `t${i}`) } as const;
+    for (const origin of ["real_client", "training", "friend", "demo"] as const) {
+      const ins = await a.client.from("realisations").insert({ ...full, origin }).select("id, origin").single();
+      assert.ifError(ins.error);
+      assert.equal(ins.data!.origin, origin);
+    }
+    const upd = await a.client.from("realisations").update({ ...full, title: `${PREFIX} renommée` }).eq("id", rA.id).select("title, client_sector, result_figure, stack");
+    assert.ifError(upd.error);
+    assert.deepEqual(upd.data, [{ title: `${PREFIX} renommée`, client_sector: "Artisanat", result_figure: "-30 %", stack: full.stack }]);
+    await b.client.from("realisations").update({ title: `${PREFIX} piratée` }).eq("id", rA.id);
+    await b.client.from("realisations").delete().eq("id", rA.id);
+    const still = await a.client.from("realisations").select("title, owner_id").eq("id", rA.id).single();
+    assert.deepEqual(still.data, { title: `${PREFIX} renommée`, owner_id: a.userId });
+    const give = await a.client.from("realisations").update({ owner_id: b.userId }).eq("id", rA.id).select("id");
+    assert.ok(give.error || give.data!.length === 0, "donner sa réalisation à B refusé");
+    assert.equal((await a.client.from("realisations").select("owner_id").eq("id", rA.id).single()).data!.owner_id, a.userId);
+    const del = await a.client.from("realisations").delete().eq("id", rA.id).select("id");
+    assert.equal(del.data?.length, 1);
+    assert.equal((await a.client.from("realisations").select("id").eq("id", rA.id).maybeSingle()).data, null);
+  });
+
   test("sans connexion : aucun droit sur la table", async () => {
     const anon = newClient();
     assert.equal((await anon.from("realisations").select("id")).error?.code, "42501");
@@ -2627,10 +2649,18 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
       ["titre vide", { title: "  ", description: "d", origin: "demo" }],
       ["description vide", { title: `${PREFIX} t`, description: "", origin: "demo" }],
       ["origine inconnue", { title: `${PREFIX} t`, description: "d", origin: "autre" }],
+      ["nom de client d'espaces", { title: `${PREFIX} t`, description: "d", origin: "demo", client_name: "  " }],
+      ["secteur trop long", { title: `${PREFIX} t`, description: "d", origin: "demo", client_sector: "x".repeat(101) }],
+      ["chiffre de résultat trop long", { title: `${PREFIX} t`, description: "d", origin: "demo", result_figure: "x".repeat(201) }],
+      ["titre trop long", { title: "x".repeat(201), description: "d", origin: "demo" }],
+      ["description trop longue", { title: `${PREFIX} t`, description: "x".repeat(601), origin: "demo" }],
+      ["étiquette vide", { title: `${PREFIX} t`, description: "d", origin: "demo", stack: ["ok", " "] }],
+      ["étiquette trop longue", { title: `${PREFIX} t`, description: "d", origin: "demo", stack: ["x".repeat(41)] }],
       ["13 étiquettes", { title: `${PREFIX} t`, description: "d", origin: "demo", stack: Array.from({ length: 13 }, (_, i) => `t${i}`) }],
     ] as const) {
       const r = await a.client.from("realisations").insert(row as never);
       assert.ok(r.error, label);
+      assert.ok(["23514", "22P02"].includes(r.error!.code), `${label} : ${r.error!.code}`);
     }
   });
 });

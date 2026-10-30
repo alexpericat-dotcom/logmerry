@@ -23,7 +23,7 @@ const COLUMNS = "id, title, description, origin, client_name, client_sector, res
 /** Mes réalisations, de la plus récente à la plus ancienne (la RLS limite aux miennes). */
 export async function listRealisations(): Promise<RealisationRecord[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("realisations").select(COLUMNS).order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("realisations").select(COLUMNS).order("created_at", { ascending: false }).order("id");
   if (error) throw new Error("Impossible de charger les réalisations.");
   return data as RealisationRecord[];
 }

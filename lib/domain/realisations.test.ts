@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
+import { REALISATION_CLIENT_NAME_MAX, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
 
 const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", stack: "" };
 
@@ -44,4 +44,36 @@ test("pile : vides et doublons ignorés, limites d'étiquettes", () => {
 test("texte piégé gardé tel quel (jamais interprété par le domaine)", () => {
   const r = validateRealisationInput({ ...base, title: "<script>alert(1)</script>" });
   assert.ok(r.ok && r.value.title === "<script>alert(1)</script>");
+});
+
+test("chaque origine est acceptée et a son étiquette (l'enum SQL en a les mêmes quatre)", () => {
+  assert.deepEqual([...REALISATION_ORIGINS], ["real_client", "training", "friend", "demo"]);
+  for (const origin of REALISATION_ORIGINS) {
+    assert.ok(validateRealisationInput({ ...base, origin }).ok, origin);
+    assert.ok(REALISATION_ORIGIN_LABELS[origin], origin);
+  }
+});
+
+test("bornes exactes : le maximum passe, un de plus est refusé, pour chaque champ", () => {
+  const cases: [keyof RealisationInput, number][] = [
+    ["title", REALISATION_TITLE_MAX],
+    ["description", REALISATION_DESCRIPTION_MAX],
+    ["client_name", REALISATION_CLIENT_NAME_MAX],
+    ["client_sector", REALISATION_SECTOR_MAX],
+    ["result_figure", REALISATION_RESULT_MAX],
+    ["stack", REALISATION_TAG_MAX],
+  ];
+  for (const [key, max] of cases) {
+    assert.ok(validateRealisationInput({ ...base, [key]: "x".repeat(max) }).ok, `${key} = ${max}`);
+    const over = validateRealisationInput({ ...base, [key]: "x".repeat(max + 1) });
+    assert.ok(!over.ok && over.errors[key], `${key} = ${max + 1}`);
+  }
+});
+
+test("retours à la ligne comptés pour un seul caractère ; caractères invisibles retirés", () => {
+  const withBreaks = "x\r\n".repeat(300).trimEnd();
+  const r = validateRealisationInput({ ...base, description: withBreaks });
+  assert.ok(r.ok && !r.value.description.includes("\r") && [...r.value.description].length === 599);
+  const invisible = validateRealisationInput({ ...base, title: "\u200B\uFEFF " });
+  assert.ok(!invisible.ok && invisible.errors.title);
 });

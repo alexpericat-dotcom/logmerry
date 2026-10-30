@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   REALISATION_ORIGINS,
   REALISATION_ORIGIN_LABELS,
-  REALISATION_DESCRIPTION_MAX,
   type RealisationInput,
   type RealisationOrigin,
 } from "@/lib/domain/realisations";
@@ -42,7 +41,7 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
       </div>
       <div className="grid gap-2">
         <Label htmlFor="description">Description courte (obligatoire)</Label>
-        <Textarea {...field("description")} defaultValue={values.description} aria-required="true" rows={4} maxLength={REALISATION_DESCRIPTION_MAX * 2} />
+        <Textarea {...field("description")} defaultValue={values.description} aria-required="true" rows={4} />
         {errorLine("description")}
       </div>
       <div className="grid gap-2">

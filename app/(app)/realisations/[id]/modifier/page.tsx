@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { deleteRealisation, updateRealisation } from "@/app/(app)/realisations/actions";
-import { ConfirmDelete } from "@/components/confirm-delete";
+import { updateRealisation } from "@/app/(app)/realisations/actions";
+import { DeleteRealisation } from "@/components/delete-realisation";
 import { PageBanner } from "@/components/page-banner";
 import { RealisationForm } from "@/components/realisation-form";
 import { getRealisation } from "@/lib/db/realisations";
@@ -33,9 +33,7 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
         }}
         submitLabel="Enregistrer les modifications"
       />
-      <ConfirmDelete askLabel="Supprimer cette réalisation" question="Supprimer cette réalisation ?" run={() => deleteRealisation(id)}>
-        Cette action est définitive.
-      </ConfirmDelete>
+      <DeleteRealisation id={id} />
     </div>
   );
 }

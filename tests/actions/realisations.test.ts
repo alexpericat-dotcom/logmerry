@@ -23,6 +23,28 @@ describe("createRealisation / updateRealisation", () => {
     assert.deepEqual(fake.revalidated, ["/realisations"]);
   });
 
+  const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie" };
+  const FULL_PAYLOAD = {
+    title: "Assistant RAG",
+    description: "Un assistant qui cite ses sources.",
+    origin: "demo",
+    client_name: "Atelier Brume",
+    client_sector: "Artisanat",
+    result_figure: "-30 % de saisie",
+    stack: ["Next.js", "Supabase"],
+  };
+
+  test("création : tous les champs, nettoyés, dans l'insertion (et rien d'autre)", async () => {
+    await assert.rejects(() => createRealisation({}, form(FULL)), redirectsTo("/realisations"));
+    assert.deepEqual(fake.on("realisations", "insert")[0].payload, FULL_PAYLOAD);
+  });
+
+  test("modification : tous les champs, nettoyés, dans la mise à jour (et rien d'autre)", async () => {
+    fake.respond = () => ({ data: [{ id: ID }] });
+    await assert.rejects(() => updateRealisation(ID, {}, form(FULL)), redirectsTo("/realisations"));
+    assert.deepEqual(fake.on("realisations", "update")[0].payload, FULL_PAYLOAD);
+  });
+
   test("champs forgés (publié, accord, propriétaire) ignorés", async () => {
     await assert.rejects(() => createRealisation({}, form({ ...VALID, published: "true", client_consent: "on", owner_id: "x" })), redirectsTo("/realisations"));
     const payload = fake.on("realisations", "insert")[0].payload as Record<string, unknown>;
