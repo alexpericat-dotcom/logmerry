@@ -11,6 +11,7 @@ export type RealisationRecord = {
   client_name: string | null;
   client_sector: string | null;
   result_figure: string | null;
+  link_url: string | null;
   stack: string[];
   client_consent: boolean;
   published: boolean;
@@ -18,7 +19,7 @@ export type RealisationRecord = {
   updated_at: string;
 };
 
-const COLUMNS = "id, title, description, origin, client_name, client_sector, result_figure, stack, client_consent, published, created_at, updated_at";
+const COLUMNS = "id, title, description, origin, client_name, client_sector, result_figure, link_url, stack, client_consent, published, created_at, updated_at";
 
 /** Mes réalisations, de la plus récente à la plus ancienne (la RLS limite aux miennes). */
 export async function listRealisations(): Promise<RealisationRecord[]> {

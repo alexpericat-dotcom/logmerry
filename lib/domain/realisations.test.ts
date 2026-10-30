@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REALISATION_CLIENT_NAME_MAX, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
+import { REALISATION_CLIENT_NAME_MAX, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
 
-const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", stack: "" };
+const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", stack: "" };
 
 test("création minimale : champs facultatifs vides → null, pile vide", () => {
   assert.deepEqual(validateRealisationInput(base), {
     ok: true,
-    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, stack: [] },
+    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, link_url: null, stack: [] },
   });
 });
 
@@ -76,4 +76,15 @@ test("retours à la ligne comptés pour un seul caractère ; caractères invisib
   assert.ok(r.ok && !r.value.description.includes("\r") && [...r.value.description].length === 599);
   const invisible = validateRealisationInput({ ...base, title: "\u200B\uFEFF " });
   assert.ok(!invisible.ok && invisible.errors.title);
+});
+
+test("lien : https complet accepté tel quel ; http, javascript:, data:, espaces, identifiants, hôte sans point et excès de longueur refusés", () => {
+  const ok = validateRealisationInput({ ...base, link_url: "https://ateliernovav3.lovable.app/" });
+  assert.ok(ok.ok && ok.value.link_url === "https://ateliernovav3.lovable.app/");
+  for (const bad of ["http://exemple.fr", "javascript:alert(1)", "data:text/html,x", "https://exemple.fr/a b", "https://user:mdp@exemple.fr", "https://localhost", "exemple.fr", "ftp://exemple.fr", `https://exemple.fr/${"x".repeat(REALISATION_LINK_MAX)}`]) {
+    assert.equal(parsePublicLink(bad), null, bad);
+    const r = validateRealisationInput({ ...base, link_url: bad });
+    assert.ok(!r.ok && r.errors.link_url, bad);
+  }
+  assert.ok(parsePublicLink(`https://exemple.fr/${"x".repeat(REALISATION_LINK_MAX - 19)}`), "300 caractères pile");
 });

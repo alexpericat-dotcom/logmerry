@@ -640,6 +640,7 @@ export type Database = {
           created_at: string;
           description: string;
           id: string;
+          link_url: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
           owner_id: string;
           published: boolean;
@@ -656,6 +657,7 @@ export type Database = {
           created_at?: string;
           description: string;
           id?: string;
+          link_url?: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
           owner_id?: string;
           published?: boolean;
@@ -672,6 +674,7 @@ export type Database = {
           created_at?: string;
           description?: string;
           id?: string;
+          link_url?: string | null;
           origin?: Database["public"]["Enums"]["realisation_origin"];
           owner_id?: string;
           published?: boolean;

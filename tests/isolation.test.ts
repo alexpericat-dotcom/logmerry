@@ -2617,15 +2617,15 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
   });
 
   test("A modifie et supprime sa propre réalisation (tous les champs, quatre origines, 12 étiquettes) ; B n'y change rien ; A ne la donne pas à B", async () => {
-    const full = { title: `${PREFIX} complète`, description: "d", origin: "friend", client_name: "Atelier", client_sector: "Artisanat", result_figure: "-30 %", stack: Array.from({ length: 12 }, (_, i) => `t${i}`) } as const;
+    const full = { title: `${PREFIX} complète`, description: "d", origin: "friend", client_name: "Atelier", client_sector: "Artisanat", result_figure: "-30 %", link_url: "https://exemple.fr/", stack: Array.from({ length: 12 }, (_, i) => `t${i}`) } as const;
     for (const origin of ["real_client", "training", "friend", "demo"] as const) {
       const ins = await a.client.from("realisations").insert({ ...full, origin }).select("id, origin").single();
       assert.ifError(ins.error);
       assert.equal(ins.data!.origin, origin);
     }
-    const upd = await a.client.from("realisations").update({ ...full, title: `${PREFIX} renommée` }).eq("id", rA.id).select("title, client_sector, result_figure, stack");
+    const upd = await a.client.from("realisations").update({ ...full, title: `${PREFIX} renommée` }).eq("id", rA.id).select("title, client_sector, result_figure, link_url, stack");
     assert.ifError(upd.error);
-    assert.deepEqual(upd.data, [{ title: `${PREFIX} renommée`, client_sector: "Artisanat", result_figure: "-30 %", stack: full.stack }]);
+    assert.deepEqual(upd.data, [{ title: `${PREFIX} renommée`, client_sector: "Artisanat", result_figure: "-30 %", link_url: "https://exemple.fr/", stack: full.stack }]);
     await b.client.from("realisations").update({ title: `${PREFIX} piratée` }).eq("id", rA.id);
     await b.client.from("realisations").delete().eq("id", rA.id);
     const still = await a.client.from("realisations").select("title, owner_id").eq("id", rA.id).single();
@@ -2649,6 +2649,9 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
       ["titre vide", { title: "  ", description: "d", origin: "demo" }],
       ["description vide", { title: `${PREFIX} t`, description: "", origin: "demo" }],
       ["origine inconnue", { title: `${PREFIX} t`, description: "d", origin: "autre" }],
+      ["lien en http", { title: `${PREFIX} t`, description: "d", origin: "demo", link_url: "http://exemple.fr" }],
+      ["lien javascript", { title: `${PREFIX} t`, description: "d", origin: "demo", link_url: "javascript:alert(1)" }],
+      ["lien avec espace", { title: `${PREFIX} t`, description: "d", origin: "demo", link_url: "https://exemple.fr/a b" }],
       ["nom de client d'espaces", { title: `${PREFIX} t`, description: "d", origin: "demo", client_name: "  " }],
       ["secteur trop long", { title: `${PREFIX} t`, description: "d", origin: "demo", client_sector: "x".repeat(101) }],
       ["chiffre de résultat trop long", { title: `${PREFIX} t`, description: "d", origin: "demo", result_figure: "x".repeat(201) }],

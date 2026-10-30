@@ -29,6 +29,7 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
           client_name: r.client_name ?? "",
           client_sector: r.client_sector ?? "",
           result_figure: r.result_figure ?? "",
+          link_url: r.link_url ?? "",
           stack: r.stack.join(", "),
         }}
         submitLabel="Enregistrer les modifications"

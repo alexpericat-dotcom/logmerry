@@ -30,6 +30,7 @@ const readValues = (formData: FormData): RealisationInput => ({
   client_name: text(formData, "client_name"),
   client_sector: text(formData, "client_sector"),
   result_figure: text(formData, "result_figure"),
+  link_url: text(formData, "link_url"),
   stack: text(formData, "stack"),
 });
 

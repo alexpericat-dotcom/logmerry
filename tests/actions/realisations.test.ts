@@ -23,7 +23,7 @@ describe("createRealisation / updateRealisation", () => {
     assert.deepEqual(fake.revalidated, ["/realisations"]);
   });
 
-  const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie" };
+  const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie", link_url: "https://exemple.fr/" };
   const FULL_PAYLOAD = {
     title: "Assistant RAG",
     description: "Un assistant qui cite ses sources.",
@@ -31,6 +31,7 @@ describe("createRealisation / updateRealisation", () => {
     client_name: "Atelier Brume",
     client_sector: "Artisanat",
     result_figure: "-30 % de saisie",
+    link_url: "https://exemple.fr/",
     stack: ["Next.js", "Supabase"],
   };
 

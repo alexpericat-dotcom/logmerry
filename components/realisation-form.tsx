@@ -23,7 +23,7 @@ type Props = {
   cancelHref?: string;
 };
 
-const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", stack: "" };
+const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", stack: "" };
 
 export function RealisationForm({ action, initial, submitLabel, cancelHref = "/realisations" }: Props) {
   const [state, formAction, pending] = useActionState<RealisationFormState, FormData>(action, {});
@@ -72,6 +72,11 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         <Label htmlFor="result_figure">Chiffre de résultat (facultatif)</Label>
         <Input {...field("result_figure")} defaultValue={values.result_figure} autoComplete="off" />
         {errorLine("result_figure")}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="link_url">Lien vers la page en ligne, en https:// (facultatif)</Label>
+        <Input {...field("link_url")} defaultValue={values.link_url} type="url" inputMode="url" autoComplete="off" />
+        {errorLine("link_url")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="stack">Stack, séparée par des virgules (facultatif)</Label>
