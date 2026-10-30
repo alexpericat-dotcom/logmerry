@@ -208,7 +208,8 @@ export const client = {
     from: (bucket: string) => ({
       remove: async (paths: string[]) => {
         fake.removed.push({ bucket, paths });
-        return { data: [], error: fake.storageError };
+        fake.ops.push({ table: `storage.${bucket}`, op: "delete", payload: paths, filters: [], returning: false });
+        return { data: fake.storageError ? null : paths.map((name) => ({ name })), error: fake.storageError };
       },
     }),
   },

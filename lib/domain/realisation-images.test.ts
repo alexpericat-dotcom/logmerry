@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { IMAGE_ALT_MAX, IMAGE_MAX_BYTES, imageFileProblem, imagePath, pathBelongsTo, publicImageUrl, validateAlt } from "./realisation-images.ts";
+import { IMAGE_ALT_MAX, IMAGE_MAX_BYTES, IMAGE_MAX_PER_REALISATION, IMAGE_TYPES, imageFileProblem, imagePath, pathBelongsTo, publicImageUrl, validateAlt } from "./realisation-images.ts";
 
 const OWNER = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const REAL = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -41,4 +42,24 @@ test("texte alternatif : obligatoire, nettoyé, borné", () => {
 
 test("adresse publique du bucket", () => {
   assert.equal(publicImageUrl("https://x.supabase.co/", "a/b/c.png"), "https://x.supabase.co/storage/v1/object/public/portfolio/a/b/c.png");
+});
+
+test("chaque type accepté a un chemin valide (png, jpg, webp) et un autre type ne s'y substitue pas", () => {
+  for (const [mime, ext] of Object.entries(IMAGE_TYPES)) {
+    const path = imagePath(OWNER, REAL, FILE, mime as keyof typeof IMAGE_TYPES);
+    assert.ok(path.endsWith(`.${ext}`) && pathBelongsTo(path, OWNER, REAL), mime);
+  }
+  assert.deepEqual(Object.values(IMAGE_TYPES), ["png", "jpg", "webp"]);
+});
+
+test("les constantes du domaine sont celles des migrations (bucket public, 3 Mo, trois types, six captures)", () => {
+  const bucket = readFileSync("supabase/migrations/20261030170000_realisation_images.sql", "utf8");
+  const limit = readFileSync("supabase/migrations/20261030180000_realisation_images_hardening.sql", "utf8");
+  assert.equal(IMAGE_MAX_BYTES, 3145728);
+  assert.match(bucket, new RegExp(`'portfolio', 'portfolio', true, ${IMAGE_MAX_BYTES}, array\\[${Object.keys(IMAGE_TYPES).map((t) => `'${t}'`).join(", ")}\\]`));
+  assert.match(limit, new RegExp(`>= ${IMAGE_MAX_PER_REALISATION} then`));
+});
+
+test("texte alternatif : caractères invisibles seuls refusés", () => {
+  for (const invisible of ["\u00AD", "\u200E", "\u2800", "\u3164"]) assert.ok(!validateAlt(invisible).ok, invisible.codePointAt(0)!.toString(16));
 });

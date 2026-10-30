@@ -113,11 +113,12 @@ export async function deleteRealisation(id: string): Promise<DeleteRealisationSt
     if (!isUuid(id)) return "not-found";
     // Les lignes de captures partent avec la réalisation (cascade) : les fichiers, non. On note leurs chemins d'abord.
     const images = await supabase.from("realisation_images").select("path").eq("realisation_id", id);
+    if (images.error) return "error"; // sans les chemins, la suppression laisserait des fichiers publics sans trace : on ne supprime pas
     const { data, error } = await supabase.from("realisations").delete().eq("id", id).select("id");
     if (error) return "error";
     if (!data?.length) return "not-found";
     const paths = (images.data ?? []).map((i) => i.path).filter((p): p is string => typeof p === "string");
-    // ponytail: suppression des fichiers au mieux ; un échec laisse un fichier orphelin (invisible : aucune ligne ne le référence), nettoyage manuel si besoin.
+    // ponytail: suppression des fichiers au mieux ; un échec laisse un fichier orphelin, public à son adresse mais référencé nulle part (nettoyage manuel, dette).
     if (paths.length > 0) await supabase.storage.from("portfolio").remove(paths);
     return "saved";
   });
@@ -146,7 +147,8 @@ export async function addRealisationImage(realisationId: string, path: string, a
     if (typeof owner !== "string" || !pathBelongsTo(path, owner, realisationId)) return "not-found";
     const { error } = await supabase.from("realisation_images").insert({ realisation_id: realisationId, path, alt: checked.value });
     if (!error) return "saved";
-    if (error.code === "23514") return "limit";
+    // 23514 vient aussi des contrôles du chemin et du texte alternatif : seul le déclencheur de plafond a ce message.
+    if (error.code === "23514" && error.message?.includes("Six captures")) return "limit";
     // 42501 : la réalisation n'est pas la mienne (politique d'insertion) ; 23503 : elle n'existe plus.
     return error.code === "42501" || error.code === "23503" ? "not-found" : "error";
   });
@@ -162,6 +164,7 @@ export async function addRealisationImage(realisationId: string, path: string, a
 
 export async function deleteRealisationImage(id: string): Promise<ImageState> {
   let realisationId = "";
+  let fileKept = false;
   const result = await withSession(async (supabase): Promise<WriteOutcome> => {
     if (!isUuid(id)) return "not-found";
     const found = await supabase.from("realisation_images").select("path, realisation_id").eq("id", id).maybeSingle();
@@ -171,8 +174,9 @@ export async function deleteRealisationImage(id: string): Promise<ImageState> {
     if (error) return "error";
     if (!data?.length) return "not-found";
     realisationId = found.data.realisation_id;
-    // ponytail: voir deleteRealisation (fichier orphelin possible, jamais visible).
-    await supabase.storage.from("portfolio").remove([found.data.path]);
+    // La capture n'est plus dans la réalisation dès que sa ligne est supprimée ; si le fichier reste dans le stockage (public), on le dit.
+    const removed = await supabase.storage.from("portfolio").remove([found.data.path]);
+    fileKept = !!removed.error || (removed.data?.length ?? 0) === 0;
     return "saved";
   });
 
@@ -181,5 +185,5 @@ export async function deleteRealisationImage(id: string): Promise<ImageState> {
   if (result.value === "not-found") return { message: "Cette capture n'existe plus." };
 
   revalidatePath(`/realisations/${realisationId}/modifier`);
-  return {};
+  return fileKept ? { message: "La capture est retirée de la réalisation, mais son fichier n'a pas pu être supprimé du stockage : il reste accessible à son adresse." } : {};
 }

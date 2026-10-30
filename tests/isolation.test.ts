@@ -2801,6 +2801,53 @@ describe("captures des réalisations (table realisation_images et bucket portfol
     assert.equal(seventh.error?.code, "23514");
   });
 
+  test("chemin d'une AUTRE de mes réalisations refusé (insertion), mise à jour impossible (plus de politique), .jpg et .webp acceptés", async () => {
+    const r2 = await a.client.from("realisations").insert({ title: `${PREFIX} seconde`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(r2.error);
+    const wrong = await a.client.from("realisation_images").insert({ realisation_id: real.id, path: `${a.userId}/${r2.data!.id}/${uuid()}.png`, alt: "x" });
+    assert.equal(wrong.error?.code, "42501", "chemin d'une autre réalisation");
+    for (const ext of ["jpg", "webp"]) {
+      const ok = await a.client.from("realisation_images").insert({ realisation_id: r2.data!.id, path: `${a.userId}/${r2.data!.id}/${uuid()}.${ext}`, alt: ext }).select("id").single();
+      assert.ifError(ok.error);
+      const upd = await a.client.from("realisation_images").update({ realisation_id: real.id }).eq("id", ok.data!.id).select("id");
+      assert.ok(upd.error || upd.data!.length === 0, `déplacer une capture refusé (${ext})`);
+    }
+  });
+
+  test("six captures : deux insertions simultanées sur la sixième place n'en donnent qu'une", async () => {
+    const r3 = await a.client.from("realisations").insert({ title: `${PREFIX} concurrence`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(r3.error);
+    for (let i = 0; i < 5; i++) assert.ifError((await a.client.from("realisation_images").insert({ realisation_id: r3.data!.id, path: `${a.userId}/${r3.data!.id}/${uuid()}.png`, alt: `n°${i}` })).error);
+    const results = await Promise.all([0, 1].map(() => a.client.from("realisation_images").insert({ realisation_id: r3.data!.id, path: `${a.userId}/${r3.data!.id}/${uuid()}.png`, alt: "course" })));
+    assert.equal(results.filter((r) => !r.error).length, 1, "une seule des deux passe");
+    assert.equal((await a.client.from("realisation_images").select("id").eq("realisation_id", r3.data!.id)).data!.length, 6);
+  });
+
+  test("stockage : dépôt hors du motif exact refusé (nom libre, réalisation inconnue ou d'un autre compte) ; supprimer : B n'y arrive pas, A si", async () => {
+    assert.ok((await put(a, `${a.userId}/${real.id}/libre.png`)).error, "nom libre");
+    assert.ok((await put(a, `${a.userId}/${uuid()}/${uuid()}.png`)).error, "réalisation inconnue");
+    const rb = await b.client.from("realisations").insert({ title: `${PREFIX} de B`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(rb.error);
+    assert.ok((await put(a, `${a.userId}/${rb.data!.id}/${uuid()}.png`)).error, "réalisation d'un autre compte");
+    const path = `${a.userId}/${real.id}/${uuid()}.png`;
+    assert.ifError((await put(a, path)).error);
+    const names = async () => ((await a.client.storage.from("portfolio").list(`${a.userId}/${real.id}`)).data ?? []).map((f) => f.name);
+    const file = path.split("/")[2];
+    await b.client.storage.from("portfolio").remove([path]);
+    assert.ok((await names()).includes(file), "le fichier de A est toujours là après la tentative de B");
+    assert.deepEqual((await b.client.storage.from("portfolio").list(`${a.userId}/${real.id}`)).data ?? [], [], "B ne liste pas le dossier de A");
+    await a.client.storage.from("portfolio").remove([path]);
+    assert.ok(!(await names()).includes(file), "A supprime son propre fichier");
+  });
+
+  test("le bucket a les réglages attendus (public, 3 Mo, trois types)", async () => {
+    const bucket = await a.client.storage.getBucket("portfolio");
+    assert.ifError(bucket.error);
+    assert.equal(bucket.data!.public, true);
+    assert.equal(bucket.data!.file_size_limit, 3145728);
+    assert.deepEqual([...(bucket.data!.allowed_mime_types ?? [])].sort(), ["image/jpeg", "image/png", "image/webp"]);
+  });
+
   test("sans connexion : aucun droit sur la table ; supprimer la réalisation supprime ses lignes de captures", async () => {
     assert.equal((await newClient().from("realisation_images").select("id")).error?.code, "42501");
     assert.ifError((await a.client.from("realisations").delete().eq("id", real.id)).error);

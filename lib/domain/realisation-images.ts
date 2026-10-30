@@ -27,7 +27,7 @@ export function imageFileProblem(file: { type: string; size: number }): string |
 }
 
 // Postgres refuse le caractère nul ; les espaces de largeur nulle ne se voient pas (même règle que les autres textes).
-const clean = (s: string) => s.replaceAll("\u0000", "").replace(/[​-‍⁠﻿]/g, "").replace(/\r\n?/g, "\n").trim();
+const clean = (s: string) => s.replaceAll("\u0000", "").replace(/[\u00AD\u200B-\u200F\u2060\u2800\u3164\uFEFF]/g, "").replace(/\r\n?/g, "\n").trim();
 
 /** Texte alternatif obligatoire : ce que montre l'image, en une phrase. */
 export function validateAlt(text: string): { ok: true; value: string } | { ok: false; error: string } {
