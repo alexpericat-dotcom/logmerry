@@ -35,14 +35,35 @@ test("mouvement : toute animation qui boucle ou se joue seule est dans « prefer
   assert.deepEqual(offenders.filter((v) => !v.startsWith("typed-blink")), []);
 });
 
-test("mouvement réduit : les copies du bandeau et le point du schéma sont masqués, le bandeau passe à la ligne", () => {
+test("mouvement réduit : les copies du bandeau sont masquées, le bandeau passe à la ligne", () => {
   const reduce = blocks(css, /@media \(prefers-reduced-motion: reduce\)\s*\{/).join("\n");
-  assert.match(reduce, /\.marquee-dup,\s*\.pipe-dot\s*\{[^}]*display:\s*none/);
+  assert.match(reduce, /\.marquee-dup\s*\{[^}]*display:\s*none/);
   assert.match(reduce, /\.marquee-track\s*\{[^}]*flex-wrap:\s*wrap/);
 });
 
-test("pause choisie par le visiteur : la règle `data-motion=paused` cible le bandeau, le point et les formes", () => {
-  assert.match(css, /html\[data-motion="paused"\] \.marquee-track[\s\S]*html\[data-motion="paused"\] \.pipe-dot[\s\S]*html\[data-motion="paused"\] \.float-slow\s*\{\s*animation-play-state:\s*paused/);
+test("pause choisie par le visiteur : TOUTE animation qui boucle a sa règle `data-motion=paused` (rien ne peut être oublié)", () => {
+  const looping = new Set<string>();
+  for (const m of css.matchAll(/([^{}]+)\{([^{}]*animation:[^;{}]*\binfinite\b[^;{}]*;[^{}]*)\}/g)) for (const sel of m[1].split(",")) looping.add(sel.trim().split(/\s+/).pop()!.replace(/:hover.*/, ""));
+  assert.ok(looping.size >= 3, "le test voit bien les boucles (bandeau, fond, formes)");
+  const pause = css.slice(css.indexOf('html[data-motion="paused"]'));
+  // `.typed-caret` : curseur clignotant du cockpit (ancien, hors de cette page, coupé par son propre bloc « mouvement réduit »).
+  for (const cls of [...looping].filter((c) => c !== ".typed-caret")) assert.ok(pause.includes(`html[data-motion="paused"] ${cls}`), `${cls} boucle sans pouvoir être mis en pause`);
+  assert.match(pause, /animation-play-state:\s*paused/);
+});
+
+test("hero : effets de pointeur et de fond seulement en `transform` et `opacity` (pas de largeur, hauteur, marge ni position animées)", () => {
+  for (const name of ["hero-in", "mesh-drift", "seg-draw", "parallax", "reveal-up", "float-slow"]) {
+    const body = blocks(css, new RegExp(`@keyframes ${name}\\s*\\{`))[0] ?? "";
+    assert.ok(body, `@keyframes ${name} introuvable`);
+    assert.ok(!/\b(width|height|top|left|right|bottom|margin|padding)\s*:/.test(body), `${name} anime une propriété de mise en page`);
+  }
+});
+
+test("hero : la lueur des boutons n'anime que l'opacité ; le grain et les nappes sont masqués à l'impression ; le texte en dégradé a un repli", () => {
+  assert.match(css, /\.cta-glow::after\s*\{[^}]*transition:\s*opacity/);
+  assert.match(blocks(css, /@media print\s*\{[^}]*\.mesh/)[0] ?? "", /\.mesh,\s*\.grain\s*\{\s*display:\s*none/);
+  assert.match(css, /\.text-brand-gradient\s*\{\s*color:\s*hsl\(var\(--primary\)\)/, "couleur pleine si le dégradé de texte n'est pas pris en charge");
+  assert.match(css, /@media \(forced-colors: active\)\s*\{\s*\.text-brand-gradient/);
 });
 
 test("impression : plus d'animation, bandeau sur toute sa largeur, décor masqué", () => {

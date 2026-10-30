@@ -272,29 +272,12 @@ html:has(#contenu) {
     transform: translateX(-50%);
   }
 }
-@keyframes pipe-run {
-  0% {
-    top: 1.7rem;
-    opacity: 0;
-  }
-  10%,
-  90% {
-    opacity: 1;
-  }
-  100% {
-    top: calc(100% - 2.4rem);
-    opacity: 0;
-  }
-}
 @media (prefers-reduced-motion: no-preference) {
   .marquee-track {
     animation: marquee 38s linear infinite;
   }
   .marquee:hover .marquee-track {
     animation-play-state: paused;
-  }
-  .pipe-dot {
-    animation: pipe-run 4.5s ease-in-out infinite;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -304,14 +287,12 @@ html:has(#contenu) {
     justify-content: center;
     padding-inline: 1rem;
   }
-  .marquee-dup,
-  .pipe-dot {
+  .marquee-dup {
     display: none;
   }
 }
 @media print {
-  .marquee-dup,
-  .pipe-dot {
+  .marquee-dup {
     display: none !important;
   }
   .marquee-track {
@@ -322,12 +303,122 @@ html:has(#contenu) {
 
 /* Pause des animations en boucle, choisie par le visiteur (bouton de l'en-tête de la page publique, WCAG 2.2.2). */
 html[data-motion="paused"] .marquee-track,
-html[data-motion="paused"] .pipe-dot,
+html[data-motion="paused"] .mesh,
 html[data-motion="paused"] .float-slow {
   animation-play-state: paused !important;
 }
 @media print {
   .marquee-track {
     width: auto !important;
+  }
+}
+
+/* Hero de la page publique : fond animé très lent, grain, verre, dégradé de texte, entrée en cascade, lueur des boutons. Tout le mouvement est dans
+   `prefers-reduced-motion: no-preference` (transform et opacity seulement) ; sans lui, le hero est complet et immobile. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes mesh-drift {
+  to {
+    transform: translate3d(7%, 5%, 0) scale(1.12);
+  }
+}
+@keyframes seg-draw {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes parallax {
+  to {
+    transform: translateY(var(--py, -40px));
+  }
+}
+/* Dégradé de texte aux couleurs de la marque (bleu → magenta → orange en clair, violet → rose → orange en sombre : jetons du thème, contrastes de grand texte tenus). */
+.text-brand-gradient {
+  color: hsl(var(--primary));
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .text-brand-gradient {
+    background-image: linear-gradient(95deg, hsl(var(--primary)) 0%, hsl(var(--chart-5)) 55%, hsl(var(--display)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+@media (forced-colors: active) {
+  .text-brand-gradient {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: CanvasText;
+  }
+}
+.glass {
+  background: hsl(var(--card) / 0.55);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--foreground) / 0.16);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: hsl(var(--card) / 0.92);
+  }
+}
+.mesh {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+}
+.grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");
+  opacity: 0.07;
+}
+/* Lueur au survol et au focus : un halo qui apparaît (opacité seulement) derrière le bouton. */
+.cta-glow {
+  position: relative;
+  isolation: isolate;
+}
+.cta-glow::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, hsl(var(--tone-orange) / 0.65), transparent);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+.cta-glow:hover::after,
+.cta-glow:focus-visible::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in 480ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation-delay: var(--d, 0ms);
+  }
+  .mesh {
+    animation: mesh-drift 38s ease-in-out infinite alternate;
+  }
+  .method-seg {
+    transform-origin: top;
+    animation: seg-draw 500ms ease-out backwards;
+    animation-delay: var(--d, 0ms);
+  }
+  @supports (animation-timeline: scroll()) {
+    .parallax {
+      animation: parallax linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+  }
+}
+@media print {
+  .mesh,
+  .grain {
+    display: none !important;
   }
 }

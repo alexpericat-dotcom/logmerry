@@ -20,7 +20,7 @@ import {
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SKILLS, STACK } from "../../lib/portfolio-content.ts";
+import { CONTACT_EMAIL, HERO, LEVER, MARQUEE_TOOLS, PROCESS, SERVICES, SKILLS, STACK } from "../../lib/portfolio-content.ts";
 
 afterEach(cleanup);
 
@@ -137,7 +137,7 @@ describe("sections de la page", () => {
     render(page());
     const h1 = screen.getAllByRole("heading", { level: 1 });
     assert.equal(h1.length, 1);
-    assert.equal(h1[0].textContent, HERO.title);
+    assert.equal(h1[0].textContent, `${HERO.titleLead} ${HERO.titleAccent}`);
     const mails = screen.getAllByRole("link", { name: /M'écrire|Parler de votre problème|alexandre/ }) as HTMLAnchorElement[];
     assert.ok(mails.length >= 4);
     for (const a of mails) assert.ok(a.href.startsWith(`mailto:${CONTACT_EMAIL}`), a.href);
@@ -191,6 +191,9 @@ describe("sections de la page", () => {
   test("outils : chaque outil est listé ; le bandeau défilant n'est lu qu'une fois par les lecteurs d'écran", () => {
     const { container } = render(page());
     for (const g of SKILLS.groups) for (const item of g.items) assert.ok(screen.getAllByText(item).length >= 1, item);
+    const chips = [...container.querySelectorAll(".marquee-track > ul:first-child > li")].map((li) => li.textContent?.trim());
+    assert.deepEqual(chips, MARQUEE_TOOLS, "le bandeau montre exactement la liste d'Alex, dans l'ordre");
+    assert.ok(!/[★☆⭐]/.test(container.textContent ?? ""), "aucune étoile ni notation");
     const rows = [...container.querySelectorAll(".marquee-track > ul")];
     assert.equal(rows.length, 4, "deux moitiés identiques de deux rangées : la boucle reste pleine sur un grand écran");
     assert.equal(rows[0].getAttribute("aria-hidden"), null);
@@ -201,9 +204,9 @@ describe("sections de la page", () => {
     }
   });
 
-  test("le décor flottant et le schéma animé sont cachés des lecteurs d'écran", () => {
+  test("le fond animé, les carrés, la carte de la méthode et le grain sont cachés des lecteurs d'écran", () => {
     const { container } = render(<PortfolioHero />);
-    const decor = container.querySelectorAll(".float-slow, .pipe-dot");
+    const decor = container.querySelectorAll(".float-slow, .mesh, .grain, .glass, .method-seg");
     assert.ok(decor.length > 0);
     for (const el of decor) assert.ok(el.closest("[aria-hidden=true]"), "élément décoratif accessible aux lecteurs d'écran");
   });
@@ -335,5 +338,103 @@ describe("pause des animations", () => {
     assert.equal(resume.getAttribute("aria-pressed"), "true");
     await userEvent.click(resume);
     assert.equal(document.documentElement.dataset.motion, undefined);
+  });
+});
+
+describe("hero", () => {
+  test("le sous-titre est posé directement sur le fond (aucun bloc sombre autour) avec un texte d'au plus 55 caractères de large", () => {
+    render(<PortfolioHero />);
+    const lead = screen.getByText(HERO.lead);
+    assert.ok(!/(^|\s)bg-/.test(lead.className), `fond autour du sous-titre : ${lead.className}`);
+    assert.ok(lead.className.includes("max-w-[55ch]"));
+  });
+
+  test("« Un problème de moins. » porte le dégradé de la marque ; le reste du titre est en texte plein", () => {
+    render(<PortfolioHero />);
+    const accent = screen.getByText(HERO.titleAccent);
+    assert.ok(accent.classList.contains("text-brand-gradient"));
+    assert.ok(!screen.getByRole("heading", { level: 1 }).classList.contains("text-brand-gradient"));
+  });
+
+  test("ligne de preuve : rien tant qu'elle est vide ; son texte quand Alex l'a écrite", () => {
+    const { container, rerender } = render(<PortfolioHero />);
+    const before = container.querySelectorAll("section p").length;
+    HERO.proof = "Parcours : exemple écrit par Alex";
+    try {
+      rerender(<PortfolioHero />);
+      assert.ok(screen.getByText("Parcours : exemple écrit par Alex"));
+      assert.equal(container.querySelectorAll("section p").length, before + 1);
+    } finally {
+      HERO.proof = null;
+    }
+  });
+
+  test("les deux boutons demandés, avec lueur et flèche qui glisse ; le principal est enveloppé de l'effet magnétique", () => {
+    const { container } = render(<PortfolioHero />);
+    const primary = screen.getByRole("link", { name: HERO.primary });
+    const secondary = screen.getByRole("link", { name: HERO.secondary });
+    for (const link of [primary, secondary]) {
+      assert.ok(link.classList.contains("cta-glow"));
+      assert.ok(link.querySelector("svg")?.getAttribute("class")?.includes("group-hover:translate-x-1"), "flèche qui glisse");
+    }
+    assert.equal(primary.getAttribute("href"), "#realisations");
+    assert.ok(primary.parentElement?.className.includes("transition-transform"), "enveloppe magnétique");
+    assert.ok(!secondary.parentElement?.className.includes("inline-block"), "l'effet magnétique ne vise que le bouton principal");
+    assert.ok(container.querySelectorAll(".hero-in").length >= 6, "entrée en cascade");
+  });
+
+  test("carte « Ma méthode » : les six étapes dans l'ordre, la première mise en avant avec « Le point de départ »", () => {
+    const { container } = render(<PortfolioHero />);
+    const steps = [...container.querySelectorAll(".glass ol > li")].map((li) => li.textContent);
+    assert.equal(steps.length, 6);
+    PROCESS.steps.forEach((s, i) => assert.ok(steps[i]?.includes(s.title), s.title));
+    assert.ok(steps[0]?.includes(HERO.methodStart));
+    assert.ok(!steps.slice(1).some((t) => t?.includes(HERO.methodStart)), "une seule étape est mise en avant");
+    assert.ok(container.querySelector(".glass")?.textContent?.includes(HERO.methodTitle));
+    assert.equal(container.querySelectorAll(".method-seg").length, 5, "un trait entre deux étapes");
+  });
+});
+
+describe("effets de pointeur (inclinaison, magnétisme)", () => {
+  const media = (matches: boolean) => {
+    (window as unknown as { matchMedia: unknown }).matchMedia = () => ({ matches });
+  };
+  afterEach(() => {
+    delete (window as unknown as { matchMedia?: unknown }).matchMedia;
+  });
+
+  test("souris et mouvement permis : la carte s'incline de 6° au plus et se remet à plat en sortant", () => {
+    media(true);
+    const { container } = render(<PortfolioHero />);
+    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
+    tilt.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100, x: 0, y: 0, toJSON() {} });
+    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
+    assert.match(tilt.style.transform, /perspective\(900px\) rotateX\(-?[0-6]\.\d+deg\) rotateY\(-?[0-8]\.\d+deg\)/);
+    fireEvent.pointerLeave(tilt);
+    assert.equal(tilt.style.transform, "");
+  });
+
+  test("tactile ou « réduire les animations » : aucune inclinaison, aucun magnétisme", () => {
+    media(false);
+    const { container } = render(<PortfolioHero />);
+    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
+    const magnet = screen.getByRole("link", { name: HERO.primary }).parentElement as HTMLElement;
+    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
+    fireEvent.pointerMove(magnet, { clientX: 5, clientY: 5 });
+    assert.equal(tilt.style.transform, "");
+    assert.equal(magnet.style.transform, "");
+  });
+
+  test("zone sans taille (masquée) : aucun calcul, jamais de NaN dans le style", () => {
+    media(true);
+    const { container } = render(<PortfolioHero />);
+    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
+    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
+    assert.equal(tilt.style.transform, "");
+  });
+
+  test("sans matchMedia (navigateur ancien) : pas d'erreur", () => {
+    const { container } = render(<PortfolioHero />);
+    assert.doesNotThrow(() => fireEvent.pointerMove(container.querySelector(".glass")?.parentElement as HTMLElement, { clientX: 5, clientY: 5 }));
   });
 });

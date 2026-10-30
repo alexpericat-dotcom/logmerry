@@ -6,7 +6,8 @@ import * as content from "./portfolio-content.ts";
 const year = String(new Date().getFullYear());
 const texts = JSON.stringify(content);
 // Seuls sont retirés : l'année du pied de page, l'adresse de contact et le nom d'outil « n8n ». Tout autre chiffre est une promesse.
-const promises = texts.replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "");
+// La seule exception chiffrée est la question du hero, écrite par Alex lui-même (« 2 heures par jour ») : à confirmer par lui avant mise en ligne.
+const promises = texts.replace("2 heures par jour", "").replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "");
 
 test("aucun chiffre, tarif ni mot de prix dans les textes publics (formules sans prix)", () => {
   assert.ok(!/\d/.test(promises), `chiffre dans : ${promises.match(/.{20}\d.{20}/)?.[0]}`);
@@ -59,7 +60,6 @@ test("contact : l'adresse donnée par Alex et un objet de courriel défini", () 
 test("la liste d'outils n'est jamais présentée comme une limite : choix de la stack technique sur mesure", () => {
   assert.match(content.SKILLS.title, /stack technique choisie sur mesure/);
   assert.match(content.SKILLS.note, /n'est pas une limite/);
-  assert.ok(content.SKILLS.more.trim());
   assert.match(content.PROCESS.steps[2].text, /stack technique sur mesure/);
   assert.match(content.STACK.intro, /stack technique choisie sur mesure/);
 });
@@ -70,4 +70,23 @@ test("« Sous le capot » : front, back, base de données, hébergement (VPS, au
   for (const word of ["VPS", "auto-hébergé", "PostgreSQL", "Supabase", "RGPD"]) assert.ok(all.includes(word), word);
   // Aucune promesse juridique : on parle de conception attentive, jamais de « conforme » ni de garantie.
   assert.ok(!/conforme|certifi|garanti|100 ?%/i.test(all));
+});
+
+test("hero : texte d'Alex, mot pour mot ; la ligne de preuve reste vide tant qu'il ne l'a pas écrite (rien d'inventé)", () => {
+  assert.equal(content.HERO.eyebrow, "Automatisation & IA pour les entreprises");
+  assert.equal(`${content.HERO.titleLead} ${content.HERO.titleAccent}`, "Pas un outil de plus. Un problème de moins.");
+  assert.equal(
+    content.HERO.lead,
+    "Pourquoi vos équipes perdent-elles 2 heures par jour sur une tâche manuelle ? Je pars de cette question, puis je construis l'automatisation qui y répond.",
+  );
+  assert.equal(content.HERO.primary, "Voir les réalisations");
+  assert.equal(content.HERO.secondary, "Parler de votre problème");
+  assert.equal(content.HERO.methodTitle, "Ma méthode");
+  assert.ok(content.HERO.proof === null || content.HERO.proof.trim().length > 0, "preuve : null ou un vrai texte, jamais un texte vide ni un placeholder visible");
+  assert.ok(!/\[|\]|à compléter/i.test(String(content.HERO.proof)), "aucun placeholder visible du public");
+});
+
+test("bandeau d'outils : EXACTEMENT la liste choisie par Alex, sans notation ni étoile ; aucun autre outil", () => {
+  assert.deepEqual(content.MARQUEE_TOOLS, ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"]);
+  assert.ok(!/[★☆⭐]|étoile|\/5\b|note :/i.test(texts));
 });

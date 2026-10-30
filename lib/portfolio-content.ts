@@ -14,11 +14,21 @@ export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver
 
 export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
-  title: "Trouver ce qu'il faut automatiser. Puis le construire.",
-  lead: "Une entreprise ne se demande pas comment utiliser un outil. Elle se demande pourquoi ses équipes passent des heures sur une tâche manuelle. Je pars de ce problème, puis je conçois l'automatisation, l'IA et les données qui le résolvent.",
+  /** Le H1 en deux temps : l'accroche, puis la fin qui porte le dégradé de la marque. */
+  titleLead: "Pas un outil de plus.",
+  titleAccent: "Un problème de moins.",
+  /** Texte d'Alex (30 octobre 2026), mot pour mot : la question et le chiffre sont les siens, à confirmer par lui avant mise en ligne. */
+  lead: "Pourquoi vos équipes perdent-elles 2 heures par jour sur une tâche manuelle ? Je pars de cette question, puis je construis l'automatisation qui y répond.",
+  /** Ligne de preuve sous les boutons : parcours, chiffre ou réalisation, À COMPLÉTER PAR ALEX (ne rien inventer). Tant que c'est `null`, rien ne s'affiche. */
+  proof: null as string | null,
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
+  methodTitle: "Ma méthode",
+  methodStart: "Le point de départ",
 };
+
+/** Le bandeau d'outils sous le hero : EXACTEMENT cette liste, choisie par Alex (30 octobre 2026), sans notation ni étoiles ; aucun autre outil n'y est ajouté. */
+export const MARQUEE_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"];
 
 /** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
 export const LEVER = {
@@ -67,7 +77,6 @@ export const SKILLS = {
   title: "Une stack technique choisie sur mesure",
   intro: "Je ne vous impose pas un outil : je choisis les briques adaptées à votre besoin, à votre taille et à vos contraintes. Voici celles que je mobilise le plus souvent.",
   note: "Cette liste n'est pas une limite : si un autre outil sert mieux votre projet, je le choisis, ou je m'adapte à celui que vous utilisez déjà.",
-  more: "Et selon votre besoin",
   groups: [
     { title: "Automatisation et intégration", items: ["n8n", "API", "Webhooks", "JSON", "OAuth"] },
     { title: "Données", items: ["Supabase", "PostgreSQL", "Notion", "Baserow", "Airtable"] },
