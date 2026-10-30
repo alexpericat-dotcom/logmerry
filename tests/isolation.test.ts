@@ -2638,6 +2638,37 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
     assert.equal((await a.client.from("realisations").select("id").eq("id", rA.id).maybeSingle()).data, null);
   });
 
+  test("publication : avec l'accord elle passe (date posée par la base, non forgeable) ; retirer l'accord la dépublie d'office ; sans accord elle reste refusée", async () => {
+    const r = await a.client.from("realisations").insert({ title: `${PREFIX} publiable`, description: "d", origin: "demo", client_consent: true, published: true, published_at: "2000-01-01T00:00:00Z" }).select("id, published, published_at").single();
+    assert.ifError(r.error);
+    assert.equal(r.data!.published, true);
+    assert.ok(Date.now() - new Date(r.data!.published_at!).getTime() < 60_000, "published_at posée par la base, pas par le client");
+    const before = r.data!.published_at;
+    const again = await a.client.from("realisations").update({ title: `${PREFIX} publiable bis`, published_at: "2001-01-01T00:00:00Z" }).eq("id", r.data!.id).select("published_at").single();
+    assert.equal(again.data!.published_at, before, "une modification ne déplace pas la date de publication");
+    const off = await a.client.from("realisations").update({ client_consent: false }).eq("id", r.data!.id).select("published, published_at").single();
+    assert.ifError(off.error);
+    assert.deepEqual(off.data, { published: false, published_at: null });
+    const noConsent = await a.client.from("realisations").update({ published: true }).eq("id", r.data!.id).select("id");
+    assert.equal(noConsent.error?.code, "23514", "publier sans accord refusé par la contrainte");
+    const filtered = await a.client.from("realisations").update({ published: true }).eq("id", r.data!.id).eq("client_consent", true).select("id");
+    assert.ifError(filtered.error);
+    assert.equal(filtered.data!.length, 0, "le filtre sur l'accord ne touche aucune ligne sans accord");
+    const insertNoConsent = await a.client.from("realisations").insert({ title: `${PREFIX} sans accord`, description: "d", origin: "demo", published: true });
+    assert.equal(insertNoConsent.error?.code, "23514");
+    const back = await a.client.from("realisations").update({ client_consent: true, published: true }).eq("id", r.data!.id).select("published").single();
+    assert.equal(back.data!.published, true);
+    const both = await a.client.from("realisations").update({ client_consent: false, published: true }).eq("id", r.data!.id).select("published").single();
+    assert.equal(both.data!.published, false, "accord retiré dans la même requête : dépubliée, pas de publication sans accord");
+    await a.client.from("realisations").update({ client_consent: true, published: true }).eq("id", r.data!.id);
+    const byB = await b.client.from("realisations").update({ published: false }).eq("id", r.data!.id).select("id");
+    assert.ok(byB.error || byB.data!.length === 0, "B ne dépublie pas la réalisation de A");
+    assert.equal((await a.client.from("realisations").select("published").eq("id", r.data!.id).single()).data!.published, true);
+    await a.client.from("realisations").update({ client_consent: false }).eq("id", r.data!.id);
+    const forged = await a.client.from("realisations").insert({ title: `${PREFIX} forgée`, description: "d", origin: "demo", published_at: "2000-01-01T00:00:00Z" }).select("published_at").single();
+    assert.equal(forged.data!.published_at, null, "non publiée : pas de date");
+  });
+
   test("sans connexion : aucun droit sur la table", async () => {
     const anon = newClient();
     assert.equal((await anon.from("realisations").select("id")).error?.code, "42501");

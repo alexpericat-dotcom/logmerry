@@ -23,7 +23,7 @@ type Props = {
   cancelHref?: string;
 };
 
-const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", stack: "" };
+const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "" };
 
 export function RealisationForm({ action, initial, submitLabel, cancelHref = "/realisations" }: Props) {
   const [state, formAction, pending] = useActionState<RealisationFormState, FormData>(action, {});
@@ -77,6 +77,22 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         <Label htmlFor="link_url">Lien vers la page en ligne, en https:// (facultatif)</Label>
         <Input {...field("link_url")} defaultValue={values.link_url} type="url" inputMode="url" autoComplete="off" />
         {errorLine("link_url")}
+      </div>
+      <div className="flex items-start gap-3">
+        <input
+          id="client_consent"
+          name="client_consent"
+          type="checkbox"
+          defaultChecked={values.client_consent === "on"}
+          aria-describedby="client_consent-help"
+          className="mt-1 size-5 shrink-0 accent-[hsl(var(--primary))] max-md:size-6"
+        />
+        <div className="grid gap-1">
+          <Label htmlFor="client_consent">Le client a donné son accord pour publier cette réalisation</Label>
+          <p id="client_consent-help" className="text-sm text-muted-foreground">
+            Sans accord, la réalisation ne peut pas être publiée. Décocher l&apos;accord d&apos;une réalisation publiée la retire du portfolio.
+          </p>
+        </div>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="stack">Stack, séparée par des virgules (facultatif)</Label>

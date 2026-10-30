@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REALISATION_CLIENT_NAME_MAX, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
+import { REALISATION_CLIENT_NAME_MAX, publicationBlock, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
 
-const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", stack: "" };
+const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "" };
 
 test("création minimale : champs facultatifs vides → null, pile vide", () => {
   assert.deepEqual(validateRealisationInput(base), {
     ok: true,
-    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, link_url: null, stack: [] },
+    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, link_url: null, client_consent: false, stack: [] },
   });
 });
 
@@ -87,4 +87,13 @@ test("lien : https complet accepté tel quel ; http, javascript:, data:, espaces
     assert.ok(!r.ok && r.errors.link_url, bad);
   }
   assert.ok(parsePublicLink(`https://exemple.fr/${"x".repeat(REALISATION_LINK_MAX - 19)}`), "300 caractères pile");
+});
+
+test("accord : coché = vrai, vide ou toute autre valeur = faux ; sans accord, la publication est bloquée avec un message", () => {
+  for (const [raw, expected] of [["on", true], ["", false], ["true", false], ["1", false]] as const) {
+    const r = validateRealisationInput({ ...base, client_consent: raw });
+    assert.ok(r.ok && r.value.client_consent === expected, raw);
+  }
+  assert.match(publicationBlock({ client_consent: false }) ?? "", /accord/);
+  assert.equal(publicationBlock({ client_consent: true }), null);
 });

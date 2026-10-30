@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { updateRealisation } from "@/app/(app)/realisations/actions";
+import { PublicationControl } from "@/components/publication-control";
 import { DeleteRealisation } from "@/components/delete-realisation";
 import { PageBanner } from "@/components/page-banner";
 import { RealisationForm } from "@/components/realisation-form";
@@ -20,7 +21,8 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
     <div className="flex flex-col gap-6">
       <PageBanner title="Modifier la réalisation" />
       <RealisationForm
-        key={r.updated_at}
+        // La clé suit le contenu enregistré, pas `updated_at` : publier ou retirer (qui le modifie) ne doit pas effacer une saisie en cours.
+        key={[r.title, r.description, r.origin, r.client_name, r.client_sector, r.result_figure, r.link_url, r.client_consent, r.stack.join("|")].join("\u0001")}
         action={updateRealisation.bind(null, id)}
         initial={{
           title: r.title,
@@ -30,10 +32,12 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
           client_sector: r.client_sector ?? "",
           result_figure: r.result_figure ?? "",
           link_url: r.link_url ?? "",
+          client_consent: r.client_consent ? "on" : "",
           stack: r.stack.join(", "),
         }}
         submitLabel="Enregistrer les modifications"
       />
+      <PublicationControl id={id} published={r.published} consent={r.client_consent} />
       <DeleteRealisation id={id} />
     </div>
   );
