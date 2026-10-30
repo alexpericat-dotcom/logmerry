@@ -46,7 +46,7 @@ describe("createRealisation / updateRealisation", () => {
   test("modification : tous les champs, nettoyés, dans la mise à jour (et rien d'autre)", async () => {
     fake.respond = () => ({ data: [{ id: ID }] });
     await assert.rejects(() => updateRealisation(ID, {}, form(FULL)), redirectsTo("/realisations"));
-    assert.deepEqual(fake.on("realisations", "update")[0].payload, FULL_PAYLOAD);
+    assert.deepEqual(fake.on("realisations", "update")[0].payload, { ...FULL_PAYLOAD, published: false });
   });
 
   test("champs forgés (publié, accord, propriétaire) ignorés", async () => {
@@ -75,10 +75,10 @@ describe("createRealisation / updateRealisation", () => {
     const [op] = fake.on("realisations", "update");
     assert.equal(filterValue(op, "eq", "id"), ID);
     assert.equal(op.returning, true);
-    assert.equal("published" in (op.payload as object), false, "avec l'accord coché, la publication n'est pas touchée");
+    assert.equal((op.payload as { published: boolean }).published, false, "toute modification remet la réalisation « non publiée », accord coché ou non");
   });
 
-  test("modification sans accord coché : dépubliée d'office, tous les champs écrits", async () => {
+  test("modification sans accord coché : dépubliée, tous les champs écrits", async () => {
     fake.respond = () => ({ data: [{ id: ID }] });
     await assert.rejects(() => updateRealisation(ID, {}, form(FULL_WITHOUT_CONSENT)), redirectsTo("/realisations"));
     assert.deepEqual(fake.on("realisations", "update")[0].payload, { ...FULL_PAYLOAD, client_consent: false, published: false });

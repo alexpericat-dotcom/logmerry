@@ -69,9 +69,9 @@ export async function createRealisation(_prev: RealisationFormState, formData: F
 export async function updateRealisation(id: string, _prev: RealisationFormState, formData: FormData): Promise<RealisationFormState> {
   return save(readValues(formData), async (supabase, value) => {
     if (!isUuid(id)) return "not-found";
-    // Case d'accord décochée : « dépubliée » est écrit explicitement (la base le ferait aussi, et refuse de toute façon published sans accord) ;
-    // accord coché : `published` n'est pas dans la requête, la publication ne bouge pas.
-    const patch = value.client_consent ? value : { ...value, published: false };
+    // Décision d'Alex (30 octobre 2026) : toute modification d'une réalisation la remet « non publiée » ; il la republie ensuite, en connaissance de cause.
+    // (Sans accord coché, la base dépublie aussi, et refuse de toute façon published sans accord.)
+    const patch = { ...value, published: false };
     const { data, error } = await supabase.from("realisations").update(patch).eq("id", id).select("id");
     if (error) return "error";
     return data?.length ? "saved" : "not-found";

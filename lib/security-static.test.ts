@@ -85,8 +85,18 @@ describe("migrations : sécurité par ligne", () => {
     assert.deepEqual(statements.filter((st) => !/auth\.uid\(\)/i.test(st)).map((st) => st.slice(0, 70)), []);
   });
 
-  test("aucun droit n'est donné à `anon`", () => {
-    assert.deepEqual([...sql.matchAll(/\bgrant\b[^;]*\bto\b[^;]*\banon\b/gi)].map((m) => m[0].slice(0, 80)), []);
+  test("le seul droit donné à `anon` est la lecture des deux vues publiques du portfolio (AD-10), jamais une table", () => {
+    const grants = [...sql.matchAll(/\bgrant\b[^;]*\bto\b[^;]*\banon\b/gi)].map((m) => m[0].replace(/\s+/g, " ").trim());
+    assert.deepEqual(grants, ["grant select on public.public_realisations, public.public_realisation_images to anon"]);
+  });
+
+  test("les vues publiques du portfolio ne filtrent que les réalisations publiées avec accord et n'exposent aucun identifiant privé", () => {
+    const views = [...sql.matchAll(/create view public\.(public_\w+)\s+as([^;]*);/gi)];
+    assert.deepEqual(views.map((v) => v[1]).sort(), ["public_realisation_images", "public_realisations"]);
+    for (const [, name, body] of views) {
+      assert.match(body, /where r\.published and r\.client_consent/i, name);
+      assert.ok(!/owner_id|client_id|mission_id|client_consent\s+as|\*/i.test(body.replace(/where r\.published and r\.client_consent/i, "")), `${name} expose une colonne privée`);
+    }
   });
 
   test("toute fonction SECURITY DEFINER a un `search_path` fixé", () => {
