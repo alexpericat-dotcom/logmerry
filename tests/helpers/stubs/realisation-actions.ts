@@ -9,3 +9,5 @@ export const setRealisationPublication = async (id: string, publish: boolean) =>
 export const createRealisation = async () => ({});
 export const updateRealisation = async () => ({});
 export const deleteRealisation = async () => ({});
+export const addRealisationImage = async () => ({});
+export const deleteRealisationImage = async () => ({});

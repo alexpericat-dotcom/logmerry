@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import { createRealisation, deleteRealisation, setRealisationPublication, updateRealisation } from "../../app/(app)/realisations/actions.ts";
+import { addRealisationImage, createRealisation, deleteRealisation, deleteRealisationImage, setRealisationPublication, updateRealisation } from "../../app/(app)/realisations/actions.ts";
 import { fake, filterValue, form, redirectsTo, routes, toLogin, withHarness } from "../helpers/harness.ts";
 
 const ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -154,5 +154,72 @@ describe("deleteRealisation", () => {
     assert.match((await deleteRealisation("x")).message ?? "", /n'existe plus/);
     fake.respond = () => ({ error: { code: "XX000" } });
     assert.match((await deleteRealisation(ID)).message ?? "", /Suppression impossible/);
+  });
+});
+
+describe("captures : addRealisationImage / deleteRealisationImage", () => {
+  const OWNER = "00000000-0000-4000-8000-000000000001"; // le propriétaire de la session factice
+  const FILE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const PATH = `${OWNER}/${ID}/${FILE}.png`;
+
+  test("ajout : chemin et texte alternatif nettoyé dans l'insertion, rien d'autre, page de modification revalidée", async () => {
+    assert.deepEqual(await addRealisationImage(ID, PATH, "  Tableau de bord  "), {});
+    const [op] = fake.on("realisation_images", "insert");
+    assert.deepEqual(op.payload, { realisation_id: ID, path: PATH, alt: "Tableau de bord" });
+    assert.deepEqual(fake.revalidated, [`/realisations/${ID}/modifier`]);
+  });
+
+  test("texte alternatif vide : refusé sans requête (obligatoire)", async () => {
+    for (const alt of ["", "   ", "\u200B"]) assert.match((await addRealisationImage(ID, PATH, alt)).message ?? "", /texte alternatif/i, JSON.stringify(alt));
+    assert.equal(fake.ops.length, 0);
+  });
+
+  test("chemin hors de mon dossier, d'une autre réalisation ou mal formé : refusé sans requête", async () => {
+    const other = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    for (const path of [`${other}/${ID}/${FILE}.png`, `${OWNER}/${other}/${FILE}.png`, `${OWNER}/${ID}/${FILE}.svg`, `${OWNER}/${ID}/../x.png`, "x"]) {
+      assert.match((await addRealisationImage(ID, path, "ok")).message ?? "", /n'existe plus/, path);
+    }
+    assert.match((await addRealisationImage("x", PATH, "ok")).message ?? "", /n'existe plus/);
+    assert.equal(fake.ops.length, 0);
+  });
+
+  test("septième capture (la base refuse, 23514) : message dédié ; réalisation d'un autre compte (42501) : « n'existe plus » ; panne : réessayer", async () => {
+    fake.respond = () => ({ error: { code: "23514" } });
+    assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /Six captures au plus/);
+    fake.respond = () => ({ error: { code: "42501" } });
+    assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /n'existe plus/);
+    fake.respond = () => ({ error: { code: "XX000" } });
+    assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /Enregistrement impossible/);
+    assert.deepEqual(fake.revalidated, []);
+  });
+
+  test("sans session : redirection vers la connexion", async () => {
+    fake.claims = null;
+    await assert.rejects(() => addRealisationImage(ID, PATH, "ok"), toLogin);
+  });
+
+  test("suppression d'une capture : ligne supprimée puis fichier retiré du stockage", async () => {
+    routes(["realisation_images:select", { data: { path: PATH, realisation_id: ID } }], ["realisation_images:delete", { data: [{ id: ID }] }]);
+    assert.deepEqual(await deleteRealisationImage(ID), {});
+    assert.deepEqual(fake.removed, [{ bucket: "portfolio", paths: [PATH] }]);
+    assert.deepEqual(fake.revalidated, [`/realisations/${ID}/modifier`]);
+  });
+
+  test("suppression : capture absente ou identifiant invalide = « n'existe plus », rien retiré", async () => {
+    assert.match((await deleteRealisationImage(ID)).message ?? "", /n'existe plus/);
+    assert.match((await deleteRealisationImage("x")).message ?? "", /n'existe plus/);
+    assert.deepEqual(fake.removed, []);
+  });
+
+  test("suppression d'une réalisation : les fichiers de ses captures sont retirés du stockage après la suppression de la ligne", async () => {
+    routes(["realisation_images:select", { data: [{ path: PATH }] }], ["realisations:delete", { data: [{ id: ID }] }]);
+    await assert.rejects(() => deleteRealisation(ID), redirectsTo("/realisations"));
+    assert.deepEqual(fake.removed, [{ bucket: "portfolio", paths: [PATH] }]);
+  });
+
+  test("suppression d'une réalisation introuvable : aucun fichier retiré", async () => {
+    routes(["realisation_images:select", { data: [{ path: PATH }] }]);
+    assert.match((await deleteRealisation(ID)).message ?? "", /n'existe plus/);
+    assert.deepEqual(fake.removed, []);
   });
 });
