@@ -3,12 +3,23 @@ import "../helpers/dom.ts";
 import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-import { PortfolioContact, PortfolioFooter, PortfolioHeader, PortfolioHero, PortfolioProcess, PortfolioServices } from "../../components/portfolio-sections.tsx";
+import {
+  PortfolioContact,
+  PortfolioFooter,
+  PortfolioHeader,
+  PortfolioHero,
+  PortfolioLever,
+  PortfolioMarquee,
+  PortfolioProcess,
+  PortfolioServices,
+  PortfolioSkills,
+} from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HERO, PROCESS, SERVICES } from "../../lib/portfolio-content.ts";
+import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SKILLS } from "../../lib/portfolio-content.ts";
 
 afterEach(cleanup);
 
@@ -34,7 +45,7 @@ describe("réalisations de la page publique", () => {
     assert.ok(screen.getByText("Formation"));
     assert.ok(screen.getByText("Atelier Nova (marque fictive)"));
     assert.ok(screen.getByText("IA générative"));
-    const link = screen.getByRole("link", { name: /Voir la page en ligne/ }) as HTMLAnchorElement;
+    const link = screen.getByRole("link", { name: /Ouvrir le site/ }) as HTMLAnchorElement;
     assert.equal(link.href, "https://ateliernovav3.lovable.app/");
     assert.equal(link.target, "_blank");
     assert.match(link.rel, /noopener/);
@@ -71,7 +82,7 @@ describe("réalisations de la page publique", () => {
 
   test("lien avec identifiants dans l'adresse : jamais rendu", () => {
     render(showcase([item({ link_url: "https://user:mdp@exemple.fr/" })]));
-    assert.equal(screen.queryByRole("link", { name: /Voir la page en ligne/ }), null);
+    assert.equal(screen.queryByRole("link", { name: /Ouvrir le site/ }), null);
   });
 
   test("textes très longs (mot sans espace) : cassés plutôt que de déborder", () => {
@@ -84,7 +95,7 @@ describe("réalisations de la page publique", () => {
   test("un lien qui n'est pas en https n'est jamais rendu (javascript:, http:)", () => {
     for (const link_url of ["javascript:alert(1)", "http://exemple.fr", null]) {
       render(showcase([item({ link_url })]));
-      assert.equal(screen.queryByRole("link", { name: /Voir la page en ligne/ }), null, String(link_url));
+      assert.equal(screen.queryByRole("link", { name: /Ouvrir le site/ }), null, String(link_url));
       cleanup();
     }
   });
@@ -106,41 +117,103 @@ describe("réalisations de la page publique", () => {
 });
 
 describe("sections de la page", () => {
+  const page = () => (
+    <>
+      <PortfolioHeader />
+      <PortfolioHero />
+      <PortfolioMarquee />
+      <PortfolioLever />
+      <PortfolioProcess />
+      <PortfolioServices />
+      <PortfolioSkills />
+      <PortfolioContact />
+      <PortfolioFooter />
+    </>
+  );
+
   test("un seul titre de niveau 1 (l'accroche) ; contact en mailto avec l'adresse donnée", () => {
-    render(
-      <>
-        <PortfolioHeader />
-        <PortfolioHero />
-        <PortfolioServices />
-        <PortfolioProcess />
-        <PortfolioContact />
-        <PortfolioFooter />
-      </>,
-    );
+    render(page());
     const h1 = screen.getAllByRole("heading", { level: 1 });
     assert.equal(h1.length, 1);
     assert.equal(h1[0].textContent, HERO.title);
-    const mails = screen.getAllByRole("link", { name: /M'écrire|alexandre/ }) as HTMLAnchorElement[];
-    assert.ok(mails.length >= 3);
+    const mails = screen.getAllByRole("link", { name: /M'écrire|Parler de votre problème|alexandre/ }) as HTMLAnchorElement[];
+    assert.ok(mails.length >= 4);
     for (const a of mails) assert.ok(a.href.startsWith(`mailto:${CONTACT_EMAIL}`), a.href);
   });
 
-  test("chaque formule est une carte titrée dans la section « Offre » ; les cinq étapes forment une liste ordonnée", () => {
-    const { container } = render(
-      <>
-        <PortfolioServices />
-        <PortfolioProcess />
-      </>,
-    );
+  test("les six étapes forment une liste ordonnée titrée ; les cinq formules sont des cartes titrées", () => {
+    const { container } = render(page());
+    const steps = container.querySelectorAll("#methode ol > li");
+    assert.equal(steps.length, PROCESS.steps.length);
+    for (const s of PROCESS.steps) assert.ok(within(container.querySelector("#methode") as HTMLElement).getByRole("heading", { level: 3, name: s.title }), s.title);
     const services = within(container.querySelector("#services") as HTMLElement);
     for (const s of SERVICES.items) assert.ok(services.getByRole("heading", { level: 3, name: s.title }), s.title);
-    assert.equal(container.querySelectorAll("#methode ol > li").length, PROCESS.steps.length);
   });
 
-  test("le décor flottant est caché des lecteurs d'écran", () => {
+  test("le positionnement : la phrase barrée et la phrase mise en avant sont toutes deux présentes", () => {
+    render(page());
+    assert.ok(screen.getByText(LEVER.before));
+    assert.ok(screen.getByText(LEVER.after));
+  });
+
+  test("outils : chaque outil est listé ; le bandeau défilant n'est lu qu'une fois par les lecteurs d'écran", () => {
+    const { container } = render(page());
+    for (const g of SKILLS.groups) for (const item of g.items) assert.ok(screen.getAllByText(item).length >= 1, item);
+    const rows = container.querySelectorAll(".marquee-track > ul");
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0].getAttribute("aria-hidden"), null);
+    assert.equal(rows[1].getAttribute("aria-hidden"), "true");
+  });
+
+  test("le décor flottant et le schéma animé sont cachés des lecteurs d'écran", () => {
     const { container } = render(<PortfolioHero />);
-    const floating = container.querySelectorAll(".float-slow");
-    assert.ok(floating.length > 0);
-    for (const el of floating) assert.ok(el.closest("[aria-hidden=true]"), "formule décorative accessible aux lecteurs d'écran");
+    const decor = container.querySelectorAll(".float-slow, .pipe-dot");
+    assert.ok(decor.length > 0);
+    for (const el of decor) assert.ok(el.closest("[aria-hidden=true]"), "élément décoratif accessible aux lecteurs d'écran");
+  });
+});
+
+describe("aperçu en direct d'une réalisation", () => {
+  const withLink = (images: PublicImage[] = []) => showcase([item({ link_url: "https://ateliernovav3.lovable.app/" })], images);
+  const enterScreen = () =>
+    act(() => {
+      for (const cb of (globalThis as { __intersections?: ((e: { isIntersecting: boolean }[]) => void)[] }).__intersections ?? []) cb([{ isIntersecting: true }]);
+    });
+
+  afterEach(() => {
+    delete (globalThis as { __intersections?: unknown }).__intersections;
+  });
+
+  test("sans capture : le site se charge dans un cadre isolé quand la carte approche de l'écran, pas avant", () => {
+    const { container } = render(withLink());
+    assert.equal(container.querySelectorAll("iframe").length, 0, "rien n'est chargé avant d'être près de l'écran");
+    enterScreen();
+    const frame = container.querySelector("iframe") as HTMLIFrameElement;
+    assert.equal(frame.src, "https://ateliernovav3.lovable.app/");
+    assert.match(frame.title, /Aperçu en direct/);
+    assert.equal(frame.getAttribute("referrerpolicy"), "no-referrer");
+    const sandbox = frame.getAttribute("sandbox") ?? "";
+    assert.ok(sandbox.includes("allow-scripts") && !sandbox.includes("allow-top-navigation"), sandbox);
+  });
+
+  test("avec capture : la capture sert d'affiche et le site ne se charge qu'au clic sur « Voir en direct »", async () => {
+    const { container } = render(withLink([img("1", "Page d'accueil")]));
+    enterScreen();
+    assert.equal(container.querySelectorAll("iframe").length, 0, "pas de chargement automatique quand une capture existe");
+    assert.ok(screen.getByAltText("Page d'accueil"));
+    await userEvent.click(screen.getByRole("button", { name: /Voir en direct/ }));
+    assert.equal((container.querySelector("iframe") as HTMLIFrameElement).src, "https://ateliernovav3.lovable.app/");
+  });
+
+  test("sans lien en https : aucun cadre, aucun bouton", () => {
+    const { container } = render(showcase([item({ link_url: "http://exemple.fr" })]));
+    enterScreen();
+    assert.equal(container.querySelectorAll("iframe").length, 0);
+    assert.equal(screen.queryByRole("button", { name: /Voir en direct/ }), null);
+  });
+
+  test("l'adresse du site est affichée dans la barre du cadre de navigateur", () => {
+    render(withLink());
+    assert.ok(screen.getByText("ateliernovav3.lovable.app"));
   });
 });

@@ -265,3 +265,57 @@ html:has(#contenu) {
     min-height: 0 !important;
   }
 }
+
+/* Bandeau d'outils et schéma du hero (page publique) : mouvement seulement si l'utilisateur ne demande pas de le réduire ; sinon le bandeau passe à la ligne. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes pipe-run {
+  0% {
+    top: 1.7rem;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 2.4rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .marquee-track {
+    animation: marquee 38s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  .pipe-dot {
+    animation: pipe-run 4.5s ease-in-out infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-inline: 1rem;
+  }
+  .marquee-dup,
+  .pipe-dot {
+    display: none;
+  }
+}
+@media print {
+  .marquee-dup,
+  .pipe-dot {
+    display: none !important;
+  }
+  .marquee-track {
+    animation: none !important;
+    flex-wrap: wrap;
+  }
+}

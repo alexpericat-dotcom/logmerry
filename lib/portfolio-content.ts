@@ -1,69 +1,93 @@
 /**
- * Textes de la page publique `/portfolio` (story 6.4). BROUILLON rédigé par l'assistant à partir de la description de l'activité (CLAUDE.md) :
- * à relire et valider par Alex avant toute mise en ligne. Règles : vouvoiement ; aucun tarif, délai, chiffre ni garantie ; rien qui ne soit décrit
- * dans le projet ; une donnée inconnue (ville, photo) n'apparaît pas.
+ * Textes de la page publique `/portfolio` (story 6.4). BROUILLON rédigé par l'assistant à partir du positionnement donné par Alex le 30 octobre 2026
+ * (« comprendre l'entreprise pour savoir quoi automatiser », chaîne problème métier → maintenance, compétences) : à relire et valider par Alex avant toute mise en
+ * ligne, en particulier la liste des outils (`SKILLS`), qui ne doit annoncer que ce qu'il maîtrise. Règles : vouvoiement ; aucun tarif, délai, chiffre ni garantie ;
+ * une donnée inconnue (ville, photo) n'apparaît pas.
  */
 export const BRAND = "LogMerry";
 /** Adresse publique du lien « m'écrire » (donnée par Alex le 30 octobre 2026). */
 export const CONTACT_EMAIL = "alexandre.pericat@gmail.com";
 export const CONTACT_SUBJECT = "Prise de contact via votre portfolio";
 
-export const PAGE_TITLE = `${BRAND} · Conseil No-Code & IA`;
-export const PAGE_DESCRIPTION = "Applications sur mesure et assistants IA qui citent leurs sources, conçus avec des outils No-Code. Découvrez les réalisations et la façon de travailler.";
+export const PAGE_TITLE = `${BRAND} · Automatisation & IA pour les entreprises`;
+export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver ce qu'il faut automatiser, puis je construis l'automatisation, l'IA et les données qui le résolvent. Réalisations et méthode.";
 
 export const HERO = {
-  eyebrow: "Conseil No-Code & IA",
-  title: "Des outils sur mesure pour piloter votre activité.",
-  lead: "Je conçois des applications web et des assistants IA qui s'appuient sur vos propres documents, avec des outils No-Code, par petites étapes que vous validez.",
+  eyebrow: "Automatisation & IA pour les entreprises",
+  title: "Trouver ce qu'il faut automatiser. Puis le construire.",
+  lead: "Une entreprise ne se demande pas comment utiliser un outil. Elle se demande pourquoi ses équipes passent des heures sur une tâche manuelle. Je pars de ce problème, puis je conçois l'automatisation, l'IA et les données qui le résolvent.",
   primary: "Voir les réalisations",
-  secondary: "M'écrire",
+  secondary: "Parler de votre problème",
 };
 
-export const SERVICES = {
-  title: "Ce que je peux faire pour vous",
-  intro: "Quatre façons de travailler ensemble, seules ou combinées.",
-  items: [
-    { title: "Cadrage", text: "Un atelier pour transformer votre besoin en parcours clairs : objectifs, utilisateurs, priorités, puis un backlog de user stories prêt à être réalisé." },
-    { title: "Application sur mesure", text: "Une application web pensée pour votre métier : comptes sécurisés, tableau de bord, base de données, recherche. Livrée étape par étape." },
-    { title: "Assistant IA sur vos documents", text: "Un assistant qui répond à partir de vos notes, procédures et livrables, cite ses sources, et dit clairement quand il ne trouve pas." },
-    { title: "Accompagnement", text: "Documentation, prise en main et suivi après la livraison, pour que l'outil reste le vôtre." },
+/** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
+export const LEVER = {
+  eyebrow: "Mon parti pris",
+  title: "L'outil vient après le problème.",
+  before: "« Je suis très bon sur tel outil. »",
+  after: "« Je comprends suffisamment le fonctionnement d'une entreprise pour savoir quoi automatiser. »",
+  note: "C'est ce qui change la qualité de ce que je construis : avant d'écrire la moindre automatisation, je cherche la tâche qui coûte le plus, et pourquoi.",
+  points: [
+    { title: "Le métier d'abord", text: "Je cherche à comprendre qui fait quoi, avec quelles données, et où ça bloque, avant de choisir un outil." },
+    { title: "Une IA qui rend des comptes", text: "Mes assistants citent les passages dont ils s'inspirent, et ne donnent ni conseil fiscal ni conseil juridique." },
+    { title: "Vos données restent les vôtres", text: "Chaque compte ne voit que ses propres données, et l'hébergement est en Europe." },
   ],
 };
 
 export const PROCESS = {
-  title: "Comment ça se passe",
-  intro: "Un déroulé simple, où vous gardez la main à chaque étape.",
+  eyebrow: "Méthode",
+  title: "Du problème métier à la maintenance",
+  intro: "Six étapes, et vous gardez la main sur chacune.",
   steps: [
-    { title: "Échange", text: "Un premier rendez-vous pour comprendre votre activité et ce que vous voulez améliorer." },
-    { title: "Cadrage", text: "Nous fixons ensemble les objectifs, les utilisateurs et les priorités. Vous recevez un backlog lisible." },
-    { title: "Proposition", text: "Périmètre, étapes et conditions écrits clairement avant de commencer." },
-    { title: "Réalisation par étapes", text: "De courtes séquences de travail, avec une démonstration à chaque étape : vous validez avant que nous avancions." },
-    { title: "Livraison et suite", text: "Mise en ligne, documentation et accompagnement pour que vous soyez autonome." },
+    { title: "Problème métier", text: "Nous partons de ce qui coûte du temps ou de l'énergie à vos équipes, pas d'un outil." },
+    { title: "Analyse du processus", text: "Qui fait quoi, avec quelles données, où ça bloque : nous le dessinons ensemble." },
+    { title: "Architecture", text: "Je choisis les briques adaptées à votre taille et à vos contraintes : sécurité, RGPD, évolution." },
+    { title: "IA, automatisation et données", text: "Automatisations, connexions entre vos outils, base de données, assistant IA : construits par étapes courtes, avec une démonstration à chaque étape." },
+    { title: "Déploiement", text: "Mise en ligne, prise en main et documentation, pour que vos équipes soient autonomes." },
+    { title: "Maintenance", text: "Suivi, corrections et évolutions, pour que l'outil continue de servir quand votre activité change." },
   ],
 };
 
-export const BENEFITS = {
-  title: "Ce que vous y gagnez",
+export const SERVICES = {
+  eyebrow: "Offre",
+  title: "Ce que je peux faire pour vous",
+  intro: "Cinq façons de travailler ensemble, seules ou combinées.",
   items: [
-    { title: "Du concret, tôt", text: "Vous voyez l'outil prendre forme dès les premières étapes, pas seulement à la fin." },
-    { title: "Des données qui restent les vôtres", text: "Chaque compte ne voit que ses propres données, et l'hébergement est en Europe." },
-    { title: "Une IA qui rend des comptes", text: "L'assistant cite les passages dont il s'inspire, et ne donne ni conseil fiscal ni conseil juridique." },
-    { title: "Un interlocuteur unique", text: "Vous parlez à la personne qui conçoit et construit votre outil." },
+    { title: "Audit et cadrage", text: "Un atelier pour repérer ce qui mérite d'être automatisé, et transformer votre besoin en parcours clairs et en priorités." },
+    { title: "Automatisation", text: "Des enchaînements fiables entre vos outils, pour supprimer les tâches répétitives et les ressaisies." },
+    { title: "Application et données sur mesure", text: "Une application web pensée pour votre métier : comptes sécurisés, tableau de bord, base de données, recherche." },
+    { title: "Assistant IA sur vos documents", text: "Un assistant qui répond à partir de vos notes, procédures et livrables, cite ses sources, et dit clairement quand il ne trouve pas." },
+    { title: "Maintenance et évolution", text: "Suivi, corrections et nouvelles fonctions, pour que l'outil reste le vôtre dans la durée." },
+  ],
+};
+
+/** Outils et domaines mobilisés. À valider par Alex : ne garder que ce qu'il peut défendre devant un client. */
+export const SKILLS = {
+  eyebrow: "Boîte à outils",
+  title: "Les outils sont un moyen",
+  intro: "Voici ceux que je mobilise, une fois le problème posé.",
+  groups: [
+    { title: "Automatisation et intégration", items: ["n8n", "API", "Webhooks", "JSON", "OAuth"] },
+    { title: "Données", items: ["Supabase", "PostgreSQL", "Baserow", "Airtable"] },
+    { title: "Intelligence artificielle", items: ["API Claude, OpenAI, Gemini", "RAG", "Agents IA"] },
+    { title: "Cadrage et fiabilité", items: ["Architecture", "Sécurité", "RGPD", "Gestion de projet", "Compréhension métier"] },
   ],
 };
 
 export const SHOWCASE = {
+  eyebrow: "Travaux",
   title: "Réalisations",
-  intro: "Une sélection de projets, publiés avec l'accord des personnes concernées. Chacun indique son origine.",
+  intro: "Une sélection de projets, publiés avec l'accord des personnes concernées. Chacun indique son origine, et se visite en direct quand il est en ligne.",
   empty: "Les premières réalisations arrivent bientôt.",
   unavailable: "Les réalisations ne sont pas disponibles pour le moment. Revenez dans quelques instants.",
-  linkLabel: "Voir la page en ligne",
+  linkLabel: "Ouvrir le site",
+  liveLabel: "Voir en direct",
 };
 
 export const CONTACT = {
-  title: "Parlons de votre projet",
-  text: "Décrivez-moi votre activité et ce que vous aimeriez améliorer. Je reviens vers vous avec des questions et des pistes.",
+  title: "Parlons de votre problème",
+  text: "Décrivez-moi ce qui prend du temps à vos équipes. Je reviens vers vous avec des questions et des pistes.",
   button: "M'écrire",
 };
 
-export const FOOTER = `© ${new Date().getFullYear()} ${BRAND}. Conseil No-Code & IA.`;
+export const FOOTER = `© ${new Date().getFullYear()} ${BRAND}. Automatisation & IA.`;

@@ -1,19 +1,21 @@
 import { ExternalLink } from "lucide-react";
 
+import { LivePreview } from "@/components/live-preview";
 import { PortfolioImage } from "@/components/portfolio-image";
 import { Badge } from "@/components/ui/badge";
 import { safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
 import { publicImageUrl } from "@/lib/domain/realisation-images";
 import { SHOWCASE } from "@/lib/portfolio-content";
 
-/** Cadre de navigateur autour d'une capture : barre à trois points, image au format 16/9. */
-function BrowserFrame({ children }: { children: React.ReactNode }) {
+/** Cadre de navigateur autour d'une capture ou d'un aperçu en direct : barre à trois points et adresse, contenu au format 16/9. */
+function BrowserFrame({ host, children }: { host?: string; children: React.ReactNode }) {
   return (
     <div className="overflow-hidden rounded-lg border bg-card shadow-hard">
       <div aria-hidden="true" className="flex items-center gap-1.5 border-b bg-muted px-3 py-2">
         <span className="size-2.5 rounded-full bg-[hsl(var(--tone-pink))]" />
         <span className="size-2.5 rounded-full bg-[hsl(var(--tone-yellow))]" />
         <span className="size-2.5 rounded-full bg-[hsl(var(--tone-teal))]" />
+        {host && <span className="ml-3 min-w-0 flex-1 truncate rounded-sm border bg-background px-3 py-0.5 text-xs text-muted-foreground">{host}</span>}
       </div>
       <div className="relative aspect-video w-full bg-muted">{children}</div>
     </div>
@@ -24,20 +26,19 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
   // Sans adresse de stockage configurée, aucune capture n'est tentée (la carte garde son aplat) : une page ne doit jamais tomber en erreur pour une image.
   const [cover, ...more] = supabaseUrl ? card.images : [];
   const link = safeHttpsLink(card.link_url);
+  const poster = cover ? (
+    <PortfolioImage src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} sizes="(min-width: 1024px) 58vw, 100vw" priority={index === 0} />
+  ) : (
+    // Sans capture : un aplat de marque avec le titre, pour que la carte ne soit jamais vide (remplacé par l'aperçu en direct quand le site est en ligne).
+    <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase dark:font-sans dark:normal-case">
+      {card.title}
+    </div>
+  );
   const flip = index % 2 === 1;
   return (
     <li className="reveal grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-12">
       <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
-        <BrowserFrame>
-          {cover ? (
-            <PortfolioImage src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} sizes="(min-width: 1024px) 58vw, 100vw" priority={index === 0} />
-          ) : (
-            // Sans capture : un aplat de marque avec le titre, pour que la carte ne soit jamais vide.
-            <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase dark:font-sans dark:normal-case">
-              {card.title}
-            </div>
-          )}
-        </BrowserFrame>
+        <BrowserFrame host={link ? new URL(link).host : undefined}>{link ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
         {more.length > 0 && (
           <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {more.map((image) => (

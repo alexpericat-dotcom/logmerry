@@ -4,14 +4,16 @@ import { Suspense } from "react";
 
 import { PortfolioShowcase } from "@/components/portfolio-showcase";
 import {
-  PortfolioBenefits,
   PortfolioContact,
   PortfolioFooter,
   PortfolioHeader,
   PortfolioHero,
+  PortfolioLever,
+  PortfolioMarquee,
   PortfolioProcess,
   PortfolioServices,
   PortfolioShowcaseFrame,
+  PortfolioSkills,
 } from "@/components/portfolio-sections";
 import { listPublicCards } from "@/lib/db/public-portfolio";
 import { loadCards } from "@/lib/domain/portfolio";
@@ -42,14 +44,16 @@ export default function PortfolioPage() {
       <PortfolioHeader />
       <main id="contenu" tabIndex={-1} className="outline-none">
         <PortfolioHero />
-        <PortfolioServices />
+        <PortfolioMarquee />
+        <PortfolioLever />
         <PortfolioProcess />
-        <PortfolioShowcaseFrame title={SHOWCASE.title} intro={SHOWCASE.intro}>
+        <PortfolioServices />
+        <PortfolioSkills />
+        <PortfolioShowcaseFrame eyebrow={SHOWCASE.eyebrow} title={SHOWCASE.title} intro={SHOWCASE.intro}>
           <Suspense fallback={<p className="text-muted-foreground">Chargement des réalisations…</p>}>
             <Showcase />
           </Suspense>
         </PortfolioShowcaseFrame>
-        <PortfolioBenefits />
         <PortfolioContact />
       </main>
       <PortfolioFooter />
