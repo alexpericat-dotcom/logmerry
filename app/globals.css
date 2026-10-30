@@ -206,3 +206,41 @@
     }
   }
 }
+
+/* Page publique du portfolio (story 6.4) : mouvements doux, jamais obligatoires. Sans `animation-timeline` ou avec « réduire les animations »,
+   tout est affiché tout de suite. Aucun contenu n'est caché par une animation qui ne démarrerait pas. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes float-slow {
+  50% {
+    transform: translateY(-14px) rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      /* `forwards` et non `both` : avant son entrée à l'écran, l'élément n'est PAS dans l'état de départ (invisible) ; sinon une capture pleine page,
+         une impression ou un robot d'indexation verraient une page vide. */
+      animation: reveal-up linear forwards;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+  .float-slow {
+    animation: float-slow 7s ease-in-out infinite;
+  }
+  .lift {
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+  }
+}

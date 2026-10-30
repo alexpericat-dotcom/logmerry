@@ -1,0 +1,97 @@
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
+
+import { Badge } from "@/components/ui/badge";
+import type { PublicCard } from "@/lib/domain/portfolio";
+import { publicImageUrl } from "@/lib/domain/realisation-images";
+import { SHOWCASE } from "@/lib/portfolio-content";
+
+const isHttps = (url: string | null): url is string => !!url && url.startsWith("https://");
+
+/** Cadre de navigateur autour d'une capture : barre à trois points, image au format 16/9. */
+function BrowserFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-lg border bg-card shadow-hard">
+      <div aria-hidden="true" className="flex items-center gap-1.5 border-b bg-muted px-3 py-2">
+        <span className="size-2.5 rounded-full bg-[hsl(var(--tone-pink))]" />
+        <span className="size-2.5 rounded-full bg-[hsl(var(--tone-yellow))]" />
+        <span className="size-2.5 rounded-full bg-[hsl(var(--tone-teal))]" />
+      </div>
+      <div className="relative aspect-video w-full bg-muted">{children}</div>
+    </div>
+  );
+}
+
+export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; index: number; supabaseUrl: string }) {
+  const [cover, ...more] = card.images;
+  const flip = index % 2 === 1;
+  return (
+    <li className="reveal grid items-center gap-8 lg:grid-cols-12">
+      <div className={`lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
+        <BrowserFrame>
+          {cover ? (
+            <Image src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} fill sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover object-top" />
+          ) : (
+            // Sans capture : un aplat de marque avec le titre, pour que la carte ne soit jamais vide.
+            <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase dark:font-sans dark:normal-case">
+              {card.title}
+            </div>
+          )}
+        </BrowserFrame>
+        {more.length > 0 && (
+          <ul className="mt-3 grid grid-cols-5 gap-2">
+            {more.map((image) => (
+              <li key={image.id} className="relative aspect-video overflow-hidden rounded-md border bg-muted">
+                <Image src={publicImageUrl(supabaseUrl, image.path)} alt={image.alt} fill sizes="12vw" className="object-cover object-top" />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className={`flex flex-col gap-4 lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="signature">{card.originLabel}</Badge>
+          <Badge variant="outline">{card.client_label}</Badge>
+        </div>
+        <h3 className="break-words text-2xl font-bold md:text-3xl">{card.title}</h3>
+        <p className="text-lg leading-relaxed text-muted-foreground">{card.description}</p>
+        {card.result_figure && (
+          <p className="w-fit rounded-md border bg-[hsl(var(--tone-yellow))] px-3 py-2 font-semibold text-[hsl(235_47%_20%)] shadow-hard">Résultat : {card.result_figure}</p>
+        )}
+        {card.stack.length > 0 && (
+          <ul aria-label="Outils utilisés" className="flex flex-wrap gap-1.5">
+            {card.stack.map((tag) => (
+              <li key={tag}>
+                <Badge variant="outline">{tag}</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
+        {isHttps(card.link_url) && (
+          <a
+            href={card.link_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md border bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-hard underline-offset-4 hover:underline"
+          >
+            {SHOWCASE.linkLabel}
+            <ExternalLink size={16} aria-hidden="true" />
+            <span className="sr-only"> (nouvel onglet) : {card.title}</span>
+          </a>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** Les cartes, ou un message sobre s'il n'y en a pas. */
+export function PortfolioShowcase({ cards, supabaseUrl }: { cards: PublicCard[]; supabaseUrl: string }) {
+  if (cards.length === 0) return <p className="rounded-lg border bg-card p-6 text-lg text-muted-foreground">{SHOWCASE.empty}</p>;
+  return (
+    <ul className="flex flex-col gap-20">
+      {cards.map((card, i) => (
+        <PortfolioCard key={card.id} card={card} index={i} supabaseUrl={supabaseUrl} />
+      ))}
+    </ul>
+  );
+}

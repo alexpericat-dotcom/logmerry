@@ -12,7 +12,7 @@ export function securityHeaders(supabaseUrl: string | undefined): { key: string;
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
+    `img-src 'self' data:${supabaseOrigin}`,
     `connect-src 'self'${supabaseOrigin}`,
     "base-uri 'self'",
     "form-action 'self'",

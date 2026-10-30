@@ -982,7 +982,38 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      public_realisation_images: {
+        Row: {
+          alt: string | null;
+          created_at: string | null;
+          id: string | null;
+          path: string | null;
+          realisation_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
+            referencedRelation: "realisations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      public_realisations: {
+        Row: {
+          client_label: string | null;
+          description: string | null;
+          id: string | null;
+          link_url: string | null;
+          origin: Database["public"]["Enums"]["realisation_origin"] | null;
+          published_at: string | null;
+          result_figure: string | null;
+          stack: string[] | null;
+          title: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       accept_quote: { Args: { p_quote_id: string }; Returns: string };
