@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { chunksMatchingKeywords, extractKeywords, mergeRetrieved } from "./keywords.ts";
+import { KEYWORDS_MAX, chunksMatchingKeywords, extractKeywords, mergeRetrieved } from "./keywords.ts";
 
 test("la question du propriétaire est réduite à son mot-clé", () => {
   assert.deepEqual(extractKeywords("est ce que j'ai une note qui traite de quittance"), ["quittance"]);
@@ -67,4 +67,10 @@ test("la voie par sens ne chasse pas les extraits trouvés seulement par mots-cl
   assert.deepEqual(out.slice(5), ["k1", "k2", "k3"], "les 3 premiers extraits par mots-clés prennent les 3 dernières places");
   assert.deepEqual(out.slice(0, 5), ["s0", "s1", "s2", "s3", "s4"], "les mieux notés par sens restent en tête");
   assert.equal(mergeRetrieved(sense.slice(0, 2), words, 8).length, 6, "pas de place perdue quand la voie par sens en a peu");
+});
+
+test("extractKeywords : jamais plus de KEYWORDS_MAX mots-clés, donc jamais plus de KEYWORDS_MAX requêtes en parallèle (une question de 300 caractères)", () => {
+  const long = Array.from({ length: 40 }, (_, i) => `procedure${String.fromCharCode(97 + (i % 26))}${i}`).join(" ").slice(0, 300);
+  const words = extractKeywords(long);
+  assert.ok(words.length > 0 && words.length <= KEYWORDS_MAX, `${words.length} mots-clés`);
 });

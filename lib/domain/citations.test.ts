@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { inventedNumbers, verifyCitations } from "./citations.ts";
+import { inventedLinks, inventedNumbers, verifyCitations } from "./citations.ts";
 
 test("citations valides : sans doublon, dans l'ordre", () => {
   assert.deepEqual(verifyCitations(["b", "a", "b"], ["a", "b", "c"]), ["b", "a"]);
@@ -33,4 +33,23 @@ test("petits entiers et décomptes ne comptent pas (« 3 étapes »), mais un d�
 
 test("aucun nombre : rien à signaler", () => {
   assert.deepEqual(inventedNumbers("Tes notes ne répondent pas.", []), []);
+});
+
+test("inventedLinks : une adresse présente dans les textes fournis est permise, même reformatée (schéma, www, barre finale, casse, ponctuation, guillemets français)", () => {
+  const known = ["La procédure est sur https://aide.example.fr/relance et le contact est jean.dupont@example.fr."];
+  assert.deepEqual(inventedLinks("Voir https://aide.example.fr/relance.", known), []);
+  assert.deepEqual(inventedLinks("Écris à jean.dupont@example.fr", known), []);
+  assert.deepEqual(inventedLinks("Va sur HTTPS://AIDE.EXAMPLE.FR/RELANCE", known), []);
+  assert.deepEqual(inventedLinks("Voir « https://aide.example.fr/relance » ou http://www.aide.example.fr/relance/", known), []);
+  assert.deepEqual(inventedLinks("Aucun lien ici, 12 étapes.", known), []);
+});
+
+test("inventedLinks : adresse inventée, tronquée ou d'un autre schéma : signalée (jamais acceptée comme simple sous-chaîne d'une adresse connue)", () => {
+  const known = ["La procédure est sur https://aide.example.fr/relance/page et le contact est jean.aide@example.fr."];
+  assert.deepEqual(inventedLinks("Clique sur https://pirate.example.net/login", known), ["pirate.example.net/login"]);
+  assert.deepEqual(inventedLinks("Va sur www.pirate.example.net, ou écris à fraude@pirate.example.net !", known), ["pirate.example.net", "fraude@pirate.example.net"]);
+  assert.deepEqual(inventedLinks("Voir https://aide.example.fr/rel", known), ["aide.example.fr/rel"], "adresse tronquée");
+  assert.deepEqual(inventedLinks("Écris à aide@example.fr", known), ["aide@example.fr"], "e-mail tronqué (suffixe d'une adresse connue)");
+  assert.deepEqual(inventedLinks("Ouvre javascript:alert(1) puis data:text/html,x, ftp://x.example.org ou mailto:a@b.fr ou //cdn.example.org/x.js", known), ["javascript:alert(1", "data:text/html,x", "ftp://x.example.org", "mailto:a@b.fr", "//cdn.example.org/x.js"]);
+  assert.deepEqual(inventedLinks("https://x.example.fr https://x.example.fr", []), ["x.example.fr"], "sans doublon");
 });

@@ -184,6 +184,7 @@ export function MissionPrompt({ missionId, hasClient }: { missionId: string; has
       {prompt && (
         <div className="grid gap-2">
           <Label htmlFor={`${id}-output`}>Prompt (modifiable)</Label>
+          <p className="text-xs text-muted-foreground">Relis ce prompt avant de le coller ailleurs : il reprend le texte de ta mission et de ton backlog, tel que tu l&apos;as écrit, y compris ce que tu y as collé d&apos;un autre document.</p>
           <Textarea
             id={`${id}-output`}
             ref={output}

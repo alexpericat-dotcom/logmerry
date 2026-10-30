@@ -9,6 +9,40 @@ withHarness();
 
 const ask = (question: unknown) => POST(new Request("http://localhost/api/chat", { method: "POST", body: JSON.stringify({ question }) }));
 
+describe("/api/chat : taille de la requête", () => {
+  test("corps annoncé trop gros : 413 avant toute lecture, sans plafond consommé ni recherche", async () => {
+    const res = await POST(new Request("http://localhost/api/chat", { method: "POST", headers: { "content-length": "100000" }, body: JSON.stringify({ question: "Une question" }) }));
+    assert.equal(res.status, 413);
+    assert.equal(fake.quotaCalls, 0);
+    assert.equal(fake.ops.length, 0);
+  });
+
+  test("en-tête absent (transfert par morceaux), non numérique ou négatif : la lecture est bornée quand même", async () => {
+    const chunked = (parts: string[]) =>
+      new Request("http://localhost/api/chat", {
+        method: "POST",
+        duplex: "half",
+        body: new ReadableStream({
+          start(c) {
+            for (const p of parts) c.enqueue(new TextEncoder().encode(p));
+            c.close();
+          },
+        }),
+      } as RequestInit);
+    assert.equal((await POST(chunked(['{"question":"', "x".repeat(20_000), '"}']))).status, 413);
+    assert.equal(fake.quotaCalls, 0);
+    for (const bad of ["abc", "-1"]) {
+      const big = new Request("http://localhost/api/chat", { method: "POST", headers: { "content-length": bad }, body: JSON.stringify({ question: "x".repeat(20_000) }) });
+      assert.equal((await POST(big)).status, 413, bad);
+    }
+    assert.equal((await POST(chunked(['{"question":"Une ', 'question"}']))).status, 200, "petit corps par morceaux : permis");
+  });
+
+  test("question normale : acceptée (le contrôle ne touche pas les requêtes ordinaires)", async () => {
+    assert.equal((await ask("Une question normale")).status, 200);
+  });
+});
+
 describe("/api/chat : plafond d'appels à l'IA", () => {
   test("plafond atteint : 429 (minute, jour) ou 503 (compteur en panne), le message du plafond, ni vectorisation ni lecture de notes", async () => {
     for (const [quota, status] of [["minute", 429], ["day", 429], ["error", 503]] as const) {

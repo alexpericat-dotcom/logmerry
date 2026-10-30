@@ -1,5 +1,5 @@
 import { SESSION_EXPIRED } from "../auth.ts";
-import { AnswerRejected, inventedNumbers, verifyCitations } from "./citations.ts";
+import { AnswerRejected, inventedLinks, inventedNumbers, verifyCitations } from "./citations.ts";
 
 /** Message exact de la conception (Voice and Tone) quand aucun extrait n'est assez proche : Claude n'est pas appelé. */
 export const NOT_FOUND = "Je n'ai trouvé aucune procédure documentée correspondant à cette requête.";
@@ -13,6 +13,16 @@ const LEGACY_NOT_FOUND = "Je n'ai trouvé aucune note correspondant à cette que
 export function offersDraftNote(message: { role: "user" | "assistant"; text: string; sources?: unknown[] }): boolean {
   if (message.role !== "assistant") return false;
   return isRefusal(message.text) || message.sources?.length === 0;
+}
+
+/** Taille maximale du corps de la requête de `/api/chat` (une question tient en 300 caractères) : au-delà, refus avant toute lecture. */
+export const CHAT_BODY_MAX = 10_000;
+
+/** Texte sous une réponse qui ne s'appuie sur aucune note (aucune source) sans être le refus fixe : elle ne vient pas de tes notes. */
+export const NO_SOURCE_NOTICE = "Aucune de tes notes ne soutient cette réponse.";
+
+export function showsNoSourceNotice(message: { role: "user" | "assistant"; text: string; sources?: unknown[] }): boolean {
+  return message.role === "assistant" && message.sources?.length === 0 && !isRefusal(message.text);
 }
 
 /** Le texte est-il un refus de l'assistant (« je ne trouve pas ») ? Sert à proposer « Créer une note à documenter plus tard », aussi sous les refus relus de l'historique. */
@@ -55,6 +65,9 @@ export async function answerQuestion<C extends ChunkLike>(
   const cited = verifyCitations(citations, chunks.map((c) => c.id));
   if (inventedNumbers(answer, [question, ...chunks.map((c) => c.content)]).length) {
     throw new AnswerRejected("Réponse rejetée : nombre absent des extraits.");
+  }
+  if (inventedLinks(answer, [question, ...chunks.map((c) => c.content)]).length) {
+    throw new AnswerRejected("Réponse rejetée : adresse web ou e-mail absent des extraits.");
   }
   const byId = new Map(chunks.map((c) => [c.id, c]));
   const sources = cited.map((id) => {

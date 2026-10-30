@@ -6,17 +6,30 @@ import { retrieveChunks } from "@/lib/db/retrieval";
 import { saveExchange } from "@/lib/db/history";
 import { quotaMessage } from "@/lib/domain/ai-quota";
 import { AnswerRejected } from "@/lib/domain/citations";
-import { answerQuestion } from "@/lib/domain/chat-flow";
+import { CHAT_BODY_MAX, answerQuestion } from "@/lib/domain/chat-flow";
 import { SENSE_QUERY_MAX } from "@/lib/domain/matching";
 import { normalizeQuery } from "@/lib/domain/search";
+import { readTextBounded } from "@/lib/read-body";
 import { createClient } from "@/lib/supabase/server";
 
 const FAILED = "L'assistant n'a pas pu répondre pour le moment.";
+const TOO_LONG = "Question trop longue.";
 const REJECTED = "La réponse n'a pas pu être vérifiée par rapport à tes notes, elle n'est pas affichée. Réessaie.";
 
 /** Seul Route Handler de l'application (AD-7) : session, extraits retrouvés sous RLS, réponse de Claude. Pas de flux. */
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as { question?: unknown } | null;
+  // Première barrière : la taille annoncée (une question tient en 300 caractères) ; puis lecture bornée, car l'en-tête peut manquer ou mentir.
+  const announced = Number(request.headers.get("content-length") ?? 0);
+  if (announced > CHAT_BODY_MAX) return NextResponse.json({ error: TOO_LONG }, { status: 413 });
+  const raw = await readTextBounded(request, CHAT_BODY_MAX).catch(() => "");
+  if (raw === null) return NextResponse.json({ error: TOO_LONG }, { status: 413 });
+  const body = (() => {
+    try {
+      return JSON.parse(raw) as { question?: unknown } | null;
+    } catch {
+      return null;
+    }
+  })();
   const question = normalizeQuery(typeof body?.question === "string" ? body.question : "", SENSE_QUERY_MAX);
   if (!question) return NextResponse.json({ error: "Écris une question." }, { status: 400 });
 
