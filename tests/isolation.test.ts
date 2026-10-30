@@ -2572,6 +2572,69 @@ describe("plafond d'appels à l'IA (ai_calls, consume_ai_quota) : isolation et v
   });
 });
 
+describe("isolation des réalisations entre deux comptes fictifs", () => {
+  let a: Account;
+  let b: Account;
+  let rA: { id: string };
+
+  const cleanup = async () => {
+    for (const account of [a, b]) {
+      if (!account) continue;
+      const { error } = await account.client.from("realisations").delete().like("title", `${PREFIX}%`);
+      if (error) console.warn(`Nettoyage des réalisations incomplet : ${error.message}`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const ra = await a.client.from("realisations").insert({ title: `${PREFIX} réalisation de A`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(ra.error);
+    rA = ra.data!;
+  });
+
+  after(cleanup);
+
+  test("créée non publiée, sans accord, propriétaire posé par la base ; B ne la voit pas, ne la modifie ni ne la supprime", async () => {
+    const { data, error } = await a.client.from("realisations").select("owner_id, published, client_consent, published_at, stack").eq("id", rA.id).single();
+    assert.ifError(error);
+    assert.deepEqual(data, { owner_id: a.userId, published: false, client_consent: false, published_at: null, stack: [] });
+    assert.equal((await b.client.from("realisations").select("id").eq("id", rA.id).maybeSingle()).data, null);
+    const upd = await b.client.from("realisations").update({ title: `${PREFIX} piratée` }).eq("id", rA.id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0);
+    const del = await b.client.from("realisations").delete().eq("id", rA.id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+    const forged = await b.client.from("realisations").insert({ title: `${PREFIX} forgée`, description: "d", origin: "demo", owner_id: a.userId });
+    assert.equal(forged.error?.code, "42501");
+  });
+
+  test("la base refuse la publication sans accord, même par l'API", async () => {
+    const r = await a.client.from("realisations").update({ published: true }).eq("id", rA.id).select("id");
+    assert.ok(r.error, "publication sans accord refusée");
+    const still = await a.client.from("realisations").select("published").eq("id", rA.id).single();
+    assert.equal(still.data!.published, false);
+  });
+
+  test("sans connexion : aucun droit sur la table", async () => {
+    const anon = newClient();
+    assert.equal((await anon.from("realisations").select("id")).error?.code, "42501");
+    assert.equal((await anon.from("realisations").insert({ title: `${PREFIX} anonyme`, description: "d", origin: "demo" })).error?.code, "42501");
+  });
+
+  test("la base refuse un titre vide, une description vide, une origine inconnue et plus de 12 étiquettes", async () => {
+    for (const [label, row] of [
+      ["titre vide", { title: "  ", description: "d", origin: "demo" }],
+      ["description vide", { title: `${PREFIX} t`, description: "", origin: "demo" }],
+      ["origine inconnue", { title: `${PREFIX} t`, description: "d", origin: "autre" }],
+      ["13 étiquettes", { title: `${PREFIX} t`, description: "d", origin: "demo", stack: Array.from({ length: 13 }, (_, i) => `t${i}`) }],
+    ] as const) {
+      const r = await a.client.from("realisations").insert(row as never);
+      assert.ok(r.error, label);
+    }
+  });
+});
+
 describe("sécurité par ligne de la base RÉELLE (rls_audit) : aucune table oubliée, même créée à la main", () => {
   // Complète `lib/security-static.test.ts`, qui ne lit que les migrations : une table créée dans l'éditeur SQL sans migration, ou une politique supprimée à la main, n'y apparaîtrait pas.
   test("chaque table de `public` a la sécurité par ligne activée et au moins une politique", async () => {
