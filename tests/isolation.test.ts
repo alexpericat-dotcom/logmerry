@@ -2699,6 +2699,155 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
   });
 });
 
+describe("captures des réalisations (table realisation_images et bucket portfolio) entre deux comptes fictifs", () => {
+  // PNG de 1 pixel : le stockage contrôle le type annoncé, pas le contenu.
+  const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+  const uuid = () => crypto.randomUUID();
+  let a: Account;
+  let b: Account;
+  let real: { id: string };
+  const uploaded: { account: () => Account; path: string }[] = [];
+
+  const put = async (account: Account, path: string, body: Buffer | Uint8Array = PNG, contentType = "image/png") => {
+    const r = await account.client.storage.from("portfolio").upload(path, body, { contentType, upsert: false });
+    if (!r.error) uploaded.push({ account: () => account, path });
+    return r;
+  };
+
+  const cleanup = async () => {
+    for (const u of uploaded) await u.account().client.storage.from("portfolio").remove([u.path]);
+    for (const account of [a, b]) {
+      if (!account) continue;
+      const { error } = await account.client.from("realisations").delete().like("title", `${PREFIX}%`);
+      if (error) console.warn(`Nettoyage des captures incomplet : ${error.message}`);
+    }
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    b = await signIn("B");
+    await cleanup();
+    const r = await a.client.from("realisations").insert({ title: `${PREFIX} avec captures`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(r.error);
+    real = r.data!;
+  });
+
+  after(cleanup);
+
+  test("A envoie une image dans son dossier, l'enregistre avec son texte alternatif ; l'adresse publique répond sans connexion", async () => {
+    const path = `${a.userId}/${real.id}/${uuid()}.png`;
+    assert.ifError((await put(a, path)).error);
+    const row = await a.client.from("realisation_images").insert({ realisation_id: real.id, path, alt: "Capture de test" }).select("owner_id, alt").single();
+    assert.ifError(row.error);
+    assert.deepEqual(row.data, { owner_id: a.userId, alt: "Capture de test" });
+    const res = await fetch(`${URL}/storage/v1/object/public/portfolio/${path}`);
+    assert.equal(res.status, 200, "bucket public : lisible sans connexion, par son adresse");
+    assert.equal(res.headers.get("content-type"), "image/png");
+  });
+
+  test("le texte alternatif est obligatoire : vide, d'espaces ou trop long refusés par la base (23514)", async () => {
+    for (const alt of ["", "   ", "x".repeat(201)]) {
+      const r = await a.client.from("realisation_images").insert({ realisation_id: real.id, path: `${a.userId}/${real.id}/${uuid()}.png`, alt });
+      assert.equal(r.error?.code, "23514", JSON.stringify(alt.slice(0, 5)));
+    }
+  });
+
+  test("chemin forgé refusé : autre dossier, autre réalisation, nom libre, extension non permise", async () => {
+    const other = uuid();
+    for (const path of [`${b.userId}/${real.id}/${uuid()}.png`, `${a.userId}/${other}/${uuid()}.png`, `${a.userId}/${real.id}/photo.png`, `${a.userId}/${real.id}/${uuid()}.svg`]) {
+      const r = await a.client.from("realisation_images").insert({ realisation_id: real.id, path, alt: "x" });
+      assert.ok(r.error, path);
+    }
+  });
+
+  test("B ne voit pas, ne modifie pas, ne supprime pas les captures de A ; B n'en ajoute pas à la réalisation de A", async () => {
+    assert.equal((await b.client.from("realisation_images").select("id")).data!.filter((i) => i.id).length, 0);
+    const mine = (await a.client.from("realisation_images").select("id, path").eq("realisation_id", real.id)).data!;
+    assert.ok(mine.length >= 1);
+    const upd = await b.client.from("realisation_images").update({ alt: "piratée" }).eq("id", mine[0].id).select("id");
+    assert.ok(upd.error || upd.data!.length === 0);
+    const del = await b.client.from("realisation_images").delete().eq("id", mine[0].id).select("id");
+    assert.equal(del.data?.length ?? 0, 0);
+    const forged = await b.client.from("realisation_images").insert({ realisation_id: real.id, path: `${b.userId}/${real.id}/${uuid()}.png`, alt: "x" });
+    assert.equal(forged.error?.code, "42501", "B ne peut pas rattacher une capture à la réalisation de A");
+    const give = await a.client.from("realisation_images").update({ owner_id: b.userId }).eq("id", mine[0].id).select("id");
+    assert.ok(give.error || give.data!.length === 0, "donner sa capture à B refusé");
+  });
+
+  test("stockage : B n'écrit pas dans le dossier de A et ne supprime pas ses fichiers ; sans connexion, aucun envoi", async () => {
+    assert.ok((await put(b, `${a.userId}/${real.id}/${uuid()}.png`)).error, "B dans le dossier de A");
+    const path = `${a.userId}/${real.id}/${uuid()}.png`;
+    assert.ifError((await put(a, path)).error);
+    await b.client.storage.from("portfolio").remove([path]);
+    assert.equal((await fetch(`${URL}/storage/v1/object/public/portfolio/${path}`)).status, 200, "le fichier de A est toujours là");
+    const anon = newClient();
+    assert.ok((await anon.storage.from("portfolio").upload(`${uuid()}/${uuid()}/${uuid()}.png`, PNG, { contentType: "image/png" })).error, "envoi anonyme refusé");
+  });
+
+  test("stockage : type non permis (SVG, HTML, texte) et fichier de plus de 3 Mo refusés par le bucket", async () => {
+    for (const [type, name] of [["image/svg+xml", "svg"], ["text/html", "html"], ["text/plain", "txt"]] as const) {
+      assert.ok((await put(a, `${a.userId}/${real.id}/${uuid()}.${name}`, Buffer.from("<svg/>"), type)).error, type);
+    }
+    assert.ok((await put(a, `${a.userId}/${real.id}/${uuid()}.png`, new Uint8Array(3 * 1024 * 1024 + 1))).error, "plus de 3 Mo");
+  });
+
+  test("six captures au plus par réalisation : la septième est refusée (23514)", async () => {
+    const have = (await a.client.from("realisation_images").select("id").eq("realisation_id", real.id)).data!.length;
+    for (let i = have; i < 6; i++) {
+      const r = await a.client.from("realisation_images").insert({ realisation_id: real.id, path: `${a.userId}/${real.id}/${uuid()}.png`, alt: `n°${i}` });
+      assert.ifError(r.error);
+    }
+    const seventh = await a.client.from("realisation_images").insert({ realisation_id: real.id, path: `${a.userId}/${real.id}/${uuid()}.png`, alt: "septième" });
+    assert.equal(seventh.error?.code, "23514");
+  });
+
+  test("chemin d'une AUTRE de mes réalisations refusé (insertion), mise à jour impossible (plus de politique), .jpg et .webp acceptés", async () => {
+    const r2 = await a.client.from("realisations").insert({ title: `${PREFIX} seconde`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(r2.error);
+    // Sur une réalisation vide : le déclencheur de plafond s'exécute avant la politique, il masquerait le refus sur une réalisation pleine.
+    const wrong = await a.client.from("realisation_images").insert({ realisation_id: r2.data!.id, path: `${a.userId}/${real.id}/${uuid()}.png`, alt: "x" });
+    assert.equal(wrong.error?.code, "42501", "chemin d'une autre réalisation");
+    for (const ext of ["jpg", "webp"]) {
+      const ok = await a.client.from("realisation_images").insert({ realisation_id: r2.data!.id, path: `${a.userId}/${r2.data!.id}/${uuid()}.${ext}`, alt: ext }).select("id").single();
+      assert.ifError(ok.error);
+      const upd = await a.client.from("realisation_images").update({ realisation_id: real.id }).eq("id", ok.data!.id).select("id");
+      assert.ok(upd.error || upd.data!.length === 0, `déplacer une capture refusé (${ext})`);
+    }
+  });
+
+  test("six captures : deux insertions simultanées sur la sixième place n'en donnent qu'une", async () => {
+    const r3 = await a.client.from("realisations").insert({ title: `${PREFIX} concurrence`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(r3.error);
+    for (let i = 0; i < 5; i++) assert.ifError((await a.client.from("realisation_images").insert({ realisation_id: r3.data!.id, path: `${a.userId}/${r3.data!.id}/${uuid()}.png`, alt: `n°${i}` })).error);
+    const results = await Promise.all([0, 1].map(() => a.client.from("realisation_images").insert({ realisation_id: r3.data!.id, path: `${a.userId}/${r3.data!.id}/${uuid()}.png`, alt: "course" })));
+    assert.equal(results.filter((r) => !r.error).length, 1, "une seule des deux passe");
+    assert.equal((await a.client.from("realisation_images").select("id").eq("realisation_id", r3.data!.id)).data!.length, 6);
+  });
+
+  test("stockage : dépôt hors du motif exact refusé (nom libre, réalisation inconnue ou d'un autre compte) ; supprimer : B n'y arrive pas, A si", async () => {
+    assert.ok((await put(a, `${a.userId}/${real.id}/libre.png`)).error, "nom libre");
+    assert.ok((await put(a, `${a.userId}/${uuid()}/${uuid()}.png`)).error, "réalisation inconnue");
+    const rb = await b.client.from("realisations").insert({ title: `${PREFIX} de B`, description: "d", origin: "demo" }).select("id").single();
+    assert.ifError(rb.error);
+    assert.ok((await put(a, `${a.userId}/${rb.data!.id}/${uuid()}.png`)).error, "réalisation d'un autre compte");
+    const path = `${a.userId}/${real.id}/${uuid()}.png`;
+    assert.ifError((await put(a, path)).error);
+    const names = async () => ((await a.client.storage.from("portfolio").list(`${a.userId}/${real.id}`)).data ?? []).map((f) => f.name);
+    const file = path.split("/")[2];
+    await b.client.storage.from("portfolio").remove([path]);
+    assert.ok((await names()).includes(file), "le fichier de A est toujours là après la tentative de B");
+    assert.deepEqual((await b.client.storage.from("portfolio").list(`${a.userId}/${real.id}`)).data ?? [], [], "B ne liste pas le dossier de A");
+    await a.client.storage.from("portfolio").remove([path]);
+    assert.ok(!(await names()).includes(file), "A supprime son propre fichier");
+  });
+
+  test("sans connexion : aucun droit sur la table ; supprimer la réalisation supprime ses lignes de captures", async () => {
+    assert.equal((await newClient().from("realisation_images").select("id")).error?.code, "42501");
+    assert.ifError((await a.client.from("realisations").delete().eq("id", real.id)).error);
+    assert.equal((await a.client.from("realisation_images").select("id").eq("realisation_id", real.id)).data!.length, 0);
+  });
+});
+
 describe("sécurité par ligne de la base RÉELLE (rls_audit) : aucune table oubliée, même créée à la main", () => {
   // Complète `lib/security-static.test.ts`, qui ne lit que les migrations : une table créée dans l'éditeur SQL sans migration, ou une politique supprimée à la main, n'y apparaîtrait pas.
   test("chaque table de `public` a la sécurité par ligne activée et au moins une politique", async () => {

@@ -39,6 +39,9 @@ export const fake = {
   problems: [] as string[],
   /** Appels aux modèles d'IA (jamais de vrai appel dans un test) : ce qui a été envoyé, et ce que la doublure répond (`fake.ai.replies[nom]`, une valeur ou une fonction ; une `Error` est levée). */
   ai: { calls: [] as { name: string; message: string; args: unknown[] }[], replies: {} as Record<string, unknown> },
+  /** Suppressions demandées au stockage (`storage.from(bucket).remove(chemins)`), et erreur à renvoyer. */
+  removed: [] as { bucket: string; paths: string[] }[],
+  storageError: null as { message: string } | null,
   /** Notes dont l'indexation (appel à Mistral) a été demandée : jamais de vrai appel dans un test. */
   indexed: [] as string[],
   /** Réponse de `consume_ai_quota()` (plafond d'appels à l'IA) et nombre d'appels : cette fonction n'entre pas dans `ops`, pour que les listes de requêtes attendues restent celles du métier. */
@@ -61,6 +64,8 @@ export const fake = {
     this.problems = [];
     this.ai = { calls: [], replies: {} };
     this.indexed = [];
+    this.removed = [];
+    this.storageError = null;
     this.indexResult = "indexed";
     this.quota = "ok";
     this.quotaQueue = [];
@@ -198,6 +203,15 @@ export const client = {
       const r = fake.respond(op);
       return { data: r.data ?? null, error: r.error ?? null, count: r.count ?? null };
     });
+  },
+  storage: {
+    from: (bucket: string) => ({
+      remove: async (paths: string[]) => {
+        fake.removed.push({ bucket, paths });
+        fake.ops.push({ table: `storage.${bucket}`, op: "delete", payload: paths, filters: [], returning: false });
+        return { data: fake.storageError ? null : paths.map((name) => ({ name })), error: fake.storageError };
+      },
+    }),
   },
   auth: {
     exchangeCodeForSession: async (code: string) => {

@@ -9,3 +9,10 @@ export const setRealisationPublication = async (id: string, publish: boolean) =>
 export const createRealisation = async () => ({});
 export const updateRealisation = async () => ({});
 export const deleteRealisation = async () => ({});
+export const addRealisationImage = async (...args: unknown[]) => {
+  const g = globalThis as { __imageCalls?: unknown[][]; __imageResult?: object | Error };
+  (g.__imageCalls ??= []).push(args);
+  if (g.__imageResult instanceof Error) throw g.__imageResult;
+  return g.__imageResult ?? {};
+};
+export const deleteRealisationImage = async () => ({});

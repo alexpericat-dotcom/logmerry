@@ -632,6 +632,41 @@ export type Database = {
           },
         ];
       };
+      realisation_images: {
+        Row: {
+          alt: string;
+          created_at: string;
+          id: string;
+          owner_id: string;
+          path: string;
+          realisation_id: string;
+        };
+        Insert: {
+          alt: string;
+          created_at?: string;
+          id?: string;
+          owner_id?: string;
+          path: string;
+          realisation_id: string;
+        };
+        Update: {
+          alt?: string;
+          created_at?: string;
+          id?: string;
+          owner_id?: string;
+          path?: string;
+          realisation_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
+            referencedRelation: "realisations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       realisations: {
         Row: {
           client_consent: boolean;

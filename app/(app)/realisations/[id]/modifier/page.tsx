@@ -2,11 +2,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { updateRealisation } from "@/app/(app)/realisations/actions";
+import { RealisationImages } from "@/components/realisation-images";
 import { PublicationControl } from "@/components/publication-control";
 import { DeleteRealisation } from "@/components/delete-realisation";
 import { PageBanner } from "@/components/page-banner";
 import { RealisationForm } from "@/components/realisation-form";
+import { listRealisationImages } from "@/lib/db/realisation-images";
 import { getRealisation } from "@/lib/db/realisations";
+import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/domain/notes";
 
 export const metadata = { title: "Modifier la réalisation · LogMerry" };
@@ -16,6 +19,9 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
   if (!isUuid(id)) notFound();
   const r = await getRealisation(id);
   if (!r) notFound();
+  const supabase = await createClient();
+  const [images, claims] = await Promise.all([listRealisationImages(id), supabase.auth.getClaims()]);
+  const ownerId = claims.data?.claims?.sub;
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,6 +43,7 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
         }}
         submitLabel="Enregistrer les modifications"
       />
+      {ownerId && <RealisationImages realisationId={id} ownerId={ownerId} supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!} images={images} />}
       <PublicationControl id={id} published={r.published} consent={r.client_consent} />
       <DeleteRealisation id={id} />
     </div>
