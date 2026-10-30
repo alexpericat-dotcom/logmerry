@@ -41,7 +41,7 @@ export const PROCESS = {
   steps: [
     { title: "Problème métier", text: "Nous partons de ce qui coûte du temps ou de l'énergie à vos équipes, pas d'un outil." },
     { title: "Analyse du processus", text: "Qui fait quoi, avec quelles données, où ça bloque : nous le dessinons ensemble." },
-    { title: "Architecture", text: "Je choisis les briques adaptées à votre taille et à vos contraintes : sécurité, RGPD, évolution." },
+    { title: "Architecture", text: "Choix de la stack technique sur mesure : je retiens les briques adaptées à votre taille et à vos contraintes (sécurité, RGPD, évolution)." },
     { title: "IA, automatisation et données", text: "Automatisations, connexions entre vos outils, base de données, assistant IA : construits par étapes courtes, avec une démonstration à chaque étape." },
     { title: "Déploiement", text: "Mise en ligne, prise en main et documentation, pour que vos équipes soient autonomes." },
     { title: "Maintenance", text: "Suivi, corrections et évolutions, pour que l'outil continue de servir quand votre activité change." },
@@ -53,7 +53,7 @@ export const SERVICES = {
   title: "Ce que je peux faire pour vous",
   intro: "Cinq façons de travailler ensemble, seules ou combinées.",
   items: [
-    { title: "Audit et cadrage", text: "Un atelier pour repérer ce qui mérite d'être automatisé, et transformer votre besoin en parcours clairs et en priorités." },
+    { title: "Audit et cadrage", text: "Un atelier pour repérer ce qui mérite d'être automatisé, choisir la stack technique adaptée, et transformer votre besoin en parcours clairs et en priorités." },
     { title: "Automatisation", text: "Des enchaînements fiables entre vos outils, pour supprimer les tâches répétitives et les ressaisies." },
     { title: "Application et données sur mesure", text: "Une application web pensée pour votre métier : comptes sécurisés, tableau de bord, base de données, recherche." },
     { title: "Assistant IA sur vos documents", text: "Un assistant qui répond à partir de vos notes, procédures et livrables, cite ses sources, et dit clairement quand il ne trouve pas." },
@@ -64,13 +64,41 @@ export const SERVICES = {
 /** Outils et domaines mobilisés. À valider par Alex : ne garder que ce qu'il peut défendre devant un client. */
 export const SKILLS = {
   eyebrow: "Boîte à outils",
-  title: "Les outils sont un moyen",
-  intro: "Voici ceux que je mobilise, une fois le problème posé.",
+  title: "Une stack technique choisie sur mesure",
+  intro: "Je ne vous impose pas un outil : je choisis les briques adaptées à votre besoin, à votre taille et à vos contraintes. Voici celles que je mobilise le plus souvent.",
+  note: "Cette liste n'est pas une limite : si un autre outil sert mieux votre projet, je le choisis, ou je m'adapte à celui que vous utilisez déjà.",
+  more: "Et selon votre besoin",
   groups: [
     { title: "Automatisation et intégration", items: ["n8n", "API", "Webhooks", "JSON", "OAuth"] },
-    { title: "Données", items: ["Supabase", "PostgreSQL", "Baserow", "Airtable"] },
-    { title: "Intelligence artificielle", items: ["API Claude, OpenAI, Gemini", "RAG", "Agents IA"] },
+    { title: "Données", items: ["Supabase", "PostgreSQL", "Notion", "Baserow", "Airtable"] },
+    { title: "Intelligence artificielle", items: ["Claude", "OpenAI", "Gemini", "RAG", "Agents IA"] },
     { title: "Cadrage et fiabilité", items: ["Architecture", "Sécurité", "RGPD", "Gestion de projet", "Compréhension métier"] },
+  ],
+};
+
+/** Les couches d'une application, et où elle tourne. Les outils cités avec un logo sont dans `lib/portfolio-tools.ts`. À valider par Alex (VPS, auto-hébergement). */
+export const STACK = {
+  eyebrow: "Architecture",
+  title: "Sous le capot",
+  intro: "Une application, ce sont plusieurs couches. Je les conçois ensemble, avec une stack technique choisie sur mesure pour votre métier et à votre portée.",
+  layers: [
+    { title: "Front", text: "Ce que vos équipes voient : des interfaces claires, rapides et utilisables sur téléphone.", tools: ["Next.js", "React"] },
+    { title: "Back", text: "La logique métier : automatisations, API et connexions entre vos outils, avec un suivi des erreurs.", tools: ["n8n", "Telegram", "Gmail"] },
+    {
+      title: "Base de données",
+      text: "PostgreSQL, directement ou via Supabase : des données structurées, protégées par compte. Je m'adapte aussi à vos outils actuels.",
+      tools: ["PostgreSQL", "Supabase", "Notion", "Airtable", "Baserow"],
+    },
+    {
+      title: "Hébergement et auto-hébergement",
+      text: "Chez un hébergeur managé en Europe, ou auto-hébergé sur un serveur privé (VPS) que vous contrôlez : vos automatisations et vos données restent chez vous.",
+      tools: ["Docker"],
+    },
+    {
+      title: "Données personnelles et RGPD",
+      text: "La protection des données est pensée dès la conception : hébergement européen, accès limités, données séparées par compte, possibilité de les supprimer.",
+      tools: [] as string[],
+    },
   ],
 };
 
@@ -90,4 +118,5 @@ export const CONTACT = {
   button: "M'écrire",
 };
 
+export const LOGOS_NOTE = "Les logos appartiennent à leurs propriétaires et ne désignent que les outils utilisés.";
 export const FOOTER = `© ${new Date().getFullYear()} ${BRAND}. Automatisation & IA.`;

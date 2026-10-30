@@ -1,13 +1,14 @@
-import { ArrowRight, Bot, Cable, Compass, DatabaseZap, LifeBuoy, ShieldCheck, Target, type LucideIcon } from "lucide-react";
+import { ArrowRight, Bot, Cable, Compass, DatabaseZap, LayoutTemplate, LifeBuoy, Lock, Server, ShieldCheck, Target, Workflow, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
 import { MotionToggle } from "@/components/motion-toggle";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { ToolIcon } from "@/components/tool-icon";
 import { Button } from "@/components/ui/button";
 import { mailtoHref } from "@/lib/domain/portfolio";
-import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HERO, LEVER, PROCESS, SERVICES, SKILLS } from "@/lib/portfolio-content";
+import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, SKILLS, STACK } from "@/lib/portfolio-content";
 
 const contactHref = mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT);
 const SERVICE_ICONS: LucideIcon[] = [Compass, Cable, DatabaseZap, Bot, LifeBuoy];
@@ -38,6 +39,7 @@ export function PortfolioHeader() {
           {[
             ["#methode", "Méthode"],
             ["#services", "Offre"],
+            ["#architecture", "Architecture"],
             ["#realisations", "Réalisations"],
           ].map(([href, label]) => (
             <a key={href} href={href} className="hidden rounded-md px-3 py-2 underline-offset-4 hover:underline md:inline-block">
@@ -127,8 +129,9 @@ export function PortfolioMarquee() {
   const tools = SKILLS.groups.flatMap((g) => g.items);
   const row = (hidden: boolean) => (
     <ul aria-hidden={hidden || undefined} className={`flex shrink-0 items-center gap-3 pr-3 ${hidden ? "marquee-dup" : ""}`}>
-      {tools.map((t) => (
-        <li key={t} className="whitespace-nowrap rounded-md border bg-card px-4 py-2 text-sm font-semibold shadow-hard">
+      {[...tools, SKILLS.more].map((t) => (
+        <li key={t} className="flex items-center gap-2 whitespace-nowrap rounded-md border bg-card px-4 py-2 text-sm font-semibold shadow-hard">
+          <ToolIcon tool={t} />
           {t}
         </li>
       ))}
@@ -222,6 +225,42 @@ export function PortfolioServices() {
   );
 }
 
+const STACK_ICONS: LucideIcon[] = [LayoutTemplate, Workflow, DatabaseZap, Server, Lock];
+
+/** « Sous le capot » : front, back, base de données, hébergement (VPS, auto-hébergement) et données personnelles, chacun avec les logos des outils cités. */
+export function PortfolioStack() {
+  return (
+    <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
+      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} />
+      <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-6">
+        {STACK.layers.map((layer, i) => {
+          const Icon = STACK_ICONS[i];
+          const span = i < 3 ? "lg:col-span-2" : "lg:col-span-3";
+          return (
+            <li key={layer.title} className={`reveal lift flex flex-col gap-4 rounded-lg border bg-card p-6 shadow-hard ${span}`}>
+              <span aria-hidden="true" className={`flex size-11 items-center justify-center rounded-md border text-foreground dark:text-background ${TONES[i % TONES.length]}`}>
+                <Icon size={22} />
+              </span>
+              <h3 className="text-xl font-semibold">{layer.title}</h3>
+              <p className="text-muted-foreground">{layer.text}</p>
+              {layer.tools.length > 0 && (
+                <ul aria-label="Outils" className="mt-auto flex flex-wrap gap-2 pt-1">
+                  {layer.tools.map((tool) => (
+                    <li key={tool} className="flex items-center gap-1.5 rounded-md border bg-muted/60 px-2.5 py-1 text-sm">
+                      <ToolIcon tool={tool} size={16} />
+                      {tool}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 export function PortfolioSkills() {
   return (
     <section aria-labelledby="skills-title" className="mx-auto max-w-6xl px-4 pb-24 md:px-6">
@@ -235,7 +274,8 @@ export function PortfolioSkills() {
             </h3>
             <ul className="flex flex-wrap gap-2">
               {g.items.map((item) => (
-                <li key={item} className="rounded-md border bg-muted/60 px-2.5 py-1 text-sm">
+                <li key={item} className="flex items-center gap-1.5 rounded-md border bg-muted/60 px-2.5 py-1 text-sm">
+                  <ToolIcon tool={item} size={16} />
                   {item}
                 </li>
               ))}
@@ -243,6 +283,7 @@ export function PortfolioSkills() {
           </section>
         ))}
       </div>
+      <p className="reveal mt-6 max-w-3xl text-lg text-muted-foreground">{SKILLS.note}</p>
     </section>
   );
 }
@@ -284,7 +325,10 @@ export function PortfolioFooter() {
   return (
     <footer className="border-t py-8 text-sm text-muted-foreground">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 md:px-6">
-        <p>{FOOTER}</p>
+        <div>
+          <p>{FOOTER}</p>
+          <p className="mt-1 text-xs">{LOGOS_NOTE}</p>
+        </div>
         <a href={contactHref} className="underline underline-offset-4">
           {CONTACT_EMAIL}
         </a>

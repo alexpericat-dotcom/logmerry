@@ -16,10 +16,11 @@ import {
   PortfolioProcess,
   PortfolioServices,
   PortfolioSkills,
+  PortfolioStack,
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SKILLS } from "../../lib/portfolio-content.ts";
+import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SKILLS, STACK } from "../../lib/portfolio-content.ts";
 
 afterEach(cleanup);
 
@@ -125,6 +126,7 @@ describe("sections de la page", () => {
       <PortfolioLever />
       <PortfolioProcess />
       <PortfolioServices />
+      <PortfolioStack />
       <PortfolioSkills />
       <PortfolioContact />
       <PortfolioFooter />
@@ -148,6 +150,36 @@ describe("sections de la page", () => {
     for (const s of PROCESS.steps) assert.ok(within(container.querySelector("#methode") as HTMLElement).getByRole("heading", { level: 3, name: s.title }), s.title);
     const services = within(container.querySelector("#services") as HTMLElement);
     for (const s of SERVICES.items) assert.ok(services.getByRole("heading", { level: 3, name: s.title }), s.title);
+  });
+
+  test("sous le capot : cinq couches titrées, et les logos des outils cités (n8n, Supabase, Notion, PostgreSQL)", () => {
+    const { container } = render(<PortfolioStack />);
+    const stack = within(container.querySelector("#architecture") as HTMLElement);
+    for (const l of STACK.layers) assert.ok(stack.getByRole("heading", { level: 3, name: l.title }), l.title);
+    const icons = [...container.querySelectorAll("[data-tool-icon]")].map((el) => el.getAttribute("data-tool-icon"));
+    for (const tool of ["n8n", "Supabase", "Notion", "PostgreSQL"]) assert.ok(icons.includes(tool), `logo ${tool}`);
+    assert.ok(screen.getByText(/serveur privé \(VPS\)/));
+  });
+
+  test("les logos sont décoratifs (cachés des lecteurs d'écran) et le nom de l'outil est toujours écrit à côté", () => {
+    const { container } = render(
+      <>
+        <PortfolioStack />
+        <PortfolioSkills />
+      </>,
+    );
+    const icons = container.querySelectorAll("[data-tool-icon]");
+    assert.ok(icons.length >= 10);
+    for (const icon of icons) {
+      assert.equal(icon.getAttribute("aria-hidden"), "true");
+      assert.ok((icon.parentElement?.textContent ?? "").includes(icon.getAttribute("data-tool-icon") ?? "?"), "outil sans nom écrit");
+    }
+  });
+
+  test("la liste d'outils n'est pas présentée comme une limite", () => {
+    render(<PortfolioSkills />);
+    assert.ok(screen.getByRole("heading", { level: 2, name: SKILLS.title }));
+    assert.ok(screen.getByText(SKILLS.note));
   });
 
   test("le positionnement : la phrase barrée et la phrase mise en avant sont toutes deux présentes", () => {

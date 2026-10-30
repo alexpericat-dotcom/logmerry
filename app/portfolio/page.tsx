@@ -14,6 +14,7 @@ import {
   PortfolioServices,
   PortfolioShowcaseFrame,
   PortfolioSkills,
+  PortfolioStack,
 } from "@/components/portfolio-sections";
 import { listPublicCards } from "@/lib/db/public-portfolio";
 import { loadCards } from "@/lib/domain/portfolio";
@@ -48,6 +49,7 @@ export default function PortfolioPage() {
         <PortfolioLever />
         <PortfolioProcess />
         <PortfolioServices />
+        <PortfolioStack />
         <PortfolioSkills />
         <PortfolioShowcaseFrame eyebrow={SHOWCASE.eyebrow} title={SHOWCASE.title} intro={SHOWCASE.intro}>
           <Suspense fallback={<p className="text-muted-foreground">Chargement des réalisations…</p>}>

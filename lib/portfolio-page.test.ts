@@ -51,7 +51,7 @@ test("impression : plus d'animation, bandeau sur toute sa largeur, décor masqu�
 });
 
 test("composition de la page : toutes les sections, dans l'ordre, une seule fois ; réalisations en flux séparé ; signaux de Next relancés", () => {
-  const order = ["PortfolioHeader", "PortfolioHero", "PortfolioMarquee", "PortfolioLever", "PortfolioProcess", "PortfolioServices", "PortfolioSkills", "PortfolioShowcaseFrame", "PortfolioContact", "PortfolioFooter"];
+  const order = ["PortfolioHeader", "PortfolioHero", "PortfolioMarquee", "PortfolioLever", "PortfolioProcess", "PortfolioServices", "PortfolioStack", "PortfolioSkills", "PortfolioShowcaseFrame", "PortfolioContact", "PortfolioFooter"];
   const body = page.slice(page.indexOf("export default function PortfolioPage"));
   const positions = order.map((name) => {
     const found = [...body.matchAll(new RegExp(`<${name}[\\s/>]`, "g"))];
