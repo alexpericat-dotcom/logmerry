@@ -6,8 +6,7 @@ import * as content from "./portfolio-content.ts";
 const year = String(new Date().getFullYear());
 const texts = JSON.stringify(content);
 // Seuls sont retirés : l'année du pied de page, l'adresse de contact et le nom d'outil « n8n ». Tout autre chiffre est une promesse.
-// La seule exception chiffrée est la question du hero, écrite par Alex lui-même (« 2 heures par jour ») : à confirmer par lui avant mise en ligne.
-const promises = texts.replace("2 heures par jour", "").replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "");
+const promises = texts.replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "");
 
 test("aucun chiffre, tarif ni mot de prix dans les textes publics (formules sans prix)", () => {
   assert.ok(!/\d/.test(promises), `chiffre dans : ${promises.match(/.{20}\d.{20}/)?.[0]}`);
@@ -74,11 +73,8 @@ test("« Sous le capot » : front, back, base de données, hébergement (VPS, au
 
 test("hero : texte d'Alex, mot pour mot ; la ligne de preuve reste vide tant qu'il ne l'a pas écrite (rien d'inventé)", () => {
   assert.equal(content.HERO.eyebrow, "Automatisation & IA pour les entreprises");
-  assert.equal(`${content.HERO.titleLead} ${content.HERO.titleAccent}`, "Pas un outil de plus. Un problème de moins.");
-  assert.equal(
-    content.HERO.lead,
-    "Pourquoi vos équipes perdent-elles 2 heures par jour sur une tâche manuelle ? Je pars de cette question, puis je construis l'automatisation qui y répond.",
-  );
+  assert.equal(`${content.HERO.titleLead} ${content.HERO.titleAccent}`, "Le vent se lève. Prenez la barre.");
+  assert.equal(content.HERO.lead, "L'IA et le no-code changent la façon de travailler. Je vous aide à en tirer parti, en partant de vos vrais problèmes.");
   assert.equal(content.HERO.primary, "Voir les réalisations");
   assert.equal(content.HERO.secondary, "Parler de votre problème");
   assert.equal(content.HERO.methodTitle, "Ma méthode");
@@ -89,4 +85,8 @@ test("hero : texte d'Alex, mot pour mot ; la ligne de preuve reste vide tant qu'
 test("bandeau d'outils : EXACTEMENT la liste choisie par Alex, sans notation ni étoile ; aucun autre outil", () => {
   assert.deepEqual(content.MARQUEE_TOOLS, ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"]);
   assert.ok(!/[★☆⭐]|étoile|\/5\b|note :/i.test(texts));
+});
+
+test("hero : plus aucun chiffre non sourcé (le texte précédent « 2 heures par jour » a été remplacé par Alex)", () => {
+  assert.ok(!/\d/.test(`${content.HERO.titleLead} ${content.HERO.titleAccent} ${content.HERO.lead}`));
 });

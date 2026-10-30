@@ -356,6 +356,26 @@ html[data-motion="paused"] .float-slow {
     color: CanvasText;
   }
 }
+/* Sur la vidéo (fond sombre garanti par l'overlay) : les couleurs CLAIRES de la marque, dont le contraste de grand texte (3:1) est calculé pour le pire pixel (`lib/domain/hero-video.ts`). */
+.text-brand-gradient-video {
+  color: hsl(var(--tone-pink));
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .text-brand-gradient-video {
+    background-image: linear-gradient(95deg, hsl(var(--tone-violet)) 0%, hsl(var(--tone-pink)) 55%, hsl(var(--tone-orange)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+@media (forced-colors: active) {
+  .text-brand-gradient-video {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: CanvasText;
+  }
+}
 .glass {
   background: hsl(var(--card) / 0.55);
   -webkit-backdrop-filter: blur(16px);

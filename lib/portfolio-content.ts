@@ -4,6 +4,8 @@
  * ligne, en particulier la liste des outils (`SKILLS`), qui ne doit annoncer que ce qu'il maîtrise. Règles : vouvoiement ; aucun tarif, délai, chiffre ni garantie ;
  * une donnée inconnue (ville, photo) n'apparaît pas.
  */
+import type { HeroVideo } from "./domain/hero-video.ts";
+
 export const BRAND = "LogMerry";
 /** Adresse publique du lien « m'écrire » (donnée par Alex le 30 octobre 2026). */
 export const CONTACT_EMAIL = "alexandre.pericat@gmail.com";
@@ -14,17 +16,21 @@ export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver
 
 export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
-  /** Le H1 en deux temps : l'accroche, puis la fin qui porte le dégradé de la marque. */
-  titleLead: "Pas un outil de plus.",
-  titleAccent: "Un problème de moins.",
-  /** Texte d'Alex (30 octobre 2026), mot pour mot : la question et le chiffre sont les siens, à confirmer par lui avant mise en ligne. */
-  lead: "Pourquoi vos équipes perdent-elles 2 heures par jour sur une tâche manuelle ? Je pars de cette question, puis je construis l'automatisation qui y répond.",
+  /** Le H1 en deux temps : l'accroche, puis la fin qui porte le dégradé de la marque. Texte d'Alex (30 octobre 2026), mot pour mot. */
+  titleLead: "Le vent se lève.",
+  titleAccent: "Prenez la barre.",
+  lead: "L'IA et le no-code changent la façon de travailler. Je vous aide à en tirer parti, en partant de vos vrais problèmes.",
   /** Ligne de preuve sous les boutons : parcours, chiffre ou réalisation, À COMPLÉTER PAR ALEX (ne rien inventer). Tant que c'est `null`, rien ne s'affiche. */
   proof: null as string | null,
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
   methodTitle: "Ma méthode",
   methodStart: "Le point de départ",
+  /**
+   * Vidéo de fond (fournie par Alex, jamais générée) : `null` tant que les fichiers ne sont pas dans `public/video`. Voir `docs/hero-video.md` pour le format et les commandes.
+   * Exemple : { poster: "/video/hero-poster.jpg", webm: "/video/hero.webm", mp4: "/video/hero.mp4", mobile: { webm: "/video/hero-720.webm", mp4: "/video/hero-720.mp4" } }
+   */
+  video: null as HeroVideo | null,
 };
 
 /** Le bandeau d'outils sous le hero : EXACTEMENT cette liste, choisie par Alex (30 octobre 2026), sans notation ni étoiles ; aucun autre outil n'y est ajouté. */

@@ -1,9 +1,9 @@
 import "../helpers/dom.ts";
 
 import assert from "node:assert/strict";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, beforeEach, describe, test } from "node:test";
 
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import {
@@ -18,6 +18,7 @@ import {
   PortfolioSkills,
   PortfolioStack,
 } from "../../components/portfolio-sections.tsx";
+import { HeroVideo } from "../../components/hero-video.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
 import { CONTACT_EMAIL, HERO, LEVER, MARQUEE_TOOLS, PROCESS, SERVICES, SKILLS, STACK } from "../../lib/portfolio-content.ts";
@@ -436,5 +437,145 @@ describe("effets de pointeur (inclinaison, magnétisme)", () => {
   test("sans matchMedia (navigateur ancien) : pas d'erreur", () => {
     const { container } = render(<PortfolioHero />);
     assert.doesNotThrow(() => fireEvent.pointerMove(container.querySelector(".glass")?.parentElement as HTMLElement, { clientX: 5, clientY: 5 }));
+  });
+});
+
+describe("vidéo de fond du hero (fichiers fournis par Alex)", () => {
+  const FILES = { poster: "/video/hero-poster.jpg", webm: "/video/hero.webm", mp4: "/video/hero.mp4", mobile: { webm: "/video/hero-720.webm", mp4: "/video/hero-720.mp4" } };
+  const w = window as unknown as Record<string, unknown>;
+  const nav = navigator as unknown as Record<string, unknown>;
+  const played: string[] = [];
+  /** Attend que la vidéo soit montée (`waitFor` ne patiente que si son rappel lève une erreur). */
+  const findVideo = (container: HTMLElement) =>
+    waitFor(() => {
+      const v = container.querySelector("video");
+      assert.ok(v, "la vidéo n'est pas encore montée");
+      return v as HTMLVideoElement;
+    });
+
+  /** Environnement du visiteur : préférence de mouvement, écran étroit, connexion. */
+  const visitor = (o: { reduce?: boolean; narrow?: boolean; saveData?: boolean; effectiveType?: string } = {}) => {
+    w.matchMedia = (q: string) => ({ matches: q.includes("prefers-reduced-motion") ? !!o.reduce : q.includes("max-width") ? !!o.narrow : false });
+    if (o.saveData !== undefined || o.effectiveType) Object.defineProperty(navigator, "connection", { configurable: true, value: { saveData: !!o.saveData, effectiveType: o.effectiveType } });
+  };
+
+  beforeEach(() => {
+    played.length = 0;
+    (HTMLMediaElement.prototype as unknown as Record<string, unknown>).play = function () {
+      played.push("play");
+      return Promise.resolve();
+    };
+    (HTMLMediaElement.prototype as unknown as Record<string, unknown>).pause = () => void played.push("pause");
+  });
+  afterEach(() => {
+    delete w.matchMedia;
+    delete nav.connection;
+    delete document.documentElement.dataset.motion;
+    HERO.video = null;
+  });
+
+  test("sans fichiers fournis : aucun fond vidéo, aucune référence à un fichier absent", () => {
+    const { container } = render(<PortfolioHero />);
+    assert.equal(container.querySelectorAll("video, [src*='/video/']").length, 0);
+    assert.ok(!container.querySelector("section")?.classList.contains("dark"));
+  });
+
+  test("l'affiche est là tout de suite (sans vidéo) ; la vidéo se monte ensuite, muette, en boucle, sans contrôle ni focus, sources WebM puis MP4", async () => {
+    visitor();
+    const { container } = render(<HeroVideo files={FILES} />);
+    assert.equal((container.querySelector("img") as HTMLImageElement).getAttribute("src"), FILES.poster);
+    assert.equal(container.querySelectorAll("video").length, 0, "pas de vidéo au premier rendu");
+    const video = await findVideo(container);
+    assert.ok(video.muted && video.loop && video.autoplay && video.playsInline);
+    assert.equal(video.getAttribute("preload"), "metadata");
+    assert.equal(video.getAttribute("poster"), FILES.poster);
+    assert.equal(video.hasAttribute("controls"), false);
+    assert.equal(video.getAttribute("tabindex"), "-1");
+    assert.deepEqual([...video.querySelectorAll("source")].map((s) => [s.getAttribute("type"), s.getAttribute("src")]), [["video/webm", FILES.webm], ["video/mp4", FILES.mp4]]);
+    assert.equal(container.firstElementChild?.getAttribute("aria-hidden"), "true");
+  });
+
+  test("« réduire les animations », économie de données, connexion 2G ou 3G : l'affiche seule, aucune vidéo", async () => {
+    for (const o of [{ reduce: true }, { saveData: true }, { effectiveType: "2g" }, { effectiveType: "3g" }, { effectiveType: "slow-2g" }]) {
+      visitor(o);
+      const { container, unmount } = render(<HeroVideo files={FILES} />);
+      await new Promise((r) => setTimeout(r, 400)); // laisse passer le moment « au repos »
+      assert.equal(container.querySelectorAll("video").length, 0, JSON.stringify(o));
+      assert.ok(container.querySelector("img"), "l'affiche reste");
+      unmount();
+    }
+  });
+
+  test("téléphone : version 720p allégée si fournie, sinon l'affiche seule", async () => {
+    visitor({ narrow: true });
+    const { container, unmount } = render(<HeroVideo files={FILES} />);
+    const video = await findVideo(container);
+    assert.deepEqual([...video.querySelectorAll("source")].map((s) => s.getAttribute("src")), [FILES.mobile.webm, FILES.mobile.mp4]);
+    unmount();
+    const { container: bare } = render(<HeroVideo files={{ poster: FILES.poster, webm: FILES.webm, mp4: FILES.mp4 }} />);
+    await new Promise((r) => setTimeout(r, 400));
+    assert.equal(bare.querySelectorAll("video").length, 0, "pas de version allégée : l'affiche seule sur téléphone");
+  });
+
+  test("le bouton de pause de l'en-tête arrête la vidéo, et la reprise la relance", async () => {
+    visitor();
+    const { container } = render(<HeroVideo files={FILES} />);
+    await findVideo(container);
+    await waitFor(() => assert.ok(played.includes("play")));
+    played.length = 0;
+    await act(async () => {
+      document.documentElement.dataset.motion = "paused";
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    assert.ok(played.includes("pause"), "pause demandée");
+    played.length = 0;
+    await act(async () => {
+      delete document.documentElement.dataset.motion;
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    assert.ok(played.includes("play"), "reprise");
+  });
+
+  test("hors de l'écran, la vidéo est en pause (aucun calcul pour rien) ; elle repart quand le hero revient", async () => {
+    visitor();
+    const { container } = render(<HeroVideo files={FILES} />);
+    await findVideo(container);
+    await waitFor(() => assert.ok(played.includes("play")));
+    played.length = 0;
+    act(() => {
+      for (const o of seen("__intersections")) if (!o.disconnected) o.callback([{ isIntersecting: false }]);
+    });
+    assert.ok(played.includes("pause"));
+    played.length = 0;
+    act(() => {
+      for (const o of seen("__intersections")) if (!o.disconnected) o.callback([{ isIntersecting: true }]);
+    });
+    assert.ok(played.includes("play"));
+  });
+
+  test("une vidéo qui ne se charge pas est retirée : l'affiche reste, la page ne casse pas", async () => {
+    visitor();
+    const { container } = render(<HeroVideo files={FILES} />);
+    const video = await findVideo(container);
+    fireEvent.error(video);
+    await waitFor(() => assert.equal(container.querySelectorAll("video").length, 0));
+    assert.ok(container.querySelector("img"));
+  });
+
+  test("overlay sombre à 74 % au moins sur toute la hauteur", () => {
+    const { container } = render(<HeroVideo files={FILES} />);
+    const overlay = [...container.querySelectorAll("div")].find((d) => d.style.background.includes("linear-gradient"));
+    assert.ok(overlay, "overlay");
+    for (const a of overlay!.style.background.match(/rgba\([^)]*\)/g) ?? []) assert.ok(Number(a.split(",").pop()!.replace(")", "")) >= 0.74, a);
+  });
+
+  test("avec la vidéo : le hero passe en jetons sombres, le titre prend les couleurs claires de la marque, le texte est plein (pas d'atténuation)", () => {
+    HERO.video = FILES;
+    const { container } = render(<PortfolioHero />);
+    assert.ok(container.querySelector("section")?.classList.contains("dark"));
+    assert.ok(screen.getByText(HERO.titleAccent).classList.contains("text-brand-gradient-video"));
+    assert.ok(screen.getByText(HERO.lead).classList.contains("text-foreground"));
+    assert.ok(!screen.getByText(HERO.lead).className.includes("/80"));
+    assert.equal(container.querySelectorAll(".mesh, .float-slow").length, 0, "la vidéo remplace les nappes et les carrés");
   });
 });

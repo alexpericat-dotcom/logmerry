@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
 import { Magnetic, TiltCard } from "@/components/hero-effects";
+import { HeroVideo } from "@/components/hero-video";
 import { MotionToggle } from "@/components/motion-toggle";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ToolIcon } from "@/components/tool-icon";
@@ -64,6 +65,8 @@ export function PortfolioHeader() {
  * et se décalent au défilement. Entièrement décoratif (caché des lecteurs d'écran), sans image lourde ; les carrés sont à l'intérieur du hero, jamais coupés.
  */
 function HeroBackdrop() {
+  // Vidéo fournie : elle remplace les nappes, le grain et les carrés (un fond à la fois) ; l'overlay sombre est dans le composant.
+  if (HERO.video) return <HeroVideo files={HERO.video} />;
   const blob = (color: string, opacity: number) => ({ background: `radial-gradient(closest-side, hsl(var(--${color}) / ${opacity}), transparent)` });
   const squares = [
     { at: "left-[3%] top-[14%]", size: "size-10", tone: "tone-teal", py: "-70px" },
@@ -117,8 +120,9 @@ function MethodCard() {
 
 export function PortfolioHero() {
   const delay = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
+  // Avec la vidéo, le hero passe en jetons SOMBRES quel que soit le thème (texte clair sur overlay sombre : c'est ce que garantit le calcul de contraste).
   return (
-    <section aria-labelledby="hero-title" className="relative isolate overflow-hidden border-b bg-gradient-sunset bg-[length:var(--banner-size)]">
+    <section aria-labelledby="hero-title" className={`relative isolate overflow-hidden border-b bg-gradient-sunset bg-[length:var(--banner-size)] ${HERO.video ? "dark" : ""}`}>
       <HeroBackdrop />
       <div className="relative mx-auto grid min-h-[88vh] max-w-6xl items-center gap-14 px-4 py-20 md:px-6 lg:grid-cols-[1.25fr_1fr]">
         <div className="flex flex-col gap-8">
@@ -130,11 +134,11 @@ export function PortfolioHero() {
             className="hero-in break-words font-pixel text-4xl font-bold uppercase leading-[1] tracking-wide text-foreground [text-wrap:balance] sm:text-5xl lg:text-6xl dark:font-sans dark:text-5xl dark:normal-case dark:leading-[0.98] dark:tracking-tight dark:sm:text-6xl dark:lg:text-7xl"
             style={delay(60)}
           >
-            {HERO.titleLead} <span className="text-brand-gradient block">{HERO.titleAccent}</span>
+            {HERO.titleLead} <span className={`${HERO.video ? "text-brand-gradient-video" : "text-brand-gradient"} block`}>{HERO.titleAccent}</span>
           </h1>
-          <p className="hero-in max-w-[55ch] text-lg leading-relaxed text-foreground/80 md:text-xl" style={delay(120)}>
-            {/* Typographie française : espace insécable avant « ? », pour qu'il ne se retrouve jamais seul en début de ligne. */}
-            {HERO.lead.replace(" ?", "\u00A0?")}
+          {/* Sur la vidéo : texte plein (pas d'atténuation), c'est ce que couvre le calcul de contraste du pire pixel. */}
+          <p className={`hero-in max-w-[55ch] text-lg leading-relaxed md:text-xl ${HERO.video ? "text-foreground" : "text-foreground/80"}`} style={delay(120)}>
+            {HERO.lead}
           </p>
           <div className="hero-in flex flex-wrap items-center gap-4" style={delay(180)}>
             <Magnetic>
@@ -153,7 +157,7 @@ export function PortfolioHero() {
             </Button>
           </div>
           {HERO.proof && (
-            <p className="hero-in max-w-[55ch] text-sm text-foreground/70" style={delay(240)}>
+            <p className={`hero-in max-w-[55ch] text-sm ${HERO.video ? "text-foreground" : "text-foreground/70"}`} style={delay(240)}>
               {HERO.proof}
             </p>
           )}
