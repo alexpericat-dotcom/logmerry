@@ -38,7 +38,7 @@ const readValues = (formData: FormData): RealisationInput => ({
 type WriteOutcome = "saved" | "not-found" | "error";
 
 /** Session, validation, écriture ; `write` dit si la base a enregistré, si la réalisation n'existe plus ou si elle a échoué. */
-async function save(values: RealisationInput, write: (supabase: Db, value: RealisationValues) => Promise<WriteOutcome>): Promise<RealisationFormState> {
+async function save(values: RealisationInput, write: (supabase: Db, value: RealisationValues) => Promise<WriteOutcome>, editedId?: string): Promise<RealisationFormState> {
   const result = await withSession(async (supabase) => {
     const checked = validateRealisationInput(values);
     if (!checked.ok) return { errors: checked.errors };
@@ -53,6 +53,7 @@ async function save(values: RealisationInput, write: (supabase: Db, value: Reali
   if (result.value.outcome !== "saved") return { message: SAVE_FAILED, values };
 
   revalidatePath("/realisations");
+  if (editedId) revalidatePath(`/realisations/${editedId}/modifier`);
   redirect("/realisations");
 }
 
@@ -67,12 +68,13 @@ export async function createRealisation(_prev: RealisationFormState, formData: F
 export async function updateRealisation(id: string, _prev: RealisationFormState, formData: FormData): Promise<RealisationFormState> {
   return save(readValues(formData), async (supabase, value) => {
     if (!isUuid(id)) return "not-found";
-    // Retirer l'accord d'une réalisation publiée la dépublie (la base le fait aussi) ; sans changement d'accord, la publication ne bouge pas.
+    // Case d'accord décochée : « dépubliée » est écrit explicitement (la base le ferait aussi, et refuse de toute façon published sans accord) ;
+    // accord coché : `published` n'est pas dans la requête, la publication ne bouge pas.
     const patch = value.client_consent ? value : { ...value, published: false };
     const { data, error } = await supabase.from("realisations").update(patch).eq("id", id).select("id");
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
-  });
+  }, id);
 }
 
 export type PublicationState = { message?: string };
@@ -81,6 +83,8 @@ export type PublicationState = { message?: string };
 export async function setRealisationPublication(id: string, publish: boolean): Promise<PublicationState> {
   const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent"> => {
     if (!isUuid(id)) return "not-found";
+    // Une Server Action est appelable avec n'importe quel argument : seul un vrai booléen est une demande.
+    if (typeof publish !== "boolean") return "error";
     // Publier ne touche que les lignes dont l'accord est coché : l'accord est relu par la base, pas pris sur la foi de l'écran.
     let query = supabase.from("realisations").update({ published: publish }).eq("id", id);
     if (publish) query = query.eq("client_consent", true);

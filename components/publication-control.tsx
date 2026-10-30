@@ -15,11 +15,22 @@ export function PublicationControl({ id, published, consent }: { id: string; pub
         <h2 id="publication-title" className="font-semibold">
           Publication
         </h2>
-        <Badge variant={published ? "success" : "outline"}>{published ? "Publiée" : "Non publiée"}</Badge>
+        <span aria-live="polite">
+          <Badge variant={published ? "success" : "outline"}>{published ? "Publiée" : "Non publiée"}</Badge>
+        </span>
       </div>
-      {!published && !consent && <p className="text-sm text-muted-foreground">Pour publier, coche d&apos;abord l&apos;accord du client puis enregistre.</p>}
+      {!published && !consent && (
+        <p id="publication-help" className="text-sm text-muted-foreground">
+          Pour publier, coche d&apos;abord l&apos;accord du client dans le formulaire ci-dessus, puis clique sur « Enregistrer les modifications ».
+        </p>
+      )}
       <form action={action} className="flex flex-col items-start gap-2">
-        <Button type="submit" variant={published ? "outline" : "default"} disabled={pending}>
+        <Button
+          type="submit"
+          variant={published ? "outline" : "default"}
+          disabled={pending || (!published && !consent)}
+          aria-describedby={!published && !consent ? "publication-help" : undefined}
+        >
           {pending ? "Un instant…" : published ? "Retirer de la publication" : "Publier"}
         </Button>
         {state.message && (

@@ -21,7 +21,8 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
     <div className="flex flex-col gap-6">
       <PageBanner title="Modifier la réalisation" />
       <RealisationForm
-        key={r.updated_at}
+        // La clé suit le contenu enregistré, pas `updated_at` : publier ou retirer (qui le modifie) ne doit pas effacer une saisie en cours.
+        key={[r.title, r.description, r.origin, r.client_name, r.client_sector, r.result_figure, r.link_url, r.client_consent, r.stack.join("|")].join("\u0001")}
         action={updateRealisation.bind(null, id)}
         initial={{
           title: r.title,

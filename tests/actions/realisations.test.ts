@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import { createRealisation, deleteRealisation, setRealisationPublication, updateRealisation } from "../../app/(app)/realisations/actions.ts";
-import { fake, filterValue, form, redirectsTo, routes, withHarness } from "../helpers/harness.ts";
+import { fake, filterValue, form, redirectsTo, routes, toLogin, withHarness } from "../helpers/harness.ts";
 
 const ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
@@ -25,6 +25,7 @@ describe("createRealisation / updateRealisation", () => {
   });
 
   const FULL = { ...VALID, client_name: " Atelier Brume ", client_sector: "Artisanat", result_figure: "-30 % de saisie", link_url: "https://exemple.fr/", client_consent: "on" };
+  const FULL_WITHOUT_CONSENT = { ...FULL, client_consent: "" };
   const FULL_PAYLOAD = {
     title: "Assistant RAG",
     description: "Un assistant qui cite ses sources.",
@@ -77,10 +78,11 @@ describe("createRealisation / updateRealisation", () => {
     assert.equal("published" in (op.payload as object), false, "avec l'accord coché, la publication n'est pas touchée");
   });
 
-  test("modification sans accord coché : dépubliée d'office ; avec accord, la publication n'est pas touchée", async () => {
+  test("modification sans accord coché : dépubliée d'office, tous les champs écrits", async () => {
     fake.respond = () => ({ data: [{ id: ID }] });
-    await assert.rejects(() => updateRealisation(ID, {}, form(VALID)), redirectsTo("/realisations"));
-    assert.equal((fake.on("realisations", "update")[0].payload as Record<string, unknown>).published, false);
+    await assert.rejects(() => updateRealisation(ID, {}, form(FULL_WITHOUT_CONSENT)), redirectsTo("/realisations"));
+    assert.deepEqual(fake.on("realisations", "update")[0].payload, { ...FULL_PAYLOAD, client_consent: false, published: false });
+    assert.ok(fake.revalidated.includes(`/realisations/${ID}/modifier`), "la page de modification est revalidée");
   });
 
   test("modification : réalisation disparue ou identifiant invalide = « n'existe plus »", async () => {
@@ -112,6 +114,14 @@ describe("setRealisationPublication", () => {
     assert.match((await setRealisationPublication(ID, true)).message ?? "", /n'existe plus/);
     fake.reset();
     assert.match((await setRealisationPublication("x", true)).message ?? "", /n'existe plus/);
+    assert.equal(fake.ops.length, 0);
+  });
+
+  test("sans session : redirection vers la connexion ; argument qui n'est pas un booléen : refusé sans requête", async () => {
+    fake.claims = null;
+    await assert.rejects(() => setRealisationPublication(ID, true), toLogin);
+    fake.reset();
+    assert.match((await setRealisationPublication(ID, "false" as unknown as boolean)).message ?? "", /Changement impossible/);
     assert.equal(fake.ops.length, 0);
   });
 
