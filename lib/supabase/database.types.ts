@@ -632,6 +632,60 @@ export type Database = {
           },
         ];
       };
+      realisations: {
+        Row: {
+          client_consent: boolean;
+          client_name: string | null;
+          client_sector: string | null;
+          created_at: string;
+          description: string;
+          id: string;
+          link_url: string | null;
+          origin: Database["public"]["Enums"]["realisation_origin"];
+          owner_id: string;
+          published: boolean;
+          published_at: string | null;
+          result_figure: string | null;
+          stack: string[];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_consent?: boolean;
+          client_name?: string | null;
+          client_sector?: string | null;
+          created_at?: string;
+          description: string;
+          id?: string;
+          link_url?: string | null;
+          origin: Database["public"]["Enums"]["realisation_origin"];
+          owner_id?: string;
+          published?: boolean;
+          published_at?: string | null;
+          result_figure?: string | null;
+          stack?: string[];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_consent?: boolean;
+          client_name?: string | null;
+          client_sector?: string | null;
+          created_at?: string;
+          description?: string;
+          id?: string;
+          link_url?: string | null;
+          origin?: Database["public"]["Enums"]["realisation_origin"];
+          owner_id?: string;
+          published?: boolean;
+          published_at?: string | null;
+          result_figure?: string | null;
+          stack?: string[];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       regulatory_rules: {
         Row: {
           activity_category: string;
@@ -977,6 +1031,7 @@ export type Database = {
       pp_urssaf_frequency: "monthly" | "quarterly" | "other";
       pp_vat_regime: "franchise" | "simplified" | "normal" | "other";
       quote_status: "draft" | "sent" | "accepted" | "refused";
+      realisation_origin: "real_client" | "training" | "friend" | "demo";
       regulatory_rule_status: "a_verifier" | "verifiee" | "essai";
       sprint_status: "planned" | "active" | "closed";
       story_status: "todo" | "in_progress" | "done";

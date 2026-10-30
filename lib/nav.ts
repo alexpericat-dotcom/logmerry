@@ -29,7 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Missions", href: "/missions", icon: "missions", available: true },
   { label: "Calendrier", href: "/calendrier", icon: "echeances", available: true },
   { label: "Paramètres", href: "/parametres", icon: "parametres", available: true },
-  { label: "Réalisations", href: "/realisations", icon: "realisations", available: false },
+  { label: "Réalisations", href: "/realisations", icon: "realisations", available: true },
   { label: "À faire", href: "/a-faire", icon: "a-faire", available: true },
   { label: "Factures", href: "/factures", icon: "factures", available: true, group: "Finances" },
   { label: "Plafonds", href: "/plafonds", icon: "plafonds", available: true, group: "Finances" },
