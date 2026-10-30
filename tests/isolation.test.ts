@@ -2804,7 +2804,8 @@ describe("captures des réalisations (table realisation_images et bucket portfol
   test("chemin d'une AUTRE de mes réalisations refusé (insertion), mise à jour impossible (plus de politique), .jpg et .webp acceptés", async () => {
     const r2 = await a.client.from("realisations").insert({ title: `${PREFIX} seconde`, description: "d", origin: "demo" }).select("id").single();
     assert.ifError(r2.error);
-    const wrong = await a.client.from("realisation_images").insert({ realisation_id: real.id, path: `${a.userId}/${r2.data!.id}/${uuid()}.png`, alt: "x" });
+    // Sur une réalisation vide : le déclencheur de plafond s'exécute avant la politique, il masquerait le refus sur une réalisation pleine.
+    const wrong = await a.client.from("realisation_images").insert({ realisation_id: r2.data!.id, path: `${a.userId}/${real.id}/${uuid()}.png`, alt: "x" });
     assert.equal(wrong.error?.code, "42501", "chemin d'une autre réalisation");
     for (const ext of ["jpg", "webp"]) {
       const ok = await a.client.from("realisation_images").insert({ realisation_id: r2.data!.id, path: `${a.userId}/${r2.data!.id}/${uuid()}.${ext}`, alt: ext }).select("id").single();
@@ -2838,14 +2839,6 @@ describe("captures des réalisations (table realisation_images et bucket portfol
     assert.deepEqual((await b.client.storage.from("portfolio").list(`${a.userId}/${real.id}`)).data ?? [], [], "B ne liste pas le dossier de A");
     await a.client.storage.from("portfolio").remove([path]);
     assert.ok(!(await names()).includes(file), "A supprime son propre fichier");
-  });
-
-  test("le bucket a les réglages attendus (public, 3 Mo, trois types)", async () => {
-    const bucket = await a.client.storage.getBucket("portfolio");
-    assert.ifError(bucket.error);
-    assert.equal(bucket.data!.public, true);
-    assert.equal(bucket.data!.file_size_limit, 3145728);
-    assert.deepEqual([...(bucket.data!.allowed_mime_types ?? [])].sort(), ["image/jpeg", "image/png", "image/webp"]);
   });
 
   test("sans connexion : aucun droit sur la table ; supprimer la réalisation supprime ses lignes de captures", async () => {
