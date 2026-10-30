@@ -16,3 +16,13 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npx next build
+  # Séparé du job principal : une panne du registre npm ou un nouvel avis sans correctif doit se lire comme « audit », pas comme un échec du code.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm audit --omit=dev --audit-level=high
