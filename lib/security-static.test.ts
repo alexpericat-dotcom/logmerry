@@ -90,13 +90,55 @@ describe("migrations : sécurité par ligne", () => {
     assert.deepEqual(grants, ["grant select on public.public_realisations, public.public_realisation_images to anon"]);
   });
 
-  test("les vues publiques du portfolio ne filtrent que les réalisations publiées avec accord et n'exposent aucun identifiant privé", () => {
-    const views = [...sql.matchAll(/create view public\.(public_\w+)\s+as([^;]*);/gi)];
-    assert.deepEqual(views.map((v) => v[1]).sort(), ["public_realisation_images", "public_realisations"]);
-    for (const [, name, body] of views) {
-      assert.match(body, /where r\.published and r\.client_consent/i, name);
-      assert.ok(!/owner_id|client_id|mission_id|client_consent\s+as|\*/i.test(body.replace(/where r\.published and r\.client_consent/i, "")), `${name} expose une colonne privée`);
+  /** Dernière définition de chaque vue publique (une migration ultérieure `create or replace view` l'emporte). */
+  const publicViews = () => {
+    const defs = new Map<string, string>();
+    for (const m of sql.matchAll(/create (?:or replace )?view public\.(public_\w+)\s+as([^;]*);/gi)) defs.set(m[1], m[2]);
+    return defs;
+  };
+  /** Noms de colonnes du `select` d'une vue, découpé aux virgules de premier niveau (les parenthèses de `coalesce(...)` ne comptent pas). */
+  const columnsOf = (body: string) => {
+    const list = /select([\s\S]*?)\bfrom\b/i.exec(body)?.[1] ?? "";
+    const items: string[] = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of list) {
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        items.push(cur);
+        cur = "";
+      } else cur += ch;
     }
+    items.push(cur);
+    return items.map((it) => {
+      const text = it.replace(/--[^\n]*/g, "").replace(/\s+/g, " ").trim();
+      return (/\bas (\w+)$/i.exec(text)?.[1] ?? /(?:\w+\.)?(\w+)$/.exec(text)?.[1] ?? text).toLowerCase();
+    });
+  };
+
+  test("vues publiques du portfolio : LISTE BLANCHE exacte des colonnes (rien d'autre n'est jamais ajouté sans que ce test change)", () => {
+    const views = publicViews();
+    assert.deepEqual([...views.keys()].sort(), ["public_realisation_images", "public_realisations"]);
+    assert.deepEqual(columnsOf(views.get("public_realisations")!), ["id", "title", "description", "origin", "client_label", "result_figure", "link_url", "stack", "published_at"]);
+    assert.deepEqual(columnsOf(views.get("public_realisation_images")!), ["id", "realisation_id", "path", "alt", "created_at"]);
+  });
+
+  test("vues publiques : filtre « publiée ET accord » en fin de définition, sans `or`, et `security_barrier` posé", () => {
+    for (const [name, body] of publicViews()) {
+      assert.match(body.trim(), /where r\.published and r\.client_consent$/i, name);
+      const where = body.slice(body.search(/\bwhere\b/i));
+      assert.ok(!/\bor\b/i.test(where), `${name} : « or » dans la clause where`);
+      assert.match(sql, new RegExp(`alter view public\\.${name} set \\(security_barrier = true\\)`, "i"), `${name} sans security_barrier`);
+      assert.ok(!/security_invoker\s*=\s*true/i.test(sql.slice(sql.indexOf(name))), `${name} en security_invoker : elle renverrait 0 ligne à un visiteur`);
+    }
+  });
+
+  test("la page publique ne lit QUE les deux vues : aucune table, aucune clé d'administration", () => {
+    const files = ["lib/db/public-portfolio.ts", "app/portfolio/page.tsx", "components/portfolio-sections.tsx", "components/portfolio-showcase.tsx", "components/portfolio-image.tsx", "lib/domain/portfolio.ts"];
+    const tables = files.flatMap((f) => [...readFileSync(f, "utf8").matchAll(/\.from\(\s*["'`](\w+)["'`]/g)].map((m) => `${f}: ${m[1]}`));
+    assert.deepEqual(tables.map((t) => t.split(": ")[1]).sort(), ["public_realisation_images", "public_realisations"]);
+    for (const f of files) assert.ok(!/service_role|createAdminClient|SUPABASE_SERVICE/i.test(readFileSync(f, "utf8")), f);
   });
 
   test("toute fonction SECURITY DEFINER a un `search_path` fixé", () => {

@@ -27,3 +27,18 @@ test("next/image n'accepte que le dossier public du bucket « portfolio » de Su
     else process.env.NEXT_PUBLIC_SUPABASE_URL = saved;
   }
 });
+
+test("next/image : un Supabase local (http, port) est accepté ; une adresse qui n'est ni http ni https donne aucun motif", async () => {
+  const saved = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  try {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
+    const { default: local } = (await import(freshConfig("local"))) as { default: typeof nextConfig };
+    assert.deepEqual(local.images?.remotePatterns, [{ protocol: "http", hostname: "127.0.0.1", port: "54321", pathname: "/storage/v1/object/public/portfolio/**" }]);
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "ftp://x.fr";
+    const { default: odd } = (await import(freshConfig("ftp"))) as { default: typeof nextConfig };
+    assert.deepEqual(odd.images?.remotePatterns, []);
+  } finally {
+    if (saved === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    else process.env.NEXT_PUBLIC_SUPABASE_URL = saved;
+  }
+});

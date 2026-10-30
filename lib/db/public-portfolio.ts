@@ -1,6 +1,6 @@
 import "server-only";
 
-import { buildCards, type PublicCard, type PublicImage, type PublicRealisation } from "@/lib/domain/portfolio";
+import { toPublicCards, type PublicCard } from "@/lib/domain/portfolio";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -14,11 +14,5 @@ export async function listPublicCards(): Promise<PublicCard[]> {
     supabase.from("public_realisation_images").select("id, realisation_id, path, alt, created_at").order("created_at").order("id"),
   ]);
   if (items.error || images.error) throw new Error("Impossible de charger le portfolio.");
-  // Les colonnes d'une vue sont nullables dans les types ; celles-ci ne le sont jamais en pratique : on écarte une ligne incomplète plutôt que de l'afficher à moitié.
-  const complete = items.data.filter((r): r is typeof r & PublicRealisation => !!(r.id && r.title && r.description && r.origin && r.client_label)) as PublicRealisation[];
-  const pictures = images.data.filter((i): i is typeof i & PublicImage => !!(i.id && i.realisation_id && i.path && i.alt)) as PublicImage[];
-  return buildCards(
-    complete.map((r) => ({ ...r, stack: r.stack ?? [] })),
-    pictures,
-  );
+  return toPublicCards(items.data, images.data);
 }

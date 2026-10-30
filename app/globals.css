@@ -238,9 +238,30 @@
     animation: float-slow 7s ease-in-out infinite;
   }
   .lift {
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    transition: translate 180ms ease, box-shadow 180ms ease;
   }
+  /* `translate` et non `transform` : l'animation d'apparition (`forwards`) garde un `transform`, qui l'emporterait sur le survol. */
   .lift:hover {
-    transform: translateY(-4px);
+    translate: 0 -4px;
+  }
+}
+
+/* L'en-tête de la page publique est collant : un élément qui reçoit le focus ou une ancre ne doit pas passer dessous (WCAG 2.4.11). */
+html:has(#contenu) {
+  scroll-padding-top: 5rem;
+}
+/* Impression : rendu statique, sans en-tête collant, sans décor ni hauteur d'écran. */
+@media print {
+  .reveal {
+    animation: none !important;
+  }
+  .float-slow {
+    display: none !important;
+  }
+  header.sticky {
+    position: static;
+  }
+  section[aria-labelledby="hero-title"] > div {
+    min-height: 0 !important;
   }
 }

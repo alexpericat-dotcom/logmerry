@@ -3,7 +3,7 @@ import "../helpers/dom.ts";
 import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { PortfolioContact, PortfolioFooter, PortfolioHeader, PortfolioHero, PortfolioProcess, PortfolioServices } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
@@ -48,9 +48,37 @@ describe("réalisations de la page publique", () => {
     assert.ok(screen.getByAltText("Formulaire d'inscription"));
   });
 
-  test("sans capture : un aplat avec le titre, caché des lecteurs d'écran (pas d'image sans alternative)", () => {
-    render(showcase([item()]));
-    assert.equal(screen.queryAllByRole("img").length, 0);
+  test("sans capture : un aplat avec le titre, caché des lecteurs d'écran ; aucune balise img sans texte alternatif", () => {
+    const { container } = render(showcase([item()]));
+    assert.equal(container.querySelectorAll("img").length, 0);
+    const flat = [...container.querySelectorAll("[aria-hidden=true]")].find((el) => el.textContent === "Atelier Nova");
+    assert.ok(flat, "l'aplat porte le titre et aria-hidden");
+    assert.equal(container.querySelectorAll("img:not([alt]), img[alt='']").length, 0);
+  });
+
+  test("une capture qui ne se charge pas est remplacée par un aplat sobre avec son texte alternatif (pas d'icône cassée)", () => {
+    const { container } = render(showcase([item()], [img("1", "Page d'accueil")]));
+    fireEvent.error(screen.getByAltText("Page d'accueil"));
+    assert.equal(container.querySelectorAll("img").length, 0);
+    assert.ok(screen.getByRole("img", { name: "Page d'accueil" }));
+  });
+
+  test("sans adresse de stockage configurée : aucune capture n'est tentée (la page ne tombe pas en erreur)", () => {
+    const { container } = render(<PortfolioShowcase cards={buildCards([item()], [img("1", "Page d'accueil")])} supabaseUrl="" />);
+    assert.equal(container.querySelectorAll("img").length, 0);
+    assert.ok(screen.getByRole("heading", { level: 3, name: "Atelier Nova" }));
+  });
+
+  test("lien avec identifiants dans l'adresse : jamais rendu", () => {
+    render(showcase([item({ link_url: "https://user:mdp@exemple.fr/" })]));
+    assert.equal(screen.queryByRole("link", { name: /Voir la page en ligne/ }), null);
+  });
+
+  test("textes très longs (mot sans espace) : cassés plutôt que de déborder", () => {
+    const { container } = render(showcase([item({ description: "x".repeat(600), client_label: "y".repeat(200), result_figure: "z".repeat(200), stack: ["w".repeat(40)] })]));
+    const long = [...container.querySelectorAll("p, li, span")].filter((el) => el.children.length === 0 && /^[xyzw]{40,}$|Résultat : z+/.test(el.textContent ?? ""));
+    assert.ok(long.length >= 2, "les textes longs sont bien rendus");
+    for (const el of long) assert.match(el.closest("[class*=break-]")?.className ?? "", /break-(words|all)/, (el.textContent ?? "").slice(0, 12));
   });
 
   test("un lien qui n'est pas en https n'est jamais rendu (javascript:, http:)", () => {

@@ -5,8 +5,9 @@ import { securityHeaders } from "./lib/security-headers.ts";
 /** Images du bucket public `portfolio` (page publique) : ce seul hôte et ce seul dossier sont autorisés pour `next/image`. */
 function portfolioImagePatterns() {
   try {
-    const { hostname } = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "");
-    return [{ protocol: "https" as const, hostname, pathname: "/storage/v1/object/public/portfolio/**" }];
+    const { protocol, hostname, port } = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "");
+    if (protocol !== "https:" && protocol !== "http:") return [];
+    return [{ protocol: protocol === "http:" ? ("http" as const) : ("https" as const), hostname, ...(port ? { port } : {}), pathname: "/storage/v1/object/public/portfolio/**" }];
   } catch {
     return [];
   }

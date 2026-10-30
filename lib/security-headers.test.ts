@@ -43,7 +43,10 @@ describe("securityHeaders", () => {
 
   test("la CSP autorise les images du bucket public de Supabase (page du portfolio)", () => {
     const csp = get(securityHeaders("https://abc.supabase.co"), "Content-Security-Policy-Report-Only") ?? "";
-    assert.ok(csp.includes("img-src 'self' data: https://abc.supabase.co"));
+    const imgSrc = csp.split("; ").find((d) => d.startsWith("img-src"));
+    assert.equal(imgSrc, "img-src 'self' data: https://abc.supabase.co");
+    const without = get(securityHeaders(undefined), "Content-Security-Policy-Report-Only") ?? "";
+    assert.equal(without.split("; ").find((d) => d.startsWith("img-src")), "img-src 'self' data:");
   });
 
   test("la CSP couvre aussi base-uri, form-action et object-src", () => {

@@ -1,12 +1,10 @@
 import { ExternalLink } from "lucide-react";
-import Image from "next/image";
 
+import { PortfolioImage } from "@/components/portfolio-image";
 import { Badge } from "@/components/ui/badge";
-import type { PublicCard } from "@/lib/domain/portfolio";
+import { safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
 import { publicImageUrl } from "@/lib/domain/realisation-images";
 import { SHOWCASE } from "@/lib/portfolio-content";
-
-const isHttps = (url: string | null): url is string => !!url && url.startsWith("https://");
 
 /** Cadre de navigateur autour d'une capture : barre à trois points, image au format 16/9. */
 function BrowserFrame({ children }: { children: React.ReactNode }) {
@@ -23,14 +21,16 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
 }
 
 export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; index: number; supabaseUrl: string }) {
-  const [cover, ...more] = card.images;
+  // Sans adresse de stockage configurée, aucune capture n'est tentée (la carte garde son aplat) : une page ne doit jamais tomber en erreur pour une image.
+  const [cover, ...more] = supabaseUrl ? card.images : [];
+  const link = safeHttpsLink(card.link_url);
   const flip = index % 2 === 1;
   return (
-    <li className="reveal grid items-center gap-8 lg:grid-cols-12">
-      <div className={`lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
+    <li className="reveal grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-12">
+      <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
         <BrowserFrame>
           {cover ? (
-            <Image src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} fill sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover object-top" />
+            <PortfolioImage src={publicImageUrl(supabaseUrl, cover.path)} alt={cover.alt} sizes="(min-width: 1024px) 58vw, 100vw" priority={index === 0} />
           ) : (
             // Sans capture : un aplat de marque avec le titre, pour que la carte ne soit jamais vide.
             <div aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-sunset bg-[length:var(--banner-size)] p-6 text-center font-pixel text-2xl font-bold uppercase dark:font-sans dark:normal-case">
@@ -39,37 +39,41 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
           )}
         </BrowserFrame>
         {more.length > 0 && (
-          <ul className="mt-3 grid grid-cols-5 gap-2">
+          <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {more.map((image) => (
               <li key={image.id} className="relative aspect-video overflow-hidden rounded-md border bg-muted">
-                <Image src={publicImageUrl(supabaseUrl, image.path)} alt={image.alt} fill sizes="12vw" className="object-cover object-top" />
+                <PortfolioImage src={publicImageUrl(supabaseUrl, image.path)} alt={image.alt} sizes="(min-width: 1024px) 12vw, 30vw" />
               </li>
             ))}
           </ul>
         )}
       </div>
-      <div className={`flex flex-col gap-4 lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
+      <div className={`flex min-w-0 flex-col gap-4 lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
         <div className="flex flex-wrap gap-2">
           <Badge variant="signature">{card.originLabel}</Badge>
-          <Badge variant="outline">{card.client_label}</Badge>
+          <Badge variant="outline" className="whitespace-normal break-words">
+            {card.client_label}
+          </Badge>
         </div>
         <h3 className="break-words text-2xl font-bold md:text-3xl">{card.title}</h3>
-        <p className="text-lg leading-relaxed text-muted-foreground">{card.description}</p>
+        <p className="break-words text-lg leading-relaxed text-muted-foreground">{card.description}</p>
         {card.result_figure && (
-          <p className="w-fit rounded-md border bg-[hsl(var(--tone-yellow))] px-3 py-2 font-semibold text-[hsl(235_47%_20%)] shadow-hard">Résultat : {card.result_figure}</p>
+          <p className="w-fit max-w-full break-words rounded-md border bg-[hsl(var(--tone-yellow))] px-3 py-2 font-semibold text-[hsl(235_47%_20%)] shadow-hard">Résultat : {card.result_figure}</p>
         )}
         {card.stack.length > 0 && (
           <ul aria-label="Outils utilisés" className="flex flex-wrap gap-1.5">
             {card.stack.map((tag) => (
               <li key={tag}>
-                <Badge variant="outline">{tag}</Badge>
+                <Badge variant="outline" className="whitespace-normal break-all">
+                  {tag}
+                </Badge>
               </li>
             ))}
           </ul>
         )}
-        {isHttps(card.link_url) && (
+        {link && (
           <a
-            href={card.link_url}
+            href={link}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md border bg-primary px-4 py-2 font-semibold text-primary-foreground shadow-hard underline-offset-4 hover:underline"

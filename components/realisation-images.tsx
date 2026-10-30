@@ -98,7 +98,7 @@ export function RealisationImages({ realisationId, ownerId, supabaseUrl, images 
       </h2>
       <p className="text-sm text-muted-foreground">
         Une capture est lisible par quiconque connaît son adresse dès son envoi, même si la réalisation n&apos;est pas publiée, et reste accessible tant que son fichier existe.
-        N&apos;envoie que des images destinées à être publiques (sans donnée du client sans son accord).
+        N&apos;envoie que des images destinées à être publiques (sans donnée du client sans son accord). Ajouter ou supprimer une capture d&apos;une réalisation publiée la remet « non publiée ».
       </p>
       {images.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2">

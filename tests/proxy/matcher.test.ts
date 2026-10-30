@@ -27,6 +27,11 @@ describe("matcher de proxy.ts", () => {
     }
   });
 
+  test("non traité : robots.txt et sitemap.xml (un robot doit les lire sans session) ; la page publique, elle, est traitée par le proxy (qui la laisse passer)", () => {
+    for (const path of ["/robots.txt", "/sitemap.xml"]) assert.equal(matched(path), false, path);
+    assert.equal(matched("/portfolio"), true);
+  });
+
   test("limites connues (figées) : une image en majuscules ou un autre type (ico hors favicon, pdf) est traité par le proxy", () => {
     for (const path of ["/LOGO.PNG", "/doc.pdf", "/autre.ico"]) assert.equal(matched(path), true, path);
   });

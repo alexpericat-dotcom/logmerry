@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { mailtoHref } from "@/lib/domain/portfolio";
 import { BENEFITS, BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HERO, PROCESS, SERVICES } from "@/lib/portfolio-content";
@@ -43,6 +44,7 @@ export function PortfolioHeader() {
               {label}
             </a>
           ))}
+          <ThemeSwitcher />
           <Button asChild size="sm">
             <a href={contactHref}>{HERO.secondary}</a>
           </Button>

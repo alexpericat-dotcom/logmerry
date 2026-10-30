@@ -166,7 +166,21 @@ describe("captures : addRealisationImage / deleteRealisationImage", () => {
     assert.deepEqual(await addRealisationImage(ID, PATH, "  Tableau de bord  "), {});
     const [op] = fake.on("realisation_images", "insert");
     assert.deepEqual(op.payload, { realisation_id: ID, path: PATH, alt: "Tableau de bord" });
-    assert.deepEqual(fake.revalidated, [`/realisations/${ID}/modifier`]);
+    assert.deepEqual(fake.revalidated, ["/realisations", `/realisations/${ID}/modifier`]);
+  });
+
+  test("ajout : la réalisation repasse « non publiée » AVANT l'insertion de la capture (jamais en ligne un instant)", async () => {
+    assert.deepEqual(await addRealisationImage(ID, PATH, "ok"), {});
+    assert.deepEqual(writes(), ["realisations:update", "realisation_images:insert"]);
+    const unpublish = fake.on("realisations", "update")[0];
+    assert.deepEqual(unpublish.payload, { published: false });
+    assert.equal(filterValue(unpublish, "eq", "id"), ID);
+  });
+
+  test("ajout : si la remise « non publiée » échoue, rien n'est inséré", async () => {
+    routes(["realisations:update", { error: { code: "XX000" } }]);
+    assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /Enregistrement impossible/);
+    assert.deepEqual(writes(), ["realisations:update"]);
   });
 
   test("texte alternatif vide : refusé sans requête (obligatoire)", async () => {
@@ -184,11 +198,11 @@ describe("captures : addRealisationImage / deleteRealisationImage", () => {
   });
 
   test("septième capture (la base refuse, 23514) : message dédié ; réalisation d'un autre compte (42501) : « n'existe plus » ; panne : réessayer", async () => {
-    fake.respond = () => ({ error: { code: "23514", message: "Six captures au plus par réalisation" } });
+    routes(["realisation_images:insert", { error: { code: "23514", message: "Six captures au plus par réalisation" } }]);
     assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /Six captures au plus/);
-    fake.respond = () => ({ error: { code: "42501" } });
+    routes(["realisation_images:insert", { error: { code: "42501" } }]);
     assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /n'existe plus/);
-    fake.respond = () => ({ error: { code: "XX000" } });
+    routes(["realisation_images:insert", { error: { code: "XX000" } }]);
     assert.match((await addRealisationImage(ID, PATH, "ok")).message ?? "", /Enregistrement impossible/);
     assert.deepEqual(fake.revalidated, []);
   });
@@ -202,7 +216,8 @@ describe("captures : addRealisationImage / deleteRealisationImage", () => {
     routes(["realisation_images:select", { data: { path: PATH, realisation_id: ID } }], ["realisation_images:delete", { data: [{ id: ID }] }]);
     assert.deepEqual(await deleteRealisationImage(ID), {});
     assert.deepEqual(fake.removed, [{ bucket: "portfolio", paths: [PATH] }]);
-    assert.deepEqual(fake.revalidated, [`/realisations/${ID}/modifier`]);
+    assert.deepEqual(writes(), ["realisations:update", "realisation_images:delete", "storage.portfolio:delete"], "dépubliée, puis ligne supprimée, puis fichier retiré");
+    assert.deepEqual(fake.revalidated, ["/realisations", `/realisations/${ID}/modifier`]);
   });
 
   test("suppression : capture absente ou identifiant invalide = « n'existe plus », rien retiré", async () => {
@@ -236,9 +251,9 @@ describe("captures : cas supplémentaires de la relecture", () => {
   });
 
   test("un refus de contrainte sur le chemin ou le texte (23514) n'est pas pris pour le plafond de six captures", async () => {
-    fake.respond = () => ({ error: { code: "23514", message: 'new row violates check constraint "realisation_images_alt_check"' } });
+    routes(["realisation_images:insert", { error: { code: "23514", message: 'new row violates check constraint "realisation_images_alt_check"' } }]);
     assert.match((await addRealisationImage(ID, `${PATH}.png`, "ok")).message ?? "", /Enregistrement impossible/);
-    fake.respond = () => ({ error: { code: "23514", message: "Six captures au plus par réalisation" } });
+    routes(["realisation_images:insert", { error: { code: "23514", message: "Six captures au plus par réalisation" } }]);
     assert.match((await addRealisationImage(ID, `${PATH}.png`, "ok")).message ?? "", /Six captures au plus/);
   });
 
@@ -262,6 +277,6 @@ describe("captures : cas supplémentaires de la relecture", () => {
     assert.match(r.message ?? "", /fichier n'a pas pu être supprimé/);
     assert.equal(filterValue(fake.on("realisation_images", "delete")[0], "eq", "id"), ID);
     assert.equal(filterValue(fake.on("realisation_images", "select")[0], "eq", "id"), ID);
-    assert.deepEqual(fake.revalidated, [`/realisations/${ID}/modifier`]);
+    assert.deepEqual(fake.revalidated, ["/realisations", `/realisations/${ID}/modifier`]);
   });
 });
