@@ -20,7 +20,8 @@ export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
   /** Le H1 : texte d'Alex (3 novembre 2026), mot pour mot, entre guillemets français à espaces insécables (4 novembre : « pour que ce soit plus humain »). */
   title: "«\u00a0Laissez la vague faire le travail.\u00a0»",
-  lead: "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.",
+  /** Deux phrases : la première sur sa ligne (retour à la ligne explicite), « Je la mets » insécable pour que « Je la » ne reste jamais seul en bout de ligne ; « vraiment » ajouté par Alex (4 novembre 2026). */
+  lead: "La puissance est déjà là\u00a0: le no-code et l'IA.\nJe\u00a0la\u00a0mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte vraiment.",
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
   /** Texte alternatif de la photo (décrit la scène, ne répète pas le titre). */

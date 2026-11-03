@@ -434,9 +434,11 @@ describe("hero", () => {
   test("un seul h1 : l'accroche d'Alex ; le sous-titre est posé directement sur la photo (aucun bloc, aucune carte)", () => {
     const { container } = render(<PortfolioHero />);
     assert.equal(screen.getByRole("heading", { level: 1 }).textContent, HERO.title);
-    const lead = screen.getByText(HERO.lead);
+    const lead = screen.getByText((_, el) => el?.tagName === "P" && el.textContent === HERO.lead);
     assert.ok(!/(^|\s)bg-/.test(lead.className), `fond autour du sous-titre : ${lead.className}`);
-    assert.ok(lead.className.includes("max-w-[42ch]"));
+    const sentences = [...lead.querySelectorAll("span.block")];
+    assert.deepEqual(sentences.map((el) => el.textContent), HERO.lead.split("\n"), "chaque phrase sur sa ligne");
+    for (const el of sentences) assert.ok(el.className.includes("text-wrap:balance"), "phrase équilibrée");
     assert.equal(container.querySelectorAll(".glass, [class*=backdrop-blur]").length, 0);
   });
 
@@ -469,7 +471,7 @@ describe("hero", () => {
     const { container } = render(<PortfolioHero />);
     const veil = container.querySelector(".hero-veil");
     assert.equal(veil?.getAttribute("aria-hidden"), "true");
-    assert.ok(screen.getByText(HERO.lead).closest("[class*='lg:text-photo']"));
+    assert.ok(screen.getByText((_, el) => el?.tagName === "P" && el.textContent === HERO.lead).closest("[class*='lg:text-photo']"));
   });
 
   test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire écrit à Alex", () => {

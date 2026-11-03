@@ -72,7 +72,8 @@ test("« Sous le capot » : frontend, backend, base de données, IA et agents, h
 test("hero : texte d'Alex, mot pour mot (3 novembre 2026)", () => {
   assert.equal(content.HERO.eyebrow, "Automatisation & IA pour les entreprises");
   assert.equal(content.HERO.title, "«\u00a0Laissez la vague faire le travail.\u00a0»", "entre guillemets français, espaces insécables");
-  assert.equal(content.HERO.lead, "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.");
+  assert.equal(content.HERO.lead, "La puissance est déjà là\u00a0: le no-code et l'IA.\nJe\u00a0la\u00a0mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte vraiment.");
+  assert.ok(content.HERO.lead.includes("Je\u00a0la\u00a0mets"), "« Je la » ne reste jamais seul en bout de ligne");
   assert.equal(content.HERO.primary, "Voir les réalisations");
   assert.equal(content.HERO.secondary, "Parler de votre problème");
   assert.ok(content.HERO.imageAlt.trim(), "la photo a un texte alternatif");

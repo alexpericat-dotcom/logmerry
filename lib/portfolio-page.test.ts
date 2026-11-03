@@ -138,6 +138,28 @@ test("boutons en verre transparent et flou : texte lisible (AA) sur le pire fond
   assert.ok(sections.includes("LiquidButton") && readFileSync("components/portfolio-showcase.tsx", "utf8").includes("liquid-orange"));
 });
 
+test("échelle typographique du nombre d'or : tailles en φ^(n/2), interligne 1 + φ⁻¹/taille, espacements en φ^n ; aucune taille Tailwind par défaut dans la page", () => {
+  const PHI = (1 + Math.sqrt(5)) / 2;
+  const folio = blocks(css, /\.folio\s*\{/)[0] ?? "";
+  const steps = ["n1", "0", "1", "2", "3", "4", "5", "6", "7", "8"];
+  const mult = steps.map((n) => Number(new RegExp(`--phi-${n}: calc\\(var\\(--fs\\) \\* ([\\d.]+)\\)`).exec(folio)?.[1]));
+  const lh = steps.map((n) => Number(new RegExp(`--lh-${n}: ([\\d.]+);`).exec(folio)?.[1]));
+  assert.ok(mult.every((m) => m > 0) && lh.every((l) => l > 0), "toutes les étapes sont définies");
+  assert.equal(mult[1], 1, "le pas 0 est le corps");
+  assert.match(folio, /--phi: 1\.618034;/);
+  for (let i = 1; i < mult.length; i++) assert.ok(Math.abs(mult[i] / mult[i - 1] - Math.sqrt(PHI)) < 0.002, `pas ${steps[i]} : rapport ${(mult[i] / mult[i - 1]).toFixed(4)} au lieu de √φ`);
+  for (let i = 2; i < mult.length; i++) assert.ok(Math.abs(mult[i] / mult[i - 2] - PHI) < 0.003, `deux pas jusqu'à ${steps[i]} : rapport ${(mult[i] / mult[i - 2]).toFixed(4)} au lieu de φ`);
+  mult.forEach((m, i) => assert.ok(Math.abs(lh[i] - (1 + 1 / PHI / m)) < 0.002, `interligne du pas ${steps[i]} : ${lh[i]} au lieu de ${(1 + 1 / PHI / m).toFixed(3)}`));
+  const config = readFileSync("tailwind.config.ts", "utf8");
+  for (const n of steps) assert.ok(config.includes(`"phi-${n}": ["var(--phi-${n})", { lineHeight: "var(--lh-${n})" }]`), `taille phi-${n} absente de tailwind.config.ts`);
+  [1, 2, 3, 4].forEach((n) => assert.ok(new RegExp(`"phi-${n}": "${(PHI ** n).toFixed(3)}rem"`).test(config), `espacement phi-${n} = φ^${n} rem`));
+  for (const file of ["components/portfolio-sections.tsx", "components/portfolio-showcase.tsx", "components/portfolio-header-frame.tsx", "app/portfolio/page.tsx"]) {
+    const src = readFileSync(file, "utf8");
+    assert.deepEqual(src.match(/(?<![\w-])(?:\w+:)*text-(?:xs|sm|base|lg|xl|[2-9]xl)\b/g) ?? [], [], `${file} : taille de texte hors de l'échelle`);
+    assert.deepEqual(src.match(/(?<![\w-])(?:\w+:)*leading-(?:\[[^\]]+\]|tight|snug|relaxed|loose)(?![\w-])/g) ?? [], [], `${file} : interligne écrit à la main (il vient de l'échelle)`);
+  }
+});
+
 test("jetons du portfolio : contrastes AA (clair et sombre) sur le fond, les cartes et les sections grisées", () => {
   const tokens = (selector: RegExp) => {
     const body = blocks(css, selector)[0] ?? "";

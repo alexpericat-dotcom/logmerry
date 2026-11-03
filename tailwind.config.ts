@@ -70,6 +70,26 @@ export default {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
       },
+      // Échelle du nombre d'or (φ = 1,618) : tailles de texte φ^(n/2) × la taille du corps, interligne 1 + φ⁻¹ / taille (voir `.folio` dans `app/globals.css`), espacements φ^n rem.
+      fontSize: {
+        "phi-n1": ["var(--phi-n1)", { lineHeight: "var(--lh-n1)" }],
+        "phi-0": ["var(--phi-0)", { lineHeight: "var(--lh-0)" }],
+        "phi-1": ["var(--phi-1)", { lineHeight: "var(--lh-1)" }],
+        "phi-2": ["var(--phi-2)", { lineHeight: "var(--lh-2)" }],
+        "phi-3": ["var(--phi-3)", { lineHeight: "var(--lh-3)" }],
+        "phi-4": ["var(--phi-4)", { lineHeight: "var(--lh-4)" }],
+        "phi-5": ["var(--phi-5)", { lineHeight: "var(--lh-5)" }],
+        "phi-6": ["var(--phi-6)", { lineHeight: "var(--lh-6)" }],
+        "phi-7": ["var(--phi-7)", { lineHeight: "var(--lh-7)" }],
+        "phi-8": ["var(--phi-8)", { lineHeight: "var(--lh-8)" }],
+      },
+      spacing: {
+        "phi-0": "1rem",
+        "phi-1": "1.618rem",
+        "phi-2": "2.618rem",
+        "phi-3": "4.236rem",
+        "phi-4": "6.854rem",
+      },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         brand: ["var(--font-brand)", "var(--font-sans)", "system-ui", "sans-serif"],

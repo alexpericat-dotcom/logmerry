@@ -7,19 +7,18 @@ import { PortfolioHeaderFrame } from "@/components/portfolio-header-frame";
 import { Sketch, type SketchName } from "@/components/sketches";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ToolIcon } from "@/components/tool-icon";
-import { Button } from "@/components/ui/button";
 import { mailtoHref } from "@/lib/domain/portfolio";
 import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HEADER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, STACK } from "@/lib/portfolio-content";
 
 const contactHref = mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT);
 /** Étiquette en monospace, petites capitales espacées : eyebrow, légendes, mentions. */
-const MONO = "font-mono text-xs uppercase tracking-[0.18em]";
+const MONO = "font-mono text-phi-n1 uppercase tracking-[0.18em]";
 /** Texte crème posé sur la photo (grand écran) : la couleur sur laquelle est calculé le contraste du voile (`--photo`, `lib/portfolio-page.test.ts`). */
 const CREAM = "lg:text-photo";
 
 /** Bouton d'appel à l'action en verre liquide (`.liquid` dans `app/globals.css`) : « orange » (verre teinté d'orange) pour l'action principale, « clear » (verre clair) pour la secondaire ; tous deux transparents et flous, texte de la couleur du contexte. */
 export function LiquidButton({ href, tone, size = "md", children, className = "" }: { href: string; tone: "orange" | "clear"; size?: "sm" | "md" | "lg"; children: ReactNode; className?: string }) {
-  const sizes = { sm: "h-11 px-7 text-sm md:h-9", md: "h-11 px-7 text-base", lg: "h-12 px-9 text-base" }[size];
+  const sizes = { sm: "h-11 px-7 text-phi-n1 md:h-9", md: "h-11 px-7 text-phi-0", lg: "h-12 px-9 text-phi-0" }[size];
   return (
     <a href={href} className={`liquid liquid-${tone} ${sizes} ${className}`}>
       {children}
@@ -30,13 +29,13 @@ export function LiquidButton({ href, tone, size = "md", children, className = ""
 /** Titre de section : étiquette mono, titre serif, introduction ; un croquis facultatif à droite (grand écran), qui se dessine à l'arrivée. */
 function SectionHead({ id, eyebrow, title, intro, sketch }: { id: string; eyebrow: string; title: string; intro?: string; sketch?: SketchName }) {
   return (
-    <div className="mb-12 flex items-end justify-between gap-10">
+    <div className="mb-phi-2 flex items-end justify-between gap-phi-2 md:mb-phi-3">
       <div className="reveal max-w-3xl">
         <p className={`${MONO} text-muted-foreground`}>{eyebrow}</p>
-        <h2 id={id} className="mt-3 break-words text-4xl leading-[1.05] md:text-6xl">
+        <h2 id={id} className="mt-3 break-words text-phi-4 md:text-phi-5">
           {title}
         </h2>
-        {intro && <p className="mt-4 text-lg text-muted-foreground md:text-xl">{intro}</p>}
+        {intro && <p className="mt-4 text-phi-1 text-muted-foreground">{intro}</p>}
       </div>
       {sketch && <Sketch name={sketch} className="hidden w-44 shrink-0 text-foreground/80 lg:block xl:w-52" />}
     </div>
@@ -48,11 +47,11 @@ export function PortfolioHeader() {
   return (
     <PortfolioHeaderFrame>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 md:px-6">
-        <Link href="/portfolio" className="flex items-center gap-2 font-brand text-xl font-bold" aria-label={`${BRAND}, haut de page`}>
+        <Link href="/portfolio" className="flex items-center gap-2 font-brand text-phi-1 font-bold" aria-label={`${BRAND}, haut de page`}>
           <LogoMark variant="classic" className="size-7" />
           <span className="max-sm:sr-only">{BRAND}</span>
         </Link>
-        <nav aria-label="Sections" className="flex items-center gap-1 text-sm">
+        <nav aria-label="Sections" className="flex items-center gap-1 text-phi-n1">
           {[
             ["#methode", "Méthode"],
             ["#services", "Offre"],
@@ -64,9 +63,9 @@ export function PortfolioHeader() {
             </a>
           ))}
           <ThemeSwitcher />
-          <Button asChild size="sm" variant="ghost" className="group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo">
-            <a href="#qui-suis-je">{HEADER.about}</a>
-          </Button>
+          <a href="#qui-suis-je" className="inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium hover:bg-accent hover:text-accent-foreground group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo md:h-9">
+            {HEADER.about}
+          </a>
           <LiquidButton href="#contact" tone="orange" size="sm" className="ml-1 px-8">
             {HEADER.contact}
           </LiquidButton>
@@ -103,13 +102,13 @@ export function PortfolioHero() {
       </div>
       <div aria-hidden="true" className="hero-veil absolute inset-0 hidden lg:block" />
       <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-40">
-        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] lg:[--liquid-shade:0.22] lg:[--ring:var(--photo)] ${CREAM}`}>
+        <div className={`hero-lift flex flex-col gap-phi-1 lg:max-w-[min(34rem,46vw)] lg:[--liquid-shade:0.22] lg:[--ring:var(--photo)] ${CREAM}`}>
           <p className={`hero-in ${MONO} flex items-center gap-3`} style={delay(0)}>
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
             {HERO.eyebrow}
           </p>
           {/* Les mots montent un à un (`.word`) ; le texte lu reste la phrase entière. */}
-          <h1 id="hero-title" className="break-words text-5xl leading-[1.02] [text-wrap:balance] sm:text-6xl xl:text-7xl">
+          <h1 id="hero-title" className="break-words text-phi-5 [text-wrap:balance] lg:text-phi-6">
             {HERO.title.split(" ").map((word, i) => (
               <Fragment key={i}>
                 {i > 0 && " "}
@@ -121,8 +120,14 @@ export function PortfolioHero() {
               </Fragment>
             ))}
           </h1>
-          <p className="hero-in max-w-[42ch] text-lg leading-relaxed md:text-xl" style={delay(240)}>
-            {HERO.lead}
+          {/* Chaque phrase est un bloc équilibré (`text-wrap: balance`) : aucune ligne courte isolée en bout de paragraphe. */}
+          <p className="hero-in text-phi-1 lg:text-phi-0" style={delay(240)}>
+            {HERO.lead.split("\n").map((sentence, i) => (
+              <Fragment key={i}>
+                {i > 0 && "\n"}
+                <span className="block [text-wrap:balance]">{sentence}</span>
+              </Fragment>
+            ))}
           </p>
           <div className="hero-in flex flex-wrap items-center gap-3" style={delay(360)}>
             <LiquidButton href="#realisations" tone="orange" size="lg" className="group">
@@ -141,17 +146,17 @@ export function PortfolioHero() {
 
 export function PortfolioLever() {
   return (
-    <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
+    <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="head" />
-      <div className="grid gap-8 lg:grid-cols-2">
-        <p className="reveal-left text-xl text-muted-foreground line-through decoration-1 md:text-2xl">{LEVER.before}</p>
-        <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-3xl leading-tight md:text-4xl">{LEVER.after}</p>
+      <div className="grid gap-phi-1 lg:grid-cols-2">
+        <p className="reveal-left text-phi-1 text-muted-foreground line-through decoration-1 md:text-phi-2">{LEVER.before}</p>
+        <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{LEVER.after}</p>
       </div>
-      <p className="reveal mt-8 max-w-3xl text-lg text-muted-foreground">{LEVER.note}</p>
-      <ul className="mt-12 grid gap-8 md:grid-cols-3">
+      <p className="reveal mt-phi-1 max-w-3xl text-phi-1 text-muted-foreground">{LEVER.note}</p>
+      <ul className="mt-phi-2 grid gap-phi-1 md:grid-cols-3">
         {LEVER.points.map((p, i) => (
           <li key={p.title} style={{ "--i": i } as React.CSSProperties} className="reveal flex flex-col gap-3 border-t pt-5">
-            <h3 className="text-2xl">{p.title}</h3>
+            <h3 className="text-phi-2">{p.title}</h3>
             <p className="text-muted-foreground">{p.text}</p>
           </li>
         ))}
@@ -166,11 +171,11 @@ const STEP_SKETCHES: SketchName[] = ["question", "flow", "compass", "spark", "ro
 export function PortfolioProcess() {
   const { epigraph } = PROCESS;
   return (
-    <section id="methode" aria-labelledby="process-title" className="scroll-mt-16 border-y bg-muted py-24">
+    <section id="methode" aria-labelledby="process-title" className="scroll-mt-16 border-y bg-muted py-phi-3 md:py-phi-4">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <SectionHead id="process-title" eyebrow={PROCESS.eyebrow} title={PROCESS.title} intro={PROCESS.intro} sketch="funnel" />
-        <figure className="reveal-scale mb-14 max-w-2xl border-l-2 border-tone-orange pl-6">
-          <blockquote className="font-serif text-2xl italic leading-snug md:text-3xl">« {epigraph.text} »</blockquote>
+        <figure className="reveal-scale mb-phi-3 max-w-2xl border-l-2 border-tone-orange pl-6">
+          <blockquote className="font-serif text-phi-2 italic md:text-phi-3">« {epigraph.text} »</blockquote>
           <figcaption className={`${MONO} mt-4 text-muted-foreground`}>
             {epigraph.author}, <cite className="not-italic">{epigraph.source}</cite>
           </figcaption>
@@ -179,13 +184,13 @@ export function PortfolioProcess() {
           {/* Colonne vertébrale : se trace au fil du défilement. */}
           <span aria-hidden="true" className="spine absolute left-0 top-0 h-full w-0.5 bg-tone-orange" />
           {PROCESS.steps.map((s, i) => (
-            <li key={s.title} className={`${i === 0 ? "reveal-scale" : "reveal-left"} grid grid-cols-[3.5rem_1fr] gap-4 border-t py-7 md:grid-cols-[5rem_1fr] ${i === 0 ? "border-t-2 border-t-tone-orange bg-card px-4 md:px-6" : ""}`}>
-              <span aria-hidden="true" className={`font-serif leading-none ${i === 0 ? "text-6xl text-primary md:text-7xl" : "text-5xl text-muted-foreground md:text-6xl"}`}>
+            <li key={s.title} className={`${i === 0 ? "reveal-scale" : "reveal-left"} grid grid-cols-[3.5rem_1fr] gap-4 border-t py-phi-1 md:grid-cols-[5rem_1fr] ${i === 0 ? "border-t-2 border-t-tone-orange bg-card px-4 md:px-6" : ""}`}>
+              <span aria-hidden="true" className={`font-serif leading-none ${i === 0 ? "text-phi-5 text-primary md:text-phi-6" : "text-phi-4 text-muted-foreground md:text-phi-5"}`}>
                 {i + 1}
               </span>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className={i === 0 ? "text-3xl md:text-4xl" : "text-2xl md:text-3xl"}>{s.title}</h3>
+                  <h3 className={i === 0 ? "text-phi-3 md:text-phi-4" : "text-phi-2 md:text-phi-3"}>{s.title}</h3>
                   <p className="mt-2 max-w-[60ch] text-muted-foreground">{s.text}</p>
                 </div>
                 <Sketch name={STEP_SKETCHES[i]} className="hidden size-20 shrink-0 text-foreground/80 sm:block" />
@@ -202,7 +207,7 @@ const SERVICE_SKETCHES: SketchName[] = ["magnifier", "loop", "window", "chat", "
 
 export function PortfolioServices() {
   return (
-    <section id="services" aria-labelledby="services-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
+    <section id="services" aria-labelledby="services-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <SectionHead id="services-title" eyebrow={SERVICES.eyebrow} title={SERVICES.title} intro={SERVICES.intro} />
       <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2">
         {SERVICES.items.map((s, i) => (
@@ -213,7 +218,7 @@ export function PortfolioServices() {
               </span>
               <Sketch name={SERVICE_SKETCHES[i]} className="size-16 text-foreground/80" />
             </div>
-            <h3 className="text-2xl md:text-3xl">{s.title}</h3>
+            <h3 className="text-phi-2 md:text-phi-3">{s.title}</h3>
             <p className="max-w-[55ch] text-muted-foreground">{s.text}</p>
           </li>
         ))}
@@ -227,17 +232,17 @@ const BRICK_SKETCHES: SketchName[] = ["window", "cog", "database", "chat", "clou
 
 export function PortfolioStack() {
   return (
-    <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
+    <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-phi-3 md:px-6 md:pb-phi-4">
       <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="cubes" />
       <ul>
         {STACK.bricks.map((brick, b) => (
-          <li key={brick.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
+          <li key={brick.title} className="reveal grid gap-4 border-t py-phi-1 md:grid-cols-[16rem_1fr] md:gap-phi-2">
             <div className="flex items-center gap-4 md:flex-col md:items-start">
-              <h3 className="text-2xl md:text-3xl">{brick.title}</h3>
+              <h3 className="text-phi-2 md:text-phi-3">{brick.title}</h3>
               <Sketch name={BRICK_SKETCHES[b]} className="size-16 text-foreground/80 md:size-20" />
             </div>
             <div className="flex flex-col gap-4">
-              <p className="max-w-[60ch] text-lg">
+              <p className="max-w-[60ch] text-phi-1">
                 <span className={`${MONO} mr-2 text-muted-foreground`}>{STACK.plainLabel}</span>
                 {brick.plain}
               </p>
@@ -245,7 +250,7 @@ export function PortfolioStack() {
               {brick.tools.length > 0 && (
                 <ul aria-label="Outils" className="flex flex-wrap gap-2">
                   {brick.tools.map((tool, t) => (
-                    <li key={tool} style={{ "--i": t % 6 } as CSSProperties} className="reveal-scale flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-sm">
+                    <li key={tool} style={{ "--i": t % 6 } as CSSProperties} className="reveal-scale flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-phi-n1">
                       <ToolIcon tool={tool} size={16} />
                       {tool}
                     </li>
@@ -263,7 +268,7 @@ export function PortfolioStack() {
 /** Zone des réalisations : titre fixe, contenu (cartes, message) donné par l'appelant. */
 export function PortfolioShowcaseFrame({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro: string; children: ReactNode }) {
   return (
-    <section id="realisations" aria-labelledby="showcase-title" className="scroll-mt-16 border-y bg-muted py-24">
+    <section id="realisations" aria-labelledby="showcase-title" className="scroll-mt-16 border-y bg-muted py-phi-3 md:py-phi-4">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <SectionHead id="showcase-title" eyebrow={eyebrow} title={title} intro={intro} />
         {children}
@@ -274,13 +279,13 @@ export function PortfolioShowcaseFrame({ eyebrow, title, intro, children }: { ey
 
 export function PortfolioContact() {
   return (
-    <section id="contact" aria-labelledby="contact-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
-      <div className="reveal-scale flex items-center justify-between gap-10">
+    <section id="contact" aria-labelledby="contact-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
+      <div className="reveal-scale flex items-center justify-between gap-phi-2">
         <div className="max-w-2xl">
-        <h2 id="contact-title" className="text-4xl leading-[1.05] md:text-6xl">
+        <h2 id="contact-title" className="text-phi-4 md:text-phi-5">
           {CONTACT.title}
         </h2>
-        <p className="mt-4 text-lg text-muted-foreground">{CONTACT.text}</p>
+        <p className="mt-4 text-phi-1 text-muted-foreground">{CONTACT.text}</p>
         <LiquidButton href={contactHref} tone="orange" size="lg" className="mt-8">
           {CONTACT.button}
           <ArrowRight size={18} aria-hidden="true" />
@@ -294,11 +299,11 @@ export function PortfolioContact() {
 
 export function PortfolioFooter() {
   return (
-    <footer className="border-t py-8 text-sm text-muted-foreground">
+    <footer className="border-t py-8 text-phi-n1 text-muted-foreground">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 md:px-6">
         <div>
           <p>{FOOTER}</p>
-          <p className="mt-1 text-xs">{LOGOS_NOTE}</p>
+          <p className="mt-1 text-phi-n1">{LOGOS_NOTE}</p>
         </div>
         <a href={contactHref} className="underline underline-offset-4">
           {CONTACT_EMAIL}

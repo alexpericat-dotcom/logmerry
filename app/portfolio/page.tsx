@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 async function Showcase() {
   // `unstable_rethrow` : les signaux internes de Next (rendu dynamique, interruption du prérendu) ne sont jamais pris pour une panne de la base.
   const result = await loadCards(listPublicCards, unstable_rethrow);
-  if ("unavailable" in result) return <p className="rounded-md border bg-card p-6 text-lg text-muted-foreground">{SHOWCASE.unavailable}</p>;
+  if ("unavailable" in result) return <p className="rounded-md border bg-card p-6 text-phi-1 text-muted-foreground">{SHOWCASE.unavailable}</p>;
   return <PortfolioShowcase cards={result.cards} supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""} />;
 }
 
