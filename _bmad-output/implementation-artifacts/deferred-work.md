@@ -113,3 +113,5 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 
 - Aperçu en direct gris chez Alex (5 novembre 2026) : cause non reproduite en Chrome. À vérifier selon son navigateur ; piste : retirer `loading="lazy"` et ne plus masquer le cadre tant que `onLoad` n'est pas arrivé (`components/live-preview.tsx`). Alternative robuste : captures téléversées (déjà possibles).
 - Texte alternatif de la veille : peut nommer les outils retenus (Weweb, Supabase, N8n, Mistral) une fois n8n ou Make tranché et le test de `lib/portfolio-dossiers.test.ts` mis à jour.
+
+- Réalisation « Automatisation des inscriptions à des ateliers » : remplir les trois emplacements `[À COMPLÉTER PAR MOI : ...]` (description, raisons du choix de Baserow, validation), choisir son statut, puis le test `lib/portfolio-placeholders.test.ts` passe. Branche `feat/realisation-design-choice` non fusionnable avant.

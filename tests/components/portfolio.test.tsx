@@ -41,6 +41,8 @@ const item = (over: Partial<PublicRealisation> = {}): PublicRealisation => ({
   status: "exercice_formation",
   problem: null,
   tests: null,
+  design_choice: null,
+  validation: null,
   stack_is_recommended: false,
   ...over,
 });
@@ -117,6 +119,17 @@ describe("réalisations de la page publique", () => {
     cleanup();
     render(showcase([item()]));
     assert.equal(screen.queryByText(SHOWCASE.fields.result), null);
+  });
+
+  test("« Choix de conception » et « Validation » : affichés seulement s'ils sont fournis, et la validation reste distincte du résultat", () => {
+    render(showcase([item()]));
+    assert.equal(screen.queryByText(SHOWCASE.fields.designChoice), null);
+    assert.equal(screen.queryByText(SHOWCASE.fields.validation), null);
+    cleanup();
+    render(showcase([item({ design_choice: "Une base relationnelle.", validation: "Validé en formation.", result_figure: "Inscriptions automatisées" })]));
+    assert.equal(screen.getByText("Une base relationnelle.").previousElementSibling?.textContent, "Choix de conception");
+    assert.equal(screen.getByText("Validé en formation.").previousElementSibling?.textContent, "Validation");
+    assert.equal(screen.getByText("Inscriptions automatisées").previousElementSibling?.textContent, "Résultat", "jamais fusionnés");
   });
 
   test("aucune réalisation : un message sobre, pas de liste vide", () => {

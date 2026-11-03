@@ -39,6 +39,8 @@ describe("createRealisation / updateRealisation", () => {
     status: "projet_perso",
     problem: null,
     tests: null,
+    design_choice: null,
+    validation: null,
     stack_is_recommended: false,
   };
 
@@ -68,9 +70,9 @@ describe("createRealisation / updateRealisation", () => {
       assert.equal(fake.ops.length, 0);
     }
     fake.reset();
-    await assert.rejects(() => createRealisation({}, form({ ...VALID, status: "exercice_formation", problem: " Des demandes dispersées ", tests: "10 testeurs", stack_is_recommended: "on" })), redirectsTo("/realisations"));
+    await assert.rejects(() => createRealisation({}, form({ ...VALID, status: "exercice_formation", problem: " Des demandes dispersées ", tests: "10 testeurs", stack_is_recommended: "on", design_choice: " Une base relationnelle ", validation: " Validé en formation " })), redirectsTo("/realisations"));
     const payload = fake.on("realisations", "insert")[0].payload as Record<string, unknown>;
-    assert.deepEqual([payload.status, payload.problem, payload.tests, payload.stack_is_recommended], ["exercice_formation", "Des demandes dispersées", "10 testeurs", true]);
+    assert.deepEqual([payload.status, payload.problem, payload.tests, payload.stack_is_recommended, payload.design_choice, payload.validation], ["exercice_formation", "Des demandes dispersées", "10 testeurs", true, "Une base relationnelle", "Validé en formation"]);
   });
 
   test("saisie invalide : erreurs par champ et valeurs rendues, aucune requête", async () => {

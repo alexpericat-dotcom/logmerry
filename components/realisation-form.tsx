@@ -26,7 +26,7 @@ type Props = {
   cancelHref?: string;
 };
 
-const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "", problem: "", tests: "", stack_is_recommended: "" };
+const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "", problem: "", tests: "", design_choice: "", validation: "", stack_is_recommended: "" };
 
 export function RealisationForm({ action, initial, submitLabel, cancelHref = "/realisations" }: Props) {
   const [state, formAction, pending] = useActionState<RealisationFormState, FormData>(action, {});
@@ -95,6 +95,16 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         <Label htmlFor="tests">Tests (facultatif)</Label>
         <Textarea {...field("tests")} defaultValue={values.tests} rows={3} />
         {errorLine("tests")}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="design_choice">Choix de conception (facultatif)</Label>
+        <Textarea {...field("design_choice")} defaultValue={values.design_choice} rows={3} />
+        {errorLine("design_choice")}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="validation">Validation (facultatif, distincte du résultat)</Label>
+        <Textarea {...field("validation")} defaultValue={values.validation} rows={3} />
+        {errorLine("validation")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="result_figure">Chiffre de résultat (facultatif)</Label>

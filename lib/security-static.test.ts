@@ -120,7 +120,7 @@ describe("migrations : sécurité par ligne", () => {
   test("vues publiques du portfolio : LISTE BLANCHE exacte des colonnes (rien d'autre n'est jamais ajouté sans que ce test change)", () => {
     const views = publicViews();
     assert.deepEqual([...views.keys()].sort(), ["public_realisation_images", "public_realisations"]);
-    assert.deepEqual(columnsOf(views.get("public_realisations")!), ["id", "title", "description", "origin", "client_label", "result_figure", "link_url", "stack", "published_at", "status", "problem", "tests", "stack_is_recommended"]);
+    assert.deepEqual(columnsOf(views.get("public_realisations")!), ["id", "title", "description", "origin", "client_label", "result_figure", "link_url", "stack", "published_at", "status", "problem", "tests", "stack_is_recommended", "design_choice", "validation"]);
     assert.deepEqual(columnsOf(views.get("public_realisation_images")!), ["id", "realisation_id", "path", "alt", "created_at"]);
   });
 

@@ -37,6 +37,8 @@ const readValues = (formData: FormData): RealisationInput => ({
   status: text(formData, "status"),
   problem: text(formData, "problem"),
   tests: text(formData, "tests"),
+  design_choice: text(formData, "design_choice"),
+  validation: text(formData, "validation"),
   stack_is_recommended: text(formData, "stack_is_recommended") === "on" ? "on" : "",
 });
 

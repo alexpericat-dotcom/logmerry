@@ -3,12 +3,12 @@ import test from "node:test";
 
 import { REALISATION_CLIENT_NAME_MAX, publicationBlock, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_STATUSES, REALISATION_STATUS_LABELS, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
 
-const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "projet_perso", problem: "", tests: "", stack_is_recommended: "" };
+const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "projet_perso", problem: "", tests: "", design_choice: "", validation: "", stack_is_recommended: "" };
 
 test("création minimale : champs facultatifs vides → null, pile vide", () => {
   assert.deepEqual(validateRealisationInput(base), {
     ok: true,
-    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, link_url: null, client_consent: false, stack: [], status: "projet_perso", problem: null, tests: null, stack_is_recommended: false },
+    value: { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: null, client_sector: null, result_figure: null, link_url: null, client_consent: false, stack: [], status: "projet_perso", problem: null, tests: null, design_choice: null, validation: null, stack_is_recommended: false },
   });
 });
 
@@ -122,4 +122,14 @@ test("accord : coché = vrai, vide ou toute autre valeur = faux ; sans accord, l
   }
   assert.match(publicationBlock({ client_consent: false, status: "projet_perso" }) ?? "", /accord/);
   assert.equal(publicationBlock({ client_consent: true, status: "projet_perso" }), null);
+});
+
+test("choix de conception et validation : facultatifs, 600 caractères au plus, distincts du résultat", () => {
+  const ok = validateRealisationInput({ ...base, design_choice: "  Une base relationnelle.  ", validation: "Validé en formation.", result_figure: "R" });
+  assert.ok(ok.ok);
+  if (ok.ok) assert.deepEqual([ok.value.design_choice, ok.value.validation, ok.value.result_figure], ["Une base relationnelle.", "Validé en formation.", "R"]);
+  assert.ok(validateRealisationInput({ ...base, design_choice: "x".repeat(600), validation: "x".repeat(600) }).ok);
+  const long = validateRealisationInput({ ...base, design_choice: "x".repeat(601), validation: "x".repeat(601) });
+  assert.ok(!long.ok);
+  if (!long.ok) assert.deepEqual(Object.keys(long.errors).sort(), ["design_choice", "validation"]);
 });
