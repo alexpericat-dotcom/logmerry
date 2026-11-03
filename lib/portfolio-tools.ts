@@ -16,6 +16,10 @@ export const TOOL_ICONS: Record<string, string> = {
   Gmail: "gmail",
   "Node.js": "nodedotjs",
   MCP: "modelcontextprotocol",
+  Make: "make",
+  Zapier: "zapier",
+  Vercel: "vercel",
+  Cursor: "cursor",
 };
 
 export const toolIconPath = (tool: string): string | null => (Object.hasOwn(TOOL_ICONS, tool) ? `/images/tools/${TOOL_ICONS[tool]}.svg` : null);
