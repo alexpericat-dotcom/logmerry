@@ -88,6 +88,9 @@ const length = (s: string) => [...s].length;
 export const publicationBlock = (r: { client_consent: boolean; status: string | null }): string | null =>
   !r.client_consent ? "Coche l'accord du client avant de publier." : !parseRealisationStatus(r.status) ? "Choisis un statut avant de publier." : null;
 
+/** Un emplacement « [À COMPLÉTER PAR MOI … ] » laissé dans un champ texte : la fiche ne doit pas être publiée (le test du script SQL ne lit pas la base). */
+export const hasPlaceholder = (fields: Array<string | null | undefined>): boolean => fields.some((f) => typeof f === "string" && f.includes("[À COMPLÉTER PAR MOI"));
+
 /** Adresse de la page en ligne : https seulement, sans identifiants, sans espace ; renvoie l'adresse telle que saisie (pas réécrite) ou null. */
 export function parsePublicLink(text: string): string | null {
   if (/\s/.test(text) || length(text) > REALISATION_LINK_MAX) return null;

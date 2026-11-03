@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { REALISATION_CLIENT_NAME_MAX, publicationBlock, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_STATUSES, REALISATION_STATUS_LABELS, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
+import { REALISATION_CLIENT_NAME_MAX, hasPlaceholder, publicationBlock, REALISATION_LINK_MAX, parsePublicLink, REALISATION_DESCRIPTION_MAX, REALISATION_ORIGINS, REALISATION_ORIGIN_LABELS, REALISATION_RESULT_MAX, REALISATION_STATUSES, REALISATION_STATUS_LABELS, REALISATION_SECTOR_MAX, REALISATION_STACK_MAX, REALISATION_TAG_MAX, REALISATION_TITLE_MAX, parseStack, validateRealisationInput, type RealisationInput } from "./realisations.ts";
 
 const base: RealisationInput = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "projet_perso", problem: "", tests: "", design_choice: "", validation: "", stack_is_recommended: "" };
 
@@ -132,4 +132,9 @@ test("choix de conception et validation : facultatifs, 600 caractères au plus, 
   const long = validateRealisationInput({ ...base, design_choice: "x".repeat(601), validation: "x".repeat(601) });
   assert.ok(!long.ok);
   if (!long.ok) assert.deepEqual(Object.keys(long.errors).sort(), ["design_choice", "validation"]);
+});
+
+test("hasPlaceholder repère un emplacement « À COMPLÉTER PAR MOI » et ignore les champs vides", () => {
+  assert.equal(hasPlaceholder(["ok", null, undefined, "x [À COMPLÉTER PAR MOI : validation] y"]), true);
+  assert.equal(hasPlaceholder(["ok", null, ""]), false);
 });

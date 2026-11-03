@@ -136,6 +136,13 @@ describe("setRealisationPublication", () => {
     assert.deepEqual(fake.revalidated, []);
   });
 
+  test("publier avec un emplacement « À COMPLÉTER PAR MOI » dans un champ : refusé, rien n'est écrit", async () => {
+    routes(["realisations:select", { data: { title: "T", validation: "[À COMPLÉTER PAR MOI : validation]" } }]);
+    assert.match((await setRealisationPublication(ID, true)).message ?? "", /À COMPLÉTER PAR MOI/);
+    assert.equal(fake.on("realisations", "update").length, 0);
+    assert.deepEqual(fake.revalidated, []);
+  });
+
   test("publier une fiche disparue ou d'un identifiant invalide : « n'existe plus »", async () => {
     assert.match((await setRealisationPublication(ID, true)).message ?? "", /n'existe plus/);
     fake.reset();

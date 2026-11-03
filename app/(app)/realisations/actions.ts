@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { isUuid } from "@/lib/domain/notes";
 import { pathBelongsTo, validateAlt } from "@/lib/domain/realisation-images";
-import { publicationBlock, validateRealisationInput, type RealisationErrors, type RealisationInput, type RealisationValues } from "@/lib/domain/realisations";
+import { hasPlaceholder, publicationBlock, validateRealisationInput, type RealisationErrors, type RealisationInput, type RealisationValues } from "@/lib/domain/realisations";
 import type { Db } from "@/lib/supabase/server";
 import { withSession } from "@/lib/supabase/with-session";
 
@@ -88,10 +88,15 @@ export type PublicationState = { message?: string };
 
 /** « Publier » (refusé sans l'accord du client, par l'action puis par la base) ou « Retirer de la publication ». */
 export async function setRealisationPublication(id: string, publish: boolean): Promise<PublicationState> {
-  const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent" | "no-status"> => {
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent" | "no-status" | "placeholder"> => {
     if (!isUuid(id)) return "not-found";
     // Une Server Action est appelable avec n'importe quel argument : seul un vrai booléen est une demande.
     if (typeof publish !== "boolean") return "error";
+    if (publish) {
+      const row = await supabase.from("realisations").select("title, description, client_name, client_sector, result_figure, problem, tests, design_choice, validation").eq("id", id).maybeSingle();
+      if (row.error) return "error";
+      if (row.data && hasPlaceholder(Object.values(row.data))) return "placeholder";
+    }
     // Publier ne touche que les lignes dont l'accord est coché ET qui ont un statut : les deux sont relus par la base, pas pris sur la foi de l'écran.
     let query = supabase.from("realisations").update({ published: publish }).eq("id", id);
     if (publish) query = query.eq("client_consent", true).not("status", "is", null);
@@ -109,6 +114,7 @@ export async function setRealisationPublication(id: string, publish: boolean): P
   if (result.status === "failed" || result.value === "error") return { message: "Changement impossible pour le moment. Réessaie." };
   if (result.value === "no-consent") return { message: publicationBlock({ client_consent: false, status: null }) ?? undefined };
   if (result.value === "no-status") return { message: publicationBlock({ client_consent: true, status: null }) ?? undefined };
+  if (result.value === "placeholder") return { message: "Un emplacement « [À COMPLÉTER PAR MOI … ] » reste dans un champ : remplis-le avant de publier." };
   if (result.value === "not-found") return { message: NOT_FOUND };
 
   revalidatePath("/realisations");

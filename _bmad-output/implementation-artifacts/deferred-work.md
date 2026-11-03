@@ -115,3 +115,5 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Texte alternatif de la veille : peut nommer les outils retenus (Weweb, Supabase, N8n, Mistral) une fois n8n ou Make tranché et le test de `lib/portfolio-dossiers.test.ts` mis à jour.
 
 - Réalisation « Automatisation des inscriptions à des ateliers » : remplir les trois emplacements `[À COMPLÉTER PAR MOI : ...]` (description, raisons du choix de Baserow, validation), choisir son statut, puis le test `lib/portfolio-placeholders.test.ts` passe. Branche `feat/realisation-design-choice` non fusionnable avant.
+
+- Protection « Publier » contre les emplacements `[À COMPLÉTER PAR MOI` : faite côté application (6 novembre 2026). Reste hors garde : la base elle-même ne refuse pas (pas de contrainte SQL), seule l'action serveur la porte.
