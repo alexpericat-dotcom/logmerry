@@ -13,7 +13,7 @@ export const CONTACT_SUBJECT = "Prise de contact via votre portfolio";
 export const PAGE_TITLE = `${BRAND} · Automatisation & IA pour les entreprises`;
 export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver ce qu'il faut automatiser, puis je construis l'automatisation, l'IA et les données qui le résolvent. Réalisations et méthode.";
 
-/** Boutons de l'en-tête : « Qui suis-je » mène à la section de présentation, « Contact » à la section de contact (qui porte le lien courriel). */
+/** Boutons de l'en-tête : « Qui suis-je » mène à sa page (`/portfolio/qui-suis-je`), « Contact » à la section de contact (qui porte le lien courriel). */
 export const HEADER = { about: "Qui suis-je", contact: "Contact" };
 
 export const HERO = {

@@ -198,7 +198,7 @@ describe("sections de la page", () => {
 
   test("« Mon parti pris » : la grande phrase seule dans la barre orange (plus de citation barrée), le paragraphe, trois colonnes titrées", () => {
     const { container } = render(<PortfolioLever />);
-    const section = within(container.querySelector("#qui-suis-je") as HTMLElement);
+    const section = within(container.querySelector("#parti-pris") as HTMLElement);
     const big = section.getByText(LEVER.after);
     assert.ok(big.className.includes("border-tone-orange") && big.className.includes("font-serif"), "la grande phrase porte la barre orange");
     assert.ok(!/line-through/.test(container.innerHTML), "plus aucun texte barré");
@@ -346,7 +346,7 @@ describe("aperçu en direct d'une réalisation", () => {
 describe("en-tête", () => {
   test("deux boutons, « Qui suis-je » et « Contact », qui mènent à leur section ; plus de petit « M'écrire »", () => {
     render(<PortfolioHeader />);
-    assert.equal(screen.getByRole("link", { name: HEADER.about }).getAttribute("href"), "#qui-suis-je");
+    assert.equal(screen.getByRole("link", { name: HEADER.about }).getAttribute("href"), "/portfolio/qui-suis-je");
     assert.equal(screen.getByRole("link", { name: HEADER.contact }).getAttribute("href"), "#contact");
     assert.equal(screen.queryByRole("link", { name: /M'écrire/ }), null);
   });
