@@ -127,7 +127,7 @@ export const STACK = {
 export const SHOWCASE = {
   eyebrow: "Travaux",
   title: "Réalisations",
-  intro: "Une sélection de projets, publiés avec l'accord des personnes concernées. Chacun indique son origine, et se visite en direct quand il est en ligne.",
+  intro: "Une sélection de projets, publiés avec l'accord des personnes concernées. Chacun indique son statut, et se visite en direct quand son site le permet.",
   empty: "Les premières réalisations arrivent bientôt.",
   unavailable: "Les réalisations ne sont pas disponibles pour le moment. Revenez dans quelques instants.",
   linkLabel: "Ouvrir le site",

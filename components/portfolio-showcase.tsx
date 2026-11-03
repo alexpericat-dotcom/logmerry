@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { LivePreview } from "@/components/live-preview";
 import { PortfolioImage } from "@/components/portfolio-image";
 import { Dossier } from "@/components/portfolio-dossier";
-import { safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
+import { canPreviewInFrame, safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
 import type { RealisationStatus } from "@/lib/domain/realisations";
 import { publicImageUrl } from "@/lib/domain/realisation-images";
 import { SHOWCASE } from "@/lib/portfolio-content";
@@ -45,9 +45,9 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
   );
   const flip = index % 2 === 1;
   return (
-    <li className="reveal-scale grid min-w-0 grid-cols-1 items-center gap-phi-1 lg:grid-cols-12">
+    <li className="reveal-scale grid min-w-0 grid-cols-1 items-start gap-phi-1 lg:grid-cols-12">
       <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
-        <BrowserFrame host={link ? new URL(link).host : undefined}>{link ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover && index === 0} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
+        <BrowserFrame host={link ? new URL(link).host : undefined}>{link && canPreviewInFrame(link) ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover && index === 0} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
         {more.length > 0 && (
           <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {more.map((image) => (

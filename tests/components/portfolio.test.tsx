@@ -632,6 +632,13 @@ describe("dossier de la plateforme de gestion des demandes clients", () => {
     }
   });
 
+  test("le lien Notion n'a pas d'aperçu en direct (Notion refuse les cadres) : ni cadre, ni bouton « Voir en direct », mais le lien « Ouvrir le site » reste", () => {
+    const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
+    assert.equal(container.querySelectorAll("iframe").length, 0);
+    assert.equal(screen.queryByRole("button", { name: /Voir en direct/ }), null);
+    assert.ok(screen.getByRole("link", { name: /Ouvrir le site/ }));
+  });
+
   test("une réalisation sans dossier n'affiche ni schéma, ni chiffres, ni extraits", () => {
     const { container } = render(showcase([item()]));
     assert.equal(container.querySelectorAll("svg[role=img], [data-placeholder]").length, 0);

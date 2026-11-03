@@ -40,7 +40,7 @@ test("mailto : objet encodé", () => {
   assert.equal(mailtoHref("a@b.fr", "Projet & idées"), "mailto:a@b.fr?subject=Projet%20%26%20id%C3%A9es");
 });
 
-import { loadCards, safeHttpsLink, toPublicCards } from "./portfolio.ts";
+import { canPreviewInFrame, loadCards, safeHttpsLink, toPublicCards } from "./portfolio.ts";
 
 const raw = (over: Record<string, unknown> = {}) => ({ id: "a", title: "T", description: "d", origin: "demo" as const, client_label: "Client confidentiel", result_figure: null, link_url: null, stack: null, published_at: null, status: "exercice_formation", problem: null, tests: null, stack_is_recommended: null, ...over });
 
@@ -98,4 +98,10 @@ test("statut : chaque carte porte son libellé ; le drapeau « stack recommandé
   const byId = Object.fromEntries(cards.map((c) => [c.id, c]));
   assert.deepEqual([byId.a.statusLabel, byId.b.statusLabel, byId.c.statusLabel], ["Client réel", "Projet personnel", "Exercice de formation"]);
   assert.deepEqual([byId.a.stack_is_recommended, byId.b.stack_is_recommended, byId.c.stack_is_recommended], [false, true, false]);
+});
+
+test("aperçu en direct : refusé pour les sites qui interdisent d'être affichés dans un cadre (Notion), permis pour les autres", () => {
+  for (const url of ["https://knotty-reaction-86f.notion.site/Projet-UMARIS-39167eb89ef68099b498ce56f5f958e9", "https://notion.so/page", "https://www.notion.so/x"]) assert.equal(canPreviewInFrame(url), false, url);
+  for (const url of ["https://ateliernovav3.lovable.app/", "https://exemple.fr/notion.site", "https://notion.site.exemple.fr/"]) assert.equal(canPreviewInFrame(url), true, url);
+  assert.equal(canPreviewInFrame("pas une adresse"), false);
 });

@@ -57,6 +57,17 @@ export function safeHttpsLink(value: string | null): string | null {
   }
 }
 
+/** Sites qui interdisent d'être affichés dans un cadre : le navigateur y montre une page d'erreur à la place du site. Pas d'aperçu en direct pour eux, seulement le lien. */
+const NO_FRAME_HOSTS = ["notion.site", "notion.so"];
+export function canPreviewInFrame(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return !NO_FRAME_HOSTS.some((d) => host === d || host.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
 /** Vrai si l'adresse est de la même origine que la page : un aperçu dans un cadre `allow-same-origin` y aurait accès à la session du visiteur. Une adresse illisible compte comme « même origine » (refus). */
 export function isSameOrigin(url: string, pageOrigin: string): boolean {
   try {
