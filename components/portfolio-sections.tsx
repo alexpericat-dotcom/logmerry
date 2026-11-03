@@ -1,9 +1,10 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
 import { PortfolioHeaderFrame } from "@/components/portfolio-header-frame";
+import { Sketch, type SketchName } from "@/components/sketches";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ToolIcon } from "@/components/tool-icon";
 import { Button } from "@/components/ui/button";
@@ -16,15 +17,18 @@ const MONO = "font-mono text-xs uppercase tracking-[0.18em]";
 /** Texte crème posé sur la photo (grand écran) : la couleur sur laquelle est calculé le contraste du voile (`--photo`, `lib/portfolio-page.test.ts`). */
 const CREAM = "lg:text-photo";
 
-/** Titre de section : étiquette mono, titre serif, introduction. */
-function SectionHead({ id, eyebrow, title, intro }: { id: string; eyebrow: string; title: string; intro?: string }) {
+/** Titre de section : étiquette mono, titre serif, introduction ; un croquis facultatif à droite (grand écran), qui se dessine à l'arrivée. */
+function SectionHead({ id, eyebrow, title, intro, sketch }: { id: string; eyebrow: string; title: string; intro?: string; sketch?: SketchName }) {
   return (
-    <div className="reveal mb-12 max-w-3xl">
-      <p className={`${MONO} text-muted-foreground`}>{eyebrow}</p>
-      <h2 id={id} className="mt-3 break-words text-4xl leading-[1.05] md:text-6xl">
-        {title}
-      </h2>
-      {intro && <p className="mt-4 text-lg text-muted-foreground md:text-xl">{intro}</p>}
+    <div className="mb-12 flex items-end justify-between gap-10">
+      <div className="reveal max-w-3xl">
+        <p className={`${MONO} text-muted-foreground`}>{eyebrow}</p>
+        <h2 id={id} className="mt-3 break-words text-4xl leading-[1.05] md:text-6xl">
+          {title}
+        </h2>
+        {intro && <p className="mt-4 text-lg text-muted-foreground md:text-xl">{intro}</p>}
+      </div>
+      {sketch && <Sketch name={sketch} className="hidden w-44 shrink-0 text-foreground/80 lg:block xl:w-52" />}
     </div>
   );
 }
@@ -94,8 +98,18 @@ export function PortfolioHero() {
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
             {HERO.eyebrow}
           </p>
-          <h1 id="hero-title" className="hero-in break-words text-5xl leading-[1.02] [text-wrap:balance] sm:text-6xl xl:text-7xl" style={delay(120)}>
-            {HERO.title}
+          {/* Les mots montent un à un (`.word`) ; le texte lu reste la phrase entière. */}
+          <h1 id="hero-title" className="break-words text-5xl leading-[1.02] [text-wrap:balance] sm:text-6xl xl:text-7xl">
+            {HERO.title.split(" ").map((word, i) => (
+              <Fragment key={i}>
+                {i > 0 && " "}
+                <span className="word-mask">
+                  <span className="word" style={{ "--w": i } as CSSProperties}>
+                    {word}
+                  </span>
+                </span>
+              </Fragment>
+            ))}
           </h1>
           <p className="hero-in max-w-[42ch] text-lg leading-relaxed md:text-xl" style={delay(240)}>
             {HERO.lead}
@@ -123,7 +137,7 @@ export function PortfolioHero() {
 export function PortfolioLever() {
   return (
     <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
-      <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} />
+      <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="tangle" />
       <div className="grid gap-8 lg:grid-cols-2">
         <p className="reveal-left text-xl text-muted-foreground line-through decoration-1 md:text-2xl">{LEVER.before}</p>
         <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-3xl leading-tight md:text-4xl">{LEVER.after}</p>
@@ -142,27 +156,34 @@ export function PortfolioLever() {
 }
 
 /** La méthode en colonne verticale ; l'étape 1 (le problème métier) est mise en valeur. La citation en épigraphe est traduite et attribuée. */
+const STEP_SKETCHES: SketchName[] = ["question", "flow", "bricks", "spark", "rocket", "wrench"];
+
 export function PortfolioProcess() {
   const { epigraph } = PROCESS;
   return (
     <section id="methode" aria-labelledby="process-title" className="scroll-mt-16 border-y bg-muted py-24">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <SectionHead id="process-title" eyebrow={PROCESS.eyebrow} title={PROCESS.title} intro={PROCESS.intro} />
+        <SectionHead id="process-title" eyebrow={PROCESS.eyebrow} title={PROCESS.title} intro={PROCESS.intro} sketch="funnel" />
         <figure className="reveal-scale mb-14 max-w-2xl border-l-2 border-tone-orange pl-6">
           <blockquote className="font-serif text-2xl italic leading-snug md:text-3xl">« {epigraph.text} »</blockquote>
           <figcaption className={`${MONO} mt-4 text-muted-foreground`}>
             {epigraph.author}, <cite className="not-italic">{epigraph.source}</cite>
           </figcaption>
         </figure>
-        <ol className="max-w-3xl">
+        <ol className="relative max-w-3xl pl-5 md:pl-8">
+          {/* Colonne vertébrale : se trace au fil du défilement. */}
+          <span aria-hidden="true" className="spine absolute left-0 top-0 h-full w-0.5 bg-tone-orange" />
           {PROCESS.steps.map((s, i) => (
             <li key={s.title} className={`${i === 0 ? "reveal-scale" : "reveal-left"} grid grid-cols-[3.5rem_1fr] gap-4 border-t py-7 md:grid-cols-[5rem_1fr] ${i === 0 ? "border-t-2 border-t-tone-orange bg-card px-4 md:px-6" : ""}`}>
               <span aria-hidden="true" className={`font-serif leading-none ${i === 0 ? "text-6xl text-primary md:text-7xl" : "text-5xl text-muted-foreground md:text-6xl"}`}>
                 {i + 1}
               </span>
-              <div>
-                <h3 className={i === 0 ? "text-3xl md:text-4xl" : "text-2xl md:text-3xl"}>{s.title}</h3>
-                <p className="mt-2 max-w-[60ch] text-muted-foreground">{s.text}</p>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className={i === 0 ? "text-3xl md:text-4xl" : "text-2xl md:text-3xl"}>{s.title}</h3>
+                  <p className="mt-2 max-w-[60ch] text-muted-foreground">{s.text}</p>
+                </div>
+                <Sketch name={STEP_SKETCHES[i]} className="hidden size-16 shrink-0 text-foreground/80 sm:block" />
               </div>
             </li>
           ))}
@@ -172,6 +193,8 @@ export function PortfolioProcess() {
   );
 }
 
+const SERVICE_SKETCHES: SketchName[] = ["magnifier", "loop", "window", "chat", "wrench"];
+
 export function PortfolioServices() {
   return (
     <section id="services" aria-labelledby="services-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
@@ -179,9 +202,12 @@ export function PortfolioServices() {
       <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2">
         {SERVICES.items.map((s, i) => (
           <li key={s.title} className={`${i % 2 === 0 ? "reveal-left" : "reveal-right"} flex flex-col gap-3 border-t pt-5`}>
-            <span aria-hidden="true" className={`${MONO} text-muted-foreground`}>
-              {String(i + 1).padStart(2, "0")}
-            </span>
+            <div className="flex items-center justify-between">
+              <span aria-hidden="true" className={`${MONO} text-muted-foreground`}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <Sketch name={SERVICE_SKETCHES[i]} className="size-14 text-foreground/80" />
+            </div>
             <h3 className="text-2xl md:text-3xl">{s.title}</h3>
             <p className="max-w-[55ch] text-muted-foreground">{s.text}</p>
           </li>
@@ -192,14 +218,19 @@ export function PortfolioServices() {
 }
 
 /** « Sous le capot » : les briques (front end, back end, base de données, IA et agents, hébergement, données personnelles), chacune traduite « en clair » ; logos seulement pour les outils validés. */
+const BRICK_SKETCHES: SketchName[] = ["window", "cog", "database", "chat", "cloud", "shield"];
+
 export function PortfolioStack() {
   return (
     <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
-      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} />
+      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="bricks" />
       <ul>
-        {STACK.bricks.map((brick) => (
+        {STACK.bricks.map((brick, b) => (
           <li key={brick.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
-            <h3 className="text-2xl md:text-3xl">{brick.title}</h3>
+            <div className="flex items-center gap-4 md:flex-col md:items-start">
+              <h3 className="text-2xl md:text-3xl">{brick.title}</h3>
+              <Sketch name={BRICK_SKETCHES[b]} className="size-14 text-foreground/80 md:size-16" />
+            </div>
             <div className="flex flex-col gap-4">
               <p className="max-w-[60ch] text-lg">
                 <span className={`${MONO} mr-2 text-muted-foreground`}>{STACK.plainLabel}</span>
@@ -208,8 +239,8 @@ export function PortfolioStack() {
               <p className="max-w-[60ch] text-muted-foreground">{brick.text}</p>
               {brick.tools.length > 0 && (
                 <ul aria-label="Outils" className="flex flex-wrap gap-2">
-                  {brick.tools.map((tool) => (
-                    <li key={tool} className="flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-sm">
+                  {brick.tools.map((tool, t) => (
+                    <li key={tool} style={{ "--i": t % 6 } as CSSProperties} className="reveal-scale flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-sm">
                       <ToolIcon tool={tool} size={16} />
                       {tool}
                     </li>
@@ -239,7 +270,8 @@ export function PortfolioShowcaseFrame({ eyebrow, title, intro, children }: { ey
 export function PortfolioContact() {
   return (
     <section id="contact" aria-labelledby="contact-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
-      <div className="reveal-scale max-w-2xl">
+      <div className="reveal-scale flex items-center justify-between gap-10">
+        <div className="max-w-2xl">
         <h2 id="contact-title" className="text-4xl leading-[1.05] md:text-6xl">
           {CONTACT.title}
         </h2>
@@ -250,6 +282,8 @@ export function PortfolioContact() {
             <ArrowRight size={18} aria-hidden="true" className="ml-1" />
           </a>
         </Button>
+        </div>
+        <Sketch name="boat" className="hidden w-56 shrink-0 text-foreground/80 md:block" />
       </div>
     </section>
   );

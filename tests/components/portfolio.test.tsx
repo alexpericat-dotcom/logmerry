@@ -18,6 +18,7 @@ import {
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { ScrollEffects } from "../../components/scroll-effects.tsx";
+import { SKETCH_NAMES, Sketch } from "../../components/sketches.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
 import { CONTACT_EMAIL, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
 
@@ -336,6 +337,41 @@ describe("en-tête", () => {
   });
 });
 
+describe("croquis", () => {
+  test("chaque croquis est décoratif (caché des lecteurs d'écran, non focalisable) et dessiné par tracés à longueur normalisée", () => {
+    for (const name of SKETCH_NAMES) {
+      const { container } = render(<Sketch name={name} />);
+      const svg = container.querySelector("svg") as SVGElement;
+      assert.equal(svg.getAttribute("aria-hidden"), "true", name);
+      assert.equal(svg.getAttribute("focusable"), "false", name);
+      const paths = [...svg.querySelectorAll("path")];
+      assert.ok(paths.length >= 2, `${name} : trop peu de tracés`);
+      for (const path of paths) {
+        assert.equal(path.getAttribute("pathLength"), "1", name);
+        assert.ok((path.getAttribute("d") ?? "").startsWith("M"), `${name} : tracé invalide`);
+      }
+      assert.ok(svg.querySelector(".sk-accent"), `${name} : pas d'accent orange`);
+      cleanup();
+    }
+  });
+
+  test("la page en pose partout : en-têtes de section, étapes de la méthode, formules, briques, contact ; tous cachés des lecteurs d'écran", () => {
+    const { container } = render(
+      <>
+        <PortfolioLever />
+        <PortfolioProcess />
+        <PortfolioServices />
+        <PortfolioStack />
+        <PortfolioContact />
+      </>,
+    );
+    const sketches = container.querySelectorAll("svg.sketch");
+    assert.equal(sketches.length, 1 + 1 + PROCESS.steps.length + SERVICES.items.length + 1 + STACK.bricks.length + 1, "tangle, funnel, 6 étapes, 5 formules, bricks, 6 briques, boat");
+    for (const svg of sketches) assert.equal(svg.getAttribute("aria-hidden"), "true");
+    assert.ok(container.querySelector(".spine"), "colonne vertébrale de la méthode");
+  });
+});
+
 describe("animations au défilement (repli sans animation-timeline)", () => {
   const offscreen = (el: HTMLElement) => (el.getBoundingClientRect = () => ({ top: 5000 }) as DOMRect);
   const tick = () => act(() => new Promise<void>((r) => requestAnimationFrame(() => r())));
@@ -424,6 +460,13 @@ describe("hero", () => {
       [null, "image/webp"],
     ]);
     assert.match(container.querySelector("picture source")?.getAttribute("srcset") ?? "", /hero-wide-1400\.avif 1400w, \/images\/hero\/hero-wide-2000\.avif 2000w/);
+  });
+
+  test("le titre : les mots montent un par un, mais le texte lu reste la phrase entière", () => {
+    const { container } = render(<PortfolioHero />);
+    const words = [...container.querySelectorAll("h1 .word")].map((el) => el.textContent);
+    assert.deepEqual(words, HERO.title.split(" "));
+    assert.equal(screen.getByRole("heading", { level: 1 }).textContent, HERO.title);
   });
 
   test("le voile est décoratif (caché des lecteurs d'écran) ; le texte du hero passe en crème sur la photo à partir de 1024 px", () => {

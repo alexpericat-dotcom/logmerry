@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const TARGETS = ".reveal, .reveal-left, .reveal-right, .reveal-scale";
+const TARGETS = ".reveal, .reveal-left, .reveal-right, .reveal-scale, .sketch";
 
 /**
  * Mouvements au défilement pour les navigateurs SANS `animation-timeline` (Safari avant 26, Firefox), où le CSS seul ne ferait rien : les éléments `.reveal*`

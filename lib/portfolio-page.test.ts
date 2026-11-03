@@ -60,8 +60,8 @@ test("mouvement : toute animation se joue dans « prefers-reduced-motion: no-pre
   assert.ok(!/\binfinite\b/.test(portfolioCss), "une animation de la page publique boucle");
 });
 
-test("mouvement : les animations de la page n'animent que `transform` et `opacity` (pas de largeur, hauteur, marge ni position)", () => {
-  for (const name of ["hero-in", "reveal-up", "reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift"]) {
+test("mouvement : les animations de la page n'animent que `transform`, `opacity` et le tracé des croquis (pas de largeur, hauteur, marge ni position)", () => {
+  for (const name of ["hero-in", "reveal-up", "reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift", "sketch-draw", "spine-grow", "word-up"]) {
     const body = blocks(css, new RegExp(`@keyframes ${name}\\s*\\{`))[0] ?? "";
     assert.ok(body, `@keyframes ${name} introuvable`);
     assert.ok(!/\b(width|height|top|left|right|bottom|margin|padding)\s*:/.test(body), `${name} anime une propriété de mise en page`);
@@ -77,7 +77,9 @@ test("animations au défilement : quatre entrées différentes, une cascade par 
   for (const rule of ["@supports not (animation-timeline: view())", "@supports not (animation-timeline: scroll())", ".rv-pending", ".rv-run", "--hero-p"]) assert.ok(css.includes(rule), `repli manquant : ${rule}`);
   assert.ok(readFileSync("app/portfolio/page.tsx", "utf8").includes("<ScrollEffects />"));
   const sections = readFileSync("components/portfolio-sections.tsx", "utf8") + readFileSync("components/portfolio-showcase.tsx", "utf8");
-  for (const cls of ["reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift"]) assert.ok(sections.includes(cls), `${cls} jamais utilisé`);
+  for (const cls of ["reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift", "spine", "word-mask", "<Sketch"]) assert.ok(sections.includes(cls), `${cls} jamais utilisé`);
+  const print2 = blocks(css, /@media print\s*\{/).join("\n");
+  for (const cls of [".spine", ".word", ".sketch path"]) assert.ok(print2.includes(cls), `${cls} reste animé à l'impression`);
 });
 
 test("en-tête : sur la photo au chargement (voile), translucide et flou au défilement ; le flou n'est que dans le cadre de l'en-tête", () => {

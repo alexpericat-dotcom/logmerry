@@ -55,11 +55,15 @@ test("le choix de la stack est présenté comme sur mesure, jamais comme une lis
   assert.match(content.STACK.intro, /stack technique choisie sur mesure/);
 });
 
-test("« Sous le capot » : front end, back end, base de données, IA et agents, hébergement (VPS, auto-hébergement) et RGPD, chacune traduite « en clair »", () => {
-  assert.deepEqual(content.STACK.bricks.map((l) => l.title), ["Front end", "Back end", "Base de données", "IA et agents", "Hébergement et auto-hébergement", "Données personnelles et RGPD"]);
+test("« Sous le capot » : frontend, backend, base de données, IA et agents, hébergement (VPS, auto-hébergement) et RGPD, chacune traduite « en clair »", () => {
+  assert.deepEqual(content.STACK.bricks.map((l) => l.title), ["Frontend", "Backend", "Base de données", "IA et agents", "Hébergement et auto-hébergement", "Données personnelles et RGPD"]);
   const all = JSON.stringify(content.STACK);
   for (const brick of content.STACK.bricks) assert.ok(brick.plain.trim().length > 10, `pas de traduction en clair pour ${brick.title}`);
   assert.ok(!/couche/i.test(all), "on parle de briques, pas de couches");
+  assert.ok(!/front end|back end/i.test(all), "« frontend » et « backend » s'écrivent en un seul mot");
+  const ia = content.STACK.bricks.find((b) => b.title === "IA et agents")!;
+  for (const tool of ["Mistral", "RAG", "MCP"]) assert.ok(ia.tools.includes(tool), `${tool} manque dans les agents et l'IA`);
+  assert.match(ia.text, /RAG \(génération augmentée par la recherche\)/, "le RAG est expliqué en clair");
   for (const word of ["VPS", "auto-hébergé", "PostgreSQL", "Supabase", "RGPD"]) assert.ok(all.includes(word), word);
   // Aucune promesse juridique : on parle de conception attentive, jamais de « conforme » ni de garantie.
   assert.ok(!/conforme|certifi|garanti|100 ?%/i.test(all));

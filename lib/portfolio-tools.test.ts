@@ -34,6 +34,7 @@ test("le dossier des logos documente leur origine, leur licence et que ce sont d
 
 import { VALIDATED_TOOLS } from "./portfolio-content.ts";
 
-test("chaque outil validé a son logo", () => {
-  for (const tool of VALIDATED_TOOLS) assert.ok(toolIconPath(tool), tool);
+test("chaque outil validé a son logo, sauf « RAG » : une technique, pas un logiciel (pastille sans logo)", () => {
+  for (const tool of VALIDATED_TOOLS.filter((t) => t !== "RAG")) assert.ok(toolIconPath(tool), tool);
+  assert.equal(toolIconPath("RAG"), null);
 });

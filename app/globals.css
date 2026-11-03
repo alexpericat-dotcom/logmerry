@@ -285,7 +285,7 @@
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(56px);
   }
   to {
     opacity: 1;
@@ -295,7 +295,7 @@
 @keyframes reveal-left {
   from {
     opacity: 0;
-    transform: translateX(-36px);
+    transform: translateX(-90px);
   }
   to {
     opacity: 1;
@@ -305,7 +305,7 @@
 @keyframes reveal-right {
   from {
     opacity: 0;
-    transform: translateX(36px);
+    transform: translateX(90px);
   }
   to {
     opacity: 1;
@@ -315,11 +315,27 @@
 @keyframes reveal-scale {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.84);
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+/* Croquis : le trait se dessine, tracé par tracé. Colonne vertébrale de la méthode : elle se trace au fil du défilement. Titre du hero : les mots montent un à un. */
+@keyframes sketch-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes spine-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes word-up {
+  from {
+    transform: translateY(115%);
   }
 }
 @keyframes hero-in {
@@ -330,13 +346,13 @@
 /* Hero au défilement : la photo s'élargit doucement, le texte monte et s'efface. */
 @keyframes hero-zoom {
   to {
-    transform: scale(1.1);
+    transform: scale(1.2);
   }
 }
 @keyframes hero-lift {
   to {
     opacity: 0;
-    transform: translateY(-48px);
+    transform: translateY(-90px);
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -363,6 +379,23 @@
       animation-range: entry calc(var(--i, 0) * 7%) entry calc(60% + var(--i, 0) * 7%);
     }
   }
+  @supports (animation-timeline: view()) {
+    .sketch path {
+      animation: sketch-draw linear forwards;
+      animation-timeline: view();
+      animation-range: entry calc(var(--p, 0) * 3%) entry calc(60% + var(--p, 0) * 3%);
+    }
+    .spine {
+      transform-origin: top;
+      animation: spine-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 60%;
+    }
+  }
+  .word {
+    animation: word-up 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(250ms + var(--w, 0) * 120ms);
+  }
   @supports (animation-timeline: scroll()) {
     .hero-zoom {
       transform-origin: 70% 50%;
@@ -382,16 +415,16 @@
       opacity: 0;
     }
     .reveal.rv-pending {
-      transform: translateY(24px);
+      transform: translateY(56px);
     }
     .reveal-left.rv-pending {
-      transform: translateX(-36px);
+      transform: translateX(-90px);
     }
     .reveal-right.rv-pending {
-      transform: translateX(36px);
+      transform: translateX(90px);
     }
     .reveal-scale.rv-pending {
-      transform: scale(0.95);
+      transform: scale(0.84);
     }
     .rv-run {
       transition:
@@ -399,21 +432,48 @@
         transform 700ms ease-out;
       transition-delay: calc(var(--i, 0) * 90ms);
     }
+    .sketch.rv-pending path {
+      stroke-dashoffset: 1;
+    }
+    .sketch.rv-run path {
+      transition: stroke-dashoffset 1300ms ease-out;
+      transition-delay: calc(var(--p, 0) * 90ms);
+    }
   }
   @supports not (animation-timeline: scroll()) {
     .hero-zoom {
       transform-origin: 70% 50%;
-      transform: scale(calc(1 + var(--hero-p, 0) * 0.1));
+      transform: scale(calc(1 + var(--hero-p, 0) * 0.2));
     }
     .hero-lift {
       opacity: calc(1 - var(--hero-p, 0) * 1.6);
-      transform: translateY(calc(var(--hero-p, 0) * -48px));
+      transform: translateY(calc(var(--hero-p, 0) * -90px));
     }
   }
   .hero-in {
     animation: hero-in 1100ms ease-out backwards;
     animation-delay: var(--d, 0ms);
   }
+}
+
+/* Tracés des croquis (`components/sketches.tsx`) : `pathLength=1`, donc un seul réglage de pointillés pour tous. Sans mouvement, le croquis est tracé en entier. */
+.sketch path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.sketch .sk-accent {
+  stroke: hsl(var(--tone-orange));
+}
+/* Masque des mots du titre : les descendantes (g, p, q) ne sont pas coupées. */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
+}
+.word {
+  display: inline-block;
 }
 
 /* L'en-tête de la page publique est collant : un élément qui reçoit le focus ou une ancre ne doit pas passer dessous (WCAG 2.4.11). */
@@ -427,7 +487,10 @@ html:has(#contenu) {
   .reveal-right,
   .reveal-scale,
   .hero-zoom,
-  .hero-lift {
+  .hero-lift,
+  .spine,
+  .word,
+  .sketch path {
     animation: none !important;
   }
   header[data-portfolio-header] {

@@ -20,6 +20,7 @@ export const TOOL_ICONS: Record<string, string> = {
   Zapier: "zapier",
   Vercel: "vercel",
   Cursor: "cursor",
+  Mistral: "mistralai",
 };
 
 export const toolIconPath = (tool: string): string | null => (Object.hasOwn(TOOL_ICONS, tool) ? `/images/tools/${TOOL_ICONS[tool]}.svg` : null);

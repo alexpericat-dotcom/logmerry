@@ -32,9 +32,9 @@ export const HERO = {
 /**
  * Les outils qui peuvent apparaître avec leur logo sur la page, ailleurs que dans les étiquettes de ses réalisations. Validés par Alex : les huit premiers le 30 octobre 2026 ;
  * Notion, MCP et Node.js demandés par lui le 3 novembre 2026 (« un éventail d'applications à la mode réparti sur les briques »). Les cinq derniers (Next.js, React, Telegram, Gmail, Docker)
- * viennent de sa propre pile et de ses captures de workflows : à CONFIRMER par Alex. Make, Zapier, Vercel et Cursor : proposés par l'assistant le 3 novembre, rangés dans leurs briques à sa demande (« range-les »).
+ * viennent de sa propre pile et de ses captures de workflows : à CONFIRMER par Alex. Make, Zapier, Vercel et Cursor : proposés par l'assistant le 3 novembre, rangés dans leurs briques à sa demande (« range-les »). Mistral demandé par lui le 3 novembre ; « RAG » est une technique, pas un logiciel : une pastille sans logo.
  */
-export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js", "Next.js", "React", "Telegram", "Gmail", "Docker", "Make", "Zapier", "Vercel", "Cursor"];
+export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js", "Next.js", "React", "Telegram", "Gmail", "Docker", "Make", "Zapier", "Vercel", "Cursor", "Mistral", "RAG"];
 
 /** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
 export const LEVER = {
@@ -87,13 +87,13 @@ export const STACK = {
   plainLabel: "En clair",
   bricks: [
     {
-      title: "Front end",
+      title: "Frontend",
       plain: "ce que vos équipes voient et utilisent à l'écran.",
       text: "Des interfaces claires, rapides et utilisables sur téléphone.",
       tools: ["Next.js", "React"],
     },
     {
-      title: "Back end",
+      title: "Backend",
       plain: "le moteur invisible, qui fait le travail en coulisses.",
       text: "La logique métier : automatisations, API et connexions entre vos outils, avec un suivi des erreurs.",
       tools: ["Node.js", "n8n", "Make", "Zapier", "Telegram", "Gmail"],
@@ -107,8 +107,8 @@ export const STACK = {
     {
       title: "IA et agents",
       plain: "des assistants qui lisent vos documents et accomplissent des tâches précises à votre place.",
-      text: "Des modèles d'IA reliés à vos données, qui citent leurs sources. MCP (Model Context Protocol) est la prise standard qui leur permet de se brancher à vos outils.",
-      tools: ["Claude", "OpenAI", "Gemini", "MCP", "Cursor"],
+      text: "Des modèles d'IA reliés à vos données, qui citent leurs sources. Le RAG (génération augmentée par la recherche) permet à l'assistant de retrouver d'abord les bons passages dans vos documents, puis de répondre en s'appuyant dessus. MCP (Model Context Protocol) est la prise standard qui lui permet de se brancher à vos outils.",
+      tools: ["Claude", "OpenAI", "Gemini", "Mistral", "RAG", "MCP", "Cursor"],
     },
     {
       title: "Hébergement et auto-hébergement",
