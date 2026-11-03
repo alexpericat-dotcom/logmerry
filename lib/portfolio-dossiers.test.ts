@@ -20,10 +20,12 @@ test("bande de chiffres : exactement les trois valeurs et la légende fournies p
   assert.equal(dossier.figuresCaption, "Tests qualitatifs sur maquettes basse fidélité, 5 clients et 5 agents.");
 });
 
-test("quatre flux dans l'ordre (soumission, enrichissement IA, traitement, notification), texte d'Alex ; aucun outil d'orchestration nommé (n8n ou Make à confirmer)", () => {
+test("quatre flux dans l'ordre (soumission, enrichissement IA, traitement, notification), texte d'Alex ; l'orchestration est assurée par n8n, Make n'est jamais nommé", () => {
   assert.deepEqual(dossier.architecture.flows.map((f) => [f.number, f.title]), [[1, "Soumission"], [2, "Enrichissement IA"], [3, "Traitement"], [4, "Notification"]]);
   const all = JSON.stringify(dossier);
-  assert.ok(!/\bn8n\b|\bmake\b/i.test(all), "l'outil d'orchestration n'est pas nommé tant qu'Alex n'a pas tranché");
+  const architectureText = JSON.stringify(dossier.architecture);
+  assert.ok(/\bn8n\b/i.test(architectureText), "n8n est nommé dans le schéma (choix d'Alex)");
+  assert.ok(!/\bmake\b/i.test(all), "Make n'est pas l'outil d'orchestration choisi");
   for (const brick of ["Mistral", "Brevo", "Supabase", "webhook"]) assert.ok(all.includes(brick), brick);
   assert.ok(!/\b(site|application|web ?app)\b/i.test(dossier.architecture.alt), "texte alternatif sans livrable inventé");
 });

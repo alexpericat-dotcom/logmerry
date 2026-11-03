@@ -47,7 +47,7 @@ function Tag({ x, y, children }: { x: number; y: number; children: string }) {
 
 /**
  * Schéma d'architecture en SVG natif (aucune image) : couleurs du site (jetons, donc thèmes clair et sombre), texte alternatif descriptif, et les quatre flux écrits en liste
- * (c'est la version « simplifiée » du téléphone, où le schéma défile horizontalement). L'orchestration n'est pas nommée : l'outil (n8n ou Make) reste à confirmer.
+ * (c'est la version « simplifiée » du téléphone, où le schéma défile horizontalement). L'orchestration est assurée par n8n (choix d'Alex, 5 novembre 2026).
  */
 function ArchitectureDiagram({ dossier }: { dossier: DossierContent }) {
   const a = dossier.architecture;
@@ -83,7 +83,7 @@ function ArchitectureDiagram({ dossier }: { dossier: DossierContent }) {
           <Box x={10} y={50} w={120} h={48} lines={["Client"]} />
           <Box x={170} y={50} w={176} h={48} lines={["Portail de soumission"]} />
           <Box x={620} y={50} w={170} h={48} lines={["Brevo (e-mails)"]} />
-          <Box x={380} y={198} w={180} h={64} lines={["Orchestration"]} accent />
+          <Box x={380} y={198} w={180} h={64} lines={["Orchestration", "n8n"]} accent />
           <Box x={620} y={206} w={170} h={48} lines={["API Mistral AI"]} />
           <Box x={10} y={380} w={120} h={48} lines={["Agent de", "support"]} />
           <Box x={170} y={380} w={176} h={48} lines={["Back-office agent"]} />

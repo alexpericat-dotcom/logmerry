@@ -599,7 +599,7 @@ describe("dossier de la plateforme de gestion des demandes clients", () => {
     assert.ok(screen.getByText("Tests qualitatifs sur maquettes basse fidélité, 5 clients et 5 agents."));
   });
 
-  test("schéma d'architecture : SVG natif (aucune image), titre et description pour les lecteurs d'écran, huit briques, quatre flux écrits, orchestration non nommée", () => {
+  test("schéma d'architecture : SVG natif (aucune image), titre et description pour les lecteurs d'écran, huit briques, quatre flux écrits, orchestration assurée par n8n", () => {
     const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
     const svg = container.querySelector("svg[role=img]") as SVGElement;
     assert.ok(svg, "le schéma est un SVG");
@@ -608,8 +608,8 @@ describe("dossier de la plateforme de gestion des demandes clients", () => {
     assert.match(svg.querySelector("desc")?.textContent ?? "", /quatre flux numérotés/i);
     assert.equal(svg.getAttribute("aria-labelledby"), "arch-title arch-desc");
     const names = [...svg.querySelectorAll("g:has(> rect)")].map((g) => [...g.querySelectorAll("text")].map((t) => t.textContent).join(" "));
-    assert.deepEqual(names, ["Client", "Portail de soumission", "Brevo (e-mails)", "Orchestration", "API Mistral AI", "Agent de support", "Back-office agent", "Supabase (données)"]);
-    assert.ok(!/n8n|make/i.test(svg.textContent ?? ""), "l'outil d'orchestration reste à confirmer : il n'est pas nommé");
+    assert.deepEqual(names, ["Client", "Portail de soumission", "Brevo (e-mails)", "Orchestration n8n", "API Mistral AI", "Agent de support", "Back-office agent", "Supabase (données)"]);
+    assert.ok(/n8n/.test(svg.textContent ?? "") && !/make/i.test(svg.textContent ?? ""), "n8n est l'outil d'orchestration choisi, Make n'est pas nommé");
     const flows = [...container.querySelectorAll("ol > li")].map((li) => li.querySelector("h5")?.textContent);
     assert.deepEqual(flows, ["Soumission", "Enrichissement IA", "Traitement", "Notification"]);
     const scroller = svg.closest("[role=group]") as HTMLElement;

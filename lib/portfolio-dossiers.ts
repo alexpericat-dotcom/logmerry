@@ -23,7 +23,7 @@ export const DOSSIERS: Record<string, Dossier> = {
     figuresCaption: "Tests qualitatifs sur maquettes basse fidélité, 5 clients et 5 agents.",
     architecture: {
       title: "Schéma d'architecture",
-      alt: "Schéma d'architecture de la plateforme : le client et l'agent de support utilisent le portail de soumission et le back-office. Une orchestration relie le portail, Supabase (les données), l'API Mistral AI et Brevo (les e-mails). Quatre flux numérotés : soumission, enrichissement par l'IA, traitement, notification.",
+      alt: "Schéma d'architecture de la plateforme : le client et l'agent de support utilisent le portail de soumission et le back-office. Une orchestration (n8n) relie le portail, Supabase (les données), l'API Mistral AI et Brevo (les e-mails). Quatre flux numérotés : soumission, enrichissement par l'IA, traitement, notification.",
       description: "Les boîtes sont les briques, les flèches sont les échanges ; chaque numéro renvoie au flux décrit juste dessous.",
       scrollHint: "Sur téléphone, le schéma défile horizontalement ; les quatre flux sont aussi écrits ci-dessous.",
       flows: [
@@ -43,7 +43,7 @@ export const DOSSIERS: Record<string, Dossier> = {
       linkLabel: "Voir le dossier complet",
       placeholder: "Capture à fournir",
       items: [
-        { key: "veille", title: "Tableau comparatif de la veille", caption: "Tableau comparatif de la veille des plateformes", alt: "Extrait du dossier Notion : tableau de la veille, douze outils notés de 1 à 5 sur les fonctionnalités, le coût, la scalabilité, les intégrations et la conformité, avec un score global et une recommandation (retenu, à creuser ou écarté)." },
+        { key: "veille", title: "Tableau comparatif de la veille", caption: "Tableau comparatif de la veille des plateformes", alt: "Extrait du dossier Notion : tableau de la veille, douze outils notés de 1 à 5 sur les fonctionnalités, le coût, la scalabilité, les intégrations et la conformité, avec un score global et une recommandation (retenu, à creuser ou écarté). Retenus : Weweb, Supabase, N8n et Mistral." },
         { key: "backlog", title: "Backlog priorisé", caption: "Backlog priorisé", alt: "Extrait du dossier Notion : backlog en colonnes MoSCoW. MustHave : six user stories (US1 à US6) rattachées aux sprints 1 à 3. ShouldHave : trois (US7 à US9). CouldHave : une (US10). WontHave : une (US11). Une dernière sans priorité (US12)." },
       ],
     },
