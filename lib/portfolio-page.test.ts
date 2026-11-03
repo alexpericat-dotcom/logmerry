@@ -98,13 +98,40 @@ test("en-tête : sur la photo au chargement (voile), translucide et flou au déf
   for (const id of ["qui-suis-je", "contact"]) assert.ok(sections.includes(`id="${id}"`), `la section #${id} est la cible d'un bouton de l'en-tête`);
 });
 
-test("direction éditoriale : aucun verre dépoli, bandeau défilant, vidéo ni pause d'animations ne reste dans la page publique", () => {
+test("direction éditoriale : ni carte de verre, bandeau défilant, vidéo ni pause d'animations ; le verre liquide est réservé aux boutons d'appel à l'action", () => {
   const portfolioCss = css.slice(css.indexOf("/* Page publique du portfolio"));
-  assert.ok(!/backdrop-filter|\.glass|\.marquee|\.mesh|data-motion/.test(portfolioCss));
+  assert.ok(!/\.glass|\.marquee|\.mesh|data-motion/.test(portfolioCss));
+  const withoutLiquid = blocks(portfolioCss, /\.liquid\s*\{/).reduce((acc, b) => acc.replace(b, ""), portfolioCss);
+  assert.ok(!/backdrop-filter/.test(withoutLiquid), "le flou n'est permis que sur `.liquid` (boutons)");
   for (const file of ["components/portfolio-sections.tsx", "components/portfolio-showcase.tsx", "app/portfolio/page.tsx"]) {
     const src = readFileSync(file, "utf8");
     assert.ok(!/backdrop-blur|bg-gradient-sunset|text-brand-gradient|font-pixel|shadow-hard|<video|Marquee|MotionToggle/.test(src), `${file} garde un élément de l'ancienne direction`);
   }
+});
+
+test("boutons en verre liquide : texte lisible (AA) sur le pire fond ; l'éclat et le survol ne bougent que `transform` et `opacity`", () => {
+  const photo = /--photo:\s*([\d.]+) ([\d.]+)% ([\d.]+)%/.exec(css)!;
+  const cream = hslToRgb([Number(photo[1]), Number(photo[2]), Number(photo[3])]);
+  const ink = [18, 20, 15];
+  const mix = (a: readonly number[], b: readonly number[], t: number) => a.map((v, i) => v * (1 - t) + b[i] * t);
+  // Verre clair : 6 % de la couleur du texte sur le pire pixel de la photo voilé (#FFC87D à 55 %), cf. le test du voile.
+  const veiled = mix([0xff, 0xc8, 0x7d], ink, 0.55);
+  const clear = /\.liquid-clear \{[^}]*\}/.exec(css)?.[0] ?? "";
+  const tint = Number(/currentColor (\d+)%, transparent\);\s*border-color/.exec(clear)?.[1]) / 100;
+  const shade = Number(/rgb\(var\(--veil\) \/ ([\d.]+)\)/.exec(clear)?.[1]);
+  assert.ok(tint > 0 && tint <= 0.06 && shade > 0, `teinte ${tint}, voile ${shade}`);
+  assert.ok(contrastRgb(cream, mix(mix(veiled, ink, shade), cream, tint)) >= 4.5, "texte crème sur le verre clair, au pire pixel de la photo");
+  const paper = hslToRgb([36.5, 51.1, 91.2]);
+  assert.ok(contrastRgb(ink, mix(mix(paper, ink, shade), ink, tint)) >= 4.5, "texte encre sur le verre clair, sur le papier");
+  // Verre orange : encre sur l'orange le moins opaque (72 %) posé sur le fond le plus sombre de la page (thème sombre), puis sur du blanc.
+  const alpha = Number(/\.liquid-orange \{[^}]*tone-orange\) \/ 0\.95\), hsl\(var\(--tone-orange\) \/ ([\d.]+)\)/.exec(css)?.[1]);
+  assert.ok(alpha >= 0.7, `opacité minimale du verre orange : ${alpha}`);
+  const orange = hslToRgb([25, 96.2, 69.2]);
+  assert.ok(contrastRgb(ink, mix(hslToRgb([185, 28.6, 8.2]), orange, alpha)) >= 4.5, "encre sur le verre orange, fond sombre");
+  assert.ok(contrastRgb(ink, mix([255, 255, 255], orange, alpha)) >= 4.5, "encre sur le verre orange, fond blanc");
+  assert.ok(contrastRgb(hslToRgb([36.5, 51.1, 91.2]), hslToRgb([182.2, 34.2, 15.5])) >= 4.5, "texte sur le verre « ink »");
+  const sections = readFileSync("components/portfolio-sections.tsx", "utf8");
+  assert.ok(sections.includes("LiquidButton") && readFileSync("components/portfolio-showcase.tsx", "utf8").includes("liquid-ink"));
 });
 
 test("jetons du portfolio : contrastes AA (clair et sombre) sur le fond, les cartes et les sections grisées", () => {

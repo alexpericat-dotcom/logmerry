@@ -82,7 +82,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground underline-offset-4 hover:underline"
+            className="liquid liquid-ink min-h-11 w-fit px-6 py-2 text-base"
           >
             {SHOWCASE.linkLabel}
             <ExternalLink size={16} aria-hidden="true" />

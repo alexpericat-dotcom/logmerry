@@ -17,6 +17,16 @@ const MONO = "font-mono text-xs uppercase tracking-[0.18em]";
 /** Texte crème posé sur la photo (grand écran) : la couleur sur laquelle est calculé le contraste du voile (`--photo`, `lib/portfolio-page.test.ts`). */
 const CREAM = "lg:text-photo";
 
+/** Bouton d'appel à l'action en verre liquide (`.liquid` dans `app/globals.css`) : « orange » pour l'action principale, « clear » (verre clair, couleur du texte) pour la secondaire. */
+export function LiquidButton({ href, tone, size = "md", children, className = "" }: { href: string; tone: "orange" | "clear" | "ink"; size?: "sm" | "md" | "lg"; children: ReactNode; className?: string }) {
+  const sizes = { sm: "h-11 px-7 text-sm md:h-9", md: "h-11 px-7 text-base", lg: "h-12 px-9 text-base" }[size];
+  return (
+    <a href={href} className={`liquid liquid-${tone} ${sizes} ${className}`}>
+      {children}
+    </a>
+  );
+}
+
 /** Titre de section : étiquette mono, titre serif, introduction ; un croquis facultatif à droite (grand écran), qui se dessine à l'arrivée. */
 function SectionHead({ id, eyebrow, title, intro, sketch }: { id: string; eyebrow: string; title: string; intro?: string; sketch?: SketchName }) {
   return (
@@ -57,9 +67,9 @@ export function PortfolioHeader() {
           <Button asChild size="sm" variant="ghost" className="group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo">
             <a href="#qui-suis-je">{HEADER.about}</a>
           </Button>
-          <Button asChild size="sm" className="px-8">
-            <a href="#contact">{HEADER.contact}</a>
-          </Button>
+          <LiquidButton href="#contact" tone="orange" size="sm" className="ml-1 px-8">
+            {HEADER.contact}
+          </LiquidButton>
         </nav>
       </div>
     </PortfolioHeaderFrame>
@@ -93,7 +103,7 @@ export function PortfolioHero() {
       </div>
       <div aria-hidden="true" className="hero-veil absolute inset-0 hidden lg:block" />
       <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-40">
-        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] ${CREAM}`}>
+        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] lg:[--ring:var(--photo)] ${CREAM}`}>
           <p className={`hero-in ${MONO} flex items-center gap-3`} style={delay(0)}>
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
             {HERO.eyebrow}
@@ -115,15 +125,13 @@ export function PortfolioHero() {
             {HERO.lead}
           </p>
           <div className="hero-in flex flex-wrap items-center gap-3" style={delay(360)}>
-            <Button asChild size="lg" className="group lg:focus-visible:outline-photo">
-              <a href="#realisations">
-                {HERO.primary}
-                <ArrowRight size={18} aria-hidden="true" className="ml-1 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
-              </a>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="lg:border-photo lg:bg-transparent lg:text-photo lg:hover:bg-photo/15 lg:hover:text-photo lg:focus-visible:outline-photo">
-              <a href={contactHref}>{HERO.secondary}</a>
-            </Button>
+            <LiquidButton href="#realisations" tone="orange" size="lg" className="group">
+              {HERO.primary}
+              <ArrowRight size={18} aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
+            </LiquidButton>
+            <LiquidButton href={contactHref} tone="clear" size="lg">
+              {HERO.secondary}
+            </LiquidButton>
           </div>
         </div>
       </div>
@@ -273,12 +281,10 @@ export function PortfolioContact() {
           {CONTACT.title}
         </h2>
         <p className="mt-4 text-lg text-muted-foreground">{CONTACT.text}</p>
-        <Button asChild size="lg" className="mt-8">
-          <a href={contactHref}>
-            {CONTACT.button}
-            <ArrowRight size={18} aria-hidden="true" className="ml-1" />
-          </a>
-        </Button>
+        <LiquidButton href={contactHref} tone="orange" size="lg" className="mt-8">
+          {CONTACT.button}
+          <ArrowRight size={18} aria-hidden="true" />
+        </LiquidButton>
         </div>
         <Sketch name="talk" className="hidden w-72 shrink-0 text-foreground/80 md:block xl:w-80" />
       </div>

@@ -456,6 +456,109 @@
   }
 }
 
+/* Boutons d'appel à l'action en « verre liquide » : une pastille translucide qui floute ce qu'elle recouvre, un reflet sur le dessus, des bords lumineux, une lueur
+   de sa couleur, et un éclat qui traverse au survol (transform seulement, une seule fois, jamais en boucle). Réservé aux appels à l'action ; pas de carte en verre. */
+.liquid {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow:
+    inset 0 1.5px 1px rgb(255 255 255 / 0.85),
+    inset 0 -2px 6px rgb(0 0 0 / 0.14),
+    inset 0 0 18px rgb(255 255 255 / 0.22),
+    0 14px 28px -12px var(--liquid-glow, rgb(0 0 0 / 0.35));
+}
+/* Reflet : une bande claire sur la moitié haute, derrière le texte. */
+.liquid::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px 7% 52% 7%;
+  border-radius: 9999px;
+  background: linear-gradient(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.04));
+  pointer-events: none;
+}
+/* Éclat : une bande oblique qui traverse la pastille quand on la survole ou qu'on la focalise. */
+.liquid::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -30%;
+  bottom: -30%;
+  left: -45%;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.65), transparent);
+  transform: translateX(0) skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+}
+.liquid:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+.liquid-orange {
+  color: hsl(var(--action-foreground));
+  background: linear-gradient(135deg, hsl(var(--tone-orange) / 0.95), hsl(var(--tone-orange) / 0.72));
+  --liquid-glow: hsl(var(--tone-orange) / 0.6);
+}
+.liquid-ink {
+  color: hsl(var(--primary-foreground));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.78));
+  --liquid-glow: hsl(var(--primary) / 0.5);
+}
+/* Verre clair : un voile d'encre léger (22 %) pour garder le contraste sur la photo, teinté de la couleur du texte (6 %), sans reflet ni halo intérieur, pour ne pas faire perdre de contraste au texte (calculé dans `lib/portfolio-page.test.ts`). */
+.liquid-clear {
+  color: inherit;
+  background:
+    linear-gradient(rgb(var(--veil) / 0.22), rgb(var(--veil) / 0.22)),
+    color-mix(in srgb, currentColor 6%, transparent);
+  border-color: color-mix(in srgb, currentColor 38%, transparent);
+  box-shadow:
+    inset 0 1px 1px color-mix(in srgb, currentColor 45%, transparent),
+    0 14px 28px -14px rgb(0 0 0 / 0.4);
+}
+.liquid-clear::before {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .liquid {
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease;
+  }
+  .liquid::after {
+    transition:
+      transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 200ms ease;
+  }
+  .liquid:hover,
+  .liquid:focus-visible {
+    transform: translateY(-2px);
+  }
+  .liquid:hover::after,
+  .liquid:focus-visible::after {
+    transform: translateX(560%) skewX(-18deg);
+    opacity: 1;
+  }
+  .liquid-clear:hover::after,
+  .liquid-clear:focus-visible::after {
+    opacity: 0.3;
+  }
+  .liquid:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
 /* Tracés des croquis (`components/sketches.tsx`) : `pathLength=1`, donc un seul réglage de pointillés pour tous. Sans mouvement, le croquis est tracé en entier. */
 .sketch path {
   stroke-dasharray: 1;
@@ -466,6 +569,10 @@
 }
 .sketch .sk-thin {
   opacity: 0.75;
+}
+/* Repères de construction : très pâles, comme les traits d'un dessin technique au crayon. */
+.sketch .sk-guide {
+  opacity: 0.3;
 }
 /* Surligneur : un gros trait orange translucide passé derrière le sujet. */
 .sketch .sk-marker {

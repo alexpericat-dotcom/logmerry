@@ -18,8 +18,8 @@ export const HEADER = { about: "Qui suis-je", contact: "Contact" };
 
 export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
-  /** Le H1 : texte d'Alex (3 novembre 2026), mot pour mot. */
-  title: "Laissez la vague faire le travail.",
+  /** Le H1 : texte d'Alex (3 novembre 2026), mot pour mot, entre guillemets français à espaces insécables (4 novembre : « pour que ce soit plus humain »). */
+  title: "«\u00a0Laissez la vague faire le travail.\u00a0»",
   lead: "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.",
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
