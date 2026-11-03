@@ -20,8 +20,9 @@ test("« PostgreSQL » n'est jamais écrit seul : toujours « Baserow (base rela
   assert.ok(!/\b(\w+ ){0,2}PostgreSQL\b/.test(content.replace(/Baserow, reposant sur PostgreSQL/g, "")), "aucune autre mention de PostgreSQL");
 });
 
-test("rien n'est affirmé sur des contraintes d'unicité garanties par la base", () => {
-  assert.ok(!/uniq|unicit|doublon|duplicate/i.test(content));
+test("rien n'est affirmé sur des contraintes d'unicité garanties par la base (« anti-doublon » décrit un workflow n8n, pas une garantie de la base)", () => {
+  assert.ok(!/uniq|unicit|contrainte|duplicate/i.test(content));
+  assert.ok(!/doublon/i.test(content.replace("anti-doublon", "")), "« doublon » n'apparaît que dans « anti-doublon », jamais comme garantie de la base");
 });
 
 test("la stack est exactement celle donnée, et la réalisation est créée non publiée, sans accord ni statut", () => {
