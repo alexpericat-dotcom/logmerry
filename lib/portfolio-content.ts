@@ -13,6 +13,9 @@ export const CONTACT_SUBJECT = "Prise de contact via votre portfolio";
 export const PAGE_TITLE = `${BRAND} · Automatisation & IA pour les entreprises`;
 export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver ce qu'il faut automatiser, puis je construis l'automatisation, l'IA et les données qui le résolvent. Réalisations et méthode.";
 
+/** Boutons de l'en-tête : « Qui suis-je » mène à la section de présentation, « Contact » à la section de contact (qui porte le lien courriel). */
+export const HEADER = { about: "Qui suis-je", contact: "Contact" };
+
 export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
   /** Le H1 : texte d'Alex (3 novembre 2026), mot pour mot. */

@@ -18,7 +18,7 @@ import {
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
+import { CONTACT_EMAIL, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
 
 afterEach(cleanup);
 
@@ -136,7 +136,7 @@ describe("sections de la page", () => {
     assert.equal(h1.length, 1);
     assert.equal(h1[0].textContent, HERO.title);
     const mails = screen.getAllByRole("link", { name: /M'écrire|Parler de votre problème|alexandre/ }) as HTMLAnchorElement[];
-    assert.ok(mails.length >= 4);
+    assert.ok(mails.length >= 3);
     for (const a of mails) assert.ok(a.href.startsWith(`mailto:${CONTACT_EMAIL}`), a.href);
   });
 
@@ -301,6 +301,33 @@ describe("aperçu en direct d'une réalisation", () => {
   test("l'adresse du site est affichée dans la barre du cadre de navigateur", () => {
     render(withLink());
     assert.ok(screen.getByText("ateliernovav3.lovable.app"));
+  });
+});
+
+describe("en-tête", () => {
+  test("deux boutons, « Qui suis-je » et « Contact », qui mènent à leur section ; plus de petit « M'écrire »", () => {
+    render(<PortfolioHeader />);
+    assert.equal(screen.getByRole("link", { name: HEADER.about }).getAttribute("href"), "#qui-suis-je");
+    assert.equal(screen.getByRole("link", { name: HEADER.contact }).getAttribute("href"), "#contact");
+    assert.equal(screen.queryByRole("link", { name: /M'écrire/ }), null);
+  });
+
+  test("sur la photo au chargement, puis translucide et flou dès que la page défile (et retour en haut)", async () => {
+    const { container } = render(<PortfolioHeader />);
+    const header = container.querySelector("header") as HTMLElement;
+    assert.equal(header.dataset.scrolled, "false");
+    assert.ok(header.className.includes("header-veil"));
+    await act(async () => {
+      Object.defineProperty(window, "scrollY", { configurable: true, value: 200 });
+      fireEvent.scroll(window);
+    });
+    assert.equal(header.dataset.scrolled, "true");
+    assert.ok(header.className.includes("backdrop-blur") && !header.className.includes("header-veil"));
+    await act(async () => {
+      Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+      fireEvent.scroll(window);
+    });
+    assert.equal(header.dataset.scrolled, "false");
   });
 });
 

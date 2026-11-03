@@ -233,6 +233,7 @@
     --ring: 182.2 34.2% 15.5%;
     --display: 182.2 34.2% 15.5%;
     --tone-orange: 25 96.2% 69.2%; /* #FCA465 : ciel le plus clair de la photo, l'unique accent vif (aplat, jamais du texte sur le papier) */
+    --veil: 18 20 15; /* #12140F encre, couleur des voiles posés sur la photo */
     --radius: 0.125rem;
     --shadow-hard: none;
     --border-w: 1px;
@@ -270,14 +271,51 @@
 /* Voile du hero : encre à 55 % jusqu'à la moitié de la largeur (là où se tient le texte), qui s'efface avant le surfeur. 55 % est calculé pour le PIRE pixel de la zone
    (#FFC87D, 0,64 de luminance) : crème sur ce pixel voilé = 5,0:1 ; un test relit ces valeurs et refait le calcul. */
 .hero-veil {
-  --veil: 18 20 15;
   background: linear-gradient(90deg, rgb(var(--veil) / 0.55) 0%, rgb(var(--veil) / 0.55) 50%, rgb(var(--veil) / 0) 76%);
 }
 
+/* Voile de l'en-tête quand il est posé sur la photo (avant tout défilement) : encre à 65 %, calculé pour le pire pixel de la bande du haut (#FFE7BA bureau, #FFFFBF
+   mobile) : crème dessus = 5,3:1 au plus bas. Un test relit cette valeur. */
+.header-veil {
+  background: linear-gradient(rgb(var(--veil) / 0.65) 0%, rgb(var(--veil) / 0.65) 70%, rgb(var(--veil) / 0) 100%);
+}
+
+/* Mouvements au défilement, légers : `transform` et `opacity` seulement, liés à la position (jamais en boucle), une seule fois par élément. `--i` décale le début
+   d'un élément d'une grille (cascade). Sans `animation-timeline` ou avec « réduire les animations », tout est affiché tout de suite : aucun contenu n'est caché. */
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-right {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -289,14 +327,53 @@
     opacity: 0;
   }
 }
+/* Hero au défilement : la photo s'élargit doucement, le texte monte et s'efface. */
+@keyframes hero-zoom {
+  to {
+    transform: scale(1.1);
+  }
+}
+@keyframes hero-lift {
+  to {
+    opacity: 0;
+    transform: translateY(-48px);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
+    /* `forwards` et non `both` : avant son entrée à l'écran, l'élément n'est PAS dans l'état de départ (invisible) ; sinon une capture pleine page,
+       une impression ou un robot d'indexation verraient une page vide. */
     .reveal {
-      /* `forwards` et non `both` : avant son entrée à l'écran, l'élément n'est PAS dans l'état de départ (invisible) ; sinon une capture pleine page,
-         une impression ou un robot d'indexation verraient une page vide. */
       animation: reveal-up linear forwards;
+    }
+    .reveal-left {
+      animation: reveal-left linear forwards;
+    }
+    .reveal-right {
+      animation: reveal-right linear forwards;
+    }
+    .reveal-scale {
+      animation: reveal-scale linear forwards;
+    }
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale {
       animation-timeline: view();
-      animation-range: entry 0% cover 30%;
+      animation-range: entry calc(var(--i, 0) * 7%) entry calc(60% + var(--i, 0) * 7%);
+    }
+  }
+  @supports (animation-timeline: scroll()) {
+    .hero-zoom {
+      transform-origin: 70% 50%;
+      animation: hero-zoom linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+    .hero-lift {
+      animation: hero-lift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60vh;
     }
   }
   .hero-in {
@@ -311,10 +388,15 @@ html:has(#contenu) {
 }
 /* Impression : rendu statique, sans en-tête collant ni hauteur d'écran. */
 @media print {
-  .reveal {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .hero-zoom,
+  .hero-lift {
     animation: none !important;
   }
-  header.sticky {
+  header[data-portfolio-header] {
     position: static;
   }
 }

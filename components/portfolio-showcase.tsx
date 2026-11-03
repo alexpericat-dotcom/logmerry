@@ -35,7 +35,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
   );
   const flip = index % 2 === 1;
   return (
-    <li className="reveal grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-12">
+    <li className="reveal-scale grid min-w-0 grid-cols-1 items-center gap-8 lg:grid-cols-12">
       <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>
         <BrowserFrame host={link ? new URL(link).host : undefined}>{link ? <LivePreview url={link} title={card.title} poster={poster} auto={!cover && index === 0} label={SHOWCASE.liveLabel} /> : poster}</BrowserFrame>
         {more.length > 0 && (

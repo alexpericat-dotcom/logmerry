@@ -98,3 +98,5 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Outils : Next.js, React, Telegram, Gmail, Docker et Notion n'ont plus de logo sur la page (hors des huit validés) ; à rajouter dans `VALIDATED_TOOLS` si Alex les valide. Section « Boîte à outils » supprimée.
 - Mesure de performance (Lighthouse, LCP) du nouveau hero non faite sur le déploiement.
 - Le texte du hero couvre jusqu'à 48 % de la largeur à 1440 px : à surveiller entre 1024 et 1200 px (colonne limitée à 46 % de la largeur).
+- « Qui suis-je » mène à la section « Mon parti pris » (positionnement). Aucune présentation personnelle (parcours, ville, photo) n'existe : à écrire par Alex si une vraie section est voulue ; rien n'a été inventé.
+- Animations au défilement : `animation-timeline` n'existe pas encore partout (Firefox) ; sans lui tout est affiché tout de suite, sans animation. Le hero (zoom, montée) n'a pas été mesuré en performance sur appareil réel.

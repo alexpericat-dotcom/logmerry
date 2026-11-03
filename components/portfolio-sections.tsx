@@ -3,11 +3,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoMark } from "@/components/logo-mark";
+import { PortfolioHeaderFrame } from "@/components/portfolio-header-frame";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ToolIcon } from "@/components/tool-icon";
 import { Button } from "@/components/ui/button";
 import { mailtoHref } from "@/lib/domain/portfolio";
-import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, STACK } from "@/lib/portfolio-content";
+import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HEADER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, STACK } from "@/lib/portfolio-content";
 
 const contactHref = mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT);
 /** Étiquette en monospace, petites capitales espacées : eyebrow, légendes, mentions. */
@@ -28,13 +29,14 @@ function SectionHead({ id, eyebrow, title, intro }: { id: string; eyebrow: strin
   );
 }
 
+/** Au chargement l'en-tête est posé sur la photo (`PortfolioHeaderFrame`), puis translucide et flou au défilement. Les deux boutons sont ceux du hero : « Qui suis-je » en contour, « Contact » en orange. */
 export function PortfolioHeader() {
   return (
-    <header className="sticky top-0 z-20 border-b bg-background">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+    <PortfolioHeaderFrame>
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 md:px-6">
         <Link href="/portfolio" className="flex items-center gap-2 font-brand text-xl font-bold" aria-label={`${BRAND}, haut de page`}>
           <LogoMark className="size-7" />
-          {BRAND}
+          <span className="max-sm:sr-only">{BRAND}</span>
         </Link>
         <nav aria-label="Sections" className="flex items-center gap-1 text-sm">
           {[
@@ -43,17 +45,20 @@ export function PortfolioHeader() {
             ["#architecture", "Architecture"],
             ["#realisations", "Réalisations"],
           ].map(([href, label]) => (
-            <a key={href} href={href} className="hidden rounded-md px-3 py-2 underline-offset-4 hover:underline md:inline-block">
+            <a key={href} href={href} className="hidden rounded-md px-3 py-2 underline-offset-4 hover:underline lg:inline-block">
               {label}
             </a>
           ))}
           <ThemeSwitcher />
+          <Button asChild size="sm" variant="outline" className="group-data-[scrolled=false]/header:border-photo group-data-[scrolled=false]/header:bg-transparent group-data-[scrolled=false]/header:text-photo group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo">
+            <a href="#qui-suis-je">{HEADER.about}</a>
+          </Button>
           <Button asChild size="sm">
-            <a href={contactHref}>{CONTACT.button}</a>
+            <a href="#contact">{HEADER.contact}</a>
           </Button>
         </nav>
       </div>
-    </header>
+    </PortfolioHeaderFrame>
   );
 }
 
@@ -74,7 +79,7 @@ export function PortfolioHero() {
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-hidden border-b bg-background lg:min-h-[max(34rem,min(56.25vw,100svh))]">
       <div className="relative aspect-[4/3] max-h-[70svh] w-full bg-primary lg:absolute lg:inset-0 lg:aspect-auto lg:max-h-none">
-        <picture>
+        <picture className="hero-zoom block size-full">
           {SOURCES.flatMap((s) =>
             (["avif", "webp"] as const).map((ext) => <source key={`${s.media}-${ext}`} media={s.media} type={`image/${ext}`} srcSet={s.set(ext)} sizes="100vw" />),
           )}
@@ -83,8 +88,8 @@ export function PortfolioHero() {
         </picture>
       </div>
       <div aria-hidden="true" className="hero-veil absolute inset-0 hidden lg:block" />
-      <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-24">
-        <div className={`flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] ${CREAM}`}>
+      <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-28">
+        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] ${CREAM}`}>
           <p className={`hero-in ${MONO} flex items-center gap-3`} style={delay(0)}>
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
             {HERO.eyebrow}
@@ -117,16 +122,16 @@ export function PortfolioHero() {
 
 export function PortfolioLever() {
   return (
-    <section aria-labelledby="lever-title" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
+    <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} />
-      <div className="reveal grid gap-8 lg:grid-cols-2">
-        <p className="text-xl text-muted-foreground line-through decoration-1 md:text-2xl">{LEVER.before}</p>
-        <p className="border-l-4 border-tone-orange pl-6 font-serif text-3xl leading-tight md:text-4xl">{LEVER.after}</p>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <p className="reveal-left text-xl text-muted-foreground line-through decoration-1 md:text-2xl">{LEVER.before}</p>
+        <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-3xl leading-tight md:text-4xl">{LEVER.after}</p>
       </div>
       <p className="reveal mt-8 max-w-3xl text-lg text-muted-foreground">{LEVER.note}</p>
       <ul className="mt-12 grid gap-8 md:grid-cols-3">
-        {LEVER.points.map((p) => (
-          <li key={p.title} className="reveal flex flex-col gap-3 border-t pt-5">
+        {LEVER.points.map((p, i) => (
+          <li key={p.title} style={{ "--i": i } as React.CSSProperties} className="reveal flex flex-col gap-3 border-t pt-5">
             <h3 className="text-2xl">{p.title}</h3>
             <p className="text-muted-foreground">{p.text}</p>
           </li>
@@ -143,7 +148,7 @@ export function PortfolioProcess() {
     <section id="methode" aria-labelledby="process-title" className="scroll-mt-16 border-y bg-muted py-24">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <SectionHead id="process-title" eyebrow={PROCESS.eyebrow} title={PROCESS.title} intro={PROCESS.intro} />
-        <figure className="reveal mb-14 max-w-2xl border-l-2 border-tone-orange pl-6">
+        <figure className="reveal-scale mb-14 max-w-2xl border-l-2 border-tone-orange pl-6">
           <blockquote className="font-serif text-2xl italic leading-snug md:text-3xl">« {epigraph.text} »</blockquote>
           <figcaption className={`${MONO} mt-4 text-muted-foreground`}>
             {epigraph.author}, <cite className="not-italic">{epigraph.source}</cite>
@@ -151,7 +156,7 @@ export function PortfolioProcess() {
         </figure>
         <ol className="max-w-3xl">
           {PROCESS.steps.map((s, i) => (
-            <li key={s.title} className={`reveal grid grid-cols-[3.5rem_1fr] gap-4 border-t py-7 md:grid-cols-[5rem_1fr] ${i === 0 ? "border-t-2 border-t-tone-orange bg-card px-4 md:px-6" : ""}`}>
+            <li key={s.title} className={`${i === 0 ? "reveal-scale" : "reveal-left"} grid grid-cols-[3.5rem_1fr] gap-4 border-t py-7 md:grid-cols-[5rem_1fr] ${i === 0 ? "border-t-2 border-t-tone-orange bg-card px-4 md:px-6" : ""}`}>
               <span aria-hidden="true" className={`font-serif leading-none ${i === 0 ? "text-6xl text-primary md:text-7xl" : "text-5xl text-muted-foreground md:text-6xl"}`}>
                 {i + 1}
               </span>
@@ -173,7 +178,7 @@ export function PortfolioServices() {
       <SectionHead id="services-title" eyebrow={SERVICES.eyebrow} title={SERVICES.title} intro={SERVICES.intro} />
       <ul className="grid gap-x-12 gap-y-10 md:grid-cols-2">
         {SERVICES.items.map((s, i) => (
-          <li key={s.title} className="reveal flex flex-col gap-3 border-t pt-5">
+          <li key={s.title} className={`${i % 2 === 0 ? "reveal-left" : "reveal-right"} flex flex-col gap-3 border-t pt-5`}>
             <span aria-hidden="true" className={`${MONO} text-muted-foreground`}>
               {String(i + 1).padStart(2, "0")}
             </span>
@@ -229,8 +234,8 @@ export function PortfolioShowcaseFrame({ eyebrow, title, intro, children }: { ey
 
 export function PortfolioContact() {
   return (
-    <section aria-labelledby="contact-title" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
-      <div className="reveal max-w-2xl">
+    <section id="contact" aria-labelledby="contact-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
+      <div className="reveal-scale max-w-2xl">
         <h2 id="contact-title" className="text-4xl leading-[1.05] md:text-6xl">
           {CONTACT.title}
         </h2>

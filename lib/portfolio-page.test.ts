@@ -61,11 +61,36 @@ test("mouvement : toute animation se joue dans « prefers-reduced-motion: no-pre
 });
 
 test("mouvement : les animations de la page n'animent que `transform` et `opacity` (pas de largeur, hauteur, marge ni position)", () => {
-  for (const name of ["hero-in", "reveal-up"]) {
+  for (const name of ["hero-in", "reveal-up", "reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift"]) {
     const body = blocks(css, new RegExp(`@keyframes ${name}\\s*\\{`))[0] ?? "";
     assert.ok(body, `@keyframes ${name} introuvable`);
     assert.ok(!/\b(width|height|top|left|right|bottom|margin|padding)\s*:/.test(body), `${name} anime une propriété de mise en page`);
   }
+});
+
+test("animations au défilement : quatre entrées différentes, une cascade par `--i`, le zoom et la montée du hero ; toutes coupées à l'impression", () => {
+  for (const cls of [".reveal", ".reveal-left", ".reveal-right", ".reveal-scale", ".hero-zoom", ".hero-lift"]) assert.ok(css.includes(`${cls} {`), `${cls} manquant`);
+  assert.match(css, /animation-range:\s*entry calc\(var\(--i, 0\) \* 7%\)/);
+  const print = blocks(css, /@media print\s*\{/).join("\n");
+  for (const cls of [".reveal", ".reveal-left", ".reveal-right", ".reveal-scale", ".hero-zoom", ".hero-lift"]) assert.ok(print.includes(cls), `${cls} reste animé à l'impression`);
+  const sections = readFileSync("components/portfolio-sections.tsx", "utf8") + readFileSync("components/portfolio-showcase.tsx", "utf8");
+  for (const cls of ["reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift"]) assert.ok(sections.includes(cls), `${cls} jamais utilisé`);
+});
+
+test("en-tête : sur la photo au chargement (voile), translucide et flou au défilement ; le flou n'est que dans le cadre de l'en-tête", () => {
+  const frame = readFileSync("components/portfolio-header-frame.tsx", "utf8");
+  assert.match(frame, /header-veil/);
+  assert.match(frame, /backdrop-blur/);
+  assert.match(frame, /scrollY >/);
+  const alpha = Number(/\.header-veil \{\s*background: linear-gradient\(rgb\(var\(--veil\) \/ ([\d.]+)\)/.exec(css)?.[1]);
+  // Pire pixel de la bande du haut de la photo : #FFFFBF (recadrage mobile), mesuré ; texte crème du jeton --photo.
+  const photo = /--photo:\s*([\d.]+) ([\d.]+)% ([\d.]+)%/.exec(css)!;
+  const cream = hslToRgb([Number(photo[1]), Number(photo[2]), Number(photo[3])]);
+  const worst = [0xff, 0xff, 0xbf].map((c, i) => c * (1 - alpha) + [18, 20, 15][i] * alpha);
+  assert.ok(contrastRgb(cream, worst) >= 4.5, `contraste ${contrastRgb(cream, worst).toFixed(2)}:1 avec un voile à ${alpha}`);
+  const sections = readFileSync("components/portfolio-sections.tsx", "utf8");
+  assert.ok(!/backdrop-blur/.test(sections), "le flou est réservé à l'en-tête");
+  for (const id of ["qui-suis-je", "contact"]) assert.ok(sections.includes(`id="${id}"`), `la section #${id} est la cible d'un bouton de l'en-tête`);
 });
 
 test("direction éditoriale : aucun verre dépoli, bandeau défilant, vidéo ni pause d'animations ne reste dans la page publique", () => {
