@@ -56,9 +56,10 @@ test("contact : l'adresse donnée par Alex et un objet de courriel défini", () 
   assert.ok(content.CONTACT_SUBJECT.trim());
 });
 
-test("le choix de la stack est présenté comme sur mesure, jamais comme une liste imposée", () => {
+test("le choix des briques est présenté comme sur mesure, jamais comme une liste imposée ; l'introduction ne cite aucun type de livrable", () => {
   assert.match(content.PROCESS.steps[2].text, /stack technique sur mesure/);
-  assert.match(content.STACK.intro, /stack technique choisie sur mesure/);
+  assert.equal(content.STACK.intro, "Une automatisation, un assistant, un outil\u00a0: derrière, ce sont toujours des briques. Je choisis celles qui conviennent à votre métier et à votre portée, et je m'adapte aux outils que vous utilisez déjà.");
+  assert.ok(!/\b(site|application|web ?app)s?\b/i.test(content.STACK.intro), "pas de type de livrable dans l'introduction");
 });
 
 test("« Sous le capot » : frontend, backend, base de données, IA et agents, hébergement (VPS, auto-hébergement) et RGPD, chacune traduite « en clair »", () => {

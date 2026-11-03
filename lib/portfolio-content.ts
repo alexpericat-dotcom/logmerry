@@ -82,7 +82,7 @@ export const SERVICES = {
 export const STACK = {
   eyebrow: "Architecture",
   title: "Sous le capot",
-  intro: "Une application, ce sont plusieurs briques. Je les assemble avec une stack technique choisie sur mesure pour votre métier et à votre portée, et je m'adapte aux outils que vous utilisez déjà.",
+  intro: "Une automatisation, un assistant, un outil\u00a0: derrière, ce sont toujours des briques. Je choisis celles qui conviennent à votre métier et à votre portée, et je m'adapte aux outils que vous utilisez déjà.",
   plainLabel: "En clair",
   bricks: [
     {
