@@ -45,13 +45,7 @@ export default function AboutPage() {
             </div>
           </article>
           <figure className="max-w-xs md:max-w-none">
-            {photo ? (
-              <Image src={photo.src} width={photo.width} height={photo.height} alt={photo.alt} className="h-auto w-full rounded-md" />
-            ) : (
-              <div role="img" aria-label={ABOUT.photoAlt} className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-foreground/60 p-4 text-center">
-                <span className="font-mono text-phi-n1">{ABOUT.photoPlaceholder}</span>
-              </div>
-            )}
+            <Image src={photo.src} width={photo.width} height={photo.height} alt={photo.alt} sizes="(min-width: 768px) 256px, 320px" priority className="h-auto w-full rounded-md" />
           </figure>
         </div>
 

@@ -14,10 +14,8 @@ export const ABOUT = {
   /** Bloc fourni par Alex (4 novembre 2026), à reprendre mot pour mot. */
   impact:
     "Je me soucie de l'impact de ce que je construis. L'IA consomme de l'énergie et je ne prétends pas le contraire. C'est pourquoi je commence par la solution la plus simple, et je n'ajoute de l'IA que là où elle apporte ce que rien d'autre n'apporte.",
-  /** Photo fournie par Alex (pas de génération) : tant que `photo` est vide, l'emplacement reste visible. */
-  photo: null as null | { src: string; width: number; height: number; alt: string },
-  photoAlt: "[À COMPLÉTER PAR MOI : texte alternatif de la photo]",
-  photoPlaceholder: "[À COMPLÉTER PAR MOI : photo]",
+  /** Photo fournie par Alex (4 novembre 2026, « pour le moment »), WebP 800 px ; remplacer le fichier et le texte alternatif pour changer de photo. */
+  photo: { src: "/images/portrait-qui-suis-je.webp", width: 800, height: 1202, alt: "Portrait en noir et blanc, en légère contre-plongée : un homme aux cheveux courts et à la moustache, en sweat à capuche noir, sur fond clair." },
   pathTitle: "Parcours",
   /** « e-commerce » sans plus de précision : le nom de l'entreprise n'est jamais affiché. */
   pathNote: "Dans l'e-commerce",
@@ -26,7 +24,7 @@ export const ABOUT = {
     { period: "2011–2021", role: "Photographe packshot" },
     { period: "2021–2024", role: "Responsable adjoint, service photo et préparation de produits" },
     { period: "2024–2026", role: "Responsable du service qualité (poste créé)" },
-    { period: "Depuis juin 2026", role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février [À COMPLÉTER PAR MOI : année]" },
+    { period: "Depuis juin 2026", role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027" },
   ],
   cta: { label: "Parler de votre problème", href: "/portfolio#contact" },
   back: "Retour au portfolio",

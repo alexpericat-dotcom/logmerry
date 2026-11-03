@@ -6,7 +6,7 @@ import { ABOUT } from "./portfolio-about.ts";
 
 const texts = JSON.stringify(ABOUT);
 
-test("BLOQUE LA FUSION tant qu'un emplacement « [À COMPLÉTER PAR MOI : ...] » reste sur la page Qui suis-je (brouillon, phrase sport, année de fin, photo)", () => {
+test("BLOQUE LA FUSION tant qu'un emplacement « [À COMPLÉTER PAR MOI : ...] » reste sur la page Qui suis-je (brouillon, phrase sport)", () => {
   const left = texts.match(/\[À COMPLÉTER PAR MOI[^\]]*\]/g) ?? [];
   assert.deepEqual(left, [], `à remplir par Alex avant de fusionner : ${[...new Set(left)].join(" ; ")}`);
 });
@@ -34,7 +34,7 @@ test("ni adresse, téléphone ni e-mail en clair ; pas de mot « logistique »",
 });
 
 test("le seul chiffre est celui de la frise ; le bouton mène à la section de contact existante, sans formulaire inventé", () => {
-  const withoutPath = JSON.stringify({ ...ABOUT, path: [] });
+  const withoutPath = JSON.stringify({ ...ABOUT, path: [], photo: null });
   assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise");
   assert.equal(ABOUT.cta.label, "Parler de votre problème");
   assert.equal(ABOUT.cta.href, "/portfolio#contact");
