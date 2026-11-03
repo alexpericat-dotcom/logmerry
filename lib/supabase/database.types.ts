@@ -662,6 +662,13 @@ export type Database = {
             foreignKeyName: "realisation_images_realisation_id_fkey";
             columns: ["realisation_id"];
             isOneToOne: false;
+            referencedRelation: "public_realisations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
             referencedRelation: "realisations";
             referencedColumns: ["id"];
           },
@@ -1003,6 +1010,13 @@ export type Database = {
           realisation_id: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
+            referencedRelation: "public_realisations";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "realisation_images_realisation_id_fkey";
             columns: ["realisation_id"];
