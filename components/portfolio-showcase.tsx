@@ -49,12 +49,12 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
       {/* Accordéon natif : replié par défaut, un seul projet ouvert à la fois (`name` commun), clavier et lecteur d'écran gérés par le navigateur. */}
       <details name="realisations" className="group">
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-phi-1 gap-y-2 border-y py-4 marker:content-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
-          <span data-status={card.status} className={`w-fit rounded-full border px-3 py-0.5 font-mono text-phi-n1 uppercase tracking-[0.18em] ${STATUS_STYLE[card.status]}`}>
+          <span data-status={card.status} className={`order-1 w-fit rounded-full border px-3 py-0.5 font-mono text-phi-n1 uppercase tracking-[0.18em] ${STATUS_STYLE[card.status]} md:order-none`}>
             {card.statusLabel}
           </span>
-          <h3 className="min-w-0 flex-1 basis-60 break-words text-phi-2 md:text-phi-3">{card.title}</h3>
-          <span className="min-w-0 basis-full break-words text-muted-foreground md:max-w-[28ch] md:basis-auto">{card.client_label}</span>
-          <ChevronDown size={20} aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-180" />
+          <h3 className="order-3 min-w-0 basis-full break-words text-phi-2 md:order-none md:flex-1 md:basis-60 md:text-phi-3">{card.title}</h3>
+          <span className="order-4 min-w-0 basis-full break-words text-muted-foreground md:order-none md:max-w-[28ch] md:basis-auto">{card.client_label}</span>
+          <ChevronDown size={20} aria-hidden="true" className="order-2 ml-auto shrink-0 transition-transform group-open:rotate-180 md:order-none" />
         </summary>
         <div className="grid grid-cols-1 items-start gap-phi-1 pt-phi-1 lg:grid-cols-12">
           <div className={`min-w-0 lg:col-span-7 ${flip ? "lg:order-2" : ""}`}>

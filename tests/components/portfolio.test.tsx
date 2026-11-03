@@ -52,7 +52,7 @@ describe("réalisations de la page publique", () => {
     render(showcase([item()]));
     assert.ok(screen.getByRole("heading", { level: 3, name: "Atelier Nova" }));
     assert.ok(screen.getByText("Exercice de formation"), "la pastille de statut");
-    assert.ok(screen.getByText("Atelier Nova (marque fictive)"));
+    assert.equal(screen.getAllByText("Atelier Nova (marque fictive)").length, 2, "une ligne de situation dans le résumé, et le relevé");
     assert.ok(screen.getByText("IA générative"));
     const link = screen.getByRole("link", { name: /Ouvrir le site/ }) as HTMLAnchorElement;
     assert.equal(link.href, "https://ateliernovav3.lovable.app/");
@@ -617,18 +617,33 @@ describe("dossier de la plateforme de gestion des demandes clients", () => {
     assert.ok(scroller.className.includes("overflow-x-auto"));
   });
 
-  test("extraits : un emplacement visible par capture tant que les fichiers ne sont pas fournis, avec légende « extrait du dossier » et lien vers le dossier complet (nouvel onglet)", () => {
-    assert.deepEqual(Object.keys(DOSSIER_IMAGES).filter((k) => /veille|backlog/.test(k)), [], "ce test décrit l'état « fichiers non fournis »");
+  test("extraits : une image par capture (AVIF et WebP) avec son texte alternatif, légende « extrait du dossier » et lien vers le dossier complet (nouvel onglet)", () => {
+    for (const key of ["veille", "backlog"]) assert.ok(DOSSIER_IMAGES[`umaris-${key}`], `fichiers de ${key} fournis`);
     const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
-    const placeholders = container.querySelectorAll("[data-placeholder]");
-    assert.deepEqual([...placeholders].map((p) => p.getAttribute("data-placeholder")), ["veille", "backlog"]);
-    assert.equal(container.querySelectorAll("picture, img[alt]").length, 0, "aucune image tant que les fichiers ne sont pas fournis");
-    for (const fig of container.querySelectorAll("figure:has([data-placeholder])")) {
+    assert.equal(container.querySelectorAll("[data-placeholder]").length, 0, "plus d'emplacement vide");
+    const figures = container.querySelectorAll("figure:has(picture)");
+    assert.equal(figures.length, 2);
+    for (const fig of figures) {
+      assert.ok(fig.querySelector("img")?.getAttribute("alt")?.trim(), "texte alternatif non vide");
+      assert.ok(fig.querySelector('source[type="image/avif"]') && fig.querySelector('source[type="image/webp"]'));
       assert.match(fig.querySelector("figcaption")?.textContent ?? "", /extrait du dossier/);
       const link = fig.querySelector("a") as HTMLAnchorElement;
       assert.equal(link.href, "https://knotty-reaction-86f.notion.site/Projet-UMARIS-39167eb89ef68099b498ce56f5f958e9");
       assert.equal(link.target, "_blank");
       assert.match(link.rel, /noopener/);
+    }
+  });
+
+  test("accordéon : chaque réalisation est un <details> replié par défaut, du même groupe (un seul ouvert à la fois), avec titre, statut et situation dans le résumé", () => {
+    const { container } = render(showcase([item(), item({ id: "r2", title: "Autre" })]));
+    const all = container.querySelectorAll("details");
+    assert.equal(all.length, 2);
+    for (const d of all) {
+      assert.equal(d.open, false);
+      assert.equal(d.getAttribute("name"), "realisations");
+      const summary = d.querySelector("summary");
+      assert.ok(summary?.querySelector("h3") && summary.querySelector("[data-status]"));
+      assert.match(summary?.textContent ?? "", /marque fictive/);
     }
   });
 

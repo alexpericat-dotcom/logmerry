@@ -110,3 +110,6 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Orchestration du schéma : n8n ou Make à confirmer avant de nommer l'outil.
 - Extraits du dossier : fichiers à fournir (`assets-source/dossier-umaris-veille.*`, `dossier-umaris-backlog.*`), puis `npm run build:dossier` ; texte alternatif à préciser en regardant les images.
 - Aperçu intégré : une page Notion peut refuser d'être affichée dans un cadre ; si c'est le cas, la carte affichera une erreur du navigateur à la place de l'aperçu automatique : ajouter une capture (clic pour charger) ou désactiver l'aperçu pour ce lien.
+
+- Aperçu en direct gris chez Alex (5 novembre 2026) : cause non reproduite en Chrome. À vérifier selon son navigateur ; piste : retirer `loading="lazy"` et ne plus masquer le cadre tant que `onLoad` n'est pas arrivé (`components/live-preview.tsx`). Alternative robuste : captures téléversées (déjà possibles).
+- Texte alternatif de la veille : peut nommer les outils retenus (Weweb, Supabase, N8n, Mistral) une fois n8n ou Make tranché et le test de `lib/portfolio-dossiers.test.ts` mis à jour.
