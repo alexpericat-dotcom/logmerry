@@ -39,7 +39,7 @@ export function PortfolioHeader() {
     <PortfolioHeaderFrame>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 md:px-6">
         <Link href="/portfolio" className="flex items-center gap-2 font-brand text-xl font-bold" aria-label={`${BRAND}, haut de page`}>
-          <LogoMark className="size-7" />
+          <LogoMark variant="classic" className="size-7" />
           <span className="max-sm:sr-only">{BRAND}</span>
         </Link>
         <nav aria-label="Sections" className="flex items-center gap-1 text-sm">
@@ -125,9 +125,6 @@ export function PortfolioHero() {
               <a href={contactHref}>{HERO.secondary}</a>
             </Button>
           </div>
-          <p className={`hero-in text-muted-foreground ${CREAM} font-mono text-xs`} style={delay(480)}>
-            {HERO.proof}
-          </p>
         </div>
       </div>
     </section>
@@ -223,7 +220,7 @@ const BRICK_SKETCHES: SketchName[] = ["window", "cog", "database", "chat", "clou
 export function PortfolioStack() {
   return (
     <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
-      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="bricks" />
+      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="bricks-lg" />
       <ul>
         {STACK.bricks.map((brick, b) => (
           <li key={brick.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
@@ -283,7 +280,7 @@ export function PortfolioContact() {
           </a>
         </Button>
         </div>
-        <Sketch name="boat" className="hidden w-56 shrink-0 text-foreground/80 md:block" />
+        <Sketch name="talk" className="hidden w-72 shrink-0 text-foreground/80 md:block xl:w-80" />
       </div>
     </section>
   );

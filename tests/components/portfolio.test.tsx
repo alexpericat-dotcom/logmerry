@@ -345,12 +345,13 @@ describe("croquis", () => {
       assert.equal(svg.getAttribute("aria-hidden"), "true", name);
       assert.equal(svg.getAttribute("focusable"), "false", name);
       const paths = [...svg.querySelectorAll("path")];
-      assert.ok(paths.length >= 2, `${name} : trop peu de tracés`);
+      assert.ok(paths.length >= 8, `${name} : trop peu de tracés pour un croquis fouillé`);
       for (const path of paths) {
         assert.equal(path.getAttribute("pathLength"), "1", name);
         assert.ok((path.getAttribute("d") ?? "").startsWith("M"), `${name} : tracé invalide`);
       }
-      assert.ok(svg.querySelector(".sk-accent"), `${name} : pas d'accent orange`);
+      assert.ok(svg.querySelector(".sk-accent, .sk-marker"), `${name} : pas d'accent orange`);
+      assert.ok(svg.querySelector(".sk-ink"), `${name} : pas de trait principal`);
       cleanup();
     }
   });
@@ -366,7 +367,7 @@ describe("croquis", () => {
       </>,
     );
     const sketches = container.querySelectorAll("svg.sketch");
-    assert.equal(sketches.length, 1 + 1 + PROCESS.steps.length + SERVICES.items.length + 1 + STACK.bricks.length + 1, "tangle, funnel, 6 étapes, 5 formules, bricks, 6 briques, boat");
+    assert.equal(sketches.length, 1 + 1 + PROCESS.steps.length + SERVICES.items.length + 1 + STACK.bricks.length + 1, "tangle, funnel, 6 étapes, 5 formules, bricks-lg, 6 briques, talk");
     for (const svg of sketches) assert.equal(svg.getAttribute("aria-hidden"), "true");
     assert.ok(container.querySelector(".spine"), "colonne vertébrale de la méthode");
   });
@@ -430,11 +431,6 @@ describe("animations au défilement (repli sans animation-timeline)", () => {
 });
 
 describe("hero", () => {
-  const delivered = HERO.proof;
-  afterEach(() => {
-    HERO.proof = delivered;
-  });
-
   test("un seul h1 : l'accroche d'Alex ; le sous-titre est posé directement sur la photo (aucun bloc, aucune carte)", () => {
     const { container } = render(<PortfolioHero />);
     assert.equal(screen.getByRole("heading", { level: 1 }).textContent, HERO.title);
@@ -474,15 +470,6 @@ describe("hero", () => {
     const veil = container.querySelector(".hero-veil");
     assert.equal(veil?.getAttribute("aria-hidden"), "true");
     assert.ok(screen.getByText(HERO.lead).closest("[class*='lg:text-photo']"));
-  });
-
-  test("ligne de preuve : le placeholder reste visible tant qu'Alex ne l'a pas écrite, puis son texte le remplace", () => {
-    render(<PortfolioHero />);
-    assert.ok(screen.getByText(HERO.proof));
-    cleanup();
-    HERO.proof = "Parcours : exemple écrit par Alex";
-    render(<PortfolioHero />);
-    assert.ok(screen.getByText("Parcours : exemple écrit par Alex"));
   });
 
   test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire écrit à Alex", () => {

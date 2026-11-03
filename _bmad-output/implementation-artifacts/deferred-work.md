@@ -93,7 +93,7 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 
 ## Hero éditorial de la page publique (3 novembre 2026)
 
-- **Ligne de preuve à écrire par Alex** (`HERO.proof`) : le test `lib/portfolio-proof.test.ts` échoue tant que le placeholder est là, donc la CI reste rouge jusqu'à la fusion voulue.
+- ~~Ligne de preuve~~ : retirée à la demande d'Alex (4 novembre 2026), avec son test bloquant ; si une ligne de preuve est voulue plus tard, la remettre sous les boutons du hero.
 - Relevés : « situation / ce qui a été réalisé / résultat » sont ramenés aux champs existants ; trois champs dédiés (migration) si Alex veut distinguer « ce qui a été automatisé » et « temps rendu ».
 - Outils : Next.js, React, Telegram, Gmail, Docker et Notion n'ont plus de logo sur la page (hors des huit validés) ; à rajouter dans `VALIDATED_TOOLS` si Alex les valide. Section « Boîte à outils » supprimée.
 - Mesure de performance (Lighthouse, LCP) du nouveau hero non faite sur le déploiement.

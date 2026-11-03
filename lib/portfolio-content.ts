@@ -23,8 +23,6 @@ export const HERO = {
   lead: "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.",
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
-  /** Ligne de preuve sous les boutons : parcours, chiffre ou réalisation, À ÉCRIRE PAR ALEX (ne rien inventer). Le placeholder reste visible et `lib/portfolio-page.test.ts` bloque la fusion tant qu'il est là. */
-  proof: "[À compléter par Alex : parcours, chiffre ou réalisation]",
   /** Texte alternatif de la photo (décrit la scène, ne répète pas le titre). */
   imageAlt: "Un surfeur sur sa planche, au moment de se lever, devant une vague orange et turquoise au coucher du soleil.",
 };

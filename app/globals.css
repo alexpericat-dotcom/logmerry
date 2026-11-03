@@ -464,6 +464,14 @@
 .sketch .sk-accent {
   stroke: hsl(var(--tone-orange));
 }
+.sketch .sk-thin {
+  opacity: 0.75;
+}
+/* Surligneur : un gros trait orange translucide passé derrière le sujet. */
+.sketch .sk-marker {
+  stroke: hsl(var(--tone-orange));
+  opacity: 0.45;
+}
 /* Masque des mots du titre : les descendantes (g, p, q) ne sont pas coupées. */
 .word-mask {
   display: inline-block;
