@@ -26,7 +26,7 @@ export function PortfolioHeaderFrame({ children }: { children: ReactNode }) {
       data-portfolio-header
       data-scrolled={scrolled}
       className={`group/header fixed inset-x-0 top-0 z-30 transition-[background-color,border-color,backdrop-filter] duration-300 motion-reduce:transition-none ${
-        scrolled ? "border-b bg-background/75 text-foreground backdrop-blur-md" : "header-veil border-b border-transparent text-photo [--muted-foreground:var(--photo)] [--ring:var(--photo)]"
+        scrolled ? "border-b bg-background/75 text-foreground backdrop-blur-md" : "header-veil border-b border-transparent text-photo [--liquid-shade:0.22] [--muted-foreground:var(--photo)] [--ring:var(--photo)]"
       }`}
     >
       {children}

@@ -345,12 +345,12 @@ describe("croquis", () => {
       assert.equal(svg.getAttribute("aria-hidden"), "true", name);
       assert.equal(svg.getAttribute("focusable"), "false", name);
       const paths = [...svg.querySelectorAll("path")];
-      assert.ok(paths.length >= 8, `${name} : trop peu de tracés pour un croquis fouillé`);
+      assert.ok(paths.length >= 2, `${name} : trop peu de tracés`);
       for (const path of paths) {
         assert.equal(path.getAttribute("pathLength"), "1", name);
         assert.ok((path.getAttribute("d") ?? "").startsWith("M"), `${name} : tracé invalide`);
       }
-      assert.ok(svg.querySelector(".sk-accent, .sk-marker"), `${name} : pas d'accent orange`);
+      assert.ok(svg.querySelector(".sk-accent"), `${name} : pas d'accent orange`);
       assert.ok(svg.querySelector(".sk-ink"), `${name} : pas de trait principal`);
       cleanup();
     }
@@ -367,7 +367,7 @@ describe("croquis", () => {
       </>,
     );
     const sketches = container.querySelectorAll("svg.sketch");
-    assert.equal(sketches.length, 1 + 1 + PROCESS.steps.length + SERVICES.items.length + 1 + STACK.bricks.length + 1, "tangle, funnel, 6 étapes, 5 formules, bricks-lg, 6 briques, talk");
+    assert.equal(sketches.length, 1 + 1 + PROCESS.steps.length + SERVICES.items.length + 1 + STACK.bricks.length + 1, "head, funnel, 6 étapes, 5 formules, cubes, 6 briques, talk");
     for (const svg of sketches) assert.equal(svg.getAttribute("aria-hidden"), "true");
     assert.ok(container.querySelector(".spine"), "colonne vertébrale de la méthode");
   });

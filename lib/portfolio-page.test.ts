@@ -109,29 +109,33 @@ test("direction éditoriale : ni carte de verre, bandeau défilant, vidéo ni pa
   }
 });
 
-test("boutons en verre liquide : texte lisible (AA) sur le pire fond ; l'éclat et le survol ne bougent que `transform` et `opacity`", () => {
+test("boutons en verre transparent et flou : texte lisible (AA) sur le pire fond, clair, orange et sombre ; seul le survol bouge, en `transform` et `opacity`", () => {
   const photo = /--photo:\s*([\d.]+) ([\d.]+)% ([\d.]+)%/.exec(css)!;
   const cream = hslToRgb([Number(photo[1]), Number(photo[2]), Number(photo[3])]);
   const ink = [18, 20, 15];
-  const mix = (a: readonly number[], b: readonly number[], t: number) => a.map((v, i) => v * (1 - t) + b[i] * t);
-  // Verre clair : 6 % de la couleur du texte sur le pire pixel de la photo voilé (#FFC87D à 55 %), cf. le test du voile.
-  const veiled = mix([0xff, 0xc8, 0x7d], ink, 0.55);
-  const clear = /\.liquid-clear \{[^}]*\}/.exec(css)?.[0] ?? "";
-  const tint = Number(/currentColor (\d+)%, transparent\);\s*border-color/.exec(clear)?.[1]) / 100;
-  const shade = Number(/rgb\(var\(--veil\) \/ ([\d.]+)\)/.exec(clear)?.[1]);
-  assert.ok(tint > 0 && tint <= 0.06 && shade > 0, `teinte ${tint}, voile ${shade}`);
-  assert.ok(contrastRgb(cream, mix(mix(veiled, ink, shade), cream, tint)) >= 4.5, "texte crème sur le verre clair, au pire pixel de la photo");
-  const paper = hslToRgb([36.5, 51.1, 91.2]);
-  assert.ok(contrastRgb(ink, mix(mix(paper, ink, shade), ink, tint)) >= 4.5, "texte encre sur le verre clair, sur le papier");
-  // Verre orange : encre sur l'orange le moins opaque (72 %) posé sur le fond le plus sombre de la page (thème sombre), puis sur du blanc.
-  const alpha = Number(/\.liquid-orange \{[^}]*tone-orange\) \/ 0\.95\), hsl\(var\(--tone-orange\) \/ ([\d.]+)\)/.exec(css)?.[1]);
-  assert.ok(alpha >= 0.7, `opacité minimale du verre orange : ${alpha}`);
   const orange = hslToRgb([25, 96.2, 69.2]);
-  assert.ok(contrastRgb(ink, mix(hslToRgb([185, 28.6, 8.2]), orange, alpha)) >= 4.5, "encre sur le verre orange, fond sombre");
-  assert.ok(contrastRgb(ink, mix([255, 255, 255], orange, alpha)) >= 4.5, "encre sur le verre orange, fond blanc");
-  assert.ok(contrastRgb(hslToRgb([36.5, 51.1, 91.2]), hslToRgb([182.2, 34.2, 15.5])) >= 4.5, "texte sur le verre « ink »");
+  const mix = (a: readonly number[], b: readonly number[], t: number) => a.map((v, i) => v * (1 - t) + b[i] * t);
+  // Le voile d'encre sous les boutons posés sur la photo : la même valeur dans le hero et dans l'en-tête, relue dans les sources.
   const sections = readFileSync("components/portfolio-sections.tsx", "utf8");
-  assert.ok(sections.includes("LiquidButton") && readFileSync("components/portfolio-showcase.tsx", "utf8").includes("liquid-ink"));
+  const frame = readFileSync("components/portfolio-header-frame.tsx", "utf8");
+  const shade = Number(/\[--liquid-shade:([\d.]+)\]/.exec(sections)?.[1]);
+  assert.equal(Number(/\[--liquid-shade:([\d.]+)\]/.exec(frame)?.[1]), shade, "même voile dans le hero et l'en-tête");
+  assert.ok(shade > 0 && shade <= 0.3, `voile ${shade}`);
+  const tint = (re: RegExp) => Number(re.exec(css)?.[1]) / 100;
+  const clear = tint(/color-mix\(in srgb, currentColor (\d+)%, transparent\);\s*border:/);
+  const warm = tint(/color-mix\(in srgb, hsl\(var\(--tone-orange\)\) (\d+)%, transparent\)/);
+  assert.ok(clear > 0 && clear <= 0.08 && warm > 0 && warm <= 0.25, `teintes ${clear} / ${warm}`);
+  // Sur la photo : le pire pixel de la zone (#FFC87D) sous le voile du hero (55 %), puis le voile du bouton, puis la teinte.
+  const veiled = mix([0xff, 0xc8, 0x7d], ink, 0.55);
+  assert.ok(contrastRgb(cream, mix(mix(veiled, ink, shade), cream, clear)) >= 4.5, "texte crème sur le verre clair, sur la photo");
+  assert.ok(contrastRgb(cream, mix(mix(veiled, ink, shade), orange, warm)) >= 4.5, "texte crème sur le verre orange, sur la photo");
+  // Sur le papier (sans voile) et sur le fond sombre du thème sombre.
+  const paper = hslToRgb([36.5, 51.1, 91.2]);
+  const night = hslToRgb([185, 28.6, 8.2]);
+  assert.ok(contrastRgb(ink, mix(paper, ink, clear)) >= 4.5 && contrastRgb(ink, mix(paper, orange, warm)) >= 4.5, "encre sur le verre, sur le papier");
+  assert.ok(contrastRgb(cream, mix(night, cream, clear)) >= 4.5 && contrastRgb(cream, mix(night, orange, warm)) >= 4.5, "crème sur le verre, en thème sombre");
+  // Le flou n'est permis que sur `.liquid` ; aucun texte ne passe sous un aplat opaque
+  assert.ok(sections.includes("LiquidButton") && readFileSync("components/portfolio-showcase.tsx", "utf8").includes("liquid-orange"));
 });
 
 test("jetons du portfolio : contrastes AA (clair et sombre) sur le fond, les cartes et les sections grisées", () => {

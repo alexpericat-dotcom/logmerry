@@ -17,8 +17,8 @@ const MONO = "font-mono text-xs uppercase tracking-[0.18em]";
 /** Texte crème posé sur la photo (grand écran) : la couleur sur laquelle est calculé le contraste du voile (`--photo`, `lib/portfolio-page.test.ts`). */
 const CREAM = "lg:text-photo";
 
-/** Bouton d'appel à l'action en verre liquide (`.liquid` dans `app/globals.css`) : « orange » pour l'action principale, « clear » (verre clair, couleur du texte) pour la secondaire. */
-export function LiquidButton({ href, tone, size = "md", children, className = "" }: { href: string; tone: "orange" | "clear" | "ink"; size?: "sm" | "md" | "lg"; children: ReactNode; className?: string }) {
+/** Bouton d'appel à l'action en verre liquide (`.liquid` dans `app/globals.css`) : « orange » (verre teinté d'orange) pour l'action principale, « clear » (verre clair) pour la secondaire ; tous deux transparents et flous, texte de la couleur du contexte. */
+export function LiquidButton({ href, tone, size = "md", children, className = "" }: { href: string; tone: "orange" | "clear"; size?: "sm" | "md" | "lg"; children: ReactNode; className?: string }) {
   const sizes = { sm: "h-11 px-7 text-sm md:h-9", md: "h-11 px-7 text-base", lg: "h-12 px-9 text-base" }[size];
   return (
     <a href={href} className={`liquid liquid-${tone} ${sizes} ${className}`}>
@@ -103,7 +103,7 @@ export function PortfolioHero() {
       </div>
       <div aria-hidden="true" className="hero-veil absolute inset-0 hidden lg:block" />
       <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-40">
-        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] lg:[--ring:var(--photo)] ${CREAM}`}>
+        <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] lg:[--liquid-shade:0.22] lg:[--ring:var(--photo)] ${CREAM}`}>
           <p className={`hero-in ${MONO} flex items-center gap-3`} style={delay(0)}>
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
             {HERO.eyebrow}
@@ -142,7 +142,7 @@ export function PortfolioHero() {
 export function PortfolioLever() {
   return (
     <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-24 md:px-6">
-      <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="tangle" />
+      <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="head" />
       <div className="grid gap-8 lg:grid-cols-2">
         <p className="reveal-left text-xl text-muted-foreground line-through decoration-1 md:text-2xl">{LEVER.before}</p>
         <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-3xl leading-tight md:text-4xl">{LEVER.after}</p>
@@ -161,7 +161,7 @@ export function PortfolioLever() {
 }
 
 /** La méthode en colonne verticale ; l'étape 1 (le problème métier) est mise en valeur. La citation en épigraphe est traduite et attribuée. */
-const STEP_SKETCHES: SketchName[] = ["question", "flow", "bricks", "spark", "rocket", "wrench"];
+const STEP_SKETCHES: SketchName[] = ["question", "flow", "compass", "spark", "rocket", "wrench"];
 
 export function PortfolioProcess() {
   const { epigraph } = PROCESS;
@@ -188,7 +188,7 @@ export function PortfolioProcess() {
                   <h3 className={i === 0 ? "text-3xl md:text-4xl" : "text-2xl md:text-3xl"}>{s.title}</h3>
                   <p className="mt-2 max-w-[60ch] text-muted-foreground">{s.text}</p>
                 </div>
-                <Sketch name={STEP_SKETCHES[i]} className="hidden size-16 shrink-0 text-foreground/80 sm:block" />
+                <Sketch name={STEP_SKETCHES[i]} className="hidden size-20 shrink-0 text-foreground/80 sm:block" />
               </div>
             </li>
           ))}
@@ -211,7 +211,7 @@ export function PortfolioServices() {
               <span aria-hidden="true" className={`${MONO} text-muted-foreground`}>
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <Sketch name={SERVICE_SKETCHES[i]} className="size-14 text-foreground/80" />
+              <Sketch name={SERVICE_SKETCHES[i]} className="size-16 text-foreground/80" />
             </div>
             <h3 className="text-2xl md:text-3xl">{s.title}</h3>
             <p className="max-w-[55ch] text-muted-foreground">{s.text}</p>
@@ -228,13 +228,13 @@ const BRICK_SKETCHES: SketchName[] = ["window", "cog", "database", "chat", "clou
 export function PortfolioStack() {
   return (
     <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
-      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="bricks-lg" />
+      <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} sketch="cubes" />
       <ul>
         {STACK.bricks.map((brick, b) => (
           <li key={brick.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
             <div className="flex items-center gap-4 md:flex-col md:items-start">
               <h3 className="text-2xl md:text-3xl">{brick.title}</h3>
-              <Sketch name={BRICK_SKETCHES[b]} className="size-14 text-foreground/80 md:size-16" />
+              <Sketch name={BRICK_SKETCHES[b]} className="size-16 text-foreground/80 md:size-20" />
             </div>
             <div className="flex flex-col gap-4">
               <p className="max-w-[60ch] text-lg">
