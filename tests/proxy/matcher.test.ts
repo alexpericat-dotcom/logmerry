@@ -21,8 +21,8 @@ describe("matcher de proxy.ts", () => {
     for (const path of ["/", "/clients", "/missions/abc", "/auth/login", "/auth/confirm", "/api/chat", "/aujourd-hui"]) assert.equal(matched(path), true, path);
   });
 
-  test("non traité : fichiers statiques de Next, favicon et images (svg, png, jpg, jpeg, gif, webp)", () => {
-    for (const path of ["/_next/static/chunks/a.js", "/_next/image", "/favicon.ico", "/icon.svg", "/opengraph-image.png", "/images/logo.png", "/a/b.jpg", "/a.jpeg", "/a.gif", "/a.webp"]) {
+  test("non traité : fichiers statiques de Next, favicon et images (svg, png, jpg, jpeg, gif, webp, avif)", () => {
+    for (const path of ["/_next/static/chunks/a.js", "/_next/image", "/favicon.ico", "/icon.svg", "/opengraph-image.png", "/images/logo.png", "/a/b.jpg", "/a.jpeg", "/a.gif", "/a.webp", "/images/hero/hero-wide-2000.avif"]) {
       assert.equal(matched(path), false, path);
     }
   });
