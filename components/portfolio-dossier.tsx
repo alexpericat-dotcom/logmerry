@@ -155,7 +155,7 @@ function Captures({ dossier, link }: { dossier: DossierContent; link: string | n
       <h4 id="dossier-captures" className="text-phi-2">
         {dossier.captures.title}
       </h4>
-      <div className="grid gap-phi-1 md:grid-cols-2">
+      <div className="grid gap-phi-2">
         {dossier.captures.items.map((item) => (
           <Capture key={item.key} keyName={item.key} item={item} dossier={dossier} link={link} />
         ))}

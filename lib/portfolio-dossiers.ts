@@ -43,8 +43,8 @@ export const DOSSIERS: Record<string, Dossier> = {
       linkLabel: "Voir le dossier complet",
       placeholder: "Capture à fournir",
       items: [
-        { key: "veille", title: "Tableau comparatif de la veille", caption: "Tableau comparatif de la veille des plateformes", alt: "Extrait du dossier Notion : tableau comparatif de la veille des plateformes" },
-        { key: "backlog", title: "Backlog priorisé", caption: "Backlog priorisé", alt: "Extrait du dossier Notion : backlog priorisé" },
+        { key: "veille", title: "Tableau comparatif de la veille", caption: "Tableau comparatif de la veille des plateformes", alt: "Extrait du dossier Notion : tableau de la veille, douze outils notés de 1 à 5 sur les fonctionnalités, le coût, la scalabilité, les intégrations et la conformité, avec un score global et une recommandation (retenu, à creuser ou écarté)." },
+        { key: "backlog", title: "Backlog priorisé", caption: "Backlog priorisé", alt: "Extrait du dossier Notion : backlog en colonnes MoSCoW. MustHave : six user stories (US1 à US6) rattachées aux sprints 1 à 3. ShouldHave : trois (US7 à US9). CouldHave : une (US10). WontHave : une (US11). Une dernière sans priorité (US12)." },
       ],
     },
   },
