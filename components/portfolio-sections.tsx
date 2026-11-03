@@ -63,9 +63,9 @@ export function PortfolioHeader() {
             </a>
           ))}
           <ThemeSwitcher className={`rounded-md px-3 md:h-9 ${GHOST_HOVER}`} iconClassName="text-current" />
-          <a href="#qui-suis-je" className={`inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium md:h-9 ${GHOST_HOVER}`}>
+          <Link href="/portfolio/qui-suis-je" className={`inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium md:h-9 ${GHOST_HOVER}`}>
             {HEADER.about}
-          </a>
+          </Link>
           <LiquidButton href="#contact" tone="orange" size="sm" className="ml-1 px-8">
             {HEADER.contact}
           </LiquidButton>
@@ -149,7 +149,7 @@ export function PortfolioHero() {
 
 export function PortfolioLever() {
   return (
-    <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
+    <section id="parti-pris" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="head" />
       <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{LEVER.after}</p>
       <p className="reveal mt-phi-1 max-w-3xl text-phi-1 text-muted-foreground">{LEVER.note}</p>
