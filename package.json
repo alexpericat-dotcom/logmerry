@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "build:hero": "node scripts/build-hero-image.mjs",
     "build:sketches": "node scripts/build-sketches.mjs",
+    "build:dossier": "node scripts/build-dossier-images.mjs",
     "test": "node --test \"lib/**/*.test.ts\" && npm run test:actions && npm run test:retrieval && npm run test:components && npm run test:proxy",
     "test:actions": "node --import ./tests/helpers/register-actions.mjs --test \"tests/actions/*.test.ts\"",
     "test:isolation": "node --env-file=.env.local --env-file=.env.test.local --test tests/isolation.test.ts",

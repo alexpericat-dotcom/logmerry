@@ -120,13 +120,13 @@ describe("migrations : sécurité par ligne", () => {
   test("vues publiques du portfolio : LISTE BLANCHE exacte des colonnes (rien d'autre n'est jamais ajouté sans que ce test change)", () => {
     const views = publicViews();
     assert.deepEqual([...views.keys()].sort(), ["public_realisation_images", "public_realisations"]);
-    assert.deepEqual(columnsOf(views.get("public_realisations")!), ["id", "title", "description", "origin", "client_label", "result_figure", "link_url", "stack", "published_at"]);
+    assert.deepEqual(columnsOf(views.get("public_realisations")!), ["id", "title", "description", "origin", "client_label", "result_figure", "link_url", "stack", "published_at", "status", "problem", "tests", "stack_is_recommended"]);
     assert.deepEqual(columnsOf(views.get("public_realisation_images")!), ["id", "realisation_id", "path", "alt", "created_at"]);
   });
 
   test("vues publiques : filtre « publiée ET accord » en fin de définition, sans `or`, et `security_barrier` posé", () => {
     for (const [name, body] of publicViews()) {
-      assert.match(body.trim(), /where r\.published and r\.client_consent$/i, name);
+      assert.match(body.trim(), /where r\.published and r\.client_consent and r\.status is not null$/i, name);
       const where = body.slice(body.search(/\bwhere\b/i));
       assert.ok(!/\bor\b/i.test(where), `${name} : « or » dans la clause where`);
       assert.match(sql, new RegExp(`alter view public\\.${name} set \\(security_barrier = true\\)`, "i"), `${name} sans security_barrier`);

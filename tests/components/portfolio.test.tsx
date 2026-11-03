@@ -18,9 +18,13 @@ import {
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { ScrollEffects } from "../../components/scroll-effects.tsx";
+import { DOSSIER_IMAGES } from "../../components/dossier-images.ts";
+import { PortfolioShowcaseFilter } from "../../components/portfolio-showcase-filter.tsx";
 import { SKETCH_NAMES, Sketch } from "../../components/sketches.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
 import { CONTACT_EMAIL, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
+import { DOSSIERS, UMARIS_ID } from "../../lib/portfolio-dossiers.ts";
+import { toPublicCards } from "../../lib/domain/portfolio.ts";
 
 afterEach(cleanup);
 
@@ -34,6 +38,10 @@ const item = (over: Partial<PublicRealisation> = {}): PublicRealisation => ({
   link_url: "https://ateliernovav3.lovable.app/",
   stack: ["Lovable", "IA générative"],
   published_at: "2026-10-30T10:00:00Z",
+  status: "exercice_formation",
+  problem: null,
+  tests: null,
+  stack_is_recommended: false,
   ...over,
 });
 const img = (id: string, alt: string): PublicImage => ({ id, realisation_id: "r1", path: `u/r1/${id}.png`, alt, created_at: `2026-10-30T10:0${id}:00Z` });
@@ -43,7 +51,7 @@ describe("réalisations de la page publique", () => {
   test("une carte : titre, description, origine, client, outils, lien externe sûr", () => {
     render(showcase([item()]));
     assert.ok(screen.getByRole("heading", { level: 3, name: "Atelier Nova" }));
-    assert.ok(screen.getByText("Formation"));
+    assert.ok(screen.getByText("Exercice de formation"), "la pastille de statut");
     assert.ok(screen.getByText("Atelier Nova (marque fictive)"));
     assert.ok(screen.getByText("IA générative"));
     const link = screen.getByRole("link", { name: /Ouvrir le site/ }) as HTMLAnchorElement;
@@ -508,5 +516,124 @@ describe("hero", () => {
     render(<PortfolioHero />);
     assert.equal(screen.getByRole("link", { name: HERO.primary }).getAttribute("href"), "#realisations");
     assert.ok((screen.getByRole("link", { name: HERO.secondary }) as HTMLAnchorElement).href.startsWith(`mailto:${CONTACT_EMAIL}`));
+  });
+});
+
+const statusItem = (id: string, status: PublicRealisation["status"], over: Partial<PublicRealisation> = {}) => item({ id, title: `Projet ${id}`, status, ...over });
+
+describe("statut des réalisations", () => {
+  test("STATUT OBLIGATOIRE : une réalisation sans statut ne s'affiche jamais ; toutes celles qui s'affichent ont leur pastille", () => {
+    const raws = [
+      { ...item({ id: "a", title: "Projet a" }), status: "client_reel" },
+      { ...item({ id: "b", title: "Projet b" }), status: null },
+      { ...item({ id: "c", title: "Projet c" }), status: "" },
+      { ...item({ id: "d", title: "Projet d" }), status: "projet_perso" },
+    ];
+    const cards = toPublicCards(raws as never, []);
+    const { container } = render(<PortfolioShowcase cards={cards} supabaseUrl="https://x.supabase.co" />);
+    const articles = [...container.querySelectorAll("ul > li")].filter((li) => li.querySelector("h3"));
+    assert.equal(articles.length, 2, "seules les réalisations avec un statut s'affichent");
+    assert.equal(screen.queryByText("Projet b"), null);
+    assert.equal(screen.queryByText("Projet c"), null);
+    for (const li of articles) assert.ok(li.querySelector("[data-status]")?.textContent?.trim(), "une réalisation s'affiche sans pastille de statut");
+  });
+
+  test("la pastille nomme le statut ; le résultat d'un exercice ou d'un projet perso n'est jamais présenté comme mesuré chez un client", () => {
+    for (const [status, label, measured] of [["client_reel", "Client réel", true], ["exercice_formation", "Exercice de formation", false], ["projet_perso", "Projet personnel", false]] as const) {
+      const { container } = render(<PortfolioShowcase cards={buildCards([statusItem("x", status, { result_figure: "Dossier complet" })], [])} supabaseUrl="https://x.supabase.co" />);
+      assert.equal(container.querySelector("[data-status]")?.textContent?.trim(), label);
+      assert.equal(container.querySelector("[data-status]")?.getAttribute("data-status"), status);
+      assert.equal(screen.getByText("Dossier complet").previousElementSibling?.textContent, SHOWCASE.fields.result, "étiquette neutre « Résultat »");
+      assert.equal(!!screen.queryByText(SHOWCASE.notMeasured(label)), !measured, `${status} : mention « non mesuré chez un client »`);
+      cleanup();
+    }
+  });
+
+  test("relevé : problème, ce que j'ai fait et tests dans l'ordre ; « Stack recommandée » quand la stack est recommandée, « Outils utilisés » sinon", () => {
+    const full = statusItem("p", "exercice_formation", { problem: "Des demandes dispersées.", tests: "10 testeurs.", stack_is_recommended: true });
+    const { container } = render(<PortfolioShowcase cards={buildCards([full], [])} supabaseUrl="https://x.supabase.co" />);
+    const labels = [...container.querySelectorAll("dt")].map((el) => el.textContent);
+    assert.deepEqual(labels, [SHOWCASE.fields.situation, SHOWCASE.fields.problem, SHOWCASE.fields.done, SHOWCASE.fields.tests]);
+    assert.ok(screen.getByText(SHOWCASE.fields.stackRecommended));
+    assert.equal(container.querySelector("ul[aria-label]")?.getAttribute("aria-label"), SHOWCASE.fields.stackRecommended);
+    assert.equal(screen.queryByText(SHOWCASE.fields.stack), null);
+    cleanup();
+    render(<PortfolioShowcase cards={buildCards([statusItem("q", "client_reel")], [])} supabaseUrl="https://x.supabase.co" />);
+    assert.ok(screen.getByText(SHOWCASE.fields.stack));
+    assert.equal(screen.queryByText(SHOWCASE.fields.stackRecommended), null);
+  });
+
+  test("filtre par statut : boutons à bascule avec le compte, un statut sans réalisation désactivé, le choix filtre les cartes, « Tous » les rend toutes", async () => {
+    const cards = buildCards([statusItem("a", "client_reel"), statusItem("b", "exercice_formation"), statusItem("c", "exercice_formation")], []);
+    render(<PortfolioShowcaseFilter cards={cards} supabaseUrl="https://x.supabase.co" />);
+    const group = screen.getByRole("group", { name: SHOWCASE.filter.label });
+    const all = within(group).getByRole("button", { name: /Tous/ });
+    const exercice = within(group).getByRole("button", { name: /Exercice de formation/ });
+    const perso = within(group).getByRole("button", { name: /Projet personnel/ }) as HTMLButtonElement;
+    assert.equal(all.getAttribute("aria-pressed"), "true");
+    assert.equal(perso.disabled, true, "aucun projet personnel : bouton désactivé");
+    assert.equal(screen.getAllByRole("heading", { level: 3 }).length, 3);
+    await userEvent.click(exercice);
+    assert.equal(exercice.getAttribute("aria-pressed"), "true");
+    assert.deepEqual(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent), ["Projet b", "Projet c"]);
+    await userEvent.click(within(group).getByRole("button", { name: /Client réel/ }));
+    assert.deepEqual(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent), ["Projet a"]);
+    await userEvent.click(all);
+    assert.equal(screen.getAllByRole("heading", { level: 3 }).length, 3);
+  });
+
+  test("sans réalisation : pas de filtre, le message sobre", () => {
+    render(<PortfolioShowcaseFilter cards={[]} supabaseUrl="" />);
+    assert.equal(screen.queryByRole("group", { name: SHOWCASE.filter.label }), null);
+    assert.ok(screen.getByText(SHOWCASE.empty));
+  });
+});
+
+describe("dossier de la plateforme de gestion des demandes clients", () => {
+  const umaris = () => buildCards([statusItem(UMARIS_ID, "exercice_formation", { title: "Plateforme de gestion des demandes clients", link_url: "https://knotty-reaction-86f.notion.site/Projet-UMARIS-39167eb89ef68099b498ce56f5f958e9" })], []);
+
+  test("bande de chiffres : les trois valeurs fournies et la légende, rien d'autre", () => {
+    const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
+    const figures = [...container.querySelectorAll("figure ul li")].slice(0, 3).map((li) => li.textContent);
+    assert.deepEqual(figures, ["10testeurs", "3,9/5d'ergonomie moyenne", "4ajustements décidés"]);
+    assert.ok(screen.getByText("Tests qualitatifs sur maquettes basse fidélité, 5 clients et 5 agents."));
+  });
+
+  test("schéma d'architecture : SVG natif (aucune image), titre et description pour les lecteurs d'écran, huit briques, quatre flux écrits, orchestration non nommée", () => {
+    const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
+    const svg = container.querySelector("svg[role=img]") as SVGElement;
+    assert.ok(svg, "le schéma est un SVG");
+    assert.equal(svg.querySelectorAll("image").length, 0, "aucune image bitmap dans le schéma");
+    assert.equal(svg.querySelector("title")?.textContent, DOSSIERS[UMARIS_ID].architecture.title);
+    assert.match(svg.querySelector("desc")?.textContent ?? "", /quatre flux numérotés/i);
+    assert.equal(svg.getAttribute("aria-labelledby"), "arch-title arch-desc");
+    const names = [...svg.querySelectorAll("g:has(> rect)")].map((g) => [...g.querySelectorAll("text")].map((t) => t.textContent).join(" "));
+    assert.deepEqual(names, ["Client", "Portail de soumission", "Brevo (e-mails)", "Orchestration", "API Mistral AI", "Agent de support", "Back-office agent", "Supabase (données)"]);
+    assert.ok(!/n8n|make/i.test(svg.textContent ?? ""), "l'outil d'orchestration reste à confirmer : il n'est pas nommé");
+    const flows = [...container.querySelectorAll("ol > li")].map((li) => li.querySelector("h5")?.textContent);
+    assert.deepEqual(flows, ["Soumission", "Enrichissement IA", "Traitement", "Notification"]);
+    const scroller = svg.closest("[role=group]") as HTMLElement;
+    assert.equal(scroller.getAttribute("tabindex"), "0", "défilement horizontal au clavier sur téléphone");
+    assert.ok(scroller.className.includes("overflow-x-auto"));
+  });
+
+  test("extraits : un emplacement visible par capture tant que les fichiers ne sont pas fournis, avec légende « extrait du dossier » et lien vers le dossier complet (nouvel onglet)", () => {
+    assert.deepEqual(Object.keys(DOSSIER_IMAGES).filter((k) => /veille|backlog/.test(k)), [], "ce test décrit l'état « fichiers non fournis »");
+    const { container } = render(<PortfolioShowcase cards={umaris()} supabaseUrl="https://x.supabase.co" />);
+    const placeholders = container.querySelectorAll("[data-placeholder]");
+    assert.deepEqual([...placeholders].map((p) => p.getAttribute("data-placeholder")), ["veille", "backlog"]);
+    assert.equal(container.querySelectorAll("picture, img[alt]").length, 0, "aucune image tant que les fichiers ne sont pas fournis");
+    for (const fig of container.querySelectorAll("figure:has([data-placeholder])")) {
+      assert.match(fig.querySelector("figcaption")?.textContent ?? "", /extrait du dossier/);
+      const link = fig.querySelector("a") as HTMLAnchorElement;
+      assert.equal(link.href, "https://knotty-reaction-86f.notion.site/Projet-UMARIS-39167eb89ef68099b498ce56f5f958e9");
+      assert.equal(link.target, "_blank");
+      assert.match(link.rel, /noopener/);
+    }
+  });
+
+  test("une réalisation sans dossier n'affiche ni schéma, ni chiffres, ni extraits", () => {
+    const { container } = render(showcase([item()]));
+    assert.equal(container.querySelectorAll("svg[role=img], [data-placeholder]").length, 0);
   });
 });

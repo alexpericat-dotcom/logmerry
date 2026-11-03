@@ -2,7 +2,9 @@ import { ExternalLink } from "lucide-react";
 
 import { LivePreview } from "@/components/live-preview";
 import { PortfolioImage } from "@/components/portfolio-image";
+import { Dossier } from "@/components/portfolio-dossier";
 import { safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
+import type { RealisationStatus } from "@/lib/domain/realisations";
 import { publicImageUrl } from "@/lib/domain/realisation-images";
 import { SHOWCASE } from "@/lib/portfolio-content";
 
@@ -20,6 +22,14 @@ function BrowserFrame({ host, children }: { host?: string; children: React.React
     </div>
   );
 }
+
+/** Pastille de statut : le texte porte toujours l'information ; le style (plein, contour orange, tirets) la double sans y suffire. */
+const STATUS_STYLE: Record<RealisationStatus, string> = {
+  client_reel: "border-transparent bg-primary text-primary-foreground",
+  exercice_formation: "border-tone-orange bg-card text-foreground",
+  projet_perso: "border-dashed border-foreground/60 bg-card text-foreground",
+};
+const DT = "font-mono text-phi-n1 uppercase tracking-[0.18em] text-muted-foreground";
 
 export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; index: number; supabaseUrl: string }) {
   // Sans adresse de stockage configurée, aucune capture n'est tentée (la carte garde son aplat) : une page ne doit jamais tomber en erreur pour une image.
@@ -49,27 +59,45 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
         )}
       </div>
       <div className={`flex min-w-0 flex-col gap-5 lg:col-span-5 ${flip ? "lg:order-1" : ""}`}>
-        <p className="w-fit rounded-sm border px-2 py-0.5 font-mono text-phi-n1 uppercase tracking-[0.18em] text-muted-foreground">{card.originLabel}</p>
+        <p data-status={card.status} className={`w-fit rounded-full border px-3 py-0.5 font-mono text-phi-n1 uppercase tracking-[0.18em] ${STATUS_STYLE[card.status]}`}>
+          {card.statusLabel}
+        </p>
         <h3 className="break-words text-phi-3 md:text-phi-4">{card.title}</h3>
         {/* Un relevé : situation, ce qui a été réalisé, résultat (seulement si fourni). Les étiquettes sont celles de `SHOWCASE.fields`. */}
         <dl className="flex flex-col divide-y border-y">
           <div className="py-3">
-            <dt className="font-mono text-phi-n1 uppercase tracking-[0.18em] text-muted-foreground">{SHOWCASE.fields.situation}</dt>
+            <dt className={DT}>{SHOWCASE.fields.situation}</dt>
             <dd className="mt-1 break-words">{card.client_label}</dd>
           </div>
+          {card.problem && (
+            <div className="py-3">
+              <dt className={DT}>{SHOWCASE.fields.problem}</dt>
+              <dd className="mt-1 break-words">{card.problem}</dd>
+            </div>
+          )}
           <div className="py-3">
-            <dt className="font-mono text-phi-n1 uppercase tracking-[0.18em] text-muted-foreground">{SHOWCASE.fields.done}</dt>
+            <dt className={DT}>{SHOWCASE.fields.done}</dt>
             <dd className="mt-1 break-words text-phi-1">{card.description}</dd>
           </div>
+          {card.tests && (
+            <div className="py-3">
+              <dt className={DT}>{SHOWCASE.fields.tests}</dt>
+              <dd className="mt-1 break-words">{card.tests}</dd>
+            </div>
+          )}
           {card.result_figure && (
             <div className="py-3">
-              <dt className="font-mono text-phi-n1 uppercase tracking-[0.18em] text-muted-foreground">{SHOWCASE.fields.result}</dt>
+              <dt className={DT}>{SHOWCASE.fields.result}</dt>
               <dd className="mt-1 break-words border-l-4 border-tone-orange pl-3 font-serif text-phi-2">{card.result_figure}</dd>
+              {card.status !== "client_reel" && <dd className="mt-2 text-phi-n1 text-muted-foreground">{SHOWCASE.notMeasured(card.statusLabel)}</dd>}
             </div>
           )}
         </dl>
         {card.stack.length > 0 && (
-          <ul aria-label={SHOWCASE.fields.stack} className="flex flex-wrap gap-1.5">
+          <p className={DT}>{card.stack_is_recommended ? SHOWCASE.fields.stackRecommended : SHOWCASE.fields.stack}</p>
+        )}
+        {card.stack.length > 0 && (
+          <ul aria-label={card.stack_is_recommended ? SHOWCASE.fields.stackRecommended : SHOWCASE.fields.stack} className="-mt-3 flex flex-wrap gap-1.5">
             {card.stack.map((tag) => (
               <li key={tag} className="whitespace-normal break-all rounded-sm border px-2 py-0.5 text-phi-n1">
                 {tag}
@@ -90,6 +118,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
           </a>
         )}
       </div>
+      <Dossier card={card} supabaseUrl={supabaseUrl} />
     </li>
   );
 }

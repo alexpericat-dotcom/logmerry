@@ -13,6 +13,10 @@ const item = (id: string, published_at: string | null, origin: PublicRealisation
   link_url: null,
   stack: [],
   published_at,
+  status: "exercice_formation",
+  problem: null,
+  tests: null,
+  stack_is_recommended: false,
 });
 const image = (id: string, realisation_id: string, created_at: string | null): PublicImage => ({ id, realisation_id, path: `p/${id}.png`, alt: `alt ${id}`, created_at });
 
@@ -38,7 +42,7 @@ test("mailto : objet encodé", () => {
 
 import { loadCards, safeHttpsLink, toPublicCards } from "./portfolio.ts";
 
-const raw = (over: Record<string, unknown> = {}) => ({ id: "a", title: "T", description: "d", origin: "demo" as const, client_label: "Client confidentiel", result_figure: null, link_url: null, stack: null, published_at: null, ...over });
+const raw = (over: Record<string, unknown> = {}) => ({ id: "a", title: "T", description: "d", origin: "demo" as const, client_label: "Client confidentiel", result_figure: null, link_url: null, stack: null, published_at: null, status: "exercice_formation", problem: null, tests: null, stack_is_recommended: null, ...over });
 
 test("lignes incomplètes d'une vue écartées ; pile absente = vide ; capture sans texte alternatif écartée", () => {
   const cards = toPublicCards(
@@ -82,4 +86,16 @@ test("aperçu en direct : une adresse de la même origine que la page est refus�
   assert.equal(isSameOrigin("http://logmerry.app/", "https://logmerry.app"), false, "autre protocole : autre origine");
   assert.equal(isSameOrigin("pas une adresse", "https://logmerry.app"), true);
   assert.equal(isSameOrigin("https://x.fr", "pas une origine"), true);
+});
+
+test("STATUT : une réalisation sans statut, ou au statut inconnu, n'est jamais gardée (elle ne peut pas s'afficher)", () => {
+  const cards = toPublicCards([raw({ id: "ok" }), raw({ id: "sans", status: null }), raw({ id: "vide", status: "" }), raw({ id: "inconnu", status: "client" }), raw({ id: "majuscules", status: "CLIENT_REEL" })], []);
+  assert.deepEqual(cards.map((c) => c.id), ["ok"]);
+});
+
+test("statut : chaque carte porte son libellé ; le drapeau « stack recommandée » est faux sauf s'il vaut vrai", () => {
+  const cards = toPublicCards([raw({ id: "a", status: "client_reel" }), raw({ id: "b", status: "projet_perso", stack_is_recommended: true }), raw({ id: "c", status: "exercice_formation", stack_is_recommended: null })], []);
+  const byId = Object.fromEntries(cards.map((c) => [c.id, c]));
+  assert.deepEqual([byId.a.statusLabel, byId.b.statusLabel, byId.c.statusLabel], ["Client réel", "Projet personnel", "Exercice de formation"]);
+  assert.deepEqual([byId.a.stack_is_recommended, byId.b.stack_is_recommended, byId.c.stack_is_recommended], [false, true, false]);
 });

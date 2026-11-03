@@ -1,4 +1,4 @@
-import { REALISATION_ORIGIN_LABELS, type RealisationOrigin } from "./realisations.ts";
+import { REALISATION_ORIGIN_LABELS, REALISATION_STATUS_LABELS, parseRealisationStatus, type RealisationOrigin, type RealisationStatus } from "./realisations.ts";
 
 /** Une réalisation telle que la vue publique `public_realisations` la rend (rien de privé). */
 export type PublicRealisation = {
@@ -11,16 +11,27 @@ export type PublicRealisation = {
   link_url: string | null;
   stack: string[];
   published_at: string | null;
+  /** Toujours présent : une réalisation sans statut n'est ni publiée par la base, ni gardée par `toPublicCards`. */
+  status: RealisationStatus;
+  problem: string | null;
+  tests: string | null;
+  /** Vrai : la stack est « recommandée », pas « utilisée ». */
+  stack_is_recommended: boolean;
 };
 export type PublicImage = { id: string; realisation_id: string; path: string; alt: string; created_at: string | null };
-export type PublicCard = PublicRealisation & { images: PublicImage[]; originLabel: string };
+export type PublicCard = PublicRealisation & { images: PublicImage[]; originLabel: string; statusLabel: string };
 
-type RawItem = { [K in keyof PublicRealisation]: PublicRealisation[K] | null };
+type RawStatus = { status: string | null; stack_is_recommended: boolean | null };
+
+type RawItem = { [K in Exclude<keyof PublicRealisation, "status" | "stack_is_recommended">]: PublicRealisation[K] | null } & RawStatus;
 type RawImage = { [K in keyof PublicImage]: PublicImage[K] | null };
 
 /** Les colonnes d'une vue sont nullables dans les types : une ligne incomplète (ou une capture sans texte alternatif) est écartée plutôt qu'affichée à moitié. */
 export function toPublicCards(items: RawItem[], images: RawImage[]): PublicCard[] {
-  const complete = items.filter((r) => !!(r.id && r.title && r.description && r.origin && r.client_label)).map((r) => ({ ...r, stack: r.stack ?? [] }) as PublicRealisation);
+  // Sans statut valide : écartée, jamais affichée (la base ne la publie pas non plus ; double garde).
+  const complete = items
+    .filter((r) => !!(r.id && r.title && r.description && r.origin && r.client_label && parseRealisationStatus(r.status)))
+    .map((r) => ({ ...r, stack: r.stack ?? [], stack_is_recommended: r.stack_is_recommended === true }) as PublicRealisation);
   const pictures = images.filter((i) => !!(i.id && i.realisation_id && i.path && i.alt)) as PublicImage[];
   return buildCards(complete, pictures);
 }
@@ -63,6 +74,7 @@ export function buildCards(items: PublicRealisation[], images: PublicImage[]): P
     .map((item) => ({
       ...item,
       originLabel: REALISATION_ORIGIN_LABELS[item.origin],
+      statusLabel: REALISATION_STATUS_LABELS[item.status],
       images: [...(byItem.get(item.id) ?? [])].sort((a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? "") || a.id.localeCompare(b.id)),
     }));
 }

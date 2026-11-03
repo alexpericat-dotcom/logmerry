@@ -6,6 +6,18 @@ export const REALISATION_RESULT_MAX = 200;
 export const REALISATION_LINK_MAX = 300;
 export const REALISATION_STACK_MAX = 12;
 export const REALISATION_TAG_MAX = 40;
+export const REALISATION_PROBLEM_MAX = 600;
+export const REALISATION_TESTS_MAX = 600;
+
+/** Statut visible d'une réalisation (5 novembre 2026). Aucune valeur par défaut : sans statut, une réalisation ne se publie pas et n'apparaît pas sur la page publique. */
+export const REALISATION_STATUSES = ["client_reel", "exercice_formation", "projet_perso"] as const;
+export type RealisationStatus = (typeof REALISATION_STATUSES)[number];
+export const REALISATION_STATUS_LABELS: Record<RealisationStatus, string> = {
+  client_reel: "Client réel",
+  exercice_formation: "Exercice de formation",
+  projet_perso: "Projet personnel",
+};
+export const parseRealisationStatus = (value: unknown): RealisationStatus | null => REALISATION_STATUSES.find((s) => s === value) ?? null;
 
 export const REALISATION_ORIGINS = ["real_client", "training", "friend", "demo"] as const;
 export type RealisationOrigin = (typeof REALISATION_ORIGINS)[number];
@@ -29,6 +41,11 @@ export type RealisationInput = {
   client_consent: string;
   /** Étiquettes séparées par des virgules. */
   stack: string;
+  status: string;
+  problem: string;
+  tests: string;
+  /** Case à cocher : « on » si la stack est recommandée (et non utilisée). */
+  stack_is_recommended: string;
 };
 export type RealisationValues = {
   title: string;
@@ -40,6 +57,10 @@ export type RealisationValues = {
   link_url: string | null;
   client_consent: boolean;
   stack: string[];
+  status: RealisationStatus;
+  problem: string | null;
+  tests: string | null;
+  stack_is_recommended: boolean;
 };
 export type RealisationErrors = Partial<Record<keyof RealisationInput, string>>;
 
@@ -56,8 +77,9 @@ const clean = (s: string) =>
 // Même décompte que char_length côté base (points de code, pas unités UTF-16).
 const length = (s: string) => [...s].length;
 
-/** Pourquoi « Publier » est refusé, ou null s'il est permis (l'accord du client est le seul critère de cette story). */
-export const publicationBlock = (r: { client_consent: boolean }): string | null => (r.client_consent ? null : "Coche l'accord du client avant de publier.");
+/** Pourquoi « Publier » est refusé, ou null s'il est permis : l'accord du client ET un statut (le statut est vérifié aussi par la base). */
+export const publicationBlock = (r: { client_consent: boolean; status: string | null }): string | null =>
+  !r.client_consent ? "Coche l'accord du client avant de publier." : !parseRealisationStatus(r.status) ? "Choisis un statut avant de publier." : null;
 
 /** Adresse de la page en ligne : https seulement, sans identifiants, sans espace ; renvoie l'adresse telle que saisie (pas réécrite) ou null. */
 export function parsePublicLink(text: string): string | null {
@@ -94,6 +116,9 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   const result_figure = optional(input.result_figure);
   const link_url = optional(input.link_url);
   const stack = parseStack(input.stack);
+  const status = parseRealisationStatus(input.status);
+  const problem = optional(input.problem);
+  const tests = optional(input.tests);
 
   const errors: RealisationErrors = {};
   if (!title) errors.title = "Saisis le titre de la réalisation.";
@@ -101,6 +126,9 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   if (!description) errors.description = "Saisis une description courte.";
   else if (length(description) > REALISATION_DESCRIPTION_MAX) errors.description = `La description doit faire ${REALISATION_DESCRIPTION_MAX} caractères au plus.`;
   if (!origin) errors.origin = "Choisis une origine.";
+  if (!status) errors.status = "Choisis un statut.";
+  if (problem && length(problem) > REALISATION_PROBLEM_MAX) errors.problem = `Le problème doit faire ${REALISATION_PROBLEM_MAX} caractères au plus.`;
+  if (tests && length(tests) > REALISATION_TESTS_MAX) errors.tests = `Les tests doivent faire ${REALISATION_TESTS_MAX} caractères au plus.`;
   if (client_name && length(client_name) > REALISATION_CLIENT_NAME_MAX) errors.client_name = `Le nom du client doit faire ${REALISATION_CLIENT_NAME_MAX} caractères au plus.`;
   if (client_sector && length(client_sector) > REALISATION_SECTOR_MAX) errors.client_sector = `Le secteur doit faire ${REALISATION_SECTOR_MAX} caractères au plus.`;
   if (result_figure && length(result_figure) > REALISATION_RESULT_MAX) errors.result_figure = `Le chiffre de résultat doit faire ${REALISATION_RESULT_MAX} caractères au plus.`;
@@ -108,6 +136,9 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   if (stack.length > REALISATION_STACK_MAX) errors.stack = `Garde ${REALISATION_STACK_MAX} étiquettes au plus.`;
   else if (stack.some((t) => length(t) > REALISATION_TAG_MAX)) errors.stack = `Chaque étiquette doit faire ${REALISATION_TAG_MAX} caractères au plus.`;
 
-  if (Object.keys(errors).length > 0 || !origin) return { ok: false, errors };
-  return { ok: true, value: { title, description, origin, client_name, client_sector, result_figure, link_url, client_consent: input.client_consent === "on", stack } };
+  if (Object.keys(errors).length > 0 || !origin || !status) return { ok: false, errors };
+  return {
+    ok: true,
+    value: { title, description, origin, client_name, client_sector, result_figure, link_url, client_consent: input.client_consent === "on", stack, status, problem, tests, stack_is_recommended: input.stack_is_recommended === "on" },
+  };
 }

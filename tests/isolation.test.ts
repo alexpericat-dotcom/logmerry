@@ -2639,7 +2639,7 @@ describe("isolation des réalisations entre deux comptes fictifs", () => {
   });
 
   test("publication : avec l'accord elle passe (date posée par la base, non forgeable) ; retirer l'accord la dépublie d'office ; sans accord elle reste refusée", async () => {
-    const r = await a.client.from("realisations").insert({ title: `${PREFIX} publiable`, description: "d", origin: "demo", client_consent: true, published: true, published_at: "2000-01-01T00:00:00Z" }).select("id, published, published_at").single();
+    const r = await a.client.from("realisations").insert({ title: `${PREFIX} publiable`, description: "d", origin: "demo", status: "projet_perso", client_consent: true, published: true, published_at: "2000-01-01T00:00:00Z" }).select("id, published, published_at").single();
     assert.ifError(r.error);
     assert.equal(r.data!.published, true);
     assert.ok(Date.now() - new Date(r.data!.published_at!).getTime() < 60_000, "published_at posée par la base, pas par le client");
@@ -2865,9 +2865,9 @@ describe("vues publiques du portfolio (public_realisations, public_realisation_i
     a = await signIn("A");
     await cleanup();
     const base = { description: "d", origin: "demo" as const };
-    const pub = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} publique`, client_consent: true, published: true, client_name: "Atelier Test", result_figure: "-30 %", link_url: "https://exemple.fr/", stack: ["Lovable"] }).select("id").single();
-    const draft = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} brouillon`, client_consent: true }).select("id").single();
-    const noConsent = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} sans accord`, client_name: "Secret SA", client_sector: "Banque", result_figure: "9 M€" }).select("id").single();
+    const pub = await a.client.from("realisations").insert({ ...base, status: "client_reel", title: `${PREFIX} publique`, client_consent: true, published: true, client_name: "Atelier Test", result_figure: "-30 %", link_url: "https://exemple.fr/", stack: ["Lovable"] }).select("id").single();
+    const draft = await a.client.from("realisations").insert({ ...base, status: "client_reel", title: `${PREFIX} brouillon`, client_consent: true }).select("id").single();
+    const noConsent = await a.client.from("realisations").insert({ ...base, status: "client_reel", title: `${PREFIX} sans accord`, client_name: "Secret SA", client_sector: "Banque", result_figure: "9 M€" }).select("id").single();
     for (const r of [pub, draft, noConsent]) assert.ifError(r.error);
     ids.published = pub.data!.id;
     ids.draft = draft.data!.id;
@@ -2886,9 +2886,40 @@ describe("vues publiques du portfolio (public_realisations, public_realisation_i
     const { data, error } = await anon.from("public_realisations").select("*").like("title", `${PREFIX}%`);
     assert.ifError(error);
     assert.deepEqual(data!.map((r) => r.title), [`${PREFIX} publique`]);
-    assert.deepEqual(Object.keys(data![0]).sort(), ["client_label", "description", "id", "link_url", "origin", "published_at", "result_figure", "stack", "title"]);
+    assert.deepEqual(Object.keys(data![0]).sort(), ["client_label", "description", "id", "link_url", "origin", "problem", "published_at", "result_figure", "stack", "stack_is_recommended", "status", "tests", "title"]);
+    assert.equal(data![0].status, "client_reel");
     assert.equal(data![0].client_label, "Atelier Test");
     assert.ok(data![0].published_at);
+  });
+
+  test("STATUT : la base refuse de publier sans statut (insertion ou mise à jour), un statut hors liste, et la vue ne montre jamais une ligne sans statut", async () => {
+    const base = { description: "d", origin: "demo" as const, client_consent: true };
+    const noStatus = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} publiée sans statut`, published: true });
+    assert.equal(noStatus.error?.code, "23514", "publier sans statut refusé par la contrainte");
+    const bad = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} statut inventé`, status: "client" });
+    assert.equal(bad.error?.code, "23514", "statut hors liste refusé");
+    const draft = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} brouillon sans statut` }).select("id").single();
+    assert.ifError(draft.error);
+    const publish = await a.client.from("realisations").update({ published: true }).eq("id", draft.data!.id);
+    assert.equal(publish.error?.code, "23514", "publier une ligne sans statut refusé");
+    const { data, error } = await newClient().from("public_realisations").select("title, status").like("title", `${PREFIX}%`);
+    assert.ifError(error);
+    assert.ok(data!.every((r) => r.status !== null), "aucune ligne sans statut dans la vue");
+    assert.deepEqual(data!.map((r) => r.title).filter((t) => /sans statut|inventé/.test(t ?? "")), []);
+  });
+
+  test("situation : « Client, secteur X » pour un client réel, « Secteur : X » pour un exercice ou un projet perso (jamais « Client » sans client)", async () => {
+    const base = { description: "d", origin: "demo" as const, client_consent: true, published: true, client_sector: "Service client" };
+    const real = await a.client.from("realisations").insert({ ...base, status: "client_reel", title: `${PREFIX} situation réelle` }).select("id").single();
+    const exo = await a.client.from("realisations").insert({ ...base, status: "exercice_formation", title: `${PREFIX} situation exercice`, problem: "Un problème", tests: "Des tests", stack_is_recommended: true }).select("id").single();
+    assert.ifError(real.error);
+    assert.ifError(exo.error);
+    const { data, error } = await newClient().from("public_realisations").select("title, client_label, status, problem, tests, stack_is_recommended").like("title", `${PREFIX} situation%`);
+    assert.ifError(error);
+    const byTitle = Object.fromEntries(data!.map((r) => [r.title, r]));
+    assert.equal(byTitle[`${PREFIX} situation réelle`].client_label, "Client, Service client");
+    assert.equal(byTitle[`${PREFIX} situation exercice`].client_label, "Secteur : Service client");
+    assert.deepEqual([byTitle[`${PREFIX} situation exercice`].problem, byTitle[`${PREFIX} situation exercice`].tests, byTitle[`${PREFIX} situation exercice`].stack_is_recommended], ["Un problème", "Des tests", true]);
   });
 
   test("les captures publiques sont celles de la réalisation publiée seulement, sans identifiant de propriétaire", async () => {
