@@ -36,16 +36,16 @@ export const HERO = {
 export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js", "Next.js", "React", "Telegram", "Gmail", "Docker", "Make", "Zapier", "Vercel", "Cursor", "Mistral", "RAG"];
 
 /** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
+/** « Mon parti pris » : texte fourni par Alex (5 novembre 2026), reproduit mot pour mot, sans ajout. */
 export const LEVER = {
   eyebrow: "Mon parti pris",
   title: "L'outil vient après le problème.",
-  before: "« Je suis très bon sur tel outil. »",
-  after: "« Je comprends suffisamment le fonctionnement d'une entreprise pour savoir quoi automatiser. »",
-  note: "C'est ce qui change la qualité de ce que je construis : avant d'écrire la moindre automatisation, je cherche la tâche qui coûte le plus, et pourquoi.",
+  after: "Avant d'écrire la moindre automatisation, je cherche la tâche qui coûte le plus de temps, et pourquoi elle existe.",
+  note: "Les heures perdues se cachent rarement là où on les attend : un export refait chaque lundi, une saisie recopiée d'un outil à l'autre, une relance qu'on oublie. Je commence par les trouver.",
   points: [
-    { title: "Le métier d'abord", text: "Je cherche à comprendre qui fait quoi, avec quelles données, et où ça bloque, avant de choisir un outil." },
-    { title: "Une IA qui rend des comptes", text: "Mes assistants citent les passages dont ils s'inspirent, et ne donnent ni conseil fiscal ni conseil juridique." },
-    { title: "Vos données restent les vôtres", text: "Chaque compte ne voit que ses propres données, et l'hébergement est en Europe." },
+    { title: "Observer d'abord", text: "Qui fait quoi, avec quelles données, et où ça bloque : je regarde le travail réel avant de choisir un outil." },
+    { title: "Construire sobre", text: "Le plus simple qui règle le problème. Si un tableau suffit, je ne vous vends pas une IA." },
+    { title: "Mesurer le temps rendu", text: "Je mesure avant, puis après. Vous voyez ce que ça change, en heures." },
   ],
 };
 

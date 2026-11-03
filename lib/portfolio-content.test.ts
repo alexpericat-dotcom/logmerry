@@ -35,14 +35,20 @@ test("la chaîne « problème métier → maintenance » de la référence : six
 
 test("contenu validé par Alex, figé : positionnement et cinq formules", () => {
   assert.equal(content.LEVER.title, "L'outil vient après le problème.");
-  assert.deepEqual(content.LEVER.points.map((p) => p.title), ["Le métier d'abord", "Une IA qui rend des comptes", "Vos données restent les vôtres"]);
+  assert.deepEqual(content.LEVER.points.map((p) => p.title), ["Observer d'abord", "Construire sobre", "Mesurer le temps rendu"]);
   assert.deepEqual(content.SERVICES.items.map((s) => s.title), ["Audit et cadrage", "Automatisation", "Application et données sur mesure", "Assistant IA sur vos documents", "Maintenance et évolution"]);
   for (const x of [...content.PROCESS.steps, ...content.SERVICES.items, ...content.LEVER.points]) assert.ok(x.title.trim() && x.text.trim());
 });
 
-test("le positionnement oppose l'outil au métier", () => {
-  assert.match(content.LEVER.before, /outil/i);
-  assert.match(content.LEVER.after, /fonctionnement d'une entreprise/);
+test("« Mon parti pris » : le texte fourni par Alex (5 novembre 2026), mot pour mot, sans citation barrée ; trois colonnes", () => {
+  assert.deepEqual(Object.keys(content.LEVER).sort(), ["after", "eyebrow", "note", "points", "title"], "aucun champ ajouté, plus de citation barrée");
+  assert.equal(content.LEVER.after, "Avant d'écrire la moindre automatisation, je cherche la tâche qui coûte le plus de temps, et pourquoi elle existe.");
+  assert.equal(content.LEVER.note, "Les heures perdues se cachent rarement là où on les attend : un export refait chaque lundi, une saisie recopiée d'un outil à l'autre, une relance qu'on oublie. Je commence par les trouver.");
+  assert.deepEqual(content.LEVER.points, [
+    { title: "Observer d'abord", text: "Qui fait quoi, avec quelles données, et où ça bloque : je regarde le travail réel avant de choisir un outil." },
+    { title: "Construire sobre", text: "Le plus simple qui règle le problème. Si un tableau suffit, je ne vous vends pas une IA." },
+    { title: "Mesurer le temps rendu", text: "Je mesure avant, puis après. Vous voyez ce que ça change, en heures." },
+  ]);
 });
 
 test("contact : l'adresse donnée par Alex et un objet de courriel défini", () => {

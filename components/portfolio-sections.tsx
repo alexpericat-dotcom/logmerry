@@ -151,10 +151,7 @@ export function PortfolioLever() {
   return (
     <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="head" />
-      <div className="grid gap-phi-1 lg:grid-cols-2">
-        <p className="reveal-left text-phi-1 text-muted-foreground line-through decoration-1 md:text-phi-2">{LEVER.before}</p>
-        <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{LEVER.after}</p>
-      </div>
+      <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{LEVER.after}</p>
       <p className="reveal mt-phi-1 max-w-3xl text-phi-1 text-muted-foreground">{LEVER.note}</p>
       <ul className="mt-phi-2 grid gap-phi-1 md:grid-cols-3">
         {LEVER.points.map((p, i) => (

@@ -175,11 +175,23 @@ describe("sections de la page", () => {
     }
   });
 
-  test("le positionnement : la phrase barrée et la phrase mise en avant sont toutes deux présentes", () => {
-    render(page());
-    assert.ok(screen.getByText(LEVER.before));
-    assert.ok(screen.getByText(LEVER.after));
+  test("« Mon parti pris » : la grande phrase seule dans la barre orange (plus de citation barrée), le paragraphe, trois colonnes titrées", () => {
+    const { container } = render(<PortfolioLever />);
+    const section = within(container.querySelector("#qui-suis-je") as HTMLElement);
+    const big = section.getByText(LEVER.after);
+    assert.ok(big.className.includes("border-tone-orange") && big.className.includes("font-serif"), "la grande phrase porte la barre orange");
+    assert.ok(!/line-through/.test(container.innerHTML), "plus aucun texte barré");
+    assert.ok(section.getByText(LEVER.note));
+    const columns = container.querySelectorAll("ul > li");
+    assert.equal(columns.length, 3);
+    LEVER.points.forEach((p, i) => {
+      assert.ok(within(columns[i] as HTMLElement).getByRole("heading", { level: 3, name: p.title }));
+      assert.ok(within(columns[i] as HTMLElement).getByText(p.text));
+    });
+    assert.ok(container.querySelector("ul")?.className.includes("md:grid-cols-3") && !container.querySelector("ul")?.className.includes("grid-cols-3 "), "colonnes empilées sur téléphone, trois colonnes dès md");
+    assert.ok(container.querySelector("svg.sketch"), "l'illustration est conservée");
   });
+
 
   test("l'épigraphe de la méthode : la citation, son auteur et sa source, dans une citation sémantique", () => {
     const { container } = render(<PortfolioProcess />);
