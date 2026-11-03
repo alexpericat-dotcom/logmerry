@@ -3,6 +3,7 @@ import { unstable_rethrow } from "next/navigation";
 import { Suspense } from "react";
 
 import { PortfolioShowcase } from "@/components/portfolio-showcase";
+import { ScrollEffects } from "@/components/scroll-effects";
 import {
   PortfolioContact,
   PortfolioFooter,
@@ -40,6 +41,7 @@ export default function PortfolioPage() {
       <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:p-3">
         Aller au contenu
       </a>
+      <ScrollEffects />
       <PortfolioHeader />
       <main id="contenu" tabIndex={-1} className="outline-none">
         <PortfolioHero />

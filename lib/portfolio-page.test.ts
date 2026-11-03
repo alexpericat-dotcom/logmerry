@@ -73,6 +73,9 @@ test("animations au défilement : quatre entrées différentes, une cascade par 
   assert.match(css, /animation-range:\s*entry calc\(var\(--i, 0\) \* 7%\)/);
   const print = blocks(css, /@media print\s*\{/).join("\n");
   for (const cls of [".reveal", ".reveal-left", ".reveal-right", ".reveal-scale", ".hero-zoom", ".hero-lift"]) assert.ok(print.includes(cls), `${cls} reste animé à l'impression`);
+  // Repli pour les navigateurs sans `animation-timeline` (Safari avant 26, Firefox) : transitions déclenchées par `components/scroll-effects.tsx`.
+  for (const rule of ["@supports not (animation-timeline: view())", "@supports not (animation-timeline: scroll())", ".rv-pending", ".rv-run", "--hero-p"]) assert.ok(css.includes(rule), `repli manquant : ${rule}`);
+  assert.ok(readFileSync("app/portfolio/page.tsx", "utf8").includes("<ScrollEffects />"));
   const sections = readFileSync("components/portfolio-sections.tsx", "utf8") + readFileSync("components/portfolio-showcase.tsx", "utf8");
   for (const cls of ["reveal-left", "reveal-right", "reveal-scale", "hero-zoom", "hero-lift"]) assert.ok(sections.includes(cls), `${cls} jamais utilisé`);
 });

@@ -376,6 +376,40 @@
       animation-range: 0 60vh;
     }
   }
+  /* Repli sans `animation-timeline` (voir `components/scroll-effects.tsx`) : mêmes mouvements par transitions, déclenchés à l'entrée à l'écran. */
+  @supports not (animation-timeline: view()) {
+    .rv-pending {
+      opacity: 0;
+    }
+    .reveal.rv-pending {
+      transform: translateY(24px);
+    }
+    .reveal-left.rv-pending {
+      transform: translateX(-36px);
+    }
+    .reveal-right.rv-pending {
+      transform: translateX(36px);
+    }
+    .reveal-scale.rv-pending {
+      transform: scale(0.95);
+    }
+    .rv-run {
+      transition:
+        opacity 700ms ease-out,
+        transform 700ms ease-out;
+      transition-delay: calc(var(--i, 0) * 90ms);
+    }
+  }
+  @supports not (animation-timeline: scroll()) {
+    .hero-zoom {
+      transform-origin: 70% 50%;
+      transform: scale(calc(1 + var(--hero-p, 0) * 0.1));
+    }
+    .hero-lift {
+      opacity: calc(1 - var(--hero-p, 0) * 1.6);
+      transform: translateY(calc(var(--hero-p, 0) * -48px));
+    }
+  }
   .hero-in {
     animation: hero-in 1100ms ease-out backwards;
     animation-delay: var(--d, 0ms);

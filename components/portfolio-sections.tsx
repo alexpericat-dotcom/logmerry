@@ -29,7 +29,7 @@ function SectionHead({ id, eyebrow, title, intro }: { id: string; eyebrow: strin
   );
 }
 
-/** Au chargement l'en-tête est posé sur la photo (`PortfolioHeaderFrame`), puis translucide et flou au défilement. Les deux boutons sont ceux du hero : « Qui suis-je » en contour, « Contact » en orange. */
+/** Au chargement l'en-tête est posé sur la photo (`PortfolioHeaderFrame`), puis translucide et flou au défilement. « Qui suis-je » est un simple lien-bouton sans cadre, « Contact » le bouton orange, plus long. */
 export function PortfolioHeader() {
   return (
     <PortfolioHeaderFrame>
@@ -50,10 +50,10 @@ export function PortfolioHeader() {
             </a>
           ))}
           <ThemeSwitcher />
-          <Button asChild size="sm" variant="outline" className="group-data-[scrolled=false]/header:border-photo group-data-[scrolled=false]/header:bg-transparent group-data-[scrolled=false]/header:text-photo group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo">
+          <Button asChild size="sm" variant="ghost" className="group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo">
             <a href="#qui-suis-je">{HEADER.about}</a>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="px-8">
             <a href="#contact">{HEADER.contact}</a>
           </Button>
         </nav>
@@ -84,11 +84,11 @@ export function PortfolioHero() {
             (["avif", "webp"] as const).map((ext) => <source key={`${s.media}-${ext}`} media={s.media} type={`image/${ext}`} srcSet={s.set(ext)} sizes="100vw" />),
           )}
           {/* Une balise <img> dans <picture> : variantes déjà optimisées (AVIF/WebP) et recadrées à la main, next/image les ré-encoderait. */}
-          <img src={`${IMAGE}-crop-1200.webp`} width={1200} height={900} alt={HERO.imageAlt} fetchPriority="high" decoding="async" className="size-full object-cover object-center lg:object-[78%_55%]" />
+          <img src={`${IMAGE}-crop-1200.webp`} width={1200} height={900} alt={HERO.imageAlt} fetchPriority="high" decoding="async" className="size-full object-cover object-center lg:object-[100%_55%]" />
         </picture>
       </div>
       <div aria-hidden="true" className="hero-veil absolute inset-0 hidden lg:block" />
-      <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-28">
+      <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-10 md:px-6 lg:pb-20 lg:pt-40">
         <div className={`hero-lift flex flex-col gap-6 lg:max-w-[min(34rem,46vw)] ${CREAM}`}>
           <p className={`hero-in ${MONO} flex items-center gap-3`} style={delay(0)}>
             <span aria-hidden="true" className="h-px w-8 bg-tone-orange" />
@@ -97,7 +97,7 @@ export function PortfolioHero() {
           <h1 id="hero-title" className="hero-in break-words text-5xl leading-[1.02] [text-wrap:balance] sm:text-6xl xl:text-7xl" style={delay(120)}>
             {HERO.title}
           </h1>
-          <p className="hero-in max-w-[48ch] text-lg leading-relaxed md:text-xl" style={delay(240)}>
+          <p className="hero-in max-w-[42ch] text-lg leading-relaxed md:text-xl" style={delay(240)}>
             {HERO.lead}
           </p>
           <div className="hero-in flex flex-wrap items-center gap-3" style={delay(360)}>

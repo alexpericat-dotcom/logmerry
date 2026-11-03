@@ -1,7 +1,7 @@
 import "../helpers/dom.ts";
 
 import assert from "node:assert/strict";
-import { afterEach, describe, test } from "node:test";
+import { afterEach, beforeEach, describe, test } from "node:test";
 
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -17,6 +17,7 @@ import {
   PortfolioStack,
 } from "../../components/portfolio-sections.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
+import { ScrollEffects } from "../../components/scroll-effects.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
 import { CONTACT_EMAIL, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
 
@@ -331,6 +332,63 @@ describe("en-tête", () => {
   });
 });
 
+describe("animations au défilement (repli sans animation-timeline)", () => {
+  const offscreen = (el: HTMLElement) => (el.getBoundingClientRect = () => ({ top: 5000 }) as DOMRect);
+  const tick = () => act(() => new Promise<void>((r) => requestAnimationFrame(() => r())));
+  const supports = CSS.supports;
+  beforeEach(() => {
+    CSS.supports = () => false; // un navigateur sans `animation-timeline`
+  });
+  afterEach(() => {
+    CSS.supports = supports;
+    delete (globalThis as Record<string, unknown>).__intersections;
+  });
+  const element = (cls: string, low: boolean) => {
+    const el = document.createElement("p");
+    el.className = cls;
+    if (low) offscreen(el);
+    document.body.append(el);
+    return el;
+  };
+
+  test("un élément sous l'écran est masqué, puis entre à son apparition ; un élément déjà visible n'est jamais masqué", async () => {
+    const low = element("reveal-left", true);
+    const top = element("reveal", false);
+    render(<ScrollEffects />);
+    assert.ok(low.classList.contains("rv-pending"), "masqué avant d'entrer");
+    assert.ok(!top.classList.contains("rv-pending"), "déjà à l'écran : jamais masqué");
+    const [observer] = ((globalThis as Record<string, unknown>).__intersections ?? []) as { callback: (e: unknown[]) => void }[];
+    await act(async () => observer.callback([{ isIntersecting: false, target: low }]));
+    assert.ok(low.classList.contains("rv-pending"), "pas encore visible : rien ne change");
+    await act(async () => observer.callback([{ isIntersecting: true, target: low }]));
+    await tick();
+    assert.ok(low.classList.contains("rv-run") && !low.classList.contains("rv-pending"));
+    low.remove();
+    top.remove();
+  });
+
+  test("navigateur qui sait faire en CSS : rien n'est masqué", () => {
+    CSS.supports = () => true;
+    const low = element("reveal", true);
+    render(<ScrollEffects />);
+    assert.ok(!low.classList.contains("rv-pending"));
+    low.remove();
+  });
+
+  test("mouvement réduit : rien n'est masqué ni observé", () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: q.includes("reduce") })) as typeof window.matchMedia;
+    try {
+      const low = element("reveal", true);
+      render(<ScrollEffects />);
+      assert.ok(!low.classList.contains("rv-pending"));
+      low.remove();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+});
+
 describe("hero", () => {
   const delivered = HERO.proof;
   afterEach(() => {
@@ -342,7 +400,7 @@ describe("hero", () => {
     assert.equal(screen.getByRole("heading", { level: 1 }).textContent, HERO.title);
     const lead = screen.getByText(HERO.lead);
     assert.ok(!/(^|\s)bg-/.test(lead.className), `fond autour du sous-titre : ${lead.className}`);
-    assert.ok(lead.className.includes("max-w-[48ch]"));
+    assert.ok(lead.className.includes("max-w-[42ch]"));
     assert.equal(container.querySelectorAll(".glass, [class*=backdrop-blur]").length, 0);
   });
 
