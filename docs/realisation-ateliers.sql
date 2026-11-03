@@ -14,7 +14,7 @@ select
   'Neuf workflows n8n gèrent le cycle complet des inscriptions à des ateliers : anti-doublon, liste d''attente avec repêchage, relances J-1 et H-2, appel par bot Telegram, erreurs journalisées. Fonctionnel sur mon instance auto-hébergée ; pas d''utilisateurs réels, donc non mesuré.',
   'training',
   'Le sujet proposait Google Sheets comme base. J''ai choisi une base relationnelle (Baserow, reposant sur PostgreSQL) : elle permet de relier ateliers, inscriptions et journal d''exécution, et de calculer automatiquement les places restantes et le taux de remplissage.',
-  '[À COMPLÉTER PAR MOI : texte exact, formation, date, projet concerné]',
+  null, -- « Validation » : laissée vide par Alex (6 novembre 2026), champ facultatif ; à renseigner quand le texte exact existe
   array['n8n', 'Baserow', 'Telegram Bot API', 'Gmail API', 'SMS OVH'],
   false,
   false,
