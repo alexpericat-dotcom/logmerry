@@ -191,20 +191,24 @@ export function PortfolioServices() {
   );
 }
 
-/** « Sous le capot » : front, back, base de données, hébergement (VPS, auto-hébergement) et données personnelles ; logos seulement pour les outils validés. */
+/** « Sous le capot » : les briques (front end, back end, base de données, IA et agents, hébergement, données personnelles), chacune traduite « en clair » ; logos seulement pour les outils validés. */
 export function PortfolioStack() {
   return (
     <section id="architecture" aria-labelledby="stack-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 pb-24 md:px-6">
       <SectionHead id="stack-title" eyebrow={STACK.eyebrow} title={STACK.title} intro={STACK.intro} />
       <ul>
-        {STACK.layers.map((layer) => (
-          <li key={layer.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
-            <h3 className="text-2xl md:text-3xl">{layer.title}</h3>
+        {STACK.bricks.map((brick) => (
+          <li key={brick.title} className="reveal grid gap-4 border-t py-7 md:grid-cols-[16rem_1fr] md:gap-10">
+            <h3 className="text-2xl md:text-3xl">{brick.title}</h3>
             <div className="flex flex-col gap-4">
-              <p className="max-w-[60ch] text-muted-foreground">{layer.text}</p>
-              {layer.tools.length > 0 && (
+              <p className="max-w-[60ch] text-lg">
+                <span className={`${MONO} mr-2 text-muted-foreground`}>{STACK.plainLabel}</span>
+                {brick.plain}
+              </p>
+              <p className="max-w-[60ch] text-muted-foreground">{brick.text}</p>
+              {brick.tools.length > 0 && (
                 <ul aria-label="Outils" className="flex flex-wrap gap-2">
-                  {layer.tools.map((tool) => (
+                  {brick.tools.map((tool) => (
                     <li key={tool} className="flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-sm">
                       <ToolIcon tool={tool} size={16} />
                       {tool}

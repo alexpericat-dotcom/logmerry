@@ -14,6 +14,8 @@ export const TOOL_ICONS: Record<string, string> = {
   React: "react",
   Telegram: "telegram",
   Gmail: "gmail",
+  "Node.js": "nodedotjs",
+  MCP: "modelcontextprotocol",
 };
 
 export const toolIconPath = (tool: string): string | null => (Object.hasOwn(TOOL_ICONS, tool) ? `/images/tools/${TOOL_ICONS[tool]}.svg` : null);

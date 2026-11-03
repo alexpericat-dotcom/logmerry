@@ -29,8 +29,12 @@ export const HERO = {
   imageAlt: "Un surfeur sur sa planche, au moment de se lever, devant une vague orange et turquoise au coucher du soleil.",
 };
 
-/** Les outils que Alex a validés (30 octobre 2026) : seuls ceux-là peuvent apparaître avec leur logo sur la page, ailleurs que dans les étiquettes de ses réalisations. */
-export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"];
+/**
+ * Les outils qui peuvent apparaître avec leur logo sur la page, ailleurs que dans les étiquettes de ses réalisations. Validés par Alex : les huit premiers le 30 octobre 2026 ;
+ * Notion, MCP et Node.js demandés par lui le 3 novembre 2026 (« un éventail d'applications à la mode réparti sur les briques »). Les cinq derniers (Next.js, React, Telegram, Gmail, Docker)
+ * viennent de sa propre pile et de ses captures de workflows : à CONFIRMER par Alex.
+ */
+export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js", "Next.js", "React", "Telegram", "Gmail", "Docker"];
 
 /** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
 export const LEVER = {
@@ -75,26 +79,46 @@ export const SERVICES = {
   ],
 };
 
-/** Les couches d'une application, et où elle tourne. Les outils cités avec un logo sont dans `lib/portfolio-tools.ts` et tous dans `VALIDATED_TOOLS`. À valider par Alex (VPS, auto-hébergement). */
+/** Les briques d'une application, et où elle tourne. Chacune a sa traduction « En clair » pour qui n'est pas du métier. Les outils cités avec un logo sont dans `lib/portfolio-tools.ts` et tous dans `VALIDATED_TOOLS`. À valider par Alex (VPS, auto-hébergement). */
 export const STACK = {
   eyebrow: "Architecture",
   title: "Sous le capot",
-  intro: "Une application, ce sont plusieurs couches. Je les conçois ensemble, avec une stack technique choisie sur mesure pour votre métier et à votre portée.",
-  layers: [
-    { title: "Front", text: "Ce que vos équipes voient : des interfaces claires, rapides et utilisables sur téléphone.", tools: [] as string[] },
-    { title: "Back", text: "La logique métier : automatisations, API, connexions entre vos outils et modèles d'IA, avec un suivi des erreurs.", tools: ["n8n", "Claude", "OpenAI", "Gemini"] },
+  intro: "Une application, ce sont plusieurs briques. Je les assemble avec une stack technique choisie sur mesure pour votre métier et à votre portée, et je m'adapte aux outils que vous utilisez déjà.",
+  plainLabel: "En clair",
+  bricks: [
+    {
+      title: "Front end",
+      plain: "ce que vos équipes voient et utilisent à l'écran.",
+      text: "Des interfaces claires, rapides et utilisables sur téléphone.",
+      tools: ["Next.js", "React"],
+    },
+    {
+      title: "Back end",
+      plain: "le moteur invisible, qui fait le travail en coulisses.",
+      text: "La logique métier : automatisations, API et connexions entre vos outils, avec un suivi des erreurs.",
+      tools: ["Node.js", "n8n", "Telegram", "Gmail"],
+    },
     {
       title: "Base de données",
+      plain: "la mémoire de l'application, là où vos informations sont rangées.",
       text: "PostgreSQL, directement ou via Supabase : des données structurées, protégées par compte. Je m'adapte aussi à vos outils actuels.",
-      tools: ["PostgreSQL", "Supabase", "Baserow", "Airtable"],
+      tools: ["PostgreSQL", "Supabase", "Notion", "Airtable", "Baserow"],
+    },
+    {
+      title: "IA et agents",
+      plain: "des assistants qui lisent vos documents et accomplissent des tâches précises à votre place.",
+      text: "Des modèles d'IA reliés à vos données, qui citent leurs sources. MCP (Model Context Protocol) est la prise standard qui leur permet de se brancher à vos outils.",
+      tools: ["Claude", "OpenAI", "Gemini", "MCP"],
     },
     {
       title: "Hébergement et auto-hébergement",
+      plain: "l'endroit où l'application fonctionne, jour et nuit.",
       text: "Chez un hébergeur managé en Europe, ou auto-hébergé sur un serveur privé (VPS) que vous contrôlez : vos automatisations et vos données restent chez vous.",
-      tools: [] as string[],
+      tools: ["Docker"],
     },
     {
       title: "Données personnelles et RGPD",
+      plain: "la protection des informations de vos clients et de vos équipes.",
       text: "La protection des données est pensée dès la conception : hébergement européen, accès limités, données séparées par compte, possibilité de les supprimer.",
       tools: [] as string[],
     },

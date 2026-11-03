@@ -150,12 +150,16 @@ describe("sections de la page", () => {
     for (const s of SERVICES.items) assert.ok(services.getByRole("heading", { level: 3, name: s.title }), s.title);
   });
 
-  test("sous le capot : cinq couches titrées ; seuls les logos des outils validés par Alex, jamais un autre", () => {
+  test("sous le capot : six briques titrées, chacune traduite « en clair » ; seuls les logos des outils validés, jamais un autre", () => {
     const { container } = render(<PortfolioStack />);
     const stack = within(container.querySelector("#architecture") as HTMLElement);
-    for (const l of STACK.layers) assert.ok(stack.getByRole("heading", { level: 3, name: l.title }), l.title);
+    for (const l of STACK.bricks) {
+      assert.ok(stack.getByRole("heading", { level: 3, name: l.title }), l.title);
+      assert.ok(stack.getByText(l.plain), `traduction de ${l.title}`);
+    }
+    assert.equal(stack.getAllByText(STACK.plainLabel).length, STACK.bricks.length);
     const icons = [...container.querySelectorAll("[data-tool-icon]")].map((el) => el.getAttribute("data-tool-icon") ?? "");
-    for (const tool of ["n8n", "Supabase", "PostgreSQL"]) assert.ok(icons.includes(tool), `logo ${tool}`);
+    for (const tool of ["n8n", "Supabase", "PostgreSQL", "Notion", "MCP", "Node.js"]) assert.ok(icons.includes(tool), `logo ${tool}`);
     for (const icon of icons) assert.ok(VALIDATED_TOOLS.includes(icon), `outil non validé affiché : ${icon}`);
     assert.ok(screen.getByText(/serveur privé \(VPS\)/));
   });

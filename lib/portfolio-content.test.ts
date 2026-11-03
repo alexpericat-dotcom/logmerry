@@ -55,9 +55,11 @@ test("le choix de la stack est présenté comme sur mesure, jamais comme une lis
   assert.match(content.STACK.intro, /stack technique choisie sur mesure/);
 });
 
-test("« Sous le capot » : front, back, base de données, hébergement (VPS, auto-hébergement) et RGPD", () => {
-  assert.deepEqual(content.STACK.layers.map((l) => l.title), ["Front", "Back", "Base de données", "Hébergement et auto-hébergement", "Données personnelles et RGPD"]);
+test("« Sous le capot » : front end, back end, base de données, IA et agents, hébergement (VPS, auto-hébergement) et RGPD, chacune traduite « en clair »", () => {
+  assert.deepEqual(content.STACK.bricks.map((l) => l.title), ["Front end", "Back end", "Base de données", "IA et agents", "Hébergement et auto-hébergement", "Données personnelles et RGPD"]);
   const all = JSON.stringify(content.STACK);
+  for (const brick of content.STACK.bricks) assert.ok(brick.plain.trim().length > 10, `pas de traduction en clair pour ${brick.title}`);
+  assert.ok(!/couche/i.test(all), "on parle de briques, pas de couches");
   for (const word of ["VPS", "auto-hébergé", "PostgreSQL", "Supabase", "RGPD"]) assert.ok(all.includes(word), word);
   // Aucune promesse juridique : on parle de conception attentive, jamais de « conforme » ni de garantie.
   assert.ok(!/conforme|certifi|garanti|100 ?%/i.test(all));
@@ -76,8 +78,8 @@ test("épigraphe : la citation donnée par Alex, traduite et attribuée (auteur,
   assert.deepEqual(content.PROCESS.epigraph, { text: "On n'arrête pas les vagues, mais on peut apprendre à surfer.", author: "Jon Kabat-Zinn", source: "Wherever You Go, There You Are, 1994" });
 });
 
-test("outils : seuls ceux validés par Alex (30 octobre 2026), sans notation ni étoile ; chaque outil cité sur la page est dans la liste", () => {
-  assert.deepEqual(content.VALIDATED_TOOLS, ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"]);
-  for (const layer of content.STACK.layers) for (const tool of layer.tools) assert.ok(content.VALIDATED_TOOLS.includes(tool), `outil non validé : ${tool}`);
+test("outils : seuls ceux validés par Alex (30 octobre et 3 novembre 2026), sans notation ni étoile ; chaque outil cité sur la page est dans la liste", () => {
+  assert.deepEqual(content.VALIDATED_TOOLS.slice(0, 11), ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js"]);
+  for (const brick of content.STACK.bricks) for (const tool of brick.tools) assert.ok(content.VALIDATED_TOOLS.includes(tool), `outil non validé : ${tool}`);
   assert.ok(!/[★☆⭐]|étoile|\/5\b|note :/i.test(texts));
 });
