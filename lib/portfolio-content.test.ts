@@ -5,8 +5,8 @@ import * as content from "./portfolio-content.ts";
 
 const year = String(new Date().getFullYear());
 const texts = JSON.stringify(content);
-// Seuls sont retirés : l'année du pied de page, l'adresse de contact et le nom d'outil « n8n ». Tout autre chiffre est une promesse.
-const promises = texts.replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "");
+// Seuls sont retirés : l'année du pied de page, l'adresse de contact, le nom d'outil « n8n » et l'année de la source de la citation. Tout autre chiffre est une promesse.
+const promises = texts.replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "").replace("Wherever You Go, There You Are, 1994", "");
 
 test("aucun chiffre, tarif ni mot de prix dans les textes publics (formules sans prix)", () => {
   assert.ok(!/\d/.test(promises), `chiffre dans : ${promises.match(/.{20}\d.{20}/)?.[0]}`);
@@ -33,16 +33,10 @@ test("la chaîne « problème métier → maintenance » de la référence : six
   );
 });
 
-test("contenu validé par Alex, figé : positionnement, cinq formules, quatre familles d'outils et leurs outils", () => {
+test("contenu validé par Alex, figé : positionnement et cinq formules", () => {
   assert.equal(content.LEVER.title, "L'outil vient après le problème.");
   assert.deepEqual(content.LEVER.points.map((p) => p.title), ["Le métier d'abord", "Une IA qui rend des comptes", "Vos données restent les vôtres"]);
   assert.deepEqual(content.SERVICES.items.map((s) => s.title), ["Audit et cadrage", "Automatisation", "Application et données sur mesure", "Assistant IA sur vos documents", "Maintenance et évolution"]);
-  assert.deepEqual(content.SKILLS.groups, [
-    { title: "Automatisation et intégration", items: ["n8n", "API", "Webhooks", "JSON", "OAuth"] },
-    { title: "Données", items: ["Supabase", "PostgreSQL", "Notion", "Baserow", "Airtable"] },
-    { title: "Intelligence artificielle", items: ["Claude", "OpenAI", "Gemini", "RAG", "Agents IA"] },
-    { title: "Cadrage et fiabilité", items: ["Architecture", "Sécurité", "RGPD", "Gestion de projet", "Compréhension métier"] },
-  ]);
   for (const x of [...content.PROCESS.steps, ...content.SERVICES.items, ...content.LEVER.points]) assert.ok(x.title.trim() && x.text.trim());
 });
 
@@ -56,9 +50,7 @@ test("contact : l'adresse donnée par Alex et un objet de courriel défini", () 
   assert.ok(content.CONTACT_SUBJECT.trim());
 });
 
-test("la liste d'outils n'est jamais présentée comme une limite : choix de la stack technique sur mesure", () => {
-  assert.match(content.SKILLS.title, /stack technique choisie sur mesure/);
-  assert.match(content.SKILLS.note, /n'est pas une limite/);
+test("le choix de la stack est présenté comme sur mesure, jamais comme une liste imposée", () => {
   assert.match(content.PROCESS.steps[2].text, /stack technique sur mesure/);
   assert.match(content.STACK.intro, /stack technique choisie sur mesure/);
 });
@@ -71,22 +63,21 @@ test("« Sous le capot » : front, back, base de données, hébergement (VPS, au
   assert.ok(!/conforme|certifi|garanti|100 ?%/i.test(all));
 });
 
-test("hero : texte d'Alex, mot pour mot ; la ligne de preuve reste vide tant qu'il ne l'a pas écrite (rien d'inventé)", () => {
+test("hero : texte d'Alex, mot pour mot (3 novembre 2026)", () => {
   assert.equal(content.HERO.eyebrow, "Automatisation & IA pour les entreprises");
-  assert.equal(`${content.HERO.titleLead} ${content.HERO.titleAccent}`, "Le vent se lève. Prenez la barre.");
-  assert.equal(content.HERO.lead, "L'IA et le no-code changent la façon de travailler. Je vous aide à en tirer parti, en partant de vos vrais problèmes.");
+  assert.equal(content.HERO.title, "Laissez la vague faire le travail.");
+  assert.equal(content.HERO.lead, "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.");
   assert.equal(content.HERO.primary, "Voir les réalisations");
   assert.equal(content.HERO.secondary, "Parler de votre problème");
-  assert.equal(content.HERO.methodTitle, "Ma méthode");
-  assert.ok(content.HERO.proof === null || content.HERO.proof.trim().length > 0, "preuve : null ou un vrai texte, jamais un texte vide ni un placeholder visible");
-  assert.ok(!/\[|\]|à compléter/i.test(String(content.HERO.proof)), "aucun placeholder visible du public");
+  assert.ok(content.HERO.imageAlt.trim(), "la photo a un texte alternatif");
 });
 
-test("bandeau d'outils : EXACTEMENT la liste choisie par Alex, sans notation ni étoile ; aucun autre outil", () => {
-  assert.deepEqual(content.MARQUEE_TOOLS, ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"]);
+test("épigraphe : la citation donnée par Alex, traduite et attribuée (auteur, ouvrage, année)", () => {
+  assert.deepEqual(content.PROCESS.epigraph, { text: "On n'arrête pas les vagues, mais on peut apprendre à surfer.", author: "Jon Kabat-Zinn", source: "Wherever You Go, There You Are, 1994" });
+});
+
+test("outils : seuls ceux validés par Alex (30 octobre 2026), sans notation ni étoile ; chaque outil cité sur la page est dans la liste", () => {
+  assert.deepEqual(content.VALIDATED_TOOLS, ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"]);
+  for (const layer of content.STACK.layers) for (const tool of layer.tools) assert.ok(content.VALIDATED_TOOLS.includes(tool), `outil non validé : ${tool}`);
   assert.ok(!/[★☆⭐]|étoile|\/5\b|note :/i.test(texts));
-});
-
-test("hero : plus aucun chiffre non sourcé (le texte précédent « 2 heures par jour » a été remplacé par Alex)", () => {
-  assert.ok(!/\d/.test(`${content.HERO.titleLead} ${content.HERO.titleAccent} ${content.HERO.lead}`));
 });

@@ -1,9 +1,9 @@
 import "../helpers/dom.ts";
 
 import assert from "node:assert/strict";
-import { afterEach, beforeEach, describe, test } from "node:test";
+import { afterEach, describe, test } from "node:test";
 
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import {
@@ -12,16 +12,13 @@ import {
   PortfolioHeader,
   PortfolioHero,
   PortfolioLever,
-  PortfolioMarquee,
   PortfolioProcess,
   PortfolioServices,
-  PortfolioSkills,
   PortfolioStack,
 } from "../../components/portfolio-sections.tsx";
-import { HeroVideo } from "../../components/hero-video.tsx";
 import { PortfolioShowcase } from "../../components/portfolio-showcase.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HERO, LEVER, MARQUEE_TOOLS, PROCESS, SERVICES, SKILLS, STACK } from "../../lib/portfolio-content.ts";
+import { CONTACT_EMAIL, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
 
 afterEach(cleanup);
 
@@ -89,8 +86,8 @@ describe("réalisations de la page publique", () => {
 
   test("textes très longs (mot sans espace) : cassés plutôt que de déborder", () => {
     const { container } = render(showcase([item({ description: "x".repeat(600), client_label: "y".repeat(200), result_figure: "z".repeat(200), stack: ["w".repeat(40)] })]));
-    const long = [...container.querySelectorAll("p, li, span")].filter((el) => el.children.length === 0 && /^[xyzw]{40,}$|Résultat : z+/.test(el.textContent ?? ""));
-    assert.ok(long.length >= 2, "les textes longs sont bien rendus");
+    const long = [...container.querySelectorAll("dd, li, span")].filter((el) => el.children.length === 0 && /^[xyzw]{40,}$/.test(el.textContent ?? ""));
+    assert.ok(long.length >= 4, "les textes longs sont bien rendus");
     for (const el of long) assert.match(el.closest("[class*=break-]")?.className ?? "", /break-(words|all)/, (el.textContent ?? "").slice(0, 12));
   });
 
@@ -104,11 +101,12 @@ describe("réalisations de la page publique", () => {
 
   test("résultat affiché seulement s'il est fourni ; un titre piégé reste du texte", () => {
     render(showcase([item({ result_figure: "-30 % de saisie", title: "<img src=x onerror=alert(1)>" })]));
-    assert.ok(screen.getByText("Résultat : -30 % de saisie"));
+    assert.ok(screen.getByText("-30 % de saisie"));
+    assert.equal(screen.getByText("-30 % de saisie").previousElementSibling?.textContent, SHOWCASE.fields.result, "étiquette neutre « Résultat » : le chiffre n'est pas forcément une durée");
     assert.ok(screen.getByRole("heading", { level: 3 }).textContent === "<img src=x onerror=alert(1)>");
     cleanup();
     render(showcase([item()]));
-    assert.equal(screen.queryByText(/Résultat/), null);
+    assert.equal(screen.queryByText(SHOWCASE.fields.result), null);
   });
 
   test("aucune réalisation : un message sobre, pas de liste vide", () => {
@@ -123,12 +121,10 @@ describe("sections de la page", () => {
     <>
       <PortfolioHeader />
       <PortfolioHero />
-      <PortfolioMarquee />
       <PortfolioLever />
       <PortfolioProcess />
       <PortfolioServices />
       <PortfolioStack />
-      <PortfolioSkills />
       <PortfolioContact />
       <PortfolioFooter />
     </>
@@ -138,7 +134,7 @@ describe("sections de la page", () => {
     render(page());
     const h1 = screen.getAllByRole("heading", { level: 1 });
     assert.equal(h1.length, 1);
-    assert.equal(h1[0].textContent, `${HERO.titleLead} ${HERO.titleAccent}`);
+    assert.equal(h1[0].textContent, HERO.title);
     const mails = screen.getAllByRole("link", { name: /M'écrire|Parler de votre problème|alexandre/ }) as HTMLAnchorElement[];
     assert.ok(mails.length >= 4);
     for (const a of mails) assert.ok(a.href.startsWith(`mailto:${CONTACT_EMAIL}`), a.href);
@@ -153,34 +149,24 @@ describe("sections de la page", () => {
     for (const s of SERVICES.items) assert.ok(services.getByRole("heading", { level: 3, name: s.title }), s.title);
   });
 
-  test("sous le capot : cinq couches titrées, et les logos des outils cités (n8n, Supabase, Notion, PostgreSQL)", () => {
+  test("sous le capot : cinq couches titrées ; seuls les logos des outils validés par Alex, jamais un autre", () => {
     const { container } = render(<PortfolioStack />);
     const stack = within(container.querySelector("#architecture") as HTMLElement);
     for (const l of STACK.layers) assert.ok(stack.getByRole("heading", { level: 3, name: l.title }), l.title);
-    const icons = [...container.querySelectorAll("[data-tool-icon]")].map((el) => el.getAttribute("data-tool-icon"));
-    for (const tool of ["n8n", "Supabase", "Notion", "PostgreSQL"]) assert.ok(icons.includes(tool), `logo ${tool}`);
+    const icons = [...container.querySelectorAll("[data-tool-icon]")].map((el) => el.getAttribute("data-tool-icon") ?? "");
+    for (const tool of ["n8n", "Supabase", "PostgreSQL"]) assert.ok(icons.includes(tool), `logo ${tool}`);
+    for (const icon of icons) assert.ok(VALIDATED_TOOLS.includes(icon), `outil non validé affiché : ${icon}`);
     assert.ok(screen.getByText(/serveur privé \(VPS\)/));
   });
 
   test("les logos sont décoratifs (cachés des lecteurs d'écran) et le nom de l'outil est toujours écrit à côté", () => {
-    const { container } = render(
-      <>
-        <PortfolioStack />
-        <PortfolioSkills />
-      </>,
-    );
+    const { container } = render(<PortfolioStack />);
     const icons = container.querySelectorAll("[data-tool-icon]");
-    assert.ok(icons.length >= 10);
+    assert.ok(icons.length >= 6);
     for (const icon of icons) {
       assert.equal(icon.getAttribute("aria-hidden"), "true");
       assert.ok((icon.parentElement?.textContent ?? "").includes(icon.getAttribute("data-tool-icon") ?? "?"), "outil sans nom écrit");
     }
-  });
-
-  test("la liste d'outils n'est pas présentée comme une limite", () => {
-    render(<PortfolioSkills />);
-    assert.ok(screen.getByRole("heading", { level: 2, name: SKILLS.title }));
-    assert.ok(screen.getByText(SKILLS.note));
   });
 
   test("le positionnement : la phrase barrée et la phrase mise en avant sont toutes deux présentes", () => {
@@ -189,27 +175,17 @@ describe("sections de la page", () => {
     assert.ok(screen.getByText(LEVER.after));
   });
 
-  test("outils : chaque outil est listé ; le bandeau défilant n'est lu qu'une fois par les lecteurs d'écran", () => {
-    const { container } = render(page());
-    for (const g of SKILLS.groups) for (const item of g.items) assert.ok(screen.getAllByText(item).length >= 1, item);
-    const chips = [...container.querySelectorAll(".marquee-track > ul:first-child > li")].map((li) => li.textContent?.trim());
-    assert.deepEqual(chips, MARQUEE_TOOLS, "le bandeau montre exactement la liste d'Alex, dans l'ordre");
-    assert.ok(!/[★☆⭐]/.test(container.textContent ?? ""), "aucune étoile ni notation");
-    const rows = [...container.querySelectorAll(".marquee-track > ul")];
-    assert.equal(rows.length, 4, "deux moitiés identiques de deux rangées : la boucle reste pleine sur un grand écran");
-    assert.equal(rows[0].getAttribute("aria-hidden"), null);
-    assert.ok(!rows[0].classList.contains("marquee-dup"));
-    for (const copy of rows.slice(1)) {
-      assert.equal(copy.getAttribute("aria-hidden"), "true");
-      assert.ok(copy.classList.contains("marquee-dup"), "la copie porte la classe que le CSS masque en mouvement réduit");
-    }
+  test("l'épigraphe de la méthode : la citation, son auteur et sa source, dans une citation sémantique", () => {
+    const { container } = render(<PortfolioProcess />);
+    assert.equal(container.querySelector("blockquote")?.textContent, `« ${PROCESS.epigraph.text} »`);
+    const caption = container.querySelector("figcaption")?.textContent ?? "";
+    assert.ok(caption.includes(PROCESS.epigraph.author) && caption.includes(PROCESS.epigraph.source));
   });
 
-  test("le fond animé, les carrés, la carte de la méthode et le grain sont cachés des lecteurs d'écran", () => {
-    const { container } = render(<PortfolioHero />);
-    const decor = container.querySelectorAll(".float-slow, .mesh, .grain, .glass, .method-seg");
-    assert.ok(decor.length > 0);
-    for (const el of decor) assert.ok(el.closest("[aria-hidden=true]"), "élément décoratif accessible aux lecteurs d'écran");
+  test("aucun élément de l'ancienne direction : ni bandeau défilant, ni carte de verre, ni étoile", () => {
+    const { container } = render(page());
+    assert.equal(container.querySelectorAll(".marquee-track, .glass, .mesh, .grain").length, 0);
+    assert.ok(!/[★☆⭐]/.test(container.textContent ?? ""));
   });
 });
 
@@ -328,254 +304,58 @@ describe("aperçu en direct d'une réalisation", () => {
   });
 });
 
-describe("pause des animations", () => {
-  test("le bouton de l'en-tête met en pause puis reprend (état annoncé, drapeau posé sur la page)", async () => {
-    render(<PortfolioHeader />);
-    const toggle = screen.getByRole("button", { name: "Mettre en pause les animations" });
-    assert.equal(toggle.getAttribute("aria-pressed"), "false");
-    await userEvent.click(toggle);
-    assert.equal(document.documentElement.dataset.motion, "paused");
-    const resume = screen.getByRole("button", { name: "Reprendre les animations" });
-    assert.equal(resume.getAttribute("aria-pressed"), "true");
-    await userEvent.click(resume);
-    assert.equal(document.documentElement.dataset.motion, undefined);
-  });
-});
-
 describe("hero", () => {
-  test("le sous-titre est posé directement sur le fond (aucun bloc sombre autour) avec un texte d'au plus 55 caractères de large", () => {
-    render(<PortfolioHero />);
+  const delivered = HERO.proof;
+  afterEach(() => {
+    HERO.proof = delivered;
+  });
+
+  test("un seul h1 : l'accroche d'Alex ; le sous-titre est posé directement sur la photo (aucun bloc, aucune carte)", () => {
+    const { container } = render(<PortfolioHero />);
+    assert.equal(screen.getByRole("heading", { level: 1 }).textContent, HERO.title);
     const lead = screen.getByText(HERO.lead);
     assert.ok(!/(^|\s)bg-/.test(lead.className), `fond autour du sous-titre : ${lead.className}`);
-    assert.ok(lead.className.includes("max-w-[55ch]"));
+    assert.ok(lead.className.includes("max-w-[48ch]"));
+    assert.equal(container.querySelectorAll(".glass, [class*=backdrop-blur]").length, 0);
   });
 
-  test("« Un problème de moins. » porte le dégradé de la marque ; le reste du titre est en texte plein", () => {
+  test("la photo : texte alternatif, priorité haute, jamais différée, dimensions explicites ; sources AVIF puis WebP, cadrage large dès 1024 px", () => {
+    const { container } = render(<PortfolioHero />);
+    const img = container.querySelector("picture img") as HTMLImageElement;
+    assert.equal(img.getAttribute("alt"), HERO.imageAlt);
+    assert.equal(img.getAttribute("fetchpriority"), "high");
+    assert.equal(img.getAttribute("loading"), null);
+    assert.equal(img.getAttribute("width"), "1200");
+    assert.equal(img.getAttribute("height"), "900");
+    const sources = [...container.querySelectorAll("picture source")].map((el) => [el.getAttribute("media"), el.getAttribute("type")]);
+    assert.deepEqual(sources, [
+      ["(min-width: 1024px)", "image/avif"],
+      ["(min-width: 1024px)", "image/webp"],
+      [null, "image/avif"],
+      [null, "image/webp"],
+    ]);
+    assert.match(container.querySelector("picture source")?.getAttribute("srcset") ?? "", /hero-wide-1400\.avif 1400w, \/images\/hero\/hero-wide-2000\.avif 2000w/);
+  });
+
+  test("le voile est décoratif (caché des lecteurs d'écran) ; le texte du hero passe en crème sur la photo à partir de 1024 px", () => {
+    const { container } = render(<PortfolioHero />);
+    const veil = container.querySelector(".hero-veil");
+    assert.equal(veil?.getAttribute("aria-hidden"), "true");
+    assert.ok(screen.getByText(HERO.lead).closest("[class*='lg:text-photo']"));
+  });
+
+  test("ligne de preuve : le placeholder reste visible tant qu'Alex ne l'a pas écrite, puis son texte le remplace", () => {
     render(<PortfolioHero />);
-    const accent = screen.getByText(HERO.titleAccent);
-    assert.ok(accent.classList.contains("text-brand-gradient"));
-    assert.ok(!screen.getByRole("heading", { level: 1 }).classList.contains("text-brand-gradient"));
-  });
-
-  test("ligne de preuve : rien tant qu'elle est vide ; son texte quand Alex l'a écrite", () => {
-    const { container, rerender } = render(<PortfolioHero />);
-    const before = container.querySelectorAll("section p").length;
+    assert.ok(screen.getByText(HERO.proof));
+    cleanup();
     HERO.proof = "Parcours : exemple écrit par Alex";
-    try {
-      rerender(<PortfolioHero />);
-      assert.ok(screen.getByText("Parcours : exemple écrit par Alex"));
-      assert.equal(container.querySelectorAll("section p").length, before + 1);
-    } finally {
-      HERO.proof = null;
-    }
+    render(<PortfolioHero />);
+    assert.ok(screen.getByText("Parcours : exemple écrit par Alex"));
   });
 
-  test("les deux boutons demandés, avec lueur et flèche qui glisse ; le principal est enveloppé de l'effet magnétique", () => {
-    const { container } = render(<PortfolioHero />);
-    const primary = screen.getByRole("link", { name: HERO.primary });
-    const secondary = screen.getByRole("link", { name: HERO.secondary });
-    for (const link of [primary, secondary]) {
-      assert.ok(link.classList.contains("cta-glow"));
-      assert.ok(link.querySelector("svg")?.getAttribute("class")?.includes("group-hover:translate-x-1"), "flèche qui glisse");
-    }
-    assert.equal(primary.getAttribute("href"), "#realisations");
-    assert.ok(primary.parentElement?.className.includes("transition-transform"), "enveloppe magnétique");
-    assert.ok(!secondary.parentElement?.className.includes("inline-block"), "l'effet magnétique ne vise que le bouton principal");
-    assert.ok(container.querySelectorAll(".hero-in").length >= 6, "entrée en cascade");
-  });
-
-  test("carte « Ma méthode » : les six étapes dans l'ordre, la première mise en avant avec « Le point de départ »", () => {
-    const { container } = render(<PortfolioHero />);
-    const steps = [...container.querySelectorAll(".glass ol > li")].map((li) => li.textContent);
-    assert.equal(steps.length, 6);
-    PROCESS.steps.forEach((s, i) => assert.ok(steps[i]?.includes(s.title), s.title));
-    assert.ok(steps[0]?.includes(HERO.methodStart));
-    assert.ok(!steps.slice(1).some((t) => t?.includes(HERO.methodStart)), "une seule étape est mise en avant");
-    assert.ok(container.querySelector(".glass")?.textContent?.includes(HERO.methodTitle));
-    assert.equal(container.querySelectorAll(".method-seg").length, 5, "un trait entre deux étapes");
-  });
-});
-
-describe("effets de pointeur (inclinaison, magnétisme)", () => {
-  const media = (matches: boolean) => {
-    (window as unknown as { matchMedia: unknown }).matchMedia = () => ({ matches });
-  };
-  afterEach(() => {
-    delete (window as unknown as { matchMedia?: unknown }).matchMedia;
-  });
-
-  test("souris et mouvement permis : la carte s'incline de 6° au plus et se remet à plat en sortant", () => {
-    media(true);
-    const { container } = render(<PortfolioHero />);
-    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
-    tilt.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100, x: 0, y: 0, toJSON() {} });
-    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
-    assert.match(tilt.style.transform, /perspective\(900px\) rotateX\(-?[0-6]\.\d+deg\) rotateY\(-?[0-8]\.\d+deg\)/);
-    fireEvent.pointerLeave(tilt);
-    assert.equal(tilt.style.transform, "");
-  });
-
-  test("tactile ou « réduire les animations » : aucune inclinaison, aucun magnétisme", () => {
-    media(false);
-    const { container } = render(<PortfolioHero />);
-    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
-    const magnet = screen.getByRole("link", { name: HERO.primary }).parentElement as HTMLElement;
-    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
-    fireEvent.pointerMove(magnet, { clientX: 5, clientY: 5 });
-    assert.equal(tilt.style.transform, "");
-    assert.equal(magnet.style.transform, "");
-  });
-
-  test("zone sans taille (masquée) : aucun calcul, jamais de NaN dans le style", () => {
-    media(true);
-    const { container } = render(<PortfolioHero />);
-    const tilt = container.querySelector(".glass")?.parentElement as HTMLElement;
-    fireEvent.pointerMove(tilt, { clientX: 5, clientY: 5 });
-    assert.equal(tilt.style.transform, "");
-  });
-
-  test("sans matchMedia (navigateur ancien) : pas d'erreur", () => {
-    const { container } = render(<PortfolioHero />);
-    assert.doesNotThrow(() => fireEvent.pointerMove(container.querySelector(".glass")?.parentElement as HTMLElement, { clientX: 5, clientY: 5 }));
-  });
-});
-
-describe("vidéo de fond du hero (fichiers fournis par Alex)", () => {
-  const FILES = { poster: "/video/hero-poster.jpg", webm: "/video/hero.webm", mp4: "/video/hero.mp4", mobile: { webm: "/video/hero-720.webm", mp4: "/video/hero-720.mp4" } };
-  const w = window as unknown as Record<string, unknown>;
-  const nav = navigator as unknown as Record<string, unknown>;
-  const played: string[] = [];
-  /** Attend que la vidéo soit montée (`waitFor` ne patiente que si son rappel lève une erreur). */
-  const findVideo = (container: HTMLElement) =>
-    waitFor(() => {
-      const v = container.querySelector("video");
-      assert.ok(v, "la vidéo n'est pas encore montée");
-      return v as HTMLVideoElement;
-    });
-
-  /** Environnement du visiteur : préférence de mouvement, écran étroit, connexion. */
-  const visitor = (o: { reduce?: boolean; narrow?: boolean; saveData?: boolean; effectiveType?: string } = {}) => {
-    w.matchMedia = (q: string) => ({ matches: q.includes("prefers-reduced-motion") ? !!o.reduce : q.includes("max-width") ? !!o.narrow : false });
-    if (o.saveData !== undefined || o.effectiveType) Object.defineProperty(navigator, "connection", { configurable: true, value: { saveData: !!o.saveData, effectiveType: o.effectiveType } });
-  };
-
-  beforeEach(() => {
-    played.length = 0;
-    (HTMLMediaElement.prototype as unknown as Record<string, unknown>).play = function () {
-      played.push("play");
-      return Promise.resolve();
-    };
-    (HTMLMediaElement.prototype as unknown as Record<string, unknown>).pause = () => void played.push("pause");
-  });
-  afterEach(() => {
-    delete w.matchMedia;
-    delete nav.connection;
-    delete document.documentElement.dataset.motion;
-    HERO.video = null;
-  });
-
-  test("sans fichiers fournis : aucun fond vidéo, aucune référence à un fichier absent", () => {
-    const { container } = render(<PortfolioHero />);
-    assert.equal(container.querySelectorAll("video, [src*='/video/']").length, 0);
-    assert.ok(!container.querySelector("section")?.classList.contains("dark"));
-  });
-
-  test("l'affiche est là tout de suite (sans vidéo) ; la vidéo se monte ensuite, muette, en boucle, sans contrôle ni focus, sources WebM puis MP4", async () => {
-    visitor();
-    const { container } = render(<HeroVideo files={FILES} />);
-    assert.equal((container.querySelector("img") as HTMLImageElement).getAttribute("src"), FILES.poster);
-    assert.equal(container.querySelectorAll("video").length, 0, "pas de vidéo au premier rendu");
-    const video = await findVideo(container);
-    assert.ok(video.muted && video.loop && video.autoplay && video.playsInline);
-    assert.equal(video.getAttribute("preload"), "metadata");
-    assert.equal(video.getAttribute("poster"), FILES.poster);
-    assert.equal(video.hasAttribute("controls"), false);
-    assert.equal(video.getAttribute("tabindex"), "-1");
-    assert.deepEqual([...video.querySelectorAll("source")].map((s) => [s.getAttribute("type"), s.getAttribute("src")]), [["video/webm", FILES.webm], ["video/mp4", FILES.mp4]]);
-    assert.equal(container.firstElementChild?.getAttribute("aria-hidden"), "true");
-  });
-
-  test("« réduire les animations », économie de données, connexion 2G ou 3G : l'affiche seule, aucune vidéo", async () => {
-    for (const o of [{ reduce: true }, { saveData: true }, { effectiveType: "2g" }, { effectiveType: "3g" }, { effectiveType: "slow-2g" }]) {
-      visitor(o);
-      const { container, unmount } = render(<HeroVideo files={FILES} />);
-      await new Promise((r) => setTimeout(r, 400)); // laisse passer le moment « au repos »
-      assert.equal(container.querySelectorAll("video").length, 0, JSON.stringify(o));
-      assert.ok(container.querySelector("img"), "l'affiche reste");
-      unmount();
-    }
-  });
-
-  test("téléphone : version 720p allégée si fournie, sinon l'affiche seule", async () => {
-    visitor({ narrow: true });
-    const { container, unmount } = render(<HeroVideo files={FILES} />);
-    const video = await findVideo(container);
-    assert.deepEqual([...video.querySelectorAll("source")].map((s) => s.getAttribute("src")), [FILES.mobile.webm, FILES.mobile.mp4]);
-    unmount();
-    const { container: bare } = render(<HeroVideo files={{ poster: FILES.poster, webm: FILES.webm, mp4: FILES.mp4 }} />);
-    await new Promise((r) => setTimeout(r, 400));
-    assert.equal(bare.querySelectorAll("video").length, 0, "pas de version allégée : l'affiche seule sur téléphone");
-  });
-
-  test("le bouton de pause de l'en-tête arrête la vidéo, et la reprise la relance", async () => {
-    visitor();
-    const { container } = render(<HeroVideo files={FILES} />);
-    await findVideo(container);
-    await waitFor(() => assert.ok(played.includes("play")));
-    played.length = 0;
-    await act(async () => {
-      document.documentElement.dataset.motion = "paused";
-      await new Promise((r) => setTimeout(r, 20));
-    });
-    assert.ok(played.includes("pause"), "pause demandée");
-    played.length = 0;
-    await act(async () => {
-      delete document.documentElement.dataset.motion;
-      await new Promise((r) => setTimeout(r, 20));
-    });
-    assert.ok(played.includes("play"), "reprise");
-  });
-
-  test("hors de l'écran, la vidéo est en pause (aucun calcul pour rien) ; elle repart quand le hero revient", async () => {
-    visitor();
-    const { container } = render(<HeroVideo files={FILES} />);
-    await findVideo(container);
-    await waitFor(() => assert.ok(played.includes("play")));
-    played.length = 0;
-    act(() => {
-      for (const o of seen("__intersections")) if (!o.disconnected) o.callback([{ isIntersecting: false }]);
-    });
-    assert.ok(played.includes("pause"));
-    played.length = 0;
-    act(() => {
-      for (const o of seen("__intersections")) if (!o.disconnected) o.callback([{ isIntersecting: true }]);
-    });
-    assert.ok(played.includes("play"));
-  });
-
-  test("une vidéo qui ne se charge pas est retirée : l'affiche reste, la page ne casse pas", async () => {
-    visitor();
-    const { container } = render(<HeroVideo files={FILES} />);
-    const video = await findVideo(container);
-    fireEvent.error(video);
-    await waitFor(() => assert.equal(container.querySelectorAll("video").length, 0));
-    assert.ok(container.querySelector("img"));
-  });
-
-  test("overlay sombre à 74 % au moins sur toute la hauteur", () => {
-    const { container } = render(<HeroVideo files={FILES} />);
-    const overlay = [...container.querySelectorAll("div")].find((d) => d.style.background.includes("linear-gradient"));
-    assert.ok(overlay, "overlay");
-    for (const a of overlay!.style.background.match(/rgba\([^)]*\)/g) ?? []) assert.ok(Number(a.split(",").pop()!.replace(")", "")) >= 0.74, a);
-  });
-
-  test("avec la vidéo : le hero passe en jetons sombres, le titre prend les couleurs claires de la marque, le texte est plein (pas d'atténuation)", () => {
-    HERO.video = FILES;
-    const { container } = render(<PortfolioHero />);
-    assert.ok(container.querySelector("section")?.classList.contains("dark"));
-    assert.ok(screen.getByText(HERO.titleAccent).classList.contains("text-brand-gradient-video"));
-    assert.ok(screen.getByText(HERO.lead).classList.contains("text-foreground"));
-    assert.ok(!screen.getByText(HERO.lead).className.includes("/80"));
-    assert.equal(container.querySelectorAll(".mesh, .float-slow").length, 0, "la vidéo remplace les nappes et les carrés");
+  test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire écrit à Alex", () => {
+    render(<PortfolioHero />);
+    assert.equal(screen.getByRole("link", { name: HERO.primary }).getAttribute("href"), "#realisations");
+    assert.ok((screen.getByRole("link", { name: HERO.secondary }) as HTMLAnchorElement).href.startsWith(`mailto:${CONTACT_EMAIL}`));
   });
 });

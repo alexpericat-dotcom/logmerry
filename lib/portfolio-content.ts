@@ -1,10 +1,9 @@
 /**
  * Textes de la page publique `/portfolio` (story 6.4). BROUILLON rédigé par l'assistant à partir du positionnement donné par Alex le 30 octobre 2026
- * (« comprendre l'entreprise pour savoir quoi automatiser », chaîne problème métier → maintenance, compétences) : à relire et valider par Alex avant toute mise en
- * ligne, en particulier la liste des outils (`SKILLS`), qui ne doit annoncer que ce qu'il maîtrise. Règles : vouvoiement ; aucun tarif, délai, chiffre ni garantie ;
- * une donnée inconnue (ville, photo) n'apparaît pas.
+ * (« comprendre l'entreprise pour savoir quoi automatiser », chaîne problème métier → maintenance) : à relire et valider par Alex avant toute mise en
+ * ligne. Règles : vouvoiement ; aucun tarif, délai, chiffre ni garantie ; une donnée inconnue (ville, photo) n'apparaît pas ; aucun outil que
+ * Alex n'a pas validé (`VALIDATED_TOOLS`).
  */
-import type { HeroVideo } from "./domain/hero-video.ts";
 
 export const BRAND = "LogMerry";
 /** Adresse publique du lien « m'écrire » (donnée par Alex le 30 octobre 2026). */
@@ -16,25 +15,19 @@ export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver
 
 export const HERO = {
   eyebrow: "Automatisation & IA pour les entreprises",
-  /** Le H1 en deux temps : l'accroche, puis la fin qui porte le dégradé de la marque. Texte d'Alex (30 octobre 2026), mot pour mot. */
-  titleLead: "Le vent se lève.",
-  titleAccent: "Prenez la barre.",
-  lead: "L'IA et le no-code changent la façon de travailler. Je vous aide à en tirer parti, en partant de vos vrais problèmes.",
-  /** Ligne de preuve sous les boutons : parcours, chiffre ou réalisation, À COMPLÉTER PAR ALEX (ne rien inventer). Tant que c'est `null`, rien ne s'affiche. */
-  proof: null as string | null,
+  /** Le H1 : texte d'Alex (3 novembre 2026), mot pour mot. */
+  title: "Laissez la vague faire le travail.",
+  lead: "La puissance est déjà là : le no-code et l'IA. Je la mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte.",
   primary: "Voir les réalisations",
   secondary: "Parler de votre problème",
-  methodTitle: "Ma méthode",
-  methodStart: "Le point de départ",
-  /**
-   * Vidéo de fond (fournie par Alex, jamais générée) : `null` tant que les fichiers ne sont pas dans `public/video`. Voir `docs/hero-video.md` pour le format et les commandes.
-   * Exemple : { poster: "/video/hero-poster.jpg", webm: "/video/hero.webm", mp4: "/video/hero.mp4", mobile: { webm: "/video/hero-720.webm", mp4: "/video/hero-720.mp4" } }
-   */
-  video: null as HeroVideo | null,
+  /** Ligne de preuve sous les boutons : parcours, chiffre ou réalisation, À ÉCRIRE PAR ALEX (ne rien inventer). Le placeholder reste visible et `lib/portfolio-page.test.ts` bloque la fusion tant qu'il est là. */
+  proof: "[À compléter par Alex : parcours, chiffre ou réalisation]",
+  /** Texte alternatif de la photo (décrit la scène, ne répète pas le titre). */
+  imageAlt: "Un surfeur sur sa planche, au moment de se lever, devant une vague orange et turquoise au coucher du soleil.",
 };
 
-/** Le bandeau d'outils sous le hero : EXACTEMENT cette liste, choisie par Alex (30 octobre 2026), sans notation ni étoiles ; aucun autre outil n'y est ajouté. */
-export const MARQUEE_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"];
+/** Les outils que Alex a validés (30 octobre 2026) : seuls ceux-là peuvent apparaître avec leur logo sur la page, ailleurs que dans les étiquettes de ses réalisations. */
+export const VALIDATED_TOOLS = ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini"];
 
 /** Le positionnement, en une opposition : l'outil d'un côté, le métier de l'autre. */
 export const LEVER = {
@@ -54,6 +47,8 @@ export const PROCESS = {
   eyebrow: "Méthode",
   title: "Du problème métier à la maintenance",
   intro: "Six étapes, et vous gardez la main sur chacune.",
+  /** Épigraphe : traduite et attribuée ; l'usage de cette citation est validé par Alex (3 novembre 2026). */
+  epigraph: { text: "On n'arrête pas les vagues, mais on peut apprendre à surfer.", author: "Jon Kabat-Zinn", source: "Wherever You Go, There You Are, 1994" },
   steps: [
     { title: "Problème métier", text: "Nous partons de ce qui coûte du temps ou de l'énergie à vos équipes, pas d'un outil." },
     { title: "Analyse du processus", text: "Qui fait quoi, avec quelles données, où ça bloque : nous le dessinons ensemble." },
@@ -77,37 +72,23 @@ export const SERVICES = {
   ],
 };
 
-/** Outils et domaines mobilisés. À valider par Alex : ne garder que ce qu'il peut défendre devant un client. */
-export const SKILLS = {
-  eyebrow: "Boîte à outils",
-  title: "Une stack technique choisie sur mesure",
-  intro: "Je ne vous impose pas un outil : je choisis les briques adaptées à votre besoin, à votre taille et à vos contraintes. Voici celles que je mobilise le plus souvent.",
-  note: "Cette liste n'est pas une limite : si un autre outil sert mieux votre projet, je le choisis, ou je m'adapte à celui que vous utilisez déjà.",
-  groups: [
-    { title: "Automatisation et intégration", items: ["n8n", "API", "Webhooks", "JSON", "OAuth"] },
-    { title: "Données", items: ["Supabase", "PostgreSQL", "Notion", "Baserow", "Airtable"] },
-    { title: "Intelligence artificielle", items: ["Claude", "OpenAI", "Gemini", "RAG", "Agents IA"] },
-    { title: "Cadrage et fiabilité", items: ["Architecture", "Sécurité", "RGPD", "Gestion de projet", "Compréhension métier"] },
-  ],
-};
-
-/** Les couches d'une application, et où elle tourne. Les outils cités avec un logo sont dans `lib/portfolio-tools.ts`. À valider par Alex (VPS, auto-hébergement). */
+/** Les couches d'une application, et où elle tourne. Les outils cités avec un logo sont dans `lib/portfolio-tools.ts` et tous dans `VALIDATED_TOOLS`. À valider par Alex (VPS, auto-hébergement). */
 export const STACK = {
   eyebrow: "Architecture",
   title: "Sous le capot",
   intro: "Une application, ce sont plusieurs couches. Je les conçois ensemble, avec une stack technique choisie sur mesure pour votre métier et à votre portée.",
   layers: [
-    { title: "Front", text: "Ce que vos équipes voient : des interfaces claires, rapides et utilisables sur téléphone.", tools: ["Next.js", "React"] },
-    { title: "Back", text: "La logique métier : automatisations, API et connexions entre vos outils, avec un suivi des erreurs.", tools: ["n8n", "Telegram", "Gmail"] },
+    { title: "Front", text: "Ce que vos équipes voient : des interfaces claires, rapides et utilisables sur téléphone.", tools: [] as string[] },
+    { title: "Back", text: "La logique métier : automatisations, API, connexions entre vos outils et modèles d'IA, avec un suivi des erreurs.", tools: ["n8n", "Claude", "OpenAI", "Gemini"] },
     {
       title: "Base de données",
       text: "PostgreSQL, directement ou via Supabase : des données structurées, protégées par compte. Je m'adapte aussi à vos outils actuels.",
-      tools: ["PostgreSQL", "Supabase", "Notion", "Airtable", "Baserow"],
+      tools: ["PostgreSQL", "Supabase", "Baserow", "Airtable"],
     },
     {
       title: "Hébergement et auto-hébergement",
       text: "Chez un hébergeur managé en Europe, ou auto-hébergé sur un serveur privé (VPS) que vous contrôlez : vos automatisations et vos données restent chez vous.",
-      tools: ["Docker"],
+      tools: [] as string[],
     },
     {
       title: "Données personnelles et RGPD",
@@ -124,6 +105,8 @@ export const SHOWCASE = {
   empty: "Les premières réalisations arrivent bientôt.",
   unavailable: "Les réalisations ne sont pas disponibles pour le moment. Revenez dans quelques instants.",
   linkLabel: "Ouvrir le site",
+  /** Étiquettes d'un relevé. « Résultat » et non « Temps rendu » : le champ est un texte libre, pas forcément une durée (aucune migration pour l'instant). */
+  fields: { situation: "Situation", done: "Ce qui a été réalisé", result: "Résultat", stack: "Outils utilisés" },
   liveLabel: "Voir en direct",
 };
 

@@ -13,6 +13,7 @@ export default {
     extend: {
       colors: {
         background: "hsl(var(--background))",
+        photo: "hsl(var(--photo))",
         foreground: "hsl(var(--foreground))",
         card: {
           DEFAULT: "hsl(var(--card))",
@@ -73,6 +74,7 @@ export default {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         brand: ["var(--font-brand)", "var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
         pixel: ["var(--font-pixel)", "var(--font-sans)", "system-ui", "sans-serif"],
       },
       backgroundImage: {

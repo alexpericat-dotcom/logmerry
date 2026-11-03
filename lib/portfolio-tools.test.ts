@@ -32,8 +32,8 @@ test("le dossier des logos documente leur origine, leur licence et que ce sont d
   assert.match(readme, /marques de leurs propriétaires/);
 });
 
-import { MARQUEE_TOOLS } from "./portfolio-content.ts";
+import { VALIDATED_TOOLS } from "./portfolio-content.ts";
 
-test("chaque outil du bandeau du hero a son logo", () => {
-  for (const tool of MARQUEE_TOOLS) assert.ok(toolIconPath(tool), tool);
+test("chaque outil validé a son logo", () => {
+  for (const tool of VALIDATED_TOOLS) assert.ok(toolIconPath(tool), tool);
 });

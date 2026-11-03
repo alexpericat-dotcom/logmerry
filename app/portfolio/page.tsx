@@ -9,11 +9,9 @@ import {
   PortfolioHeader,
   PortfolioHero,
   PortfolioLever,
-  PortfolioMarquee,
   PortfolioProcess,
   PortfolioServices,
   PortfolioShowcaseFrame,
-  PortfolioSkills,
   PortfolioStack,
 } from "@/components/portfolio-sections";
 import { listPublicCards } from "@/lib/db/public-portfolio";
@@ -32,25 +30,23 @@ export const metadata: Metadata = {
 async function Showcase() {
   // `unstable_rethrow` : les signaux internes de Next (rendu dynamique, interruption du prérendu) ne sont jamais pris pour une panne de la base.
   const result = await loadCards(listPublicCards, unstable_rethrow);
-  if ("unavailable" in result) return <p className="rounded-lg border bg-card p-6 text-lg text-muted-foreground">{SHOWCASE.unavailable}</p>;
+  if ("unavailable" in result) return <p className="rounded-md border bg-card p-6 text-lg text-muted-foreground">{SHOWCASE.unavailable}</p>;
   return <PortfolioShowcase cards={result.cards} supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""} />;
 }
 
 export default function PortfolioPage() {
   return (
-    <>
+    <div className="folio min-h-screen bg-background text-foreground">
       <a href="#contenu" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:p-3">
         Aller au contenu
       </a>
       <PortfolioHeader />
       <main id="contenu" tabIndex={-1} className="outline-none">
         <PortfolioHero />
-        <PortfolioMarquee />
         <PortfolioLever />
         <PortfolioProcess />
         <PortfolioServices />
         <PortfolioStack />
-        <PortfolioSkills />
         <PortfolioShowcaseFrame eyebrow={SHOWCASE.eyebrow} title={SHOWCASE.title} intro={SHOWCASE.intro}>
           <Suspense fallback={<p className="text-muted-foreground">Chargement des réalisations…</p>}>
             <Showcase />
@@ -59,6 +55,6 @@ export default function PortfolioPage() {
         <PortfolioContact />
       </main>
       <PortfolioFooter />
-    </>
+    </div>
   );
 }

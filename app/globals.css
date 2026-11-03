@@ -207,21 +207,86 @@
   }
 }
 
-/* Page publique du portfolio (story 6.4) : mouvements doux, jamais obligatoires. Sans `animation-timeline` ou avec « réduire les animations »,
-   tout est affiché tout de suite. Aucun contenu n'est caché par une animation qui ne démarrerait pas. */
+/* Page publique du portfolio (story 6.4), direction « éditoriale » : papier, encre et turquoise tirés de la photo du hero, un seul accent orange, aucun verre
+   dépoli ni ombre dure. Les jetons ne valent que sous `.folio` (l'application garde les siens). Mouvement rare et lent, une seule fois, jamais obligatoire :
+   sans `animation-timeline` ou avec « réduire les animations », tout est affiché tout de suite. Aucune animation ne boucle (rien à mettre en pause, WCAG 2.2.2). */
+@layer base {
+  .folio {
+    --background: 36.5 51.1% 91.2%; /* #F4EBDD papier : dérivé (la photo n'a pas de sable) */
+    --foreground: 84 14.3% 6.9%; /* #12140F encre : pixel le plus sombre de la photo */
+    --card: 40 65.2% 95.5%; /* #FBF6EC */
+    --card-foreground: 84 14.3% 6.9%;
+    --popover: 40 65.2% 95.5%;
+    --popover-foreground: 84 14.3% 6.9%;
+    --primary: 182.2 34.2% 15.5%; /* #1A3435 turquoise profond (mur de la vague) */
+    --primary-foreground: 36.5 51.1% 91.2%;
+    --action-foreground: 84 14.3% 6.9%; /* texte des boutons orange */
+    --photo: 34.7 70.4% 94.7%; /* #FBF3E8 crème : texte posé sur la photo du hero, voile compris (même valeur dans les deux thèmes) */
+    --secondary: 38.7 42.5% 85.7%;
+    --secondary-foreground: 84 14.3% 6.9%;
+    --muted: 38.7 42.5% 85.7%; /* #EADFCB */
+    --muted-foreground: 46.4 14.9% 29%; /* #55503F */
+    --accent: 38.7 42.5% 85.7%;
+    --accent-foreground: 84 14.3% 6.9%;
+    --border: 39.4 31.5% 78.2%; /* #D9CDB6 filet fin */
+    --input: 41.2 15.1% 41.6%; /* #7A705A */
+    --ring: 182.2 34.2% 15.5%;
+    --display: 182.2 34.2% 15.5%;
+    --tone-orange: 25 96.2% 69.2%; /* #FCA465 : ciel le plus clair de la photo, l'unique accent vif (aplat, jamais du texte sur le papier) */
+    --radius: 0.125rem;
+    --shadow-hard: none;
+    --border-w: 1px;
+    --gradient-action: linear-gradient(hsl(var(--tone-orange)), hsl(var(--tone-orange)));
+  }
+  .dark .folio {
+    --background: 185 28.6% 8.2%; /* #0F1A1B turquoise très sombre */
+    --foreground: 36.5 51.1% 91.2%; /* #F4EBDD */
+    --card: 186.3 30.2% 12.4%; /* #162729 */
+    --card-foreground: 36.5 51.1% 91.2%;
+    --popover: 186.3 30.2% 12.4%;
+    --popover-foreground: 36.5 51.1% 91.2%;
+    --primary: 25 96.2% 69.2%; /* #FCA465 */
+    --primary-foreground: 84 14.3% 6.9%;
+    --secondary: 183.8 32% 9.8%;
+    --secondary-foreground: 36.5 51.1% 91.2%;
+    --muted: 183.8 32% 9.8%; /* #112021 */
+    --muted-foreground: 43.2 15.2% 67.6%; /* #B9B2A0 */
+    --accent: 186.3 30.2% 12.4%;
+    --accent-foreground: 36.5 51.1% 91.2%;
+    --border: 182.4 22.5% 21.8%; /* #2B4344 */
+    --input: 43.2 15.2% 67.6%;
+    --ring: 25 96.2% 69.2%;
+    --display: 25 96.2% 69.2%;
+  }
+}
+.folio h1,
+.folio h2,
+.folio h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Voile du hero : encre à 55 % jusqu'à la moitié de la largeur (là où se tient le texte), qui s'efface avant le surfeur. 55 % est calculé pour le PIRE pixel de la zone
+   (#FFC87D, 0,64 de luminance) : crème sur ce pixel voilé = 5,0:1 ; un test relit ces valeurs et refait le calcul. */
+.hero-veil {
+  --veil: 18 20 15;
+  background: linear-gradient(90deg, rgb(var(--veil) / 0.55) 0%, rgb(var(--veil) / 0.55) 50%, rgb(var(--veil) / 0) 76%);
+}
+
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(28px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: none;
   }
 }
-@keyframes float-slow {
-  50% {
-    transform: translateY(-14px) rotate(3deg);
+@keyframes hero-in {
+  from {
+    opacity: 0;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -234,15 +299,9 @@
       animation-range: entry 0% cover 30%;
     }
   }
-  .float-slow {
-    animation: float-slow 7s ease-in-out infinite;
-  }
-  .lift {
-    transition: translate 180ms ease, box-shadow 180ms ease;
-  }
-  /* `translate` et non `transform` : l'animation d'apparition (`forwards`) garde un `transform`, qui l'emporterait sur le survol. */
-  .lift:hover {
-    translate: 0 -4px;
+  .hero-in {
+    animation: hero-in 1100ms ease-out backwards;
+    animation-delay: var(--d, 0ms);
   }
 }
 
@@ -250,195 +309,12 @@
 html:has(#contenu) {
   scroll-padding-top: 5rem;
 }
-/* Impression : rendu statique, sans en-tête collant, sans décor ni hauteur d'écran. */
+/* Impression : rendu statique, sans en-tête collant ni hauteur d'écran. */
 @media print {
   .reveal {
     animation: none !important;
   }
-  .float-slow {
-    display: none !important;
-  }
   header.sticky {
     position: static;
-  }
-  section[aria-labelledby="hero-title"] > div {
-    min-height: 0 !important;
-  }
-}
-
-/* Bandeau d'outils et schéma du hero (page publique) : mouvement seulement si l'utilisateur ne demande pas de le réduire ; sinon le bandeau passe à la ligne. */
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .marquee-track {
-    animation: marquee 38s linear infinite;
-  }
-  .marquee:hover .marquee-track {
-    animation-play-state: paused;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    width: auto;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding-inline: 1rem;
-  }
-  .marquee-dup {
-    display: none;
-  }
-}
-@media print {
-  .marquee-dup {
-    display: none !important;
-  }
-  .marquee-track {
-    animation: none !important;
-    flex-wrap: wrap;
-  }
-}
-
-/* Pause des animations en boucle, choisie par le visiteur (bouton de l'en-tête de la page publique, WCAG 2.2.2). */
-html[data-motion="paused"] .marquee-track,
-html[data-motion="paused"] .mesh,
-html[data-motion="paused"] .float-slow {
-  animation-play-state: paused !important;
-}
-@media print {
-  .marquee-track {
-    width: auto !important;
-  }
-}
-
-/* Hero de la page publique : fond animé très lent, grain, verre, dégradé de texte, entrée en cascade, lueur des boutons. Tout le mouvement est dans
-   `prefers-reduced-motion: no-preference` (transform et opacity seulement) ; sans lui, le hero est complet et immobile. */
-@keyframes hero-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-}
-@keyframes mesh-drift {
-  to {
-    transform: translate3d(7%, 5%, 0) scale(1.12);
-  }
-}
-@keyframes seg-draw {
-  from {
-    transform: scaleY(0);
-  }
-}
-@keyframes parallax {
-  to {
-    transform: translateY(var(--py, -40px));
-  }
-}
-/* Dégradé de texte aux couleurs de la marque (bleu → magenta → orange en clair, violet → rose → orange en sombre : jetons du thème, contrastes de grand texte tenus). */
-.text-brand-gradient {
-  color: hsl(var(--primary));
-}
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .text-brand-gradient {
-    background-image: linear-gradient(95deg, hsl(var(--primary)) 0%, hsl(var(--chart-5)) 55%, hsl(var(--display)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
-}
-@media (forced-colors: active) {
-  .text-brand-gradient {
-    background: none;
-    -webkit-text-fill-color: currentColor;
-    color: CanvasText;
-  }
-}
-/* Sur la vidéo (fond sombre garanti par l'overlay) : les couleurs CLAIRES de la marque, dont le contraste de grand texte (3:1) est calculé pour le pire pixel (`lib/domain/hero-video.ts`). */
-.text-brand-gradient-video {
-  color: hsl(var(--tone-pink));
-}
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .text-brand-gradient-video {
-    background-image: linear-gradient(95deg, hsl(var(--tone-violet)) 0%, hsl(var(--tone-pink)) 55%, hsl(var(--tone-orange)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-  }
-}
-@media (forced-colors: active) {
-  .text-brand-gradient-video {
-    background: none;
-    -webkit-text-fill-color: currentColor;
-    color: CanvasText;
-  }
-}
-.glass {
-  background: hsl(var(--card) / 0.55);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--foreground) / 0.16);
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass {
-    background: hsl(var(--card) / 0.92);
-  }
-}
-.mesh {
-  position: absolute;
-  border-radius: 9999px;
-  will-change: transform;
-}
-.grain {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");
-  opacity: 0.07;
-}
-/* Lueur au survol et au focus : un halo qui apparaît (opacité seulement) derrière le bouton. */
-.cta-glow {
-  position: relative;
-  isolation: isolate;
-}
-.cta-glow::after {
-  content: "";
-  position: absolute;
-  inset: -10px;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(closest-side, hsl(var(--tone-orange) / 0.65), transparent);
-  opacity: 0;
-  transition: opacity 220ms ease;
-}
-.cta-glow:hover::after,
-.cta-glow:focus-visible::after {
-  opacity: 1;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .hero-in {
-    animation: hero-in 480ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-    animation-delay: var(--d, 0ms);
-  }
-  .mesh {
-    animation: mesh-drift 38s ease-in-out infinite alternate;
-  }
-  .method-seg {
-    transform-origin: top;
-    animation: seg-draw 500ms ease-out backwards;
-    animation-delay: var(--d, 0ms);
-  }
-  @supports (animation-timeline: scroll()) {
-    .parallax {
-      animation: parallax linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-  }
-}
-@media print {
-  .mesh,
-  .grain {
-    display: none !important;
   }
 }
