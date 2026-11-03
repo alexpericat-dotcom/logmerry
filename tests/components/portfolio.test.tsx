@@ -318,6 +318,17 @@ describe("en-tête", () => {
     assert.equal(screen.queryByRole("link", { name: /M'écrire/ }), null);
   });
 
+  test("la lune du thème réagit au survol exactement comme « Qui suis-je » (mêmes classes, même taille, icône à la couleur du texte)", () => {
+    render(<PortfolioHeader />);
+    const moon = screen.getByRole("button", { name: "Changer de thème" });
+    const about = screen.getByRole("link", { name: HEADER.about });
+    for (const cls of ["hover:bg-accent", "hover:text-accent-foreground", "group-data-[scrolled=false]/header:hover:bg-photo/15", "group-data-[scrolled=false]/header:hover:text-photo", "rounded-md", "md:h-9"]) {
+      assert.ok(moon.className.split(" ").includes(cls), `la lune n'a pas ${cls}`);
+      assert.ok(about.className.split(" ").includes(cls), `« Qui suis-je » n'a pas ${cls}`);
+    }
+    assert.ok(moon.querySelector("svg")?.getAttribute("class")?.includes("text-current"), "l'icône suit la couleur du bouton, donc son survol");
+  });
+
   test("sur la photo au chargement, puis translucide et flou dès que la page défile (et retour en haut)", async () => {
     const { container } = render(<PortfolioHeader />);
     const header = container.querySelector("header") as HTMLElement;
@@ -472,6 +483,13 @@ describe("hero", () => {
     const veil = container.querySelector(".hero-veil");
     assert.equal(veil?.getAttribute("aria-hidden"), "true");
     assert.ok(screen.getByText((_, el) => el?.tagName === "P" && el.textContent === HERO.lead).closest("[class*='lg:text-photo']"));
+  });
+
+  test("les deux boutons restent côte à côte sur grand écran (sans retour à la ligne) ; ils passent l'un sous l'autre seulement sur téléphone", () => {
+    render(<PortfolioHero />);
+    const row = screen.getByRole("link", { name: HERO.primary }).parentElement as HTMLElement;
+    assert.ok(row.className.includes("lg:flex-nowrap") && row.className.includes("lg:w-max") && row.className.includes("flex-wrap"));
+    assert.equal(row.querySelectorAll("a.liquid").length, 2);
   });
 
   test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire écrit à Alex", () => {

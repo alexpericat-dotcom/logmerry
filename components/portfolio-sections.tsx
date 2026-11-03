@@ -62,8 +62,8 @@ export function PortfolioHeader() {
               {label}
             </a>
           ))}
-          <ThemeSwitcher />
-          <a href="#qui-suis-je" className="inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium hover:bg-accent hover:text-accent-foreground group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo md:h-9">
+          <ThemeSwitcher className={`rounded-md px-3 md:h-9 ${GHOST_HOVER}`} iconClassName="text-current" />
+          <a href="#qui-suis-je" className={`inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium md:h-9 ${GHOST_HOVER}`}>
             {HEADER.about}
           </a>
           <LiquidButton href="#contact" tone="orange" size="sm" className="ml-1 px-8">
@@ -74,6 +74,9 @@ export function PortfolioHeader() {
     </PortfolioHeaderFrame>
   );
 }
+
+/** Survol des liens et boutons « fantômes » de l'en-tête : fond et texte accent sur la page, voile crème sur la photo. Le même pour « Qui suis-je » et pour la lune. */
+const GHOST_HOVER = "hover:bg-accent hover:text-accent-foreground group-data-[scrolled=false]/header:hover:bg-photo/15 group-data-[scrolled=false]/header:hover:text-photo";
 
 const IMAGE = "/images/hero/hero";
 /** Sources de la photo : AVIF puis WebP ; cadrage large dès 1024 px, cadrage 4:3 centré sur le surfeur en dessous. Les tailles sont celles de `scripts/build-hero-image.mjs`. */
@@ -129,7 +132,7 @@ export function PortfolioHero() {
               </Fragment>
             ))}
           </p>
-          <div className="hero-in flex flex-wrap items-center gap-3" style={delay(360)}>
+          <div className="hero-in flex flex-wrap items-center gap-3 lg:w-max lg:flex-nowrap" style={delay(360)}>
             <LiquidButton href="#realisations" tone="orange" size="lg" className="group">
               {HERO.primary}
               <ArrowRight size={18} aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
