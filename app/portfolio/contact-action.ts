@@ -13,7 +13,7 @@ const text = (formData: FormData, key: string) => {
 
 /**
  * Formulaire de contact public. Aucune session requise : le message passe par la fonction SQL `submit_contact_message`, la seule porte ouverte à `anon`
- * (elle valide, plafonne à 10 messages par heure et écrit une note en brouillon chez le destinataire désigné).
+ * (elle valide, plafonne et écrit une note en brouillon chez le destinataire désigné).
  */
 export async function sendContactMessage(_prev: ContactMessageState, formData: FormData): Promise<ContactMessageState> {
   const values = { name: text(formData, "name"), email: text(formData, "email"), message: text(formData, "message") };
