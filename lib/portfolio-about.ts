@@ -31,11 +31,27 @@ export const ABOUT = {
   pathNote: "Dans l'e-commerce",
   /** Au passé : Alex n'est plus en poste, 2024–2026 est une période terminée. `iso` alimente la balise <time>. */
   path: [
-    { from: { iso: "2011", text: "2011" }, to: { iso: "2021", text: "2021" }, role: "Photographe packshot" },
-    { from: { iso: "2021", text: "2021" }, to: { iso: "2024", text: "2024" }, role: "Responsable adjoint, service photo et préparation de produits" },
-    { from: { iso: "2024", text: "2024" }, to: { iso: "2026", text: "2026" }, role: "Responsable du service qualité (poste créé)" },
+    { from: { iso: "2011", text: "2011" }, to: { iso: "2021", text: "2021" }, role: "Photographe packshot", details: ["Mettre en valeur des produits (lumière, disposition, prise de vue, retouche) en fonction de notre cahier des charges."] },
+    { from: { iso: "2021", text: "2021" }, to: { iso: "2024", text: "2024" }, role: "Responsable adjoint, service photo et préparation de produits",
+      details: [
+        "Manager les effectifs répartis dans différents services.",
+        "Gérer le flux de marchandise et la chaîne de production en lien avec le service commercial.",
+        "Recherche et développement. Améliorer la qualité (ergonomie, lumière, images, scripts/actions Adobe Photoshop ou Capture One), augmenter la productivité, faire baisser le coût à la photo, économies d'énergie, de papier.",
+        "Diriger un groupe de travail en lien avec la R&D.",
+        "Conception et mise en place de nouveaux workflows/process. Former les effectifs à ces derniers.",
+      ],
+    },
+    { from: { iso: "2024", text: "2024" }, to: { iso: "2026", text: "2026" }, role: "Responsable du service qualité (poste créé)",
+      details: [
+        "Manager une équipe de six à huit personnes.",
+        "Gérer différents flux et la chaîne de production en lien avec le service commercial.",
+        "Anticiper et résoudre des problèmes en relation avec les différents services.",
+        "Recherche et développement. Améliorer l'ergonomie des postes, les process de production, imaginer des solutions futures.",
+        "Piloter la performance avec la création d'indicateurs.",
+      ],
+    },
     { lead: "Depuis", from: { iso: "2026-06", text: "juin 2026" }, role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027" },
-  ] as Array<{ lead?: string; from: { iso: string; text: string }; to?: { iso: string; text: string }; role: string }>,
+  ] as Array<{ lead?: string; from: { iso: string; text: string }; to?: { iso: string; text: string }; role: string; details?: string[] }>,
   /** Grande phrase de fin : celle déjà publiée sur `/portfolio`. */
   closing: CONTACT.title,
   cta: { label: "Parler de votre problème", href: "/portfolio#contact" },

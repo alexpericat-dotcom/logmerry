@@ -20,7 +20,6 @@ export const metadata: Metadata = {
 /** Étiquette en monospace, comme sur la page principale. */
 const MONO = "font-mono text-phi-n1 uppercase tracking-[0.18em]";
 /** Grain léger sur la photo : bruit SVG en surimpression, sans fichier ni couleur ajoutés. */
-const GRAIN = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 /** Une mention de section : « 02 — Introduction ». Le numéro est décoratif pour les lecteurs d'écran. */
 function SectionLabel({ n, children }: { n: string; children: string }) {
@@ -57,7 +56,7 @@ export default function AboutPage() {
             <span aria-hidden="true">01 — </span>
             Qui suis-je
           </p>
-          <h1 id="titre" className="reveal mt-phi-1 break-words text-[clamp(3rem,13vw,9.5rem)] leading-[0.95]">
+          <h1 id="titre" className="reveal mt-phi-1 break-words text-[clamp(2.25rem,8vw,5.5rem)] leading-[0.95]">
             Je viens du terrain.
           </h1>
           <ul className={`${MONO} mt-phi-2 flex flex-wrap gap-x-8 gap-y-2 border-y py-4 text-foreground`}>
@@ -85,7 +84,6 @@ export default function AboutPage() {
                   unoptimized
                   className="aspect-[4/3] h-auto w-full object-cover object-[50%_40%] lg:aspect-[4/5]"
                 />
-                <span aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: GRAIN }} />
               </div>
             </figure>
           </div>
@@ -94,13 +92,13 @@ export default function AboutPage() {
               <SectionLabel n="02">{ABOUT.sections.intro}</SectionLabel>
             </div>
             <div className="mt-phi-1 max-w-2xl space-y-phi-1 text-phi-1">
-              <p className="reveal font-serif text-phi-3 leading-snug md:text-phi-4">{ABOUT.intro[0]}</p>
+              <p className="reveal font-serif text-phi-2 leading-snug md:text-phi-3">{ABOUT.intro[0]}</p>
               {ABOUT.intro.slice(1).map((p, i) => (
                 <p key={p} style={{ "--i": i } as React.CSSProperties} className="reveal text-muted-foreground">
                   {p}
                 </p>
               ))}
-              <blockquote className="reveal-right my-phi-2 border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{ABOUT.quote}</blockquote>
+              <blockquote className="reveal-right my-phi-2 border-l-4 border-tone-orange pl-6 font-serif text-phi-2 md:text-phi-3">{ABOUT.quote}</blockquote>
               <p className="reveal">{ABOUT.sport}</p>
             </div>
           </div>
@@ -111,7 +109,7 @@ export default function AboutPage() {
           <div id="sobriete" className="reveal lg:col-span-4">
             <SectionLabel n="03">{ABOUT.sections.impact}</SectionLabel>
           </div>
-          <p className="reveal max-w-2xl font-serif text-phi-2 leading-snug md:text-phi-3 lg:col-span-8">{ABOUT.impact}</p>
+          <p className="reveal max-w-2xl font-serif text-phi-1 leading-snug md:text-phi-2 lg:col-span-8">{ABOUT.impact}</p>
         </section>
 
         {/* 04 : parcours */}
@@ -136,7 +134,16 @@ export default function AboutPage() {
                       </>
                     )}
                   </p>
-                  <p className="mt-2 font-serif text-phi-2 md:text-phi-3">{step.role}</p>
+                  <p className="mt-2 font-serif text-phi-1 md:text-phi-2">{step.role}</p>
+                  {step.details && (
+                    <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                      {step.details.map((d) => (
+                        <li key={d} className="relative pl-4 before:absolute before:left-0 before:top-[0.6em] before:size-1 before:rounded-full before:bg-foreground/40">
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               );
             })}
@@ -145,7 +152,7 @@ export default function AboutPage() {
 
         {/* Fin */}
         <section aria-labelledby="fin" className="border-t py-phi-4 md:py-phi-5">
-          <h2 id="fin" className="reveal break-words text-[clamp(2.25rem,8vw,6rem)] leading-[1]">
+          <h2 id="fin" className="reveal break-words text-[clamp(1.75rem,5vw,3.75rem)] leading-[1]">
             {ABOUT.closing}.
           </h2>
           <div className="reveal mt-phi-2">
