@@ -9,10 +9,14 @@ import { CONTACT } from "./portfolio-content.ts";
 
 export type TimelineStep = {
   lead?: string;
+  /** Point plein : ce qui est en cours. */
+  current?: boolean;
   from?: { iso: string; text: string };
   to?: { iso: string; text: string };
   role: string;
   where?: string;
+  /** Référence au Répertoire national des certifications professionnelles, avec le lien de la fiche officielle. */
+  rncp?: { label: string; href: string };
   details?: string[];
   /** Compétences avec, au besoin, les outils associés (logo si connu, sinon pastille avec le nom). */
   skills?: Array<{ label: string; tools?: string[] }>;
@@ -62,7 +66,7 @@ export const ABOUT = {
         "Piloter la performance avec la création d'indicateurs.",
       ],
     },
-    { lead: "Depuis", from: { iso: "2026-06", text: "juin 2026" }, role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027",
+    { lead: "Depuis", current: true, from: { iso: "2026-06", text: "juin 2026" }, role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027",
       groups: [
         {
           title: "Compétences techniques et no-code",
@@ -97,6 +101,13 @@ export const ABOUT = {
   training: [
     { from: { iso: "2005", text: "2005" }, role: "Baccalauréat ES", where: "Lycée Gay-Lussac, Limoges" },
     { from: { iso: "2008", text: "2008" }, to: { iso: "2009", text: "2009" }, role: "CAP Photographe", where: "Cifap" },
+    {
+      lead: "Prévu",
+      from: { iso: "2027-02", text: "février 2027" },
+      role: "Product builder no code",
+      where: "Titre certifié par Global Digital University",
+      rncp: { label: "RNCP41766 · niveau 6", href: "https://www.francecompetences.fr/recherche/rncp/41766" },
+    },
     { role: "Formations", details: ["Pilotage de la performance", "Gestion du changement", "Management"] },
     {
       role: "Compétences",

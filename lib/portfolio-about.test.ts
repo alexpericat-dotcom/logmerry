@@ -40,9 +40,10 @@ test("ni adresse, téléphone ni e-mail en clair ; pas de mot « logistique »",
 test("le seul chiffre est celui de la frise ; le bouton mène à la section de contact existante, sans formulaire inventé", () => {
   const withoutPath = JSON.stringify({ ...ABOUT, path: [], training: [], facts: [], photo: null });
   assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise et de la bande de faits");
-  const trainingText = JSON.stringify(ABOUT.training, (k, v) => (k === "from" || k === "to" ? undefined : v));
+  const trainingText = JSON.stringify(ABOUT.training, (k, v) => (k === "from" || k === "to" || k === "rncp" ? undefined : v));
   assert.ok(!/\d/.test(trainingText.replaceAll("n8n", "")), "dans la frise de formation, seuls les diplômes portent une date (from, to)");
-  assert.ok(ABOUT.training.every((t) => !t.from || /^\d{4}$/.test(t.from.iso)), "les dates de diplôme sont des années");
+  assert.ok(ABOUT.training.every((t) => !t.rncp || (/^RNCP\d{5} · niveau \d$/.test(t.rncp.label) && t.rncp.href === `https://www.francecompetences.fr/recherche/rncp/${t.rncp.label.slice(4, 9)}`)), "le numéro RNCP pointe vers sa fiche officielle");
+  assert.ok(ABOUT.training.every((t) => !t.from || /^\d{4}(-\d{2})?$/.test(t.from.iso)), "les dates de diplôme sont des années");
   assert.equal(ABOUT.cta.label, "Parler de votre problème");
   assert.equal(ABOUT.cta.href, "/portfolio#contact");
 });

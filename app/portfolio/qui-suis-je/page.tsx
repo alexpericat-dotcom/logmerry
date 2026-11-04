@@ -40,7 +40,7 @@ function Timeline({ steps }: { steps: readonly TimelineStep[] }) {
       <span aria-hidden="true" className="spine absolute left-[5px] top-2 h-[calc(100%-1rem)] w-px bg-foreground/40" />
       {steps.map((step, i) => (
         <li key={(step.from?.iso ?? "") + step.role} style={{ "--i": i } as React.CSSProperties} className="reveal group relative pb-phi-2 pl-8 last:pb-0">
-          <span aria-hidden="true" className={`absolute left-0 top-2 size-[11px] rounded-full border-2 border-tone-orange transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none ${step.lead ? "bg-tone-orange" : "bg-background"}`} />
+          <span aria-hidden="true" className={`absolute left-0 top-2 size-[11px] rounded-full border-2 border-tone-orange transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none ${step.current ? "bg-tone-orange" : "bg-background"}`} />
           {step.from && (
             <p className={`${MONO} mb-2 text-muted-foreground`}>
               {step.lead && `${step.lead} `}
@@ -54,6 +54,14 @@ function Timeline({ steps }: { steps: readonly TimelineStep[] }) {
           )}
           <p className="font-serif text-phi-1 md:text-phi-2">{step.role}</p>
           {step.where && <p className="mt-1 text-sm text-muted-foreground">{step.where}</p>}
+          {step.rncp && (
+            <p className={`${MONO} mt-2`}>
+              <a href={step.rncp.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-tone-orange">
+                {step.rncp.label}
+                <span className="sr-only"> (fiche officielle France Compétences, nouvel onglet)</span>
+              </a>
+            </p>
+          )}
           {step.groups?.map((g) => (
             <div key={g.title} className="mt-4">
               <p className={`${MONO} text-muted-foreground`}>{g.title}</p>
