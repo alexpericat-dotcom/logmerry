@@ -22,7 +22,7 @@ import { DOSSIER_IMAGES } from "../../components/dossier-images.ts";
 import { PortfolioShowcaseFilter } from "../../components/portfolio-showcase-filter.tsx";
 import { SKETCH_NAMES, Sketch } from "../../components/sketches.tsx";
 import { buildCards, type PublicImage, type PublicRealisation } from "../../lib/domain/portfolio.ts";
-import { CONTACT_EMAIL, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
+import { CONTACT, HEADER, HERO, LEVER, PROCESS, SERVICES, SHOWCASE, STACK, VALIDATED_TOOLS } from "../../lib/portfolio-content.ts";
 import { DOSSIERS, UMARIS_ID } from "../../lib/portfolio-dossiers.ts";
 import { toPublicCards } from "../../lib/domain/portfolio.ts";
 
@@ -48,6 +48,9 @@ const item = (over: Partial<PublicRealisation> = {}): PublicRealisation => ({
 });
 const img = (id: string, alt: string): PublicImage => ({ id, realisation_id: "r1", path: `u/r1/${id}.png`, alt, created_at: `2026-10-30T10:0${id}:00Z` });
 const showcase = (items: PublicRealisation[], images: PublicImage[] = []) => <PortfolioShowcase cards={buildCards(items, images)} supabaseUrl="https://x.supabase.co" />;
+
+/** Action d'envoi factice : ces tests regardent le rendu, pas l'envoi (testé dans `lib/domain/contact-message.test.ts`). */
+const noAction = async () => ({});
 
 describe("réalisations de la page publique", () => {
   test("une carte : titre, description, origine, client, outils, lien externe sûr", () => {
@@ -148,19 +151,27 @@ describe("sections de la page", () => {
       <PortfolioProcess />
       <PortfolioServices />
       <PortfolioStack />
-      <PortfolioContact />
+      <PortfolioContact action={noAction} />
       <PortfolioFooter />
     </>
   );
 
-  test("un seul titre de niveau 1 (l'accroche) ; contact en mailto avec l'adresse donnée", () => {
+  test("un seul titre de niveau 1 (l'accroche) ; le contact passe par le formulaire, jamais par une adresse affichée", () => {
     render(page());
     const h1 = screen.getAllByRole("heading", { level: 1 });
     assert.equal(h1.length, 1);
     assert.equal(h1[0].textContent, HERO.title);
-    const mails = screen.getAllByRole("link", { name: /M'écrire|Parler de votre problème|alexandre/ }) as HTMLAnchorElement[];
-    assert.ok(mails.length >= 3);
-    for (const a of mails) assert.ok(a.href.startsWith(`mailto:${CONTACT_EMAIL}`), a.href);
+    assert.equal(document.querySelector('a[href^="mailto:"]'), null, "aucun lien mailto");
+    assert.ok(!/@/.test(document.body.textContent ?? ""), "aucune adresse e-mail affichée");
+    assert.equal(screen.getByRole("link", { name: HERO.secondary }).getAttribute("href"), "#contact");
+    const form = document.querySelector("#contact form") as HTMLFormElement;
+    assert.ok(form, "le formulaire est dans la section de contact");
+    for (const label of [CONTACT.form.name, CONTACT.form.email, CONTACT.form.message]) assert.ok(screen.getByLabelText(label), label);
+    assert.ok(screen.getByRole("button", { name: CONTACT.form.send }));
+    assert.ok(screen.getByText(CONTACT.form.privacy));
+    const trap = form.querySelector('input[name="website"]') as HTMLInputElement;
+    assert.equal(trap.tabIndex, -1);
+    assert.ok(trap.closest('[aria-hidden="true"]'), "le champ piège est caché des lecteurs d'écran");
   });
 
   test("les six étapes forment une liste ordonnée titrée ; les cinq formules sont des cartes titrées", () => {
@@ -407,7 +418,7 @@ describe("croquis", () => {
         <PortfolioProcess />
         <PortfolioServices />
         <PortfolioStack />
-        <PortfolioContact />
+        <PortfolioContact action={noAction} />
       </>,
     );
     const sketches = container.querySelectorAll("svg.sketch");
@@ -525,10 +536,10 @@ describe("hero", () => {
     assert.equal(row.querySelectorAll("a.liquid").length, 2);
   });
 
-  test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire écrit à Alex", () => {
+  test("les deux boutons demandés ; le principal mène aux réalisations, le secondaire au formulaire de contact", () => {
     render(<PortfolioHero />);
     assert.equal(screen.getByRole("link", { name: HERO.primary }).getAttribute("href"), "#realisations");
-    assert.ok((screen.getByRole("link", { name: HERO.secondary }) as HTMLAnchorElement).href.startsWith(`mailto:${CONTACT_EMAIL}`));
+    assert.equal(screen.getByRole("link", { name: HERO.secondary }).getAttribute("href"), "#contact");
   });
 });
 

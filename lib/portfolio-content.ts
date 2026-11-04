@@ -6,9 +6,6 @@
  */
 
 export const BRAND = "LogMerry";
-/** Adresse publique du lien « m'écrire » (donnée par Alex le 30 octobre 2026). */
-export const CONTACT_EMAIL = "alexandre.pericat@gmail.com";
-export const CONTACT_SUBJECT = "Prise de contact via votre portfolio";
 
 export const PAGE_TITLE = `${BRAND} · Automatisation & IA pour les entreprises`;
 export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver ce qu'il faut automatiser, puis je construis l'automatisation, l'IA et les données qui le résolvent. Réalisations et méthode.";
@@ -142,7 +139,21 @@ export const SHOWCASE = {
 export const CONTACT = {
   title: "Parlons de votre problème",
   text: "Décrivez-moi ce qui prend du temps à vos équipes. Je reviens vers vous avec des questions et des pistes.",
-  button: "M'écrire",
+  /**
+   * Formulaire (4 novembre 2026, option A : l'adresse n'est plus affichée). BROUILLON de l'assistant, à valider par Alex : la mention sur l'usage des données
+   * est une description de ce que fait l'application (les messages arrivent dans ses notes, en brouillon), pas un avis juridique.
+   */
+  form: {
+    name: "Votre nom",
+    email: "Votre adresse e-mail",
+    message: "Votre message",
+    send: "Envoyer",
+    sending: "Envoi en cours…",
+    success: "Merci, votre message est bien envoyé.",
+    fail: "Le message n'a pas pu être envoyé. Réessayez dans un instant.",
+    rate: "Trop de messages en ce moment. Réessayez un peu plus tard.",
+    privacy: "Votre nom, votre adresse e-mail et votre message ne servent qu'à vous répondre.",
+  },
 };
 
 export const LOGOS_NOTE = "Les logos appartiennent à leurs propriétaires et ne désignent que les outils utilisés.";

@@ -238,8 +238,3 @@ test("composition de la page : toutes les sections, dans l'ordre, une seule fois
   assert.ok(/<main id="contenu"/.test(body), "le lien d'évitement vise <main id=contenu>");
 });
 
-test("contact : le lien « m'écrire » porte l'objet encodé du courriel", async () => {
-  const { mailtoHref } = await import("./domain/portfolio.ts");
-  const { CONTACT_EMAIL, CONTACT_SUBJECT } = await import("./portfolio-content.ts");
-  assert.equal(mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT), `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(CONTACT_SUBJECT)}`);
-});

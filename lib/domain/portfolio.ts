@@ -92,5 +92,3 @@ export function buildCards(items: PublicRealisation[], images: PublicImage[]): P
     }));
 }
 
-/** Lien « m'écrire » : l'objet est encodé, l'adresse jamais réécrite. */
-export const mailtoHref = (email: string, subject: string) => `mailto:${email}?subject=${encodeURIComponent(subject)}`;
