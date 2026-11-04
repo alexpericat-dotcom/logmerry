@@ -73,7 +73,7 @@ export default function AboutPage() {
         {/* 02 : introduction, photo collante à gauche */}
         <section aria-labelledby="intro" className="grid gap-phi-2 border-t py-phi-3 md:py-phi-4 lg:grid-cols-12 lg:gap-phi-3">
           <div className="lg:col-span-4">
-            <figure className="reveal-left lg:sticky lg:top-8">
+            <figure className="lg:sticky lg:top-8">
               <div className="relative overflow-hidden rounded-sm border">
                 <Image
                   src={photo.src}
@@ -82,6 +82,7 @@ export default function AboutPage() {
                   alt={photo.alt}
                   sizes="(min-width: 1024px) 400px, 100vw"
                   priority
+                  unoptimized
                   className="aspect-[4/3] h-auto w-full object-cover object-[50%_40%] lg:aspect-[4/5]"
                 />
                 <span aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: GRAIN }} />
