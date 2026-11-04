@@ -41,7 +41,7 @@ test("le seul chiffre est celui de la frise ; le bouton mène à la section de c
   const withoutPath = JSON.stringify({ ...ABOUT, path: [], training: [], facts: [], photo: null });
   assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise et de la bande de faits");
   const trainingText = JSON.stringify(ABOUT.training, (k, v) => (k === "from" || k === "to" ? undefined : v));
-  assert.ok(!/\d/.test(trainingText), "dans la frise de formation, seuls les diplômes portent une date (from, to)");
+  assert.ok(!/\d/.test(trainingText.replaceAll("n8n", "")), "dans la frise de formation, seuls les diplômes portent une date (from, to)");
   assert.ok(ABOUT.training.every((t) => !t.from || /^\d{4}$/.test(t.from.iso)), "les dates de diplôme sont des années");
   assert.equal(ABOUT.cta.label, "Parler de votre problème");
   assert.equal(ABOUT.cta.href, "/portfolio#contact");
@@ -69,8 +69,9 @@ test("aucun terme d'écoblanchiment dans les pages publiques, et rien d'affirmé
   assert.ok(PUBLIC_FILES.includes("lib/portfolio-about.ts"));
 });
 
-test("bande de faits : uniquement les trois validés ; citation extraite du premier paragraphe ; aucun logo d'outil ni d'employeur", () => {
+test("bande de faits : uniquement les trois validés ; citation extraite du premier paragraphe ; logos d'outils permis (demande d'Alex du 4 novembre 2026), jamais d'employeur", () => {
   assert.deepEqual(ABOUT.facts, ["15 ans d'e-commerce", "3 postes", "1 poste créé"]);
   assert.ok(ABOUT.intro[0].includes(ABOUT.quote.slice(3, -1)), "la citation est dans le texte");
-  assert.ok(!/ToolIcon|tool-icon/.test(readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8")));
+  const page = readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8");
+  assert.ok(!/modz/i.test(page + JSON.stringify(ABOUT)), "aucun nom ni logo d'employeur");
 });

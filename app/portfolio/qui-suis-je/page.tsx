@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { LogoMark } from "@/components/logo-mark";
 import { LiquidButton } from "@/components/portfolio-sections";
+import { ToolIcon } from "@/components/tool-icon";
 import { ScrollEffects } from "@/components/scroll-effects";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ABOUT, type TimelineStep } from "@/lib/portfolio-about";
@@ -65,6 +66,25 @@ function Timeline({ steps }: { steps: readonly TimelineStep[] }) {
               </ul>
             </div>
           ))}
+          {step.skills && (
+            <ul className="mt-3 space-y-2.5 text-sm text-muted-foreground">
+              {step.skills.map((k) => (
+                <li key={k.label} className={BULLET}>
+                  {k.label}
+                  {k.tools && (
+                    <span className="mt-1.5 flex flex-wrap gap-1.5">
+                      {k.tools.map((t) => (
+                        <span key={t} className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs text-foreground">
+                          <ToolIcon tool={t} size={13} />
+                          {t}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
           {step.details && (
             <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
               {step.details.map((d) => (

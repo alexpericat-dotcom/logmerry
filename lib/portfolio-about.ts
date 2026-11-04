@@ -14,6 +14,8 @@ export type TimelineStep = {
   role: string;
   where?: string;
   details?: string[];
+  /** Compétences avec, au besoin, les outils associés (logo si connu, sinon pastille avec le nom). */
+  skills?: Array<{ label: string; tools?: string[] }>;
   groups?: Array<{ title: string; items: string[] }>;
 };
 
@@ -91,14 +93,32 @@ export const ABOUT = {
     },
   ] as TimelineStep[],
   trainingNote: "Formation et compétences",
-  /** Frise de gauche (CV d'Alex, 4 novembre 2026). Datée seulement pour les diplômes ; l'ordre des formations et compétences sans date n'implique aucune chronologie. */
+  /** Frise de gauche (CV d'Alex, 4 novembre 2026). Datée seulement pour les diplômes ; l'ordre des formations et compétences sans date n'implique aucune chronologie ; les compétences vont de la plus utile à l'activité de conseil (no-code, IA, méthode) à la moins liée (photo). */
   training: [
     { from: { iso: "2005", text: "2005" }, role: "Baccalauréat ES", where: "Lycée Gay-Lussac, Limoges" },
     { from: { iso: "2008", text: "2008" }, to: { iso: "2009", text: "2009" }, role: "CAP Photographe", where: "Cifap" },
     { role: "Formations", details: ["Pilotage de la performance", "Gestion du changement", "Management"] },
     {
       role: "Compétences",
-      details: ["Lumière", "Adobe Photoshop", "Capture One", "Optimisation de processus", "Gestion d'équipe", "Gestion de flux", "Résolution de problèmes", "Esprit critique", "Curiosité intellectuelle", "Anglais"],
+      skills: [
+        { label: "Développement web et mobile no-code", tools: ["Bubble", "FlutterFlow", "Glide", "Softr", "Webflow"] },
+        { label: "Automatisation et optimisation de processus", tools: ["Make", "Zapier", "n8n"] },
+        { label: "Intégration d'IA dans les produits", tools: ["Claude", "ChatGPT", "Mistral AI"] },
+        { label: "Agents IA et chatbots" },
+        { label: "Ingénierie de prompt" },
+        { label: "Bases de données relationnelles et API", tools: ["Airtable", "Xano", "Supabase"] },
+        { label: "Cadrage produit : user stories, MVP" },
+        { label: "Méthodes agiles (Scrum, Kanban)" },
+        { label: "Design d'interface et UX/UI", tools: ["Figma"] },
+        { label: "Recette et assurance qualité" },
+        { label: "Gestion de flux" },
+        { label: "Gestion d'équipe" },
+        { label: "Résolution de problèmes" },
+        { label: "Esprit critique" },
+        { label: "Curiosité intellectuelle" },
+        { label: "Anglais" },
+        { label: "Lumière", tools: ["Adobe Photoshop", "Capture One"] },
+      ],
     },
   ] as TimelineStep[],
   /** Grande phrase de fin : celle déjà publiée sur `/portfolio`. */
