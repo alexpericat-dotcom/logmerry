@@ -117,3 +117,5 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Réalisation « Automatisation des inscriptions à des ateliers » : remplir les trois emplacements `[À COMPLÉTER PAR MOI : ...]` (description, raisons du choix de Baserow, validation), choisir son statut, puis le test `lib/portfolio-placeholders.test.ts` passe. Branche `feat/realisation-design-choice` non fusionnable avant.
 
 - Protection « Publier » contre les emplacements `[À COMPLÉTER PAR MOI` : faite côté application (6 novembre 2026). Reste hors garde : la base elle-même ne refuse pas (pas de contrainte SQL), seule l'action serveur la porte.
+
+- « Qui suis-je » (4 novembre 2026) : rendu clair et sombre à 390 px contrôlé, rien à corriger. Restent : relecture d'Alex en local, décision de la PR de `feat/about-page` (dépend de la chaîne #97), formulaire de contact (option A), liste d'exceptions `ALLOWED` du test d'écoblanchiment à valider par Alex.
