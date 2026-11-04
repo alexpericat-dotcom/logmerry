@@ -10,10 +10,10 @@ import { CONTACT } from "./portfolio-content.ts";
 export const ABOUT = {
   eyebrow: "Qui suis-je",
   title: "Je viens du terrain.",
-  /** Brouillon d'Alex (4 novembre 2026), mot pour mot, apostrophes typographiques comprises. */
+  /** Texte d'Alex (4 novembre 2026, nouvelle version), mot pour mot, apostrophes typographiques comprises. */
   intro: [
-    "Pendant quinze ans, dans l’e-commerce, j’ai été photographe packshot, puis responsable adjoint d’un service photo, puis responsable d’un service qualité, un poste créé. J’en retiens qu’un process se juge à ce que les gens y font vraiment, pas à ce qui est écrit sur le papier.",
-    "J’y ai conçu des workflows, formé des équipes, créé des indicateurs et mis en place des scripts pour gagner du temps sur les tâches répétitives. L’automatisation n’est pas nouvelle pour moi : seuls les outils ont changé.",
+    "Pendant quinze ans, dans l’e-commerce, j’ai été photographe packshot, responsable adjoint du service photo, puis responsable qualité (un poste créé). J’y ai pris un réflexe : aller voir comment le travail se fait vraiment, avant de proposer quoi que ce soit.",
+    "Au fil de ces années, j’ai conçu des workflows, formé des équipes, créé des indicateurs de performance et mis en place des scripts pour gagner du temps sur les tâches répétitives. L’automatisation n’est pas nouvelle pour moi : seuls les outils ont changé.",
     "Depuis juin, je me forme à plein temps au no-code et à l’IA.",
   ],
   sport: "Hors de l'écran, je suis dehors : trail, vélo, randonnée. J'y reviens toujours.",
@@ -27,7 +27,7 @@ export const ABOUT = {
   /** Bande de faits (4 novembre 2026, validée par Alex) : uniquement ces trois, tirés de son texte (« quinze ans », trois postes, « un poste créé »). */
   facts: ["15 ans d'e-commerce", "3 postes", "1 poste créé"],
   /** Citation extraite du premier paragraphe (validée par Alex) : le paragraphe reste entier. */
-  quote: "Un process se juge à ce que les gens y font vraiment.",
+  quote: "Aller voir comment le travail se fait vraiment, avant de proposer quoi que ce soit.",
   pathNote: "Dans l'e-commerce",
   /** Au passé : Alex n'est plus en poste, 2024–2026 est une période terminée. `iso` alimente la balise <time>. */
   path: [
