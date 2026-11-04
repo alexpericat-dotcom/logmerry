@@ -105,7 +105,7 @@ export const ABOUT = {
       lead: "Prévu",
       from: { iso: "2027-02", text: "février 2027" },
       role: "Product builder no code",
-      where: "Titre certifié par Global Digital University",
+      where: "Titre certifié par Global Digital University, spécialisation IA",
       rncp: { label: "RNCP41766 · niveau 6", href: "https://www.francecompetences.fr/recherche/rncp/41766" },
     },
     { role: "Formations", details: ["Pilotage de la performance", "Gestion du changement", "Management"] },

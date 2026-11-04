@@ -37,5 +37,7 @@ Product builder no code, manager / chef de projet no code, product owner no code
 ## Ce que le projet en fait
 
 - La page publique « Qui suis-je » (`lib/portfolio-about.ts`, frise de gauche) affiche l'intitulé, le niveau et le numéro, avec le lien de la fiche, sous la mention « Prévu février 2027 ». Le test `lib/portfolio-about.test.ts` vérifie que le lien pointe vers la fiche du numéro affiché.
-- **À confirmer par Alex** : le bloc optionnel choisi (A, B ou C) et la date d'obtention. Ni l'un ni l'autre ne sont affichés tant qu'ils sont inconnus. Confirmé par Alex le 4 novembre 2026 : « Product builder no code » est bien le titre visé par sa formation ; la frise de droite garde l'intitulé de la formation, « Bachelor Chef de projet No-Code et IA ».
+- **Spécialisation : IA** (bloc optionnel BC07). Source : page de la formation d'Alex, <https://gducampus.com/formations/147-bachelor-chef-de-projet-no-code-et-intelligence-artificielle/> (lue le 4 novembre 2026, mise à jour du site au 13-09-2026) : « Ce parcours couvre BC01, BC02, BC03, BC04, BC07. » ; le parcours dure 520 h, à distance. Les blocs web/mobile (BC05) et XR (BC06) ne sont pas couverts.
+- **Date d'obtention** : « Prévu février 2027 » vient de la fin du Bachelor donnée par Alex ; la page de la formation ne donne pas de date de rentrée. À corriger si Alex indique une autre date.
+- Confirmé par Alex le 4 novembre 2026 : « Product builder no code » est bien le titre visé par sa formation ; la frise de droite garde l'intitulé de la formation, « Bachelor Chef de projet No-Code et IA ».
 - Si l'enregistrement n'est plus actif (échéance 18-12-2028), revoir la mention.
