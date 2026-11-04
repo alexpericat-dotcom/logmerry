@@ -10,12 +10,21 @@ import { join } from "node:path";
 
 import { Marked } from "marked";
 
+import { SKETCH_DATA } from "../components/sketch-data.ts";
+
 const DIR = "docs/livrables";
 const OUT = `${DIR}/livrables-soutenance.pdf`;
 const CACHE = "node_modules/.cache/livrables";
 const MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
+/** Un croquis monoligne de la page publique par chapitre (mêmes tracés que `components/sketch-data.ts`). */
+const SKETCH_OF = { 1: "database", 2: "flow", 3: "window", 4: "cloud", 5: "compass", 6: "rocket", 7: "magnifier", 8: "cubes", 9: "shield", 10: "funnel", 11: "wrench", 12: "loop", 13: "cog" };
+const sketch = (name) => {
+  const d = SKETCH_DATA[name];
+  if (!d) return "";
+  return `<div class="sk"><svg viewBox="${d.box}" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${d.strokes.map((p) => `<path d="${p.d}" stroke-width="${p.w}" class="sk-${p.k}"/>`).join("")}</svg></div>`;
+};
 const esc = (s) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const slug = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -31,6 +40,7 @@ const toc = [];
 const chapters = files.map((file) => {
   const n = file.slice(0, 2);
   const h2 = [];
+  let h2n = 0;
   const marked = new Marked({
     renderer: {
       code({ text, lang }) {
@@ -41,7 +51,10 @@ const chapters = files.map((file) => {
         const plain = tokens.map((t) => t.raw ?? "").join("");
         if (depth === 1) return `<h1 id="c${n}"><span class="num">${n}</span>${html}</h1>`;
         const id = `c${n}-${slug(plain)}`;
-        if (depth === 2) h2.push({ id, text: plain });
+        if (depth === 2) {
+          h2.push({ id, text: plain });
+          return `<h2 id="${id}"><span class="h2n">${n}.${++h2n}</span>${html}</h2>`;
+        }
         return `<h${depth} id="${id}">${html}</h${depth}>`;
       },
     },
@@ -50,10 +63,10 @@ const chapters = files.map((file) => {
   const title = md.match(/^#\s+(.+)$/m)?.[1] ?? file;
   const body = marked.parse(md);
   toc.push({ n, title, h2 });
-  return `<section class="chap">${body}</section>`;
+  return `<section class="chap">${sketch(SKETCH_OF[Number(n)])}${body}</section>`;
 });
 
-const tocHtml = (pageOf) => `<section class="toc"><h2>Sommaire</h2><p class="lead">Treize livrables, un chapitre chacun. Les mentions « À confirmer » signalent ce qui n'est pas vérifié.</p><ol>${toc
+const tocHtml = (pageOf) => `<section class="toc"><div class="eyebrow">Livrables de soutenance</div><h2>Sommaire</h2><p class="lead">Treize livrables, un chapitre chacun. Les mentions « À confirmer » signalent ce qui n'est pas vérifié.</p><ol>${toc
   .map(
     (c) =>
       `<li class="l1"><span class="n">${c.n}</span><a class="t" href="#c${c.n}">${esc(c.title)}</a><span class="p">${pageOf[`c${c.n}`] ?? ""}</span></li>${c.h2
@@ -63,12 +76,12 @@ const tocHtml = (pageOf) => `<section class="toc"><h2>Sommaire</h2><p class="lea
   .join("")}</ol></section>`;
 
 const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-const cover = `<section class="cover"><div class="brand">LogMerry · Alex Pericat</div><div><h1>Livrables<br/>de soutenance</h1><p class="sub">Mini CRM et cockpit d'activité avec assistant IA connecté à mes notes (RAG), conçu et déployé en no-code et IA.</p></div><div class="meta"><div><b>Soutenance</b>16 novembre 2026</div><div><b>Version</b>${today}</div><div><b>Formation</b>Bachelor Chef de projet No-Code et IA</div></div></section>`;
+const cover = `<section class="cover"><div class="photo" style="background-image:url('file://${process.cwd()}/public/images/hero/hero-crop-1200.webp')"></div><div class="veil"></div><div class="eyebrow">LogMerry · Automatisation &amp; IA pour les entreprises</div><div><h1>Livrables<br/>de soutenance</h1><p class="sub">Mini CRM et cockpit d'activité avec assistant IA connecté à mes notes, conçu et déployé en no-code et IA.</p><span class="pill">Soutenance · 16 novembre 2026</span></div><div class="meta"><div><b>Auteur</b>Alex Pericat</div><div><b>Version</b>${today}</div><div><b>Formation</b>Bachelor Chef de projet No-Code et IA</div></div></section>`;
 
 const html = (pageOf) => `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Livrables de soutenance · LogMerry</title><style>${readFileSync("scripts/livrables.css", "utf8")}</style></head><body>${cover}${tocHtml(pageOf)}${chapters.join("\n")}
 <script src="mermaid.min.js"></script>
 <script>
-  mermaid.initialize({ startOnLoad: false, theme: "base", fontFamily: "Hanken Grotesk, sans-serif", themeVariables: { primaryColor: "#e6eeee", primaryBorderColor: "#1a3435", primaryTextColor: "#12140f", lineColor: "#1a3435", secondaryColor: "#fff1e3", tertiaryColor: "#f4ebdd", edgeLabelBackground: "#ffffff", fontSize: "13px" }, er: { useMaxWidth: true, layoutDirection: "LR", entityPadding: 10, fontSize: 13 }, flowchart: { useMaxWidth: true, htmlLabels: true }, sequence: { useMaxWidth: true }, state: { useMaxWidth: true } });
+  mermaid.initialize({ startOnLoad: false, theme: "base", fontFamily: "Hanken Grotesk, sans-serif", themeVariables: { primaryColor: "#eadfcb", primaryBorderColor: "#1a3435", primaryTextColor: "#12140f", lineColor: "#1a3435", secondaryColor: "#fbf6ec", tertiaryColor: "#f4ebdd", edgeLabelBackground: "#f4ebdd", attributeBackgroundColorOdd: "#fbf6ec", attributeBackgroundColorEven: "#f4ebdd", fontSize: "13px"}, er: { useMaxWidth: true, layoutDirection: "LR", entityPadding: 10, fontSize: 13 }, flowchart: { useMaxWidth: true, htmlLabels: true }, sequence: { useMaxWidth: true }, state: { useMaxWidth: true } });
   mermaid.run({ querySelector: ".mermaid" });
 </script></body></html>`;
 
