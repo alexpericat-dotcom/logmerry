@@ -72,6 +72,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      contact_submissions: {
+        Row: {
+          created_at: string;
+          email_hash: string;
+          id: string;
+          message_hash: string;
+          owner_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          email_hash: string;
+          id?: string;
+          message_hash: string;
+          owner_id: string;
+        };
+        Update: {
+          created_at?: string;
+          email_hash?: string;
+          id?: string;
+          message_hash?: string;
+          owner_id?: string;
+        };
+        Relationships: [];
+      };
       contacts: {
         Row: {
           address: string | null;
