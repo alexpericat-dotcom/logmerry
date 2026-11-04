@@ -10,7 +10,7 @@ export const ABOUT = {
   title: "Je viens du terrain.",
   /** Le brouillon d'Alex n'a pas encore été collé : emplacement visible, à remplacer par ses paragraphes, mot pour mot. */
   intro: ["[À COMPLÉTER PAR MOI : texte du brouillon « Je viens du terrain »]"],
-  sport: "[À COMPLÉTER PAR MOI : phrase sur le sport]",
+  sport: "Hors de l'écran, je suis dehors : trail, vélo, randonnée. J'y reviens toujours.",
   /** Bloc fourni par Alex (4 novembre 2026), à reprendre mot pour mot. */
   impact:
     "Je me soucie de l'impact de ce que je construis. L'IA consomme de l'énergie et je ne prétends pas le contraire. C'est pourquoi je commence par la solution la plus simple, et je n'ajoute de l'IA que là où elle apporte ce que rien d'autre n'apporte.",
