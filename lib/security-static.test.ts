@@ -85,9 +85,14 @@ describe("migrations : sécurité par ligne", () => {
     assert.deepEqual(statements.filter((st) => !/auth\.uid\(\)/i.test(st)).map((st) => st.slice(0, 70)), []);
   });
 
-  test("le seul droit donné à `anon` est la lecture des deux vues publiques du portfolio (AD-10), jamais une table", () => {
+  // 4 novembre 2026 (formulaire de contact, demande d'Alex) : AD-10 passe à deux portes exactes, jamais une table : la lecture des deux vues publiques, et l'exécution de `submit_contact_message`
+  // (valide, plafonne à 10 messages par heure, écrit une note en brouillon chez le seul destinataire activé). Toute autre ouverture à `anon` fait échouer ce test.
+  test("les seuls droits donnés à `anon` sont la lecture des deux vues publiques du portfolio et l'exécution de `submit_contact_message` (AD-10), jamais une table", () => {
     const grants = [...sql.matchAll(/\bgrant\b[^;]*\bto\b[^;]*\banon\b/gi)].map((m) => m[0].replace(/\s+/g, " ").trim());
-    assert.deepEqual(grants, ["grant select on public.public_realisations, public.public_realisation_images to anon"]);
+    assert.deepEqual(grants, [
+      "grant select on public.public_realisations, public.public_realisation_images to anon",
+      "grant execute on function public.submit_contact_message(text, text, text) to anon",
+    ]);
   });
 
   /** Dernière définition de chaque vue publique (une migration ultérieure `create or replace view` l'emporte). */

@@ -57,6 +57,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      contact_form_settings: {
+        Row: {
+          enabled: boolean;
+          owner_id: string;
+        };
+        Insert: {
+          enabled?: boolean;
+          owner_id: string;
+        };
+        Update: {
+          enabled?: boolean;
+          owner_id?: string;
+        };
+        Relationships: [];
+      };
       contacts: {
         Row: {
           address: string | null;
@@ -1113,6 +1128,10 @@ export type Database = {
           title: string;
           type: Database["public"]["Enums"]["note_type"];
         }[];
+      };
+      submit_contact_message: {
+        Args: { p_email: string; p_message: string; p_name: string };
+        Returns: boolean;
       };
     };
     Enums: {
