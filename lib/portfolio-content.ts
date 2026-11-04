@@ -140,8 +140,8 @@ export const CONTACT = {
   title: "Parlons de votre problème",
   text: "Décrivez-moi ce qui prend du temps à vos équipes. Je reviens vers vous avec des questions et des pistes.",
   /**
-   * Formulaire (4 novembre 2026, option A : l'adresse n'est plus affichée). BROUILLON de l'assistant, à valider par Alex : la mention sur l'usage des données
-   * est une description de ce que fait l'application (les messages arrivent dans ses notes, en brouillon), pas un avis juridique.
+   * Formulaire (4 novembre 2026, option A : l'adresse n'est plus affichée). Textes validés par Alex le 4 novembre 2026, mention sur l'usage des données
+   * comprise : elle décrit ce que fait l'application (les messages arrivent dans ses notes, en brouillon), ce n'est pas un avis juridique.
    */
   form: {
     name: "Votre nom",
