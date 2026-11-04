@@ -21,6 +21,7 @@
     "seed:activity": "node --env-file=.env.local --env-file=.env.test.local scripts/seed-demo-activity.ts",
     "test:retrieval": "node --import ./tests/helpers/register.mjs --test \"tests/retrieval/*.test.ts\"",
     "test:components": "node --import ./tests/helpers/register-components.mjs --test \"tests/components/*.test.tsx\"",
+    "livrables": "node scripts/build-livrables.mjs",
     "test:proxy": "node --import ./tests/helpers/register-proxy.mjs --test \"tests/proxy/*.test.ts\""
   },
   "dependencies": {
@@ -54,6 +55,7 @@
     "eslint": "^9",
     "eslint-config-next": "^16.4.2",
     "jsdom": "^30.1.3",
+    "marked": "^18.1.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",

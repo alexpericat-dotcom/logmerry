@@ -1,0 +1,85 @@
+/* Mise en page du PDF des livrables (scripts/build-livrables.mjs). Palette de la page publique : encre, papier, turquoise profond, orange en aplat. */
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&display=swap");
+
+:root {
+  --ink: #12140f;
+  --paper: #ffffff;
+  --sand: #f4ebdd;
+  --teal: #1a3435;
+  --teal-soft: #e6eeee;
+  --orange: #fca465;
+  --muted: #5b5f55;
+  --line: #ddd5c6;
+}
+
+@page {
+  size: A4;
+  margin: 22mm 18mm 22mm 18mm;
+  @bottom-left { content: "LogMerry · Livrables de soutenance"; font: 500 7.5pt "IBM Plex Mono", monospace; color: #8a8d82; letter-spacing: 0.08em; text-transform: uppercase; }
+  @bottom-right { content: counter(page) " / " counter(pages); font: 500 7.5pt "IBM Plex Mono", monospace; color: #8a8d82; }
+}
+@page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+
+* { box-sizing: border-box; }
+html { color: var(--ink); background: var(--paper); font: 400 9.6pt/1.55 "Hanken Grotesk", system-ui, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; }
+
+/* Couverture */
+.cover { height: 297mm; width: 210mm; padding: 26mm 22mm; background: var(--teal); color: var(--sand); display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; position: relative; overflow: hidden; }
+.cover::before { content: ""; position: absolute; right: -40mm; top: -40mm; width: 150mm; height: 150mm; border-radius: 50%; background: var(--orange); opacity: 0.95; }
+.cover::after { content: ""; position: absolute; right: 18mm; bottom: 38mm; width: 46mm; height: 46mm; border-radius: 50%; border: 1.2mm solid var(--sand); opacity: 0.35; }
+.cover .brand { position: relative; font: 500 9pt "IBM Plex Mono", monospace; letter-spacing: 0.2em; text-transform: uppercase; }
+.cover h1 { position: relative; font: 400 46pt/1.02 "Instrument Serif", Georgia, serif; margin: 0 0 8mm; max-width: 150mm; }
+.cover .sub { position: relative; font-size: 13pt; max-width: 120mm; opacity: 0.92; }
+.cover .meta { position: relative; display: grid; grid-template-columns: repeat(3, auto); gap: 4mm 12mm; font: 400 8.5pt "IBM Plex Mono", monospace; letter-spacing: 0.06em; text-transform: uppercase; border-top: 0.3mm solid rgba(244, 235, 221, 0.4); padding-top: 6mm; }
+.cover .meta b { display: block; font-weight: 500; color: var(--orange); margin-bottom: 1mm; }
+
+/* Sommaire */
+.toc { page-break-after: always; }
+.toc h2 { font: 400 30pt/1 "Instrument Serif", serif; margin: 0 0 2mm; }
+.toc .lead { color: var(--muted); margin: 0 0 8mm; }
+.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: none; }
+.toc li.l1 { display: flex; gap: 4mm; align-items: baseline; padding: 2.4mm 0; border-bottom: 0.25mm solid var(--line); }
+.toc li.l1 .n { font: 500 9pt "IBM Plex Mono", monospace; color: var(--teal); background: var(--orange); border-radius: 1mm; padding: 0.4mm 1.6mm; flex: none; }
+.toc li.l1 a.t { flex: 1; font-weight: 600; font-size: 10.5pt; color: var(--ink); text-decoration: none; }
+.toc li.l1 .p { font: 500 8.5pt "IBM Plex Mono", monospace; color: var(--muted); }
+.toc li.l2 { margin: 0.6mm 0 0 17mm; display: flex; align-items: baseline; gap: 2mm; }
+.toc li.l2 a { color: var(--muted); text-decoration: none; font-size: 8.8pt; }
+.toc li.l2 .dots { flex: 1; border-bottom: 0.25mm dotted var(--line); transform: translateY(-1mm); }
+.toc li.l2 .p { font-size: 8pt; }
+
+/* Chapitres */
+section.chap { break-before: page; }
+section.chap > h1 { font: 400 27pt/1.05 "Instrument Serif", Georgia, serif; margin: 0 0 6mm; padding-top: 14mm; position: relative; color: var(--teal); }
+section.chap > h1 .num { position: absolute; top: 0; left: 0; font: 500 9pt "IBM Plex Mono", monospace; letter-spacing: 0.14em; color: var(--ink); background: var(--orange); padding: 0.6mm 2.4mm; border-radius: 1mm; }
+section.chap > h1::after { content: ""; display: block; width: 24mm; height: 0.9mm; background: var(--orange); margin-top: 4mm; }
+h2 { font: 700 14pt/1.2 "Hanken Grotesk", sans-serif; color: var(--teal); margin: 9mm 0 2.5mm; break-after: avoid; }
+h3 { font: 600 10.5pt/1.3 "Hanken Grotesk", sans-serif; margin: 6mm 0 1.5mm; break-after: avoid; }
+p { margin: 0 0 3mm; orphans: 3; widows: 3; }
+ul, ol { margin: 0 0 3.5mm; padding-left: 5mm; }
+li { margin: 0.8mm 0; }
+a { color: var(--teal); }
+strong { font-weight: 600; }
+code { font: 400 8.4pt "IBM Plex Mono", monospace; background: var(--sand); padding: 0.2mm 1.2mm; border-radius: 0.8mm; }
+pre { background: #1c211f; color: #f0ede4; padding: 4mm; border-radius: 2mm; font: 400 7.8pt/1.5 "IBM Plex Mono", monospace; white-space: pre-wrap; break-inside: avoid; }
+pre code { background: none; padding: 0; color: inherit; font: inherit; }
+blockquote { margin: 0 0 4mm; padding: 3mm 4mm; background: var(--teal-soft); border-left: 1.2mm solid var(--teal); border-radius: 0 1.5mm 1.5mm 0; }
+blockquote p:last-child { margin: 0; }
+hr { border: 0; border-top: 0.25mm solid var(--line); margin: 6mm 0; }
+
+/* Tableaux */
+table { width: 100%; border-collapse: collapse; margin: 0 0 5mm; font-size: 8.5pt; break-inside: auto; }
+thead { display: table-header-group; }
+th { text-align: left; font: 500 7.4pt "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sand); background: var(--teal); padding: 2mm 2.4mm; }
+td { padding: 1.9mm 2.4mm; border-bottom: 0.25mm solid var(--line); vertical-align: top; }
+tr { break-inside: avoid; }
+tbody tr:nth-child(even) td { background: #faf6ee; }
+
+/* Diagrammes Mermaid */
+pre.mermaid { background: none; color: var(--ink); padding: 0; border-radius: 0; font: inherit; white-space: normal; text-align: center; margin: 4mm 0 6mm; }
+.mermaid svg { display: block; margin: 0 auto; width: auto !important; max-width: 100% !important; height: auto; max-height: 170mm; }
+figure.diagram { margin: 0; break-inside: avoid; }
+figcaption { font: 400 8pt "IBM Plex Mono", monospace; color: var(--muted); text-align: center; margin-top: -3mm; margin-bottom: 5mm; }
+
+/* À confirmer : visible, jamais caché */
+.todo { background: #fff1e3; border: 0.3mm dashed var(--orange); border-radius: 1.5mm; padding: 2.5mm 3.5mm; margin: 0 0 4mm; }

@@ -4,11 +4,13 @@ Liste donnée par Alex le 4 novembre 2026 ; objectif : **prêts vendredi 6 novem
 
 Règle : rien d'inventé. Ce qui est dans ces documents vient du code, des migrations, des tests et des documents du projet ; ce qui est inconnu est écrit « À confirmer ».
 
+Le PDF d'ensemble se génère avec `npm run livrables` (Chrome sans interface, aucun service externe) : couverture, sommaire avec numéros de page, un chapitre par fichier `NN-*.md`. Résultat : `livrables-soutenance.pdf`.
+
 Légende de la colonne « Reste » : **moi** = je rédige à partir du dépôt ; **toi** = Alex doit fournir ou décider ; **les deux**.
 
 | N° | Livrable | Ce qui existe déjà (vérifié dans le dépôt) | Fichier prévu | Reste |
 |---|---|---|---|---|
-| 1 | Schéma de données (MCD) + dictionnaire + règles d'intégrité | `supabase/migrations/` (une trentaine de fichiers), `lib/supabase/database.types.ts`, modèle dans `ARCHITECTURE-SPINE.md`. Aucun diagramme. | `01-schema-de-donnees.md` (Mermaid ER, dictionnaire, contraintes, RLS) | moi |
+| 1 | Schéma de données (MCD) + dictionnaire + règles d'intégrité | `supabase/migrations/` (une trentaine de fichiers), `lib/supabase/database.types.ts`, modèle dans `ARCHITECTURE-SPINE.md`. Aucun diagramme. | `01-schema-de-donnees.md` (Mermaid ER, dictionnaire, contraintes, RLS) | **fait** (relu dans la base) |
 | 2 | Workflow de saisie des documents et gestion IA / RAG | Code : saisie de note, indexation Mistral, chat, vérification des citations, historique ; `docs/rag-tests.md` | `02-workflows.md` (diagrammes Mermaid : états, événements, règles, exceptions, SLA) | moi ; **toi** : ce que « MCP » désigne ici (le MCP Supabase de développement ? un MCP dans l'app ?) |
 | 3 | UX et maquettes | `_bmad-output/planning-artifacts/ux-designs/` (`DESIGN.md`, `EXPERIENCE.md`, `mockups/`, `review-accessibility.md`), `docs/ux-resume.md`, `docs/audit-accessibilite.md`, `docs/ui-rules.md` | `03-ux-design-system.md` (assemblage et critères d'accessibilité) | moi ; **toi** : choisir les maquettes à montrer |
 | 4 | Spécifications d'intégration : API Supabase et authentification | Migrations, fonctions SQL, Server Actions, Route Handler du chat, `proxy.ts`, `lib/supabase/` | `04-integration-api-auth.md` (contrats, droits, flux d'authentification, aucun webhook) | moi |
