@@ -8,8 +8,12 @@
 export const ABOUT = {
   eyebrow: "Qui suis-je",
   title: "Je viens du terrain.",
-  /** Le brouillon d'Alex n'a pas encore été collé : emplacement visible, à remplacer par ses paragraphes, mot pour mot. */
-  intro: ["[À COMPLÉTER PAR MOI : texte du brouillon « Je viens du terrain »]"],
+  /** Brouillon d'Alex (4 novembre 2026), mot pour mot, apostrophes typographiques comprises. */
+  intro: [
+    "Pendant quinze ans, dans l’e-commerce, j’ai été photographe packshot, puis responsable adjoint d’un service photo, puis responsable d’un service qualité, un poste créé. J’en retiens qu’un process se juge à ce que les gens y font vraiment, pas à ce qui est écrit sur le papier.",
+    "J’y ai conçu des workflows, formé des équipes, créé des indicateurs et mis en place des scripts pour gagner du temps sur les tâches répétitives. L’automatisation n’est pas nouvelle pour moi : seuls les outils ont changé.",
+    "Depuis juin, je me forme à plein temps au no-code et à l’IA.",
+  ],
   sport: "Hors de l'écran, je suis dehors : trail, vélo, randonnée. J'y reviens toujours.",
   /** Bloc fourni par Alex (4 novembre 2026), à reprendre mot pour mot. */
   impact:

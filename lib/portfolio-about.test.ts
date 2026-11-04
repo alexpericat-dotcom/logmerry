@@ -6,7 +6,7 @@ import { ABOUT } from "./portfolio-about.ts";
 
 const texts = JSON.stringify(ABOUT);
 
-test("BLOQUE LA FUSION tant qu'un emplacement « [À COMPLÉTER PAR MOI : ...] » reste sur la page Qui suis-je (brouillon)", () => {
+test("BLOQUE LA FUSION tant qu'un emplacement « [À COMPLÉTER PAR MOI : ...] » reste sur la page Qui suis-je (plus rien à remplir)", () => {
   const left = texts.match(/\[À COMPLÉTER PAR MOI[^\]]*\]/g) ?? [];
   assert.deepEqual(left, [], `à remplir par Alex avant de fusionner : ${[...new Set(left)].join(" ; ")}`);
 });
