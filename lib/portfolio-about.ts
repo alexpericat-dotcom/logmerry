@@ -7,6 +7,16 @@
 
 import { CONTACT } from "./portfolio-content.ts";
 
+export type TimelineStep = {
+  lead?: string;
+  from?: { iso: string; text: string };
+  to?: { iso: string; text: string };
+  role: string;
+  where?: string;
+  details?: string[];
+  groups?: Array<{ title: string; items: string[] }>;
+};
+
 export const ABOUT = {
   eyebrow: "Qui suis-je",
   title: "Je viens du terrain.",
@@ -79,7 +89,18 @@ export const ABOUT = {
         },
       ],
     },
-  ] as Array<{ lead?: string; from: { iso: string; text: string }; to?: { iso: string; text: string }; role: string; details?: string[]; groups?: Array<{ title: string; items: string[] }> }>,
+  ] as TimelineStep[],
+  trainingNote: "Formation et compétences",
+  /** Frise de gauche (CV d'Alex, 4 novembre 2026). Datée seulement pour les diplômes ; l'ordre des formations et compétences sans date n'implique aucune chronologie. */
+  training: [
+    { from: { iso: "2005", text: "2005" }, role: "Baccalauréat ES", where: "Lycée Gay-Lussac, Limoges" },
+    { from: { iso: "2008", text: "2008" }, to: { iso: "2009", text: "2009" }, role: "CAP Photographe", where: "Cifap" },
+    { role: "Formations", details: ["Pilotage de la performance", "Gestion du changement", "Management"] },
+    {
+      role: "Compétences",
+      details: ["Lumière", "Adobe Photoshop", "Capture One", "Optimisation de processus", "Gestion d'équipe", "Gestion de flux", "Résolution de problèmes", "Esprit critique", "Curiosité intellectuelle", "Anglais"],
+    },
+  ] as TimelineStep[],
   /** Grande phrase de fin : celle déjà publiée sur `/portfolio`. */
   closing: CONTACT.title,
   cta: { label: "Parler de votre problème", href: "/portfolio#contact" },

@@ -6,7 +6,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { LiquidButton } from "@/components/portfolio-sections";
 import { ScrollEffects } from "@/components/scroll-effects";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ABOUT } from "@/lib/portfolio-about";
+import { ABOUT, type TimelineStep } from "@/lib/portfolio-about";
 import { BRAND } from "@/lib/portfolio-content";
 
 const TITLE = `Qui suis-je · ${BRAND}`;
@@ -27,6 +27,56 @@ function SectionLabel({ n, children }: { n: string; children: string }) {
       <span aria-hidden="true">{n} — </span>
       {children}
     </h2>
+  );
+}
+
+const BULLET = "relative pl-4 before:absolute before:left-0 before:top-[0.6em] before:size-1 before:rounded-full before:bg-foreground/40";
+
+/** Une frise : points sur une ligne verticale ; la date est facultative, le point plein marque ce qui est en cours. */
+function Timeline({ steps }: { steps: readonly TimelineStep[] }) {
+  return (
+    <ol className="relative max-w-2xl">
+      <span aria-hidden="true" className="spine absolute left-[5px] top-2 h-[calc(100%-1rem)] w-px bg-foreground/40" />
+      {steps.map((step, i) => (
+        <li key={(step.from?.iso ?? "") + step.role} style={{ "--i": i } as React.CSSProperties} className="reveal group relative pb-phi-2 pl-8 last:pb-0">
+          <span aria-hidden="true" className={`absolute left-0 top-2 size-[11px] rounded-full border-2 border-tone-orange transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none ${step.lead ? "bg-tone-orange" : "bg-background"}`} />
+          {step.from && (
+            <p className={`${MONO} mb-2 text-muted-foreground`}>
+              {step.lead && `${step.lead} `}
+              <time dateTime={step.from.iso}>{step.from.text}</time>
+              {step.to && (
+                <>
+                  –<time dateTime={step.to.iso}>{step.to.text}</time>
+                </>
+              )}
+            </p>
+          )}
+          <p className="font-serif text-phi-1 md:text-phi-2">{step.role}</p>
+          {step.where && <p className="mt-1 text-sm text-muted-foreground">{step.where}</p>}
+          {step.groups?.map((g) => (
+            <div key={g.title} className="mt-4">
+              <p className={`${MONO} text-muted-foreground`}>{g.title}</p>
+              <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                {g.items.map((d) => (
+                  <li key={d} className={BULLET}>
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {step.details && (
+            <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+              {step.details.map((d) => (
+                <li key={d} className={BULLET}>
+                  {d}
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -111,54 +161,21 @@ export default function AboutPage() {
           <p className="reveal max-w-2xl font-serif text-phi-1 leading-snug md:text-phi-2 lg:col-span-8">{ABOUT.impact}</p>
         </section>
 
-        {/* 04 : parcours */}
-        <section aria-labelledby="parcours" className="grid gap-phi-2 border-t py-phi-3 md:py-phi-4 lg:grid-cols-12 lg:gap-phi-3">
-          <div id="parcours" className="reveal lg:col-span-4">
+        {/* 04 : parcours, deux frises côte à côte : formation à gauche, expérience à droite */}
+        <section aria-labelledby="parcours" className="border-t py-phi-3 md:py-phi-4">
+          <div id="parcours" className="reveal">
             <SectionLabel n="04">{ABOUT.sections.path}</SectionLabel>
-            <p className={`${MONO} mt-2 text-muted-foreground`}>{ABOUT.pathNote}</p>
           </div>
-          <ol className="relative max-w-2xl lg:col-span-8">
-            <span aria-hidden="true" className="spine absolute left-[5px] top-2 h-[calc(100%-1rem)] w-px bg-foreground/40" />
-            {ABOUT.path.map((step, i) => {
-              const current = !step.to;
-              return (
-                <li key={step.from.iso + step.role} style={{ "--i": i } as React.CSSProperties} className="reveal group relative pb-phi-2 pl-8 last:pb-0">
-                  <span aria-hidden="true" className={`absolute left-0 top-2 size-[11px] rounded-full border-2 border-tone-orange transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none ${current ? "bg-tone-orange" : "bg-background"}`} />
-                  <p className={`${MONO} text-muted-foreground`}>
-                    {step.lead && `${step.lead} `}
-                    <time dateTime={step.from.iso}>{step.from.text}</time>
-                    {step.to && (
-                      <>
-                        –<time dateTime={step.to.iso}>{step.to.text}</time>
-                      </>
-                    )}
-                  </p>
-                  <p className="mt-2 font-serif text-phi-1 md:text-phi-2">{step.role}</p>
-                  {step.groups?.map((g) => (
-                    <div key={g.title} className="mt-4">
-                      <p className={`${MONO} text-muted-foreground`}>{g.title}</p>
-                      <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
-                        {g.items.map((d) => (
-                          <li key={d} className="relative pl-4 before:absolute before:left-0 before:top-[0.6em] before:size-1 before:rounded-full before:bg-foreground/40">
-                            {d}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                  {step.details && (
-                    <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                      {step.details.map((d) => (
-                        <li key={d} className="relative pl-4 before:absolute before:left-0 before:top-[0.6em] before:size-1 before:rounded-full before:bg-foreground/40">
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
+          <div className="mt-phi-2 grid gap-phi-3 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <p className={`${MONO} reveal mb-phi-1 text-muted-foreground`}>{ABOUT.trainingNote}</p>
+              <Timeline steps={ABOUT.training} />
+            </div>
+            <div className="lg:col-span-8">
+              <p className={`${MONO} reveal mb-phi-1 text-muted-foreground`}>{ABOUT.pathNote}</p>
+              <Timeline steps={ABOUT.path} />
+            </div>
+          </div>
         </section>
 
         {/* Fin */}

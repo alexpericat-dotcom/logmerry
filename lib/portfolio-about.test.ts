@@ -21,7 +21,7 @@ test("le bloc sur l'impact est celui d'Alex, mot pour mot, après la phrase sur 
 });
 
 test("parcours : liste ordonnée, au passé, e-commerce sans nom d'employeur ; le dernier poste est terminé", () => {
-  const period = (s: (typeof ABOUT.path)[number]) => `${s.lead ? `${s.lead} ` : ""}${s.from.text}${s.to ? `–${s.to.text}` : ""}`;
+  const period = (s: (typeof ABOUT.path)[number]) => `${s.lead ? `${s.lead} ` : ""}${s.from?.text}${s.to ? `–${s.to.text}` : ""}`;
   assert.deepEqual(ABOUT.path.map(period), ["2011–2021", "2021–2024", "2024–2026", "Depuis juin 2026"]);
   assert.equal(ABOUT.pathNote, "Dans l'e-commerce");
   const page = readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8");
@@ -38,8 +38,11 @@ test("ni adresse, téléphone ni e-mail en clair ; pas de mot « logistique »",
 });
 
 test("le seul chiffre est celui de la frise ; le bouton mène à la section de contact existante, sans formulaire inventé", () => {
-  const withoutPath = JSON.stringify({ ...ABOUT, path: [], facts: [], photo: null });
+  const withoutPath = JSON.stringify({ ...ABOUT, path: [], training: [], facts: [], photo: null });
   assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise et de la bande de faits");
+  const trainingText = JSON.stringify(ABOUT.training, (k, v) => (k === "from" || k === "to" ? undefined : v));
+  assert.ok(!/\d/.test(trainingText), "dans la frise de formation, seuls les diplômes portent une date (from, to)");
+  assert.ok(ABOUT.training.every((t) => !t.from || /^\d{4}$/.test(t.from.iso)), "les dates de diplôme sont des années");
   assert.equal(ABOUT.cta.label, "Parler de votre problème");
   assert.equal(ABOUT.cta.href, "/portfolio#contact");
 });
