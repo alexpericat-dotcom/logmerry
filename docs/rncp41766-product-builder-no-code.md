@@ -37,5 +37,5 @@ Product builder no code, manager / chef de projet no code, product owner no code
 ## Ce que le projet en fait
 
 - La page publique « Qui suis-je » (`lib/portfolio-about.ts`, frise de gauche) affiche l'intitulé, le niveau et le numéro, avec le lien de la fiche, sous la mention « Prévu février 2027 ». Le test `lib/portfolio-about.test.ts` vérifie que le lien pointe vers la fiche du numéro affiché.
-- **À confirmer par Alex** : le bloc optionnel choisi (A, B ou C) et la date d'obtention. Ni l'un ni l'autre ne sont affichés tant qu'ils sont inconnus. Le Bachelor est nommé « Chef de projet No-Code et IA » dans la frise de droite ; l'intitulé du titre RNCP est « Product builder no code ».
+- **À confirmer par Alex** : le bloc optionnel choisi (A, B ou C) et la date d'obtention. Ni l'un ni l'autre ne sont affichés tant qu'ils sont inconnus. Confirmé par Alex le 4 novembre 2026 : « Product builder no code » est bien le titre visé par sa formation ; la frise de droite garde l'intitulé de la formation, « Bachelor Chef de projet No-Code et IA ».
 - Si l'enregistrement n'est plus actif (échéance 18-12-2028), revoir la mention.
