@@ -120,9 +120,9 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 
 - « Qui suis-je » (4 novembre 2026) : rendu clair et sombre à 390 px contrôlé, rien à corriger. Restent : relecture d'Alex en local, décision de la PR de `feat/about-page` (dépend de la chaîne #97), formulaire de contact (option A), liste d'exceptions `ALLOWED` du test d'écoblanchiment à valider par Alex.
 
-## Livrables du titre RNCP41766 (ajout du 4 novembre 2026, liste d'Alex)
+## Livrables à produire (ajout du 4 novembre 2026, liste d'Alex)
 
-Chaque ligne : livrable attendu -> ce qui le fournit dans le projet. Les lignes sans flèche n'ont pas encore de réponse : à définir avec Alex. Aucune case n'est cochée : l'état de chaque livrable n'a pas été vérifié.
+Chaque ligne : livrable -> ce qui le fournit dans le projet (liste donnée par Alex ; son origine n'est pas précisée, elle n'est pas liée au numéro RNCP). Les lignes sans flèche n'ont pas encore de réponse : à définir avec Alex. Aucune case n'est cochée : l'état de chaque livrable n'a pas été vérifié.
 
 - [ ] Schéma de données (conceptuel/logique) + dictionnaire et règles d’intégrité - Diagramme de classe ou MCD
 - [ ] Diagrammes de workflows (états/événements/règles/exceptions/SLA) - Workflow de saisie des documents et gestion IA MCP RAG
