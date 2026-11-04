@@ -21,9 +21,13 @@ test("le bloc sur l'impact est celui d'Alex, mot pour mot, après la phrase sur 
 });
 
 test("parcours : liste ordonnée, au passé, e-commerce sans nom d'employeur ; le dernier poste est terminé", () => {
-  assert.deepEqual(ABOUT.path.map((s) => s.period), ["2011–2021", "2021–2024", "2024–2026", "Depuis juin 2026"]);
+  const period = (s: (typeof ABOUT.path)[number]) => `${s.lead ? `${s.lead} ` : ""}${s.from.text}${s.to ? `–${s.to.text}` : ""}`;
+  assert.deepEqual(ABOUT.path.map(period), ["2011–2021", "2021–2024", "2024–2026", "Depuis juin 2026"]);
   assert.equal(ABOUT.pathNote, "Dans l'e-commerce");
-  assert.match(readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8"), /<ol /);
+  const page = readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8");
+  assert.match(page, /<ol /);
+  assert.match(page, /<time dateTime=/, "dates en <time>");
+  assert.equal((page.match(/<h1[ >]/g) ?? []).length, 1, "un seul h1");
 });
 
 test("ni adresse, téléphone ni e-mail en clair ; pas de mot « logistique »", () => {
@@ -34,8 +38,8 @@ test("ni adresse, téléphone ni e-mail en clair ; pas de mot « logistique »",
 });
 
 test("le seul chiffre est celui de la frise ; le bouton mène à la section de contact existante, sans formulaire inventé", () => {
-  const withoutPath = JSON.stringify({ ...ABOUT, path: [], photo: null });
-  assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise");
+  const withoutPath = JSON.stringify({ ...ABOUT, path: [], facts: [], photo: null });
+  assert.ok(!/\d/.test(withoutPath), "aucun chiffre hors de la frise et de la bande de faits");
   assert.equal(ABOUT.cta.label, "Parler de votre problème");
   assert.equal(ABOUT.cta.href, "/portfolio#contact");
 });
@@ -60,4 +64,10 @@ test("aucun terme d'écoblanchiment dans les pages publiques, et rien d'affirmé
     }
   }
   assert.ok(PUBLIC_FILES.includes("lib/portfolio-about.ts"));
+});
+
+test("bande de faits : uniquement les trois validés ; citation extraite du premier paragraphe ; aucun logo d'outil ni d'employeur", () => {
+  assert.deepEqual(ABOUT.facts, ["15 ans d'e-commerce", "3 postes", "1 poste créé"]);
+  assert.ok(ABOUT.intro[0].includes(ABOUT.quote.slice(3, -1)), "la citation est dans le texte");
+  assert.ok(!/ToolIcon|tool-icon/.test(readFileSync("app/portfolio/qui-suis-je/page.tsx", "utf8")));
 });
