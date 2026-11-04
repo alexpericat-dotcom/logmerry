@@ -119,3 +119,21 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Protection « Publier » contre les emplacements `[À COMPLÉTER PAR MOI` : faite côté application (6 novembre 2026). Reste hors garde : la base elle-même ne refuse pas (pas de contrainte SQL), seule l'action serveur la porte.
 
 - « Qui suis-je » (4 novembre 2026) : rendu clair et sombre à 390 px contrôlé, rien à corriger. Restent : relecture d'Alex en local, décision de la PR de `feat/about-page` (dépend de la chaîne #97), formulaire de contact (option A), liste d'exceptions `ALLOWED` du test d'écoblanchiment à valider par Alex.
+
+## Livrables du titre RNCP41766 (ajout du 4 novembre 2026, liste d'Alex)
+
+Chaque ligne : livrable attendu -> ce qui le fournit dans le projet. Les lignes sans flèche n'ont pas encore de réponse : à définir avec Alex. Aucune case n'est cochée : l'état de chaque livrable n'a pas été vérifié.
+
+- [ ] Schéma de données (conceptuel/logique) + dictionnaire et règles d’intégrité - Diagramme de classe ou MCD
+- [ ] Diagrammes de workflows (états/événements/règles/exceptions/SLA) - Workflow de saisie des documents et gestion IA MCP RAG
+- [ ] Guide UX/design system (gabarits, composants, critères d’accessibilité) -> UX et maquettes
+- [ ] Spécifications d’intégration (contrats d’API, webhooks, mappings, authentification) -> Supabase API et authentification
+- [ ] Exigences QoS (budgets de performance, observabilité, résilience/modes dégradés) => Dashboard Supabase
+- [ ] Application/feature IA-driven opérationnelle (lien/QR/démo) -> Démo application
+- [ ] Rapport d’évaluation (jeu de tests & métriques : pertinence/hallucinations/latence/coût) -> Demander à l'IA dans l'EDI de produire le rapport
+- [ ] Registre des données & index RAG (si utilisé) + politiques de gouvernance -> RAG
+- [ ] Dossier de garde-fous & conformité (modération, PII, journalisation).
+- [ ] Dossier de déploiement & exécution : plan/pipelines (dev→prod) + compte rendu de mise en production avec stratégie de rollback -> Compte rendu du déploiement GitHub -> Vercel
+- [ ] Sécurité d’accès opérationnelle : SSO/MFA, matrice IAM (rôles/droits) et gestion des secrets en place.
+- [ ] Continuité testée : politique de sauvegardes (RPO/RTO) + PV de test de restauration + PRA/PCA synthétique -> Plan de continuité de service, garantir le fonctionnement de l'application en mode dégradé en cas de problème, garantir la haute disponibilité de l'application.
+- [ ] Exploitation & conformité actives : tableau de bord (logs/métriques, alertes) + kit support N1/N2 (FAQ/SLAs) + registre RGPD/sécurité synthétique.
