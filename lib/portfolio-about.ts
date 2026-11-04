@@ -20,8 +20,8 @@ export const ABOUT = {
   /** Bloc fourni par Alex (4 novembre 2026), à reprendre mot pour mot. */
   impact:
     "Je me soucie de l'impact de ce que je construis. L'IA consomme de l'énergie et je ne prétends pas le contraire. C'est pourquoi je commence par la solution la plus simple, et je n'ajoute de l'IA que là où elle apporte ce que rien d'autre n'apporte.",
-  /** Photo fournie par Alex (4 novembre 2026, « pour le moment »), WebP 800 px ; remplacer le fichier et le texte alternatif pour changer de photo. */
-  photo: { src: "/images/portrait-qui-suis-je.webp", width: 800, height: 1202, alt: "Portrait en noir et blanc, en légère contre-plongée : un homme aux cheveux courts et à la moustache, en sweat à capuche noir, sur fond clair." },
+  /** Emplacement de portrait (4 novembre 2026) : la photo d'Alex, floutée, décorative (alt vide) en attendant un portrait qui lui convient. Pour le remplacer : nouveau fichier, texte alternatif, et retirer le flou dans la page. */
+  photo: { src: "/images/portrait-qui-suis-je.webp", width: 800, height: 1202, alt: "" },
   /** Numéros et noms de section (mentions en monospace) : « 01 » est l'ouverture. */
   sections: { intro: "Introduction", impact: "Sobriété", path: "Parcours" },
   /** Bande de faits (4 novembre 2026, validée par Alex) : uniquement ces trois, tirés de son texte (« quinze ans », trois postes, « un poste créé »). */
@@ -50,8 +50,36 @@ export const ABOUT = {
         "Piloter la performance avec la création d'indicateurs.",
       ],
     },
-    { lead: "Depuis", from: { iso: "2026-06", text: "juin 2026" }, role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027" },
-  ] as Array<{ lead?: string; from: { iso: string; text: string }; to?: { iso: string; text: string }; role: string; details?: string[] }>,
+    { lead: "Depuis", from: { iso: "2026-06", text: "juin 2026" }, role: "Bachelor Chef de projet No-Code et IA, à plein temps, fin prévue en février 2027",
+      groups: [
+        {
+          title: "Compétences techniques et no-code",
+          items: [
+            "Développement web et mobile no-code : conception, maquettage et déploiement d'applications web et mobiles robustes (via des outils leaders comme Bubble, FlutterFlow, Glide, Softr ou Webflow).",
+            "Automatisation des processus métiers : création de flux de travail automatisés, synchronisation de données et interconnexion d'outils via des plateformes d'intégration (Make / Integromat, Zapier, n8n).",
+            "Gestion de bases de données et architecture : modélisation de bases de données relationnelles, structuration des données et gestion d'API (Airtable, Xano, Supabase).",
+            "Design d'interface et UX/UI : création de wireframes, prototypage rapide et respect des normes d'accessibilité numérique et de design responsive (Figma).",
+          ],
+        },
+        {
+          title: "Compétences en intelligence artificielle",
+          items: [
+            "Intégration d'IA dans les produits : connexion d'API d'intelligence artificielle (OpenAI / ChatGPT, Anthropic / Claude, Mistral AI) au sein d'applications no-code pour automatiser la génération de contenu ou l'analyse de données.",
+            "Ingénierie de prompt : conception, test et optimisation de prompts complexes pour maximiser la pertinence et la performance des modèles de langage intégrés.",
+            "Automatisation intelligente (agents IA) : configuration et déploiement d'agents autonomes ou de chatbots intelligents pour le support client ou le traitement de workflows internes.",
+          ],
+        },
+        {
+          title: "Gestion de projet et méthodes",
+          items: [
+            "Product building et cadrage : traduction des besoins métiers en spécifications techniques (user stories), priorisation des fonctionnalités (MVP, produit minimum viable).",
+            "Méthodologies agiles : pilotage de projet en mode Scrum ou Kanban, animation des rituels et gestion du cycle de vie du produit.",
+            "Recette et assurance qualité : réalisation de tests fonctionnels, débogage d'architectures no-code et optimisation des performances applicatives.",
+          ],
+        },
+      ],
+    },
+  ] as Array<{ lead?: string; from: { iso: string; text: string }; to?: { iso: string; text: string }; role: string; details?: string[]; groups?: Array<{ title: string; items: string[] }> }>,
   /** Grande phrase de fin : celle déjà publiée sur `/portfolio`. */
   closing: CONTACT.title,
   cta: { label: "Parler de votre problème", href: "/portfolio#contact" },

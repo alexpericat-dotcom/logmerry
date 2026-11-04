@@ -19,7 +19,6 @@ export const metadata: Metadata = {
 
 /** Étiquette en monospace, comme sur la page principale. */
 const MONO = "font-mono text-phi-n1 uppercase tracking-[0.18em]";
-/** Grain léger sur la photo : bruit SVG en surimpression, sans fichier ni couleur ajoutés. */
 
 /** Une mention de section : « 02 — Introduction ». Le numéro est décoratif pour les lecteurs d'écran. */
 function SectionLabel({ n, children }: { n: string; children: string }) {
@@ -82,7 +81,7 @@ export default function AboutPage() {
                   sizes="(min-width: 1024px) 400px, 100vw"
                   priority
                   unoptimized
-                  className="aspect-[4/3] h-auto w-full object-cover object-[50%_40%] lg:aspect-[4/5]"
+                  className="aspect-[4/3] h-auto w-full scale-110 object-cover object-[50%_40%] blur-2xl lg:aspect-[4/5]"
                 />
               </div>
             </figure>
@@ -135,6 +134,18 @@ export default function AboutPage() {
                     )}
                   </p>
                   <p className="mt-2 font-serif text-phi-1 md:text-phi-2">{step.role}</p>
+                  {step.groups?.map((g) => (
+                    <div key={g.title} className="mt-4">
+                      <p className={`${MONO} text-muted-foreground`}>{g.title}</p>
+                      <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                        {g.items.map((d) => (
+                          <li key={d} className="relative pl-4 before:absolute before:left-0 before:top-[0.6em] before:size-1 before:rounded-full before:bg-foreground/40">
+                            {d}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                   {step.details && (
                     <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
                       {step.details.map((d) => (
