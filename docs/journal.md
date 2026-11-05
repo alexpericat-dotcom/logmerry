@@ -844,3 +844,8 @@
 - CI de `main` : un échec sur le test « double clic sur Ajouter » (attente de 1 s), réussi à la relance de la tâche : test instable, à durcir plus tard.
 - Production : déploiement bien créé (Ready, 33 s), `/portfolio` répond 200 sans connexion. Mon premier relevé (API GitHub/Vercel, `curl` précoce) l'avait manqué : erreur de ma part, corrigée par la capture de Vercel d'Alex et une nouvelle requête.
 - Test d'isolation relancé : 157/158. L'échec restant : la vue publique expose `design_choice` et `validation` (migration de `feat/realisation-design-choice`, appliquée à la base, branche non fusionnée, sans PR). Décision en attente d'Alex.
+
+## 2026-11-05 — Fusion de la pull request n° 99 et test d'isolation vert
+- Accord explicite d'Alex (« oui ») pour ouvrir et fusionner `feat/realisation-design-choice`. PR n° 99 ouverte (base `main`, 4 commits : champs « Choix de conception » et « Validation », refus de publier avec un texte provisoire), contrôles verts, fusionnée (`475a7f9`), CI de `main` verte, déploiement de production terminé (statut Vercel de GitHub).
+- `gh workflow run isolation.yml --ref main` : **158 contrôles sur 158**, aucun échec (run 42094696418). Le test de nuit est vert pour la première fois.
+- Reste non fusionné : `feat/about-page` (n° 98) et `feat/contact-form` ; `preview/realisation-status` jamais touchée. Migrations du formulaire de contact déjà appliquées à la base.

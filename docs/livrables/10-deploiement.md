@@ -1,6 +1,6 @@
 # Déploiement et retour arrière
 
-> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne depuis le 5 novembre 2026 sur le dernier commit de `main` (fusion des pull requests n° 96 et 97, avec le portfolio public) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre, et il échoue encore sur un seul contrôle, parce que la base est en avance sur `main`.
+> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne depuis le 5 novembre 2026 sur le dernier commit de `main` (fusion des pull requests n° 96, 97 et 99, avec le portfolio public) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre et le test passe depuis (158 contrôles sur 158).
 
 Faits relevés le 5 novembre 2026 par la ligne de commande de Vercel, l'API de GitHub et des requêtes sur l'adresse publique (lecture seule). Aucune action de déploiement n'a été lancée pour écrire ce chapitre.
 
@@ -32,18 +32,19 @@ flowchart LR
 |---|---|---|---|
 | `.github/workflows/ci.yml`, tâche `check` | Chaque envoi, chaque pull request | Typage (`tsc`), analyse (`lint`), tests (`npm test`), construction (`next build`), Node 24 | Aucune base ni clé : les tests qui interrogent la vraie base n'y tournent pas |
 | `ci.yml`, tâche `audit` | Idem | `npm audit` des dépendances de production, niveau « élevé » | Séparée pour qu'une panne du registre ne passe pas pour un échec du code |
-| `.github/workflows/isolation.yml` | Chaque nuit (cron 3 h 17 UTC) et à la demande | Rejoue `npm run test:isolation` contre la vraie base, avec deux comptes fictifs ; option `leak` (appelle Claude et Mistral, quelques centimes) | **Réparé en partie, voir ci-dessous** |
+| `.github/workflows/isolation.yml` | Chaque nuit (cron 3 h 17 UTC) et à la demande | Rejoue `npm run test:isolation` contre la vraie base, avec deux comptes fictifs ; option `leak` (appelle Claude et Mistral, quelques centimes) | **Réparé le 5 novembre, voir ci-dessous** |
 
-### Le test d'isolation de nuit : secrets créés, un contrôle encore en échec
+### Le test d'isolation de nuit : réparé le 5 novembre
 
 | Constat | Détail |
 |---|---|
 | Avant le 5 novembre | **7 exécutions sur 7 en échec**, du 30 octobre au 5 novembre 2026 : « Secret manquant : SUPABASE_URL », `gh secret list` vide. Le test n'avait **jamais tourné** contre la vraie base ; une régression de la sécurité par ligne n'aurait pas été vue en moins de 24 h |
 | Réparation (Alex, 5 novembre) | Les six secrets (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`) ont été créés dans GitHub ; `gh secret list` les montre tous |
 | Première exécution à la main (5 novembre, `main` avant les fusions) | **151 contrôles sur 152 passent**, dont tous ceux d'isolation entre deux comptes. 1 échec (statut des réalisations) |
-| Seconde exécution (5 novembre, `main` après les n° 96 et 97) | **157 contrôles sur 158 passent** : l'échec du statut a disparu |
-| L'échec restant | « seule la réalisation publiée avec accord est visible, avec exactement les colonnes publiables » : la vue publique expose deux colonnes de plus que celles attendues par le test, `design_choice` et `validation`. Elles viennent de la migration `20261106100000_realisation_design_choice.sql` de la branche `feat/realisation-design-choice` (4 commits, aucune pull request), **déjà appliquée à la base** ; la même branche met le test à jour d'une ligne. Deux champs texte facultatifs sans donnée privée : le test signale leur **nouveauté**, ce n'est pas une fuite |
-| Conséquence | Le test de nuit restera en échec sur ce seul contrôle tant que cette branche n'est pas fusionnée dans `main`. Il est néanmoins utile dès maintenant : tout autre échec d'isolation apparaîtrait parmi les 157 autres contrôles |
+| Seconde exécution (5 novembre, `main` après les n° 96 et 97) | **157 contrôles sur 158 passent** : l'échec du statut a disparu ; un autre apparaît (colonnes de la vue publique) |
+| Troisième exécution (5 novembre, `main` après la n° 99) | **158 contrôles sur 158 passent**, aucun échec. Run GitHub 42094696418 |
+| L'échec de la seconde exécution | La vue publique exposait deux colonnes de plus que celles attendues par le test (`design_choice`, `validation`), ajoutées à la base par la migration de la branche `feat/realisation-design-choice`, appliquée avant d'être fusionnée. Ce n'était pas une fuite (deux champs texte facultatifs) ; corrigé par la fusion de la pull request n° 99 (le test est mis à jour dans la même branche) |
+| Conséquence | Le test de nuit est **entièrement vert** depuis le 5 novembre. Il prouve que la base et le code de `main` sont alignés : tout écart futur (migration appliquée avant sa fusion) le fera échouer, ce qui est son rôle |
 
 Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, du 30 octobre au 5 novembre, sont restés sans réaction (aucune alerte lue ou configurée : **À confirmer**).
 
@@ -70,17 +71,17 @@ Deux écarts à connaître :
 
 | Élément | Valeur |
 |---|---|
-| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96 puis 97 par Alex (accord donné dans la conversation) ; statut **Ready**, construction 33 s (capture Vercel) |
-| Commit déployé | `da3614c`, fusion de la pull request n° 97 ; la n° 96 (`7a2103e`, page publique du portfolio) l'avait précédé |
+| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96, 97 puis 99 par Alex (accords donnés dans la conversation) ; statut **Ready** (capture Vercel pour le n° 97 : construction 33 s) |
+| Commit déployé | `475a7f9`, fusion de la pull request n° 99 (champs « Choix de conception » et « Validation »), précédée des n° 96 (`7a2103e`, page publique du portfolio) et 97 (`da3614c`, statut des réalisations) |
 | CI sur ces commits | Succès. La CI de `main` a échoué une première fois sur un test (« double clic sur Ajouter », attente d'une seconde) puis réussi à la relance : test **instable**, noté |
 | Adresse | `https://logmerry.vercel.app` : `/` et `/portfolio/qui-suis-je` renvoient à la connexion, `/auth/login` répond 200, **`/portfolio` répond 200 sans connexion** (vérifié le 5 novembre) |
 | Historique | Avant le 5 novembre : une vingtaine de déploiements « Ready » du 29 au 30 octobre |
-| **Ce qui n'est pas en production** | Les branches `feat/about-page` (n° 98), `feat/realisation-design-choice` (aucune PR) et `feat/contact-form`, **non fusionnées** |
-| Migrations déjà appliquées à la base partagée | Certaines migrations de ces branches sont **déjà appliquées** (formulaire de contact, champs « Choix de conception » et « Validation ») alors que leur code n'est pas en production : la base reste en avance sur le code publié |
+| **Ce qui n'est pas en production** | Les branches `feat/about-page` (n° 98) et `feat/contact-form`, **non fusionnées** |
+| Migrations déjà appliquées à la base partagée | Celles du formulaire de contact (branche non fusionnée) : la base reste en avance sur le code publié pour cette seule fonction. Le test de nuit le signalerait s'il portait dessus |
 
 Une méprise à noter : juste après la fusion, ma première vérification (API de GitHub et de Vercel) n'a pas montré le déploiement et m'a fait croire à tort qu'il n'avait pas eu lieu. La capture de Vercel et une nouvelle requête sur l'adresse l'ont corrigé.
 
-> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact, champs de conception), et dans quel ordre le fusionner. Je ne fusionne rien, n'ouvre aucune pull request et ne pousse rien sans ton accord explicite.
+> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact), et dans quel ordre le fusionner. Je ne fusionne rien, n'ouvre aucune pull request et ne pousse rien sans ton accord explicite.
 
 ## Retour arrière
 
@@ -110,7 +111,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 
 | Limite | Piste |
 |---|---|
-| Test de nuit encore en échec sur un contrôle | Fusionner `feat/realisation-design-choice` (décision d'Alex) ; relancer ensuite `gh workflow run isolation.yml` |
+| Écart base / code restant : le formulaire de contact | Fusionner `feat/contact-form` (décision d'Alex) ; relancer ensuite `gh workflow run isolation.yml` |
 | Fusion possible malgré une CI rouge | Discipline ; ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |

@@ -19,12 +19,12 @@
 
 ## Ce que la production contient (et ne contient pas)
 
-Production = branche `main` au 5 novembre 2026, commit `da3614c` (fusion de la pull request n° 97, qui contient la n° 96). Déploiement « Ready » dans Vercel.
+Production = branche `main` au 5 novembre 2026, commit `475a7f9` (fusion de la pull request n° 99, après les n° 96 et 97). Déploiement terminé dans Vercel (statut de commit GitHub : « Deployment has completed »).
 
 | Visible en démonstration | **Absent de la production** (branches non fusionnées) |
 |---|---|
-| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Page « Qui suis-je » du portfolio, formulaire de contact public, champs « Choix de conception » et « Validation » des réalisations |
-| Réalisations (gestion dans l'application, captures avec texte alternatif, statut) ; **portfolio public** (`/portfolio`) | Page « Qui suis-je » (`/portfolio/qui-suis-je` renvoie à la connexion), choix de présentation des réalisations (« Choix de conception », « Validation ») |
+| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Page « Qui suis-je » du portfolio, formulaire de contact public |
+| Réalisations (gestion dans l'application, captures avec texte alternatif, statut, « Choix de conception » et « Validation ») ; **portfolio public** (`/portfolio`) | Page « Qui suis-je » (`/portfolio/qui-suis-je` renvoie à la connexion) |
 
 > **À décider par Alex.** Le portfolio public est en production depuis le 5 novembre. Montrer aussi « Qui suis-je » et le formulaire de contact suppose de fusionner leurs branches avant (voir le chapitre « Déploiement »).
 
