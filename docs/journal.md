@@ -805,3 +805,8 @@
 ## 2026-11-05 — Captures de l'application connectée (chapitre 3)
 - Alex a ouvert la session du compte de démonstration dans le navigateur piloté ; captures prises sur une version de production locale (port 3100), données fictives : cockpit, notes, factures, plafonds. Une capture des missions a été écartée (une mission de test au titre non professionnel y apparaît).
 - Captures converties en JPEG (qualité 82) : 6 images, environ 2,1 Mo au total, contre 6 Mo en PNG. Serveur local arrêté.
+
+## 2026-11-05 — Livrable 5, qualité de service
+- Chapitre `05-qos.md`. Mesure faite par moi : 30 requêtes vers l'interface publique de Supabase (clé publique, vue publique et santé de l'authentification), depuis le Mac d'Alex : médiane 104 et 113 ms, 95e centile 134 et 178 ms, 60 réponses sur 60 en 200. `.env.local` non lu (clé publique obtenue par le MCP Supabase).
+- Non mesuré, écrit « À confirmer » : délai d'une Server Action depuis Vercel, connexion, recherche vectorielle seule. Les statistiques de la base (`pg_stat_statements`) ne montrent que des requêtes d'outillage parmi les plus lentes ; je n'en tire pas de durée pour l'application.
+- Avis de performance Supabase relus (3 clés étrangères sans index, 4 index inutilisés, niveau info) : aucune action, décision écrite dans le chapitre. Objectifs de qualité de service marqués « proposés », sans engagement.
