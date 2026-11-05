@@ -131,9 +131,17 @@ Vérification annoncée dans `ui-rules.md` : émulation Pixel 6a (412 × 915) da
 
 Captures prises le 5 novembre 2026 sur une version de production locale (`next build` puis `next start`), avec des données **fictives** (compte de démonstration) ; elles montrent donc l'état du code du jour, qui n'est pas celui de la production Vercel (voir le chapitre 10).
 
-![Page de connexion, thème sombre par défaut : carte centrée sur le dégradé, nom et logo en haut à gauche.](captures/connexion-sombre.png)
+![Page de connexion, thème sombre par défaut : carte centrée sur le dégradé, nom et logo en haut à gauche.](captures/connexion-sombre.jpg)
 
-![Portfolio public (page d'accueil) : bandeau photographique, titre en serif, étiquettes en police à chasse fixe.](captures/portfolio-public.png)
+![Cockpit « Aujourd'hui », thème sombre : bandeau de compteurs, chiffre d'affaires encaissé, jauge de plafond (étiquetée « estimation · DEMO »), calendrier et prochaines échéances.](captures/cockpit-sombre.jpg)
+
+![Notes : filtres par type, recherche, état d'indexation visible sur chaque note (Indexée, En attente d'indexation).](captures/notes-sombre.jpg)
+
+![Factures : suivi sans valeur légale (mention affichée), statut « Payée » déduit des encaissements.](captures/factures-sombre.jpg)
+
+![Plafonds : estimation étiquetée « DEMO, non officielle », donnée non confirmée signalée, règle, source et date d'effet affichées.](captures/plafonds-sombre.jpg)
+
+![Portfolio public (page d'accueil) : bandeau photographique, titre en serif, étiquettes en police à chasse fixe.](captures/portfolio-public.jpg)
 
 ## Maquettes
 
