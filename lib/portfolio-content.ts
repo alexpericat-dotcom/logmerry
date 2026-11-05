@@ -132,7 +132,7 @@ export const SHOWCASE = {
   unavailable: "Les réalisations ne sont pas disponibles pour le moment. Revenez dans quelques instants.",
   linkLabel: "Ouvrir le site",
   /** Étiquettes d'un relevé. « Résultat » et non « Temps rendu » : le champ est un texte libre, pas forcément une durée (aucune migration pour l'instant). */
-  fields: { situation: "Situation", problem: "Problème", done: "Ce que j'ai fait", tests: "Tests", result: "Résultat", stack: "Outils utilisés", stackRecommended: "Stack recommandée" },
+  fields: { situation: "Situation", problem: "Problème", done: "Ce que j'ai fait", tests: "Tests", designChoice: "Choix de conception", validation: "Validation", result: "Résultat", stack: "Outils utilisés", stackRecommended: "Stack recommandée" },
   /** Un résultat d'exercice ou de projet personnel n'est jamais présenté comme mesuré chez un client (5 novembre 2026). */
   notMeasured: (statusLabel: string) => `${statusLabel} : résultat non mesuré chez un client.`,
   filter: { label: "Filtrer par statut", all: "Tous", empty: "Aucune réalisation avec ce statut pour l'instant." },

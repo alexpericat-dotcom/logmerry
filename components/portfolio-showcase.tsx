@@ -86,10 +86,22 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
                 <dt className={DT}>{SHOWCASE.fields.done}</dt>
                 <dd className="mt-1 break-words text-phi-1">{card.description}</dd>
               </div>
+              {card.design_choice && (
+                <div className="py-3">
+                  <dt className={DT}>{SHOWCASE.fields.designChoice}</dt>
+                  <dd className="mt-1 break-words">{card.design_choice}</dd>
+                </div>
+              )}
               {card.tests && (
                 <div className="py-3">
                   <dt className={DT}>{SHOWCASE.fields.tests}</dt>
                   <dd className="mt-1 break-words">{card.tests}</dd>
+                </div>
+              )}
+              {card.validation && (
+                <div className="py-3">
+                  <dt className={DT}>{SHOWCASE.fields.validation}</dt>
+                  <dd className="mt-1 break-words">{card.validation}</dd>
                 </div>
               )}
               {card.result_figure && (

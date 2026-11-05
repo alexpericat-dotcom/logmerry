@@ -681,6 +681,7 @@ export type Database = {
           client_sector: string | null;
           created_at: string;
           description: string;
+          design_choice: string | null;
           id: string;
           link_url: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
@@ -695,6 +696,7 @@ export type Database = {
           tests: string | null;
           title: string;
           updated_at: string;
+          validation: string | null;
         };
         Insert: {
           client_consent?: boolean;
@@ -702,6 +704,7 @@ export type Database = {
           client_sector?: string | null;
           created_at?: string;
           description: string;
+          design_choice?: string | null;
           id?: string;
           link_url?: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
@@ -716,6 +719,7 @@ export type Database = {
           tests?: string | null;
           title: string;
           updated_at?: string;
+          validation?: string | null;
         };
         Update: {
           client_consent?: boolean;
@@ -723,6 +727,7 @@ export type Database = {
           client_sector?: string | null;
           created_at?: string;
           description?: string;
+          design_choice?: string | null;
           id?: string;
           link_url?: string | null;
           origin?: Database["public"]["Enums"]["realisation_origin"];
@@ -737,6 +742,7 @@ export type Database = {
           tests?: string | null;
           title?: string;
           updated_at?: string;
+          validation?: string | null;
         };
         Relationships: [];
       };
@@ -1030,6 +1036,7 @@ export type Database = {
         Row: {
           client_label: string | null;
           description: string | null;
+          design_choice: string | null;
           id: string | null;
           link_url: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"] | null;
@@ -1041,6 +1048,7 @@ export type Database = {
           status: string | null;
           tests: string | null;
           title: string | null;
+          validation: string | null;
         };
         Relationships: [];
       };

@@ -15,6 +15,8 @@ export type PublicRealisation = {
   status: RealisationStatus;
   problem: string | null;
   tests: string | null;
+  design_choice: string | null;
+  validation: string | null;
   /** Vrai : la stack est « recommandée », pas « utilisée ». */
   stack_is_recommended: boolean;
 };

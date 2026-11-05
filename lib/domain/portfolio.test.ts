@@ -16,6 +16,8 @@ const item = (id: string, published_at: string | null, origin: PublicRealisation
   status: "exercice_formation",
   problem: null,
   tests: null,
+  design_choice: null,
+  validation: null,
   stack_is_recommended: false,
 });
 const image = (id: string, realisation_id: string, created_at: string | null): PublicImage => ({ id, realisation_id, path: `p/${id}.png`, alt: `alt ${id}`, created_at });
@@ -42,7 +44,7 @@ test("mailto : objet encodé", () => {
 
 import { canPreviewInFrame, loadCards, safeHttpsLink, toPublicCards } from "./portfolio.ts";
 
-const raw = (over: Record<string, unknown> = {}) => ({ id: "a", title: "T", description: "d", origin: "demo" as const, client_label: "Client confidentiel", result_figure: null, link_url: null, stack: null, published_at: null, status: "exercice_formation", problem: null, tests: null, stack_is_recommended: null, ...over });
+const raw = (over: Record<string, unknown> = {}) => ({ id: "a", title: "T", description: "d", origin: "demo" as const, client_label: "Client confidentiel", result_figure: null, link_url: null, stack: null, published_at: null, status: "exercice_formation", problem: null, tests: null, design_choice: null, validation: null, stack_is_recommended: null, ...over });
 
 test("lignes incomplètes d'une vue écartées ; pile absente = vide ; capture sans texte alternatif écartée", () => {
   const cards = toPublicCards(

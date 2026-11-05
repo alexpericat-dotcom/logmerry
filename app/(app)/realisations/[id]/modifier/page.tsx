@@ -33,7 +33,7 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
       )}
       <RealisationForm
         // La clé suit le contenu enregistré, pas `updated_at` : publier ou retirer (qui le modifie) ne doit pas effacer une saisie en cours.
-        key={[r.title, r.description, r.origin, r.client_name, r.client_sector, r.result_figure, r.link_url, r.client_consent, r.status, r.problem, r.tests, r.stack_is_recommended, r.stack.join("|")].join("\u0001")}
+        key={[r.title, r.description, r.origin, r.client_name, r.client_sector, r.result_figure, r.link_url, r.client_consent, r.status, r.problem, r.tests, r.design_choice, r.validation, r.stack_is_recommended, r.stack.join("|")].join("\u0001")}
         action={updateRealisation.bind(null, id)}
         initial={{
           title: r.title,
@@ -48,6 +48,8 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
           status: r.status ?? "",
           problem: r.problem ?? "",
           tests: r.tests ?? "",
+          design_choice: r.design_choice ?? "",
+          validation: r.validation ?? "",
           stack_is_recommended: r.stack_is_recommended ? "on" : "",
         }}
         submitLabel="Enregistrer les modifications"

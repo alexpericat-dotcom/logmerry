@@ -56,7 +56,7 @@ describe("PublicationControl", () => {
 });
 
 describe("RealisationForm : case d'accord", () => {
-  const initial = { title: "T", description: "D", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "on", stack: "", status: "projet_perso", problem: "", tests: "", stack_is_recommended: "" };
+  const initial = { title: "T", description: "D", origin: "demo", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "on", stack: "", status: "projet_perso", problem: "", tests: "", design_choice: "", validation: "", stack_is_recommended: "" };
   const view = (client_consent: string) => <RealisationForm action={async () => ({})} initial={{ ...initial, client_consent }} submitLabel="Enregistrer" />;
 
   test("accord enregistré : case cochée, envoyée sous le nom attendu par l'action", () => {

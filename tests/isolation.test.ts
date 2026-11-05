@@ -2886,7 +2886,7 @@ describe("vues publiques du portfolio (public_realisations, public_realisation_i
     const { data, error } = await anon.from("public_realisations").select("*").like("title", `${PREFIX}%`);
     assert.ifError(error);
     assert.deepEqual(data!.map((r) => r.title), [`${PREFIX} publique`]);
-    assert.deepEqual(Object.keys(data![0]).sort(), ["client_label", "description", "id", "link_url", "origin", "problem", "published_at", "result_figure", "stack", "stack_is_recommended", "status", "tests", "title"]);
+    assert.deepEqual(Object.keys(data![0]).sort(), ["client_label", "description", "design_choice", "id", "link_url", "origin", "problem", "published_at", "result_figure", "stack", "stack_is_recommended", "status", "tests", "title", "validation"]);
     assert.equal(data![0].status, "client_reel");
     assert.equal(data![0].client_label, "Atelier Test");
     assert.ok(data![0].published_at);

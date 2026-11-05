@@ -8,6 +8,8 @@ export const REALISATION_STACK_MAX = 12;
 export const REALISATION_TAG_MAX = 40;
 export const REALISATION_PROBLEM_MAX = 600;
 export const REALISATION_TESTS_MAX = 600;
+export const REALISATION_DESIGN_CHOICE_MAX = 600;
+export const REALISATION_VALIDATION_MAX = 600;
 
 /** Statut visible d'une réalisation (5 novembre 2026). Aucune valeur par défaut : sans statut, une réalisation ne se publie pas et n'apparaît pas sur la page publique. */
 export const REALISATION_STATUSES = ["client_reel", "exercice_formation", "projet_perso"] as const;
@@ -44,6 +46,9 @@ export type RealisationInput = {
   status: string;
   problem: string;
   tests: string;
+  design_choice: string;
+  /** Distinct du résultat (`result_figure`) : jamais fusionné avec lui. */
+  validation: string;
   /** Case à cocher : « on » si la stack est recommandée (et non utilisée). */
   stack_is_recommended: string;
 };
@@ -60,6 +65,8 @@ export type RealisationValues = {
   status: RealisationStatus;
   problem: string | null;
   tests: string | null;
+  design_choice: string | null;
+  validation: string | null;
   stack_is_recommended: boolean;
 };
 export type RealisationErrors = Partial<Record<keyof RealisationInput, string>>;
@@ -80,6 +87,9 @@ const length = (s: string) => [...s].length;
 /** Pourquoi « Publier » est refusé, ou null s'il est permis : l'accord du client ET un statut (le statut est vérifié aussi par la base). */
 export const publicationBlock = (r: { client_consent: boolean; status: string | null }): string | null =>
   !r.client_consent ? "Coche l'accord du client avant de publier." : !parseRealisationStatus(r.status) ? "Choisis un statut avant de publier." : null;
+
+/** Un emplacement « [À COMPLÉTER PAR MOI … ] » laissé dans un champ texte : la fiche ne doit pas être publiée (le test du script SQL ne lit pas la base). */
+export const hasPlaceholder = (fields: Array<string | null | undefined>): boolean => fields.some((f) => typeof f === "string" && f.includes("[À COMPLÉTER PAR MOI"));
 
 /** Adresse de la page en ligne : https seulement, sans identifiants, sans espace ; renvoie l'adresse telle que saisie (pas réécrite) ou null. */
 export function parsePublicLink(text: string): string | null {
@@ -119,6 +129,8 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   const status = parseRealisationStatus(input.status);
   const problem = optional(input.problem);
   const tests = optional(input.tests);
+  const design_choice = optional(input.design_choice);
+  const validation = optional(input.validation);
 
   const errors: RealisationErrors = {};
   if (!title) errors.title = "Saisis le titre de la réalisation.";
@@ -129,6 +141,8 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   if (!status) errors.status = "Choisis un statut.";
   if (problem && length(problem) > REALISATION_PROBLEM_MAX) errors.problem = `Le problème doit faire ${REALISATION_PROBLEM_MAX} caractères au plus.`;
   if (tests && length(tests) > REALISATION_TESTS_MAX) errors.tests = `Les tests doivent faire ${REALISATION_TESTS_MAX} caractères au plus.`;
+  if (design_choice && length(design_choice) > REALISATION_DESIGN_CHOICE_MAX) errors.design_choice = `Le choix de conception doit faire ${REALISATION_DESIGN_CHOICE_MAX} caractères au plus.`;
+  if (validation && length(validation) > REALISATION_VALIDATION_MAX) errors.validation = `La validation doit faire ${REALISATION_VALIDATION_MAX} caractères au plus.`;
   if (client_name && length(client_name) > REALISATION_CLIENT_NAME_MAX) errors.client_name = `Le nom du client doit faire ${REALISATION_CLIENT_NAME_MAX} caractères au plus.`;
   if (client_sector && length(client_sector) > REALISATION_SECTOR_MAX) errors.client_sector = `Le secteur doit faire ${REALISATION_SECTOR_MAX} caractères au plus.`;
   if (result_figure && length(result_figure) > REALISATION_RESULT_MAX) errors.result_figure = `Le chiffre de résultat doit faire ${REALISATION_RESULT_MAX} caractères au plus.`;
@@ -139,6 +153,6 @@ export function validateRealisationInput(input: RealisationInput): { ok: true; v
   if (Object.keys(errors).length > 0 || !origin || !status) return { ok: false, errors };
   return {
     ok: true,
-    value: { title, description, origin, client_name, client_sector, result_figure, link_url, client_consent: input.client_consent === "on", stack, status, problem, tests, stack_is_recommended: input.stack_is_recommended === "on" },
+    value: { title, description, origin, client_name, client_sector, result_figure, link_url, client_consent: input.client_consent === "on", stack, status, problem, tests, design_choice, validation, stack_is_recommended: input.stack_is_recommended === "on" },
   };
 }
