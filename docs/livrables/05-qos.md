@@ -48,7 +48,7 @@ Mesures du journal, sur un build de production local, Lighthouse mobile :
 | Appels à l'assistant par utilisateur | 20 par minute, 300 par jour ; au-delà, refus (statut 429) | `consume_ai_quota` (base) |
 | Appel à Claude | Délai de 60 s, aucune nouvelle tentative | `lib/ai/claude-tool.ts` |
 | Appel à Mistral | Délai de 20 s par lot de 16 extraits, aucune nouvelle tentative | `lib/ai/embeddings.ts` |
-| Formulaire de contact | 10 messages par heure, délai minimum de 3 s avant l'envoi | `submit_contact_message` |
+| Formulaire de contact | 5 messages par heure, 30 par jour au total et 3 par jour pour une même adresse, délai minimum de 3 s avant l'envoi | `submit_contact_message` |
 | Appels à Supabase depuis l'application | Aucun délai propre (valeurs par défaut du client) | **À confirmer** |
 
 Conséquence à connaître : l'enregistrement d'une note attend l'indexation. Si Mistral est lent, l'enregistrement peut durer **jusqu'à 20 secondes** avant de passer à l'état « échec » (la note, elle, est conservée).

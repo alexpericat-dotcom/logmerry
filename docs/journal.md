@@ -855,3 +855,8 @@
 - Vérification à l'œil : couverture, sommaire, début des chapitres 10 (page 59) et 13 (page 74), compte rendu de mise en production (page 62). Numéros du sommaire exacts.
 - Corrigé : preuves périmées du chapitre 10 (identifiant du déploiement et durée de CI du 30 octobre), résumé du chapitre 13 (« test de nuit en échec depuis une semaine », réparé), liste de décisions du chapitre 13 (secrets déjà créés), note « À décider » du chapitre 10. Paragraphe sur ma fausse alerte de déploiement retiré du livrable (reste dans ce journal).
 - Non fait : lecture visuelle de chacune des 80 pages ; seules les pages ci-dessus ont été regardées.
+
+## 2026-11-05 — Correction : mention du formulaire de contact et limites
+- Alex signale que le bouton « M'écrire » ne fonctionne pas. Cause : sur la production (`main`), c'est un lien `mailto:` qui n'ouvre rien sans logiciel de messagerie. Le formulaire qui le remplace est sur `feat/contact-form`, non fusionnée.
+- **Erreur de ma part corrigée** : j'avais écrit (chapitre 13, journal) que le formulaire de contact n'avait aucun texte d'information. La branche affiche une ligne validée par Alex le 4 novembre (commit a0dd583) : « Votre nom, votre adresse e-mail et votre message ne servent qu'à vous répondre. » Il manque la durée de conservation, la base légale, les droits et le contact.
+- Limites du formulaire : les chapitres 4, 5 et 9 disaient 10 messages par heure. La base applique (vérifié par requête en lecture seule) 5 par heure, 30 par jour au total, 3 par jour par adresse, doublons ignorés (migration `20261107110000`). Chapitres corrigés.
