@@ -67,7 +67,7 @@ Trois barrières se superposent : une politique par table (`to authenticated` et
 
 | Test | Ce qu'il vérifie | Quand |
 |---|---|---|
-| `tests/isolation.test.ts` | Deux comptes fictifs ne voient, ne modifient et ne suppriment jamais les données de l'autre ; un visiteur sans compte est refusé (erreur 42501) ; `rls_audit()` liste les tables sans sécurité par ligne | Chaque nuit à 3 h 17 (`.github/workflows/isolation.yml`), contre la vraie base |
+| `tests/isolation.test.ts` | Deux comptes fictifs ne voient, ne modifient et ne suppriment jamais les données de l'autre ; un visiteur sans compte est refusé (erreur 42501) ; `rls_audit()` liste les tables sans sécurité par ligne | **Prévu** chaque nuit (`.github/workflows/isolation.yml`) contre la vraie base, mais **en échec depuis le 30 octobre : les secrets GitHub n'ont jamais été créés** (voir le chapitre « Déploiement »). Il se lance à la main sur l'ordinateur d'Alex avec `npm run test:isolation` |
 | `lib/security-static.test.ts` | Toute politique est `to authenticated` et utilise `auth.uid()` ; liste blanche des vues publiques ; aucun `service_role` dans le code ; seules l'adresse et la clé publique Supabase portent `NEXT_PUBLIC_` | À chaque envoi de code (CI) |
 | `tests/proxy/` | Règle d'accès (`accessDecision`) et motif des chemins couverts par le proxy | CI |
 

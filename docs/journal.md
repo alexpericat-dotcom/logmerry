@@ -810,3 +810,10 @@
 - Chapitre `05-qos.md`. Mesure faite par moi : 30 requêtes vers l'interface publique de Supabase (clé publique, vue publique et santé de l'authentification), depuis le Mac d'Alex : médiane 104 et 113 ms, 95e centile 134 et 178 ms, 60 réponses sur 60 en 200. `.env.local` non lu (clé publique obtenue par le MCP Supabase).
 - Non mesuré, écrit « À confirmer » : délai d'une Server Action depuis Vercel, connexion, recherche vectorielle seule. Les statistiques de la base (`pg_stat_statements`) ne montrent que des requêtes d'outillage parmi les plus lentes ; je n'en tire pas de durée pour l'application.
 - Avis de performance Supabase relus (3 clés étrangères sans index, 4 index inutilisés, niveau info) : aucune action, décision écrite dans le chapitre. Objectifs de qualité de service marqués « proposés », sans engagement.
+
+## 2026-11-05 — Livrable 10, déploiement
+- Chapitre `10-deploiement.md`, relevé en lecture seule (CLI Vercel, `gh`, requêtes sur l'adresse publique). Aucun déploiement, retour arrière ni fusion lancé.
+- **Constat grave** : `isolation.yml` (test d'isolation de nuit) est en échec **7 fois sur 7** depuis le 30 octobre : « Secret manquant : SUPABASE_URL », `gh secret list` vide. Ce test n'a jamais tourné contre la vraie base. Les chapitres 8 et 11 le présentaient comme actif : corrigés. À Alex de créer les six secrets (je ne manipule aucun mot de passe).
+- Alias de production : `https://logmerry.vercel.app` (répond, 307 vers `/auth/login`, `/api/chat` sans session : 401). Préversions et adresses de déploiement : protégées par la connexion Vercel (302). Nom de domaine propre : À confirmer.
+- Production = `main` au commit `5db86bf` (PR #95, 30 octobre 12:39, CI verte) ; `main` n'a rien depuis. Quatre branches (about-page, realisation-status, realisation-design-choice, contact-form) non fusionnées, certaines migrations déjà appliquées à la base partagée.
+- Écarts relevés : clés IA et clé publique Supabase définies pour la production seulement (pas les préversions) ; un seul projet Supabase, pas de recette ; protection de `main` impossible (GitHub : offre Pro requise).
