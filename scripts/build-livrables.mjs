@@ -118,6 +118,12 @@ function anchorPages() {
 print({});
 const first = anchorPages();
 print(first.map);
-const second = anchorPages();
-if (JSON.stringify(first.map) !== JSON.stringify(second.map)) console.warn("Les pages ont bougé à la seconde passe : relancer.");
-console.log(`${OUT} (${files.length} chapitres, ${second.total} pages)`);
+let last = anchorPages();
+// Le sommaire rempli peut déplacer les pages : on réimprime jusqu'à stabilité (3 passes au plus).
+for (let i = 0; i < 3 && JSON.stringify(first.map) !== JSON.stringify(last.map); i++) {
+  first.map = last.map;
+  print(last.map);
+  last = anchorPages();
+}
+if (JSON.stringify(first.map) !== JSON.stringify(last.map)) console.warn("Les numéros de page ne se stabilisent pas.");
+console.log(`${OUT} (${files.length} chapitres, ${last.total} pages)`);
