@@ -12,7 +12,7 @@ Faits relevés dans le code, les migrations et la base réelle le 5 novembre 202
 | Longueur minimale du mot de passe | 12 caractères (`MIN_PASSWORD_LENGTH`) |
 | SSO (connexion par un fournisseur externe) | **Aucun** : aucun appel dans le code |
 | MFA (second facteur) | **Aucun** : rien dans le code, et 0 facteur enregistré dans la base |
-| Création de compte | **Aucune page d'inscription** dans l'application. La base compte 5 comptes. L'interdiction d'inscription côté Supabase est un réglage du tableau de bord : **À confirmer** (non lisible par les outils utilisés ici) |
+| Création de compte | **Aucune page d'inscription** dans l'application. La base compte 5 comptes. L'inscription est **désactivée** dans le tableau de bord de Supabase (réglage confirmé par Alex le 5 novembre 2026 ; non lisible par les outils utilisés ici) |
 | Mot de passe oublié | Lien envoyé par e-mail, retour sur `/auth/confirm` (échange d'un code PKCE contre une session côté serveur), puis page de nouveau mot de passe |
 | Mots de passe déjà divulgués | Protection **désactivée** : elle est réservée à l'offre Pro de Supabase |
 | Messages d'erreur | Traduits en français, jamais le texte brut ; un même message pour « e-mail inconnu » et « mauvais mot de passe » (`invalid_credentials`) |
@@ -56,12 +56,12 @@ Mesures prises dans la base réelle le 5 novembre 2026 :
 |---|---|
 | Tables de `public` avec sécurité par ligne activée | **22 sur 22** |
 | Politiques de sécurité | 74, **toutes réservées aux comptes connectés** ; aucune ouverte à tous |
-| Droits de `anon` sur les tables | 2 lectures seulement, sur les 2 vues du portfolio |
+| Droits de `anon` | 2 lectures seulement (les 2 vues du portfolio) et l'exécution de `submit_contact_message` ; aucune table |
 | Fonctions `SECURITY DEFINER` | 3 : `rule_version_is_mine`, `consume_ai_quota`, `submit_contact_message`, toutes avec un `search_path` fixé (test) |
 
 Trois barrières se superposent : une politique par table (`to authenticated` et `auth.uid()`), le retrait des droits d'`anon` (migration `20261030120000_revoke_anon_tables.sql`), et un test qui échoue si une table est créée sans sécurité par ligne.
 
-**Écart relevé.** Quatre fonctions d'aide restent exécutables par `anon` : `immutable_unaccent`, `pp_thresholds_ok`, `set_updated_at` et `user_stories_guard_closed_sprint`. Ce sont des fonctions ordinaires (pas `SECURITY DEFINER`) qui ne lisent aucune table : elles ne donnent accès à aucune donnée. Ce droit vient du réglage par défaut de Postgres, antérieur à la migration qui n'a corrigé que les futures fonctions. À confirmer avec Alex : les révoquer par une migration, pour que la liste réelle corresponde au test (qui n'énumère que `submit_contact_message`).
+**Écart relevé et corrigé le 5 novembre 2026.** Quatre fonctions d'aide (`immutable_unaccent`, `pp_thresholds_ok`, `set_updated_at`, `user_stories_guard_closed_sprint`) étaient restées exécutables par `anon`, par le droit par défaut de Postgres, antérieur à la migration du lot D qui n'avait corrigé que les futures fonctions. Elles ne lisaient aucune table. Une migration (`20261105111141_revoke_anon_helper_functions.sql`) a retiré ce droit : `anon` n'exécute plus que `submit_contact_message`, ce qu'un contrôle dans la base confirme. Un test statique vérifie désormais ces quatre retraits, et les 158 tests d'isolation passent après la migration.
 
 ## Tests qui le prouvent
 
@@ -94,6 +94,4 @@ La politique de contenu (CSP) est en **mode rapport seulement** : elle ne bloque
 |---|---|---|
 | Pas de MFA | Un mot de passe volé suffit pour entrer | Activer le MFA par application d'authentification (disponible dans Supabase Auth ; **À confirmer** sur l'offre gratuite) |
 | Mots de passe divulgués non vérifiés | Un mot de passe connu des pirates serait accepté s'il a 12 caractères | Offre Pro, ou politique de mot de passe imposée à la main |
-| Inscription : réglage du tableau de bord non vérifié | **À confirmer** que personne ne peut créer un compte | Lire le réglage dans Supabase, Authentication |
 | CSP non bloquante | Une injection de script ne serait pas stoppée par le navigateur | Passer en mode bloquant avec des jetons (nonces) |
-| 4 fonctions d'aide ouvertes à `anon` | Aucune donnée exposée | Révocation par migration (voir plus haut) |

@@ -201,4 +201,10 @@ describe("migrations : droits d'`anon`", () => {
     assert.ok(/alter default privileges for role postgres in schema public revoke all on tables from anon/i.test(sql));
     assert.ok(/alter default privileges for role postgres in schema public revoke execute on functions from public, anon/i.test(sql));
   });
+
+  test("les quatre fonctions d'aide créées avant le lot D ne sont plus exécutables par `anon` (5 novembre 2026, livrable 11)", () => {
+    for (const fn of ["immutable_unaccent\\(text\\)", "pp_thresholds_ok\\(smallint\\[\\]\\)", "set_updated_at\\(\\)", "user_stories_guard_closed_sprint\\(\\)"]) {
+      assert.ok(new RegExp(`revoke execute on function public\\.${fn} from public, anon`, "i").test(sql), fn);
+    }
+  });
 });
