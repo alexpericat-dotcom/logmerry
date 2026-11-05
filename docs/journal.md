@@ -849,3 +849,9 @@
 - Accord explicite d'Alex (« oui ») pour ouvrir et fusionner `feat/realisation-design-choice`. PR n° 99 ouverte (base `main`, 4 commits : champs « Choix de conception » et « Validation », refus de publier avec un texte provisoire), contrôles verts, fusionnée (`475a7f9`), CI de `main` verte, déploiement de production terminé (statut Vercel de GitHub).
 - `gh workflow run isolation.yml --ref main` : **158 contrôles sur 158**, aucun échec (run 42094696418). Le test de nuit est vert pour la première fois.
 - Reste non fusionné : `feat/about-page` (n° 98) et `feat/contact-form` ; `preview/realisation-status` jamais touchée. Migrations du formulaire de contact déjà appliquées à la base.
+
+## 2026-11-05 — Relecture finale du PDF (80 pages)
+- Contrôles automatiques sur le HTML du PDF : aucun tableau ou image qui déborde, aucune image cassée, aucun lien de sommaire cassé, 13 diagrammes Mermaid sans erreur de syntaxe. Identifiants dupliqués : uniquement ceux générés par Mermaid et deux titres de niveau 3 du chapitre 1 (sans effet sur le sommaire).
+- Vérification à l'œil : couverture, sommaire, début des chapitres 10 (page 59) et 13 (page 74), compte rendu de mise en production (page 62). Numéros du sommaire exacts.
+- Corrigé : preuves périmées du chapitre 10 (identifiant du déploiement et durée de CI du 30 octobre), résumé du chapitre 13 (« test de nuit en échec depuis une semaine », réparé), liste de décisions du chapitre 13 (secrets déjà créés), note « À décider » du chapitre 10. Paragraphe sur ma fausse alerte de déploiement retiré du livrable (reste dans ce journal).
+- Non fait : lecture visuelle de chacune des 80 pages ; seules les pages ci-dessus ont été regardées.

@@ -20,10 +20,10 @@ flowchart LR
 | Étape | Qui ou quoi | Preuve |
 |---|---|---|
 | 1. Développement | Une branche par fonctionnalité, petits commits | Dépôt GitHub `alexpericat-dotcom/logmerry` |
-| 2. Vérification | `ci.yml` à chaque envoi et chaque pull request | Dernière exécution sur `main` : succès en 1 min 34 s |
+| 2. Vérification | `ci.yml` à chaque envoi et chaque pull request | Dernière exécution sur `main` (5 novembre, après la fusion du n° 99) : succès en 2 min 40 s |
 | 3. Préversion | Vercel déploie chaque branche à une adresse propre | Alias du type `logmerry-git-<branche>-new-team-adce.vercel.app` |
 | 4. Fusion | Alex fusionne la pull request dans `main` | Aucune règle de protection de branche (voir plus bas) |
-| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Déploiement `dpl_2EvRdV7zKFvkzzBg21ADVGMstVhF` |
+| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Commit `475a7f9` : statut GitHub « Deployment has completed » (Vercel) |
 | 6. Base de données | Les migrations de `supabase/migrations/` sont appliquées **à la main**, après que le SQL m'a été montré | Journal : « appliquée par Alex » ; aucune étape de migration dans la CI |
 
 ## Ce que la CI contrôle
@@ -79,9 +79,7 @@ Deux écarts à connaître :
 | **Ce qui n'est pas en production** | Les branches `feat/about-page` (n° 98) et `feat/contact-form`, **non fusionnées** |
 | Migrations déjà appliquées à la base partagée | Celles du formulaire de contact (branche non fusionnée) : la base reste en avance sur le code publié pour cette seule fonction. Le test de nuit le signalerait s'il portait dessus |
 
-Une méprise à noter : juste après la fusion, ma première vérification (API de GitHub et de Vercel) n'a pas montré le déploiement et m'a fait croire à tort qu'il n'avait pas eu lieu. La capture de Vercel et une nouvelle requête sur l'adresse l'ont corrigé.
-
-> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact), et dans quel ordre le fusionner. Je ne fusionne rien, n'ouvre aucune pull request et ne pousse rien sans ton accord explicite.
+> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact), et dans quel ordre le fusionner. Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97 et 99 l'ont été avec cet accord le 5 novembre.
 
 ## Retour arrière
 
