@@ -861,3 +861,9 @@
 - Alex signale que le bouton « M'écrire » ne fonctionne pas. Cause : sur la production (`main`), c'est un lien `mailto:` qui n'ouvre rien sans logiciel de messagerie. Le formulaire qui le remplace est sur `feat/contact-form`, non fusionnée.
 - **Erreur de ma part corrigée** : j'avais écrit (chapitre 13, journal) que le formulaire de contact n'avait aucun texte d'information. La branche affiche une ligne validée par Alex le 4 novembre (commit a0dd583) : « Votre nom, votre adresse e-mail et votre message ne servent qu'à vous répondre. » Il manque la durée de conservation, la base légale, les droits et le contact.
 - Limites du formulaire : les chapitres 4, 5 et 9 disaient 10 messages par heure. La base applique (vérifié par requête en lecture seule) 5 par heure, 30 par jour au total, 3 par jour par adresse, doublons ignorés (migration `20261107110000`). Chapitres corrigés.
+
+## 2026-11-05 — Fusion de la pull request n° 102 (formulaire de contact et « Qui suis-je »)
+- Accord explicite d'Alex (« fusionne le formulaire et pousse ») après le constat que « M'écrire » était un `mailto:` inopérant sans logiciel de messagerie. PR n° 102 ouverte (`feat/contact-form` vers `main`, 25 commits dont ceux de la n° 98), contrôles verts, fusionnée (`59c9d8c`), CI de `main` verte, déploiement terminé.
+- Vérifié en production : `/portfolio` 200 avec formulaire, plus de `mailto:`, ligne d'information présente ; `/portfolio/qui-suis-je` 200. Test d'isolation relancé : 158 sur 158.
+- Erreur de ma part corrigée dans la signature de la PR n° 102 (j'avais mis le lien de la page récap au lieu de celui de Claude Code).
+- Branche `docs/livrables-only` mise à jour (fusion de `main`, conflit du journal résolu en gardant les deux côtés) et poussée ; chapitres 6, 10, 13 et README mis à jour. PR n° 98 devenue redondante (non fermée sans l'accord d'Alex).

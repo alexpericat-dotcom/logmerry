@@ -1,6 +1,6 @@
 # Démonstration de l'application
 
-> **En deux phrases.** La démonstration se fait sur l'adresse de production **`https://logmerry.vercel.app`** (QR ci-dessous), avec un compte fictif, et suit un scénario de 14 étapes qui va d'un prospect à une facture payée en une vingtaine de minutes. Ce scénario a été déroulé en développement le 29 octobre 2026 ; **il n'a pas été rejoué sur la production**, et la production ne contient pas tout ce qui a été fait depuis : le portfolio public y est depuis le 5 novembre 2026, mais pas la page « Qui suis-je » ni le formulaire de contact.
+> **En deux phrases.** La démonstration se fait sur l'adresse de production **`https://logmerry.vercel.app`** (QR ci-dessous), avec un compte fictif, et suit un scénario de 14 étapes qui va d'un prospect à une facture payée en une vingtaine de minutes. Ce scénario a été déroulé en développement le 29 octobre 2026 ; **il n'a pas été rejoué sur la production**, et le portfolio public, la page « Qui suis-je » et le formulaire de contact y sont depuis le 5 novembre 2026.
 
 ## Où et comment
 
@@ -19,14 +19,14 @@
 
 ## Ce que la production contient (et ne contient pas)
 
-Production = branche `main` au 5 novembre 2026, commit `475a7f9` (fusion de la pull request n° 99, après les n° 96 et 97). Déploiement terminé dans Vercel (statut de commit GitHub : « Deployment has completed »).
+Production = branche `main` au 5 novembre 2026, commit `59c9d8c` (fusion de la pull request n° 102 : formulaire de contact et « Qui suis-je », après les n° 96, 97 et 99). Déploiement terminé dans Vercel (statut de commit GitHub : « Deployment has completed »).
 
-| Visible en démonstration | **Absent de la production** (branches non fusionnées) |
+| Visible en démonstration | **Absent de la production** |
 |---|---|
-| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Page « Qui suis-je » du portfolio, formulaire de contact public |
-| Réalisations (gestion dans l'application, captures avec texte alternatif, statut, « Choix de conception » et « Validation ») ; **portfolio public** (`/portfolio`) | Page « Qui suis-je » (`/portfolio/qui-suis-je` renvoie à la connexion) |
+| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Rien de prévu qui ne soit pas en ligne ; voir « Ce qui n'est pas démontrable » |
+| Réalisations (gestion dans l'application, captures avec texte alternatif, statut, « Choix de conception » et « Validation ») ; **portfolio public** (`/portfolio`, sans connexion) ; page **« Qui suis-je »** (`/portfolio/qui-suis-je`) ; **formulaire de contact** (remplace le lien « M'écrire ») | — |
 
-> **À décider par Alex.** Le portfolio public est en production depuis le 5 novembre. Montrer aussi « Qui suis-je » et le formulaire de contact suppose de fusionner leurs branches avant (voir le chapitre « Déploiement »).
+> **À savoir.** Le formulaire de contact écrit dans les notes du compte propriétaire, en brouillon. Un message envoyé pendant la démonstration y apparaît ; à supprimer ensuite. Sa ligne d'information est courte (durée de conservation, base légale et droits restent à compléter : chapitre « Exploitation et conformité »).
 
 ## Avant de commencer : la liste de contrôle
 
@@ -81,7 +81,7 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 ## Ce qui n'est pas démontrable aujourd'hui
 
 - Les **performances en production** : les pages ont été mesurées en développement (0,4 à 1,5 s par page, à chaud) ; la mesure sur le déploiement avec une session connectée reste à faire.
-- La page **« Qui suis-je »** et le **formulaire de contact** depuis la production (non fusionnés).
+- L'**envoi réel** d'un message par le formulaire de contact : non essayé en production par moi (il écrirait dans la base).
 - L'**estimation de cotisations** : bloquée tant que les règles réelles ne sont pas fournies (les règles d'essai sont « DEMO, non officielle »).
 - Les **vraies données** : aucune ; tout est fictif.
 

@@ -1,6 +1,6 @@
 # Déploiement et retour arrière
 
-> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne depuis le 5 novembre 2026 sur le dernier commit de `main` (fusion des pull requests n° 96, 97 et 99, avec le portfolio public) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre et le test passe depuis (158 contrôles sur 158).
+> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne depuis le 5 novembre 2026 sur le dernier commit de `main` (fusion des pull requests n° 96, 97, 99 et 102 : portfolio public, « Qui suis-je » et formulaire de contact) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre et le test passe depuis (158 contrôles sur 158).
 
 Faits relevés le 5 novembre 2026 par la ligne de commande de Vercel, l'API de GitHub et des requêtes sur l'adresse publique (lecture seule). Aucune action de déploiement n'a été lancée pour écrire ce chapitre.
 
@@ -71,15 +71,15 @@ Deux écarts à connaître :
 
 | Élément | Valeur |
 |---|---|
-| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96, 97 puis 99 par Alex (accords donnés dans la conversation) ; statut **Ready** (capture Vercel pour le n° 97 : construction 33 s) |
-| Commit déployé | `475a7f9`, fusion de la pull request n° 99 (champs « Choix de conception » et « Validation »), précédée des n° 96 (`7a2103e`, page publique du portfolio) et 97 (`da3614c`, statut des réalisations) |
+| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96, 97, 99 puis 102 par Alex (accords donnés dans la conversation) ; statut **Ready** (capture Vercel pour le n° 97 : construction 33 s) |
+| Commit déployé | `59c9d8c`, fusion de la pull request n° 102 (formulaire de contact et « Qui suis-je »), précédée des n° 96 (page publique du portfolio), 97 (statut des réalisations) et 99 (« Choix de conception » et « Validation ») |
 | CI sur ces commits | Succès. La CI de `main` a échoué une première fois sur un test (« double clic sur Ajouter », attente d'une seconde) puis réussi à la relance : test **instable**, noté |
 | Adresse | `https://logmerry.vercel.app` : `/` et `/portfolio/qui-suis-je` renvoient à la connexion, `/auth/login` répond 200, **`/portfolio` répond 200 sans connexion** (vérifié le 5 novembre) |
 | Historique | Avant le 5 novembre : une vingtaine de déploiements « Ready » du 29 au 30 octobre |
-| **Ce qui n'est pas en production** | Les branches `feat/about-page` (n° 98) et `feat/contact-form`, **non fusionnées** |
-| Migrations déjà appliquées à la base partagée | Celles du formulaire de contact (branche non fusionnée) : la base reste en avance sur le code publié pour cette seule fonction. Le test de nuit le signalerait s'il portait dessus |
+| **Ce qui n'est pas en production** | Rien de planifié : tout ce qui est fusionné est déployé. La pull request n° 98 (`feat/about-page`) devient redondante, ses commits étant dans la n° 102 |
+| Migrations déjà appliquées à la base partagée | Plus d'écart connu : la base et `main` sont alignés (test de nuit : 158 sur 158 après la fusion de la n° 102) |
 
-> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact), et dans quel ordre le fusionner. Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97 et 99 l'ont été avec cet accord le 5 novembre.
+> **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) reste à fusionner.
 
 ## Retour arrière
 
@@ -109,7 +109,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 
 | Limite | Piste |
 |---|---|
-| Écart base / code restant : le formulaire de contact | Fusionner `feat/contact-form` (décision d'Alex) ; relancer ensuite `gh workflow run isolation.yml` |
+| Fusion possible malgré une CI rouge | Aucun écart base / code restant ; la protection de `main` reste impossible sur l'offre GitHub actuelle |
 | Fusion possible malgré une CI rouge | Discipline ; ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |
