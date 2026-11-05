@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 /** Bloc « Publication » de la page de modification : état actuel et un bouton Publier / Retirer de la publication. */
-export function PublicationControl({ id, published, consent }: { id: string; published: boolean; consent: boolean }) {
+export function PublicationControl({ id, published, consent, hasStatus = true }: { id: string; published: boolean; consent: boolean; hasStatus?: boolean }) {
+  const blocked = !published && (!consent || !hasStatus);
   const [state, action, pending] = useActionState<PublicationState>(() => setRealisationPublication(id, !published), {});
   return (
     <section aria-labelledby="publication-title" className="flex max-w-2xl flex-col gap-3 rounded-lg border p-4">
@@ -19,17 +20,19 @@ export function PublicationControl({ id, published, consent }: { id: string; pub
           <Badge variant={published ? "success" : "outline"}>{published ? "Publiée" : "Non publiée"}</Badge>
         </span>
       </div>
-      {!published && !consent && (
+      {blocked && (
         <p id="publication-help" className="text-sm text-muted-foreground">
-          Pour publier, coche d&apos;abord l&apos;accord du client dans le formulaire ci-dessus, puis clique sur « Enregistrer les modifications ».
+          {!consent
+            ? "Pour publier, coche d'abord l'accord du client dans le formulaire ci-dessus, puis clique sur « Enregistrer les modifications »."
+            : "Pour publier, choisis d'abord un statut dans le formulaire ci-dessus, puis clique sur « Enregistrer les modifications »."}
         </p>
       )}
       <form action={action} className="flex flex-col items-start gap-2">
         <Button
           type="submit"
           variant={published ? "outline" : "default"}
-          disabled={pending || (!published && !consent)}
-          aria-describedby={!published && !consent ? "publication-help" : undefined}
+          disabled={pending || blocked}
+          aria-describedby={blocked ? "publication-help" : undefined}
         >
           {pending ? "Un instant…" : published ? "Retirer de la publication" : "Publier"}
         </Button>

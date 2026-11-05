@@ -12,8 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   REALISATION_ORIGINS,
   REALISATION_ORIGIN_LABELS,
+  REALISATION_STATUSES,
+  REALISATION_STATUS_LABELS,
   type RealisationInput,
   type RealisationOrigin,
+  type RealisationStatus,
 } from "@/lib/domain/realisations";
 
 type Props = {
@@ -23,7 +26,7 @@ type Props = {
   cancelHref?: string;
 };
 
-const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "" };
+const EMPTY: RealisationInput = { title: "", description: "", origin: "", client_name: "", client_sector: "", result_figure: "", link_url: "", client_consent: "", stack: "", status: "", problem: "", tests: "", stack_is_recommended: "" };
 
 export function RealisationForm({ action, initial, submitLabel, cancelHref = "/realisations" }: Props) {
   const [state, formAction, pending] = useActionState<RealisationFormState, FormData>(action, {});
@@ -59,6 +62,21 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         {errorLine("origin")}
       </div>
       <div className="grid gap-2">
+        <Label htmlFor="status">Statut affiché sur la page publique (obligatoire)</Label>
+        {/* Aucune valeur par défaut : sans statut choisi, la réalisation ne peut pas être publiée. */}
+        <select {...field("status")} defaultValue={values.status} aria-required="true" className={selectClass}>
+          <option value="" disabled>
+            Choisis un statut
+          </option>
+          {REALISATION_STATUSES.map((st: RealisationStatus) => (
+            <option key={st} value={st}>
+              {REALISATION_STATUS_LABELS[st]}
+            </option>
+          ))}
+        </select>
+        {errorLine("status")}
+      </div>
+      <div className="grid gap-2">
         <Label htmlFor="client_name">Nom du client (facultatif)</Label>
         <Input {...field("client_name")} defaultValue={values.client_name} autoComplete="off" />
         {errorLine("client_name")}
@@ -67,6 +85,16 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         <Label htmlFor="client_sector">Secteur du client (facultatif)</Label>
         <Input {...field("client_sector")} defaultValue={values.client_sector} autoComplete="off" />
         {errorLine("client_sector")}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="problem">Problème de départ (facultatif)</Label>
+        <Textarea {...field("problem")} defaultValue={values.problem} rows={3} />
+        {errorLine("problem")}
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="tests">Tests (facultatif)</Label>
+        <Textarea {...field("tests")} defaultValue={values.tests} rows={3} />
+        {errorLine("tests")}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="result_figure">Chiffre de résultat (facultatif)</Label>
@@ -98,6 +126,16 @@ export function RealisationForm({ action, initial, submitLabel, cancelHref = "/r
         <Label htmlFor="stack">Stack, séparée par des virgules (facultatif)</Label>
         <Input {...field("stack")} defaultValue={values.stack} autoComplete="off" />
         {errorLine("stack")}
+      </div>
+      <div className="flex items-start gap-3">
+        <input
+          id="stack_is_recommended"
+          name="stack_is_recommended"
+          type="checkbox"
+          defaultChecked={values.stack_is_recommended === "on"}
+          className="mt-1 size-5 shrink-0 accent-[hsl(var(--primary))] max-md:size-6"
+        />
+        <Label htmlFor="stack_is_recommended">Cette stack est recommandée, pas utilisée (affichée « Stack recommandée »)</Label>
       </div>
       {state.message && (
         <p role="alert" className="text-sm text-destructive">

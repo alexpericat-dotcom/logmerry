@@ -34,6 +34,10 @@ const readValues = (formData: FormData): RealisationInput => ({
   link_url: text(formData, "link_url"),
   client_consent: text(formData, "client_consent") === "on" ? "on" : "",
   stack: text(formData, "stack"),
+  status: text(formData, "status"),
+  problem: text(formData, "problem"),
+  tests: text(formData, "tests"),
+  stack_is_recommended: text(formData, "stack_is_recommended") === "on" ? "on" : "",
 });
 
 type WriteOutcome = "saved" | "not-found" | "error";
@@ -82,29 +86,32 @@ export type PublicationState = { message?: string };
 
 /** « Publier » (refusé sans l'accord du client, par l'action puis par la base) ou « Retirer de la publication ». */
 export async function setRealisationPublication(id: string, publish: boolean): Promise<PublicationState> {
-  const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent"> => {
+  const result = await withSession(async (supabase): Promise<WriteOutcome | "no-consent" | "no-status"> => {
     if (!isUuid(id)) return "not-found";
     // Une Server Action est appelable avec n'importe quel argument : seul un vrai booléen est une demande.
     if (typeof publish !== "boolean") return "error";
-    // Publier ne touche que les lignes dont l'accord est coché : l'accord est relu par la base, pas pris sur la foi de l'écran.
+    // Publier ne touche que les lignes dont l'accord est coché ET qui ont un statut : les deux sont relus par la base, pas pris sur la foi de l'écran.
     let query = supabase.from("realisations").update({ published: publish }).eq("id", id);
-    if (publish) query = query.eq("client_consent", true);
+    if (publish) query = query.eq("client_consent", true).not("status", "is", null);
     const { data, error } = await query.select("id");
     if (error) return "error";
     if (data?.length) return "saved";
     if (!publish) return "not-found";
-    const exists = await supabase.from("realisations").select("id").eq("id", id).maybeSingle();
+    const exists = await supabase.from("realisations").select("id, client_consent, status").eq("id", id).maybeSingle();
     if (exists.error) return "error";
-    return exists.data ? "no-consent" : "not-found";
+    if (!exists.data) return "not-found";
+    return exists.data.client_consent ? "no-status" : "no-consent";
   });
 
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed" || result.value === "error") return { message: "Changement impossible pour le moment. Réessaie." };
-  if (result.value === "no-consent") return { message: publicationBlock({ client_consent: false }) ?? undefined };
+  if (result.value === "no-consent") return { message: publicationBlock({ client_consent: false, status: null }) ?? undefined };
+  if (result.value === "no-status") return { message: publicationBlock({ client_consent: true, status: null }) ?? undefined };
   if (result.value === "not-found") return { message: NOT_FOUND };
 
   revalidatePath("/realisations");
   revalidatePath(`/realisations/${id}/modifier`);
+  revalidatePath("/portfolio");
   return {};
 }
 

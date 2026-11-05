@@ -662,6 +662,13 @@ export type Database = {
             foreignKeyName: "realisation_images_realisation_id_fkey";
             columns: ["realisation_id"];
             isOneToOne: false;
+            referencedRelation: "public_realisations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
             referencedRelation: "realisations";
             referencedColumns: ["id"];
           },
@@ -678,10 +685,14 @@ export type Database = {
           link_url: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
           owner_id: string;
+          problem: string | null;
           published: boolean;
           published_at: string | null;
           result_figure: string | null;
           stack: string[];
+          stack_is_recommended: boolean;
+          status: string | null;
+          tests: string | null;
           title: string;
           updated_at: string;
         };
@@ -695,10 +706,14 @@ export type Database = {
           link_url?: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"];
           owner_id?: string;
+          problem?: string | null;
           published?: boolean;
           published_at?: string | null;
           result_figure?: string | null;
           stack?: string[];
+          stack_is_recommended?: boolean;
+          status?: string | null;
+          tests?: string | null;
           title: string;
           updated_at?: string;
         };
@@ -712,10 +727,14 @@ export type Database = {
           link_url?: string | null;
           origin?: Database["public"]["Enums"]["realisation_origin"];
           owner_id?: string;
+          problem?: string | null;
           published?: boolean;
           published_at?: string | null;
           result_figure?: string | null;
           stack?: string[];
+          stack_is_recommended?: boolean;
+          status?: string | null;
+          tests?: string | null;
           title?: string;
           updated_at?: string;
         };
@@ -995,6 +1014,13 @@ export type Database = {
             foreignKeyName: "realisation_images_realisation_id_fkey";
             columns: ["realisation_id"];
             isOneToOne: false;
+            referencedRelation: "public_realisations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "realisation_images_realisation_id_fkey";
+            columns: ["realisation_id"];
+            isOneToOne: false;
             referencedRelation: "realisations";
             referencedColumns: ["id"];
           },
@@ -1007,9 +1033,13 @@ export type Database = {
           id: string | null;
           link_url: string | null;
           origin: Database["public"]["Enums"]["realisation_origin"] | null;
+          problem: string | null;
           published_at: string | null;
           result_figure: string | null;
           stack: string[] | null;
+          stack_is_recommended: boolean | null;
+          status: string | null;
+          tests: string | null;
           title: string | null;
         };
         Relationships: [];

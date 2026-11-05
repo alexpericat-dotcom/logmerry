@@ -6,7 +6,7 @@ import { fake, filterValue, form, redirectsTo, routes, toLogin, withHarness, wri
 
 const ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
-const VALID = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", stack: "Next.js, Supabase" };
+const VALID = { title: "Assistant RAG", description: "Un assistant qui cite ses sources.", origin: "demo", stack: "Next.js, Supabase", status: "projet_perso" };
 
 withHarness();
 
@@ -36,6 +36,10 @@ describe("createRealisation / updateRealisation", () => {
     link_url: "https://exemple.fr/",
     client_consent: true,
     stack: ["Next.js", "Supabase"],
+    status: "projet_perso",
+    problem: null,
+    tests: null,
+    stack_is_recommended: false,
   };
 
   test("création : tous les champs, nettoyés, dans l'insertion (et rien d'autre)", async () => {
@@ -54,6 +58,19 @@ describe("createRealisation / updateRealisation", () => {
     const payload = fake.on("realisations", "insert")[0].payload as Record<string, unknown>;
     for (const key of ["owner_id", "published", "published_at"]) assert.equal(key in payload, false, key);
     assert.equal(payload.client_consent, true, "« on » est la seule valeur qui coche l'accord");
+  });
+
+  test("STATUT : sans statut valide, la création est refusée (aucune requête) ; problème, tests et stack recommandée sont écrits quand ils sont donnés", async () => {
+    for (const status of ["", "client", "inventé"]) {
+      fake.reset();
+      const r = await createRealisation({}, form({ ...VALID, status }));
+      assert.ok(r.errors?.status, JSON.stringify(status));
+      assert.equal(fake.ops.length, 0);
+    }
+    fake.reset();
+    await assert.rejects(() => createRealisation({}, form({ ...VALID, status: "exercice_formation", problem: " Des demandes dispersées ", tests: "10 testeurs", stack_is_recommended: "on" })), redirectsTo("/realisations"));
+    const payload = fake.on("realisations", "insert")[0].payload as Record<string, unknown>;
+    assert.deepEqual([payload.status, payload.problem, payload.tests, payload.stack_is_recommended], ["exercice_formation", "Des demandes dispersées", "10 testeurs", true]);
   });
 
   test("saisie invalide : erreurs par champ et valeurs rendues, aucune requête", async () => {
@@ -101,12 +118,19 @@ describe("setRealisationPublication", () => {
     assert.deepEqual(op.payload, { published: true });
     assert.equal(filterValue(op, "eq", "id"), ID);
     assert.equal(filterValue(op, "eq", "client_consent"), true);
-    assert.ok(fake.revalidated.includes("/realisations"));
+    assert.ok(op.filters.some((f) => f.kind === "not" && f.args[0] === "status" && f.args[1] === "is" && f.args[2] === null), "publier exige un statut, relu par la base");
+    assert.ok(fake.revalidated.includes("/realisations") && fake.revalidated.includes("/portfolio"));
   });
 
   test("publier sans accord : aucune ligne touchée mais la fiche existe → message clair", async () => {
-    routes(["realisations:update", { data: [] }], ["realisations:select", { data: { id: ID } }]);
+    routes(["realisations:update", { data: [] }], ["realisations:select", { data: { id: ID, client_consent: false, status: "projet_perso" } }]);
     assert.match((await setRealisationPublication(ID, true)).message ?? "", /accord du client/);
+    assert.deepEqual(fake.revalidated, []);
+  });
+
+  test("publier sans statut (accord coché) : aucune ligne touchée → message « choisis un statut », rien de revalidé", async () => {
+    routes(["realisations:update", { data: [] }], ["realisations:select", { data: { id: ID, client_consent: true, status: null } }]);
+    assert.match((await setRealisationPublication(ID, true)).message ?? "", /statut/);
     assert.deepEqual(fake.revalidated, []);
   });
 

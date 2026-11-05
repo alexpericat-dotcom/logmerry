@@ -288,7 +288,8 @@
 }
 .folio h1,
 .folio h2,
-.folio h3 {
+.folio h3,
+.folio h4 {
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.01em;

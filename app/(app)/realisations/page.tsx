@@ -5,7 +5,7 @@ import { PageBanner } from "@/components/page-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listRealisations } from "@/lib/db/realisations";
-import { REALISATION_ORIGIN_LABELS } from "@/lib/domain/realisations";
+import { REALISATION_ORIGIN_LABELS, REALISATION_STATUS_LABELS, parseRealisationStatus } from "@/lib/domain/realisations";
 
 export const metadata = { title: "Réalisations · LogMerry" };
 
@@ -42,6 +42,8 @@ async function RealisationsList() {
             <p className="line-clamp-3 break-words text-sm text-muted-foreground">{r.description}</p>
             <div className="mt-auto flex flex-wrap gap-1.5">
               <Badge variant="outline">{REALISATION_ORIGIN_LABELS[r.origin]}</Badge>
+              {/* Pas de statut : la réalisation ne peut pas être publiée et reste hors de la page publique. */}
+              <Badge variant={parseRealisationStatus(r.status) ? "signature" : "destructive"}>{parseRealisationStatus(r.status) ? REALISATION_STATUS_LABELS[parseRealisationStatus(r.status)!] : "Statut à choisir"}</Badge>
               <Badge variant="outline">{r.published ? "Publiée" : "Non publiée"}</Badge>
             </div>
           </li>

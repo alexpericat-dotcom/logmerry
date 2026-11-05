@@ -13,13 +13,17 @@ export type RealisationRecord = {
   result_figure: string | null;
   link_url: string | null;
   stack: string[];
+  status: string | null;
+  problem: string | null;
+  tests: string | null;
+  stack_is_recommended: boolean;
   client_consent: boolean;
   published: boolean;
   created_at: string;
   updated_at: string;
 };
 
-const COLUMNS = "id, title, description, origin, client_name, client_sector, result_figure, link_url, stack, client_consent, published, created_at, updated_at";
+const COLUMNS = "id, title, description, origin, client_name, client_sector, result_figure, link_url, stack, status, problem, tests, stack_is_recommended, client_consent, published, created_at, updated_at";
 
 /** Mes réalisations, de la plus récente à la plus ancienne (la RLS limite aux miennes). */
 export async function listRealisations(): Promise<RealisationRecord[]> {

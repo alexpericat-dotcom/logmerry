@@ -100,3 +100,16 @@ Deuxième tri (le premier : 23 octobre, 92 points). Les points sont regroupés p
 - Le texte du hero couvre jusqu'à 48 % de la largeur à 1440 px : à surveiller entre 1024 et 1200 px (colonne limitée à 46 % de la largeur).
 - « Qui suis-je » mène à la section « Mon parti pris » (positionnement). Aucune présentation personnelle (parcours, ville, photo) n'existe : à écrire par Alex si une vraie section est voulue ; rien n'a été inventé.
 - Animations au défilement : `animation-timeline` n'existe pas encore partout (Firefox) ; sans lui tout est affiché tout de suite, sans animation. Le hero (zoom, montée) n'a pas été mesuré en performance sur appareil réel.
+
+## Statut des réalisations et dossier (5 novembre 2026)
+
+- Migration `20261105100000_realisation_status.sql` à appliquer par Alex ; ensuite régénérer `lib/supabase/database.types.ts` (outil MCP) : les types ont été écrits à la main pour cette branche.
+- La ligne existante (Atelier Nova) n'a pas de statut : elle disparaît de la page publique jusqu'à son classement ; valider ensuite la contrainte `realisations_published_needs_status`.
+- `origin` (client réel, formation, ami, démo) et `status` se recouvrent : la page publique n'affiche plus que le statut ; l'origine reste en base. À trancher : la retirer, ou la garder comme donnée interne.
+- Pas de page de détail publique : si elle est voulue, la pastille et le dossier y migreraient.
+- Orchestration du schéma : n8n ou Make à confirmer avant de nommer l'outil.
+- Extraits du dossier : fichiers à fournir (`assets-source/dossier-umaris-veille.*`, `dossier-umaris-backlog.*`), puis `npm run build:dossier` ; texte alternatif à préciser en regardant les images.
+- Aperçu intégré : une page Notion peut refuser d'être affichée dans un cadre ; si c'est le cas, la carte affichera une erreur du navigateur à la place de l'aperçu automatique : ajouter une capture (clic pour charger) ou désactiver l'aperçu pour ce lien.
+
+- Aperçu en direct gris chez Alex (5 novembre 2026) : cause non reproduite en Chrome. À vérifier selon son navigateur ; piste : retirer `loading="lazy"` et ne plus masquer le cadre tant que `onLoad` n'est pas arrivé (`components/live-preview.tsx`). Alternative robuste : captures téléversées (déjà possibles).
+- Texte alternatif de la veille : peut nommer les outils retenus (Weweb, Supabase, N8n, Mistral) une fois n8n ou Make tranché et le test de `lib/portfolio-dossiers.test.ts` mis à jour.

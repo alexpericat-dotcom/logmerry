@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function listPublicCards(): Promise<PublicCard[]> {
   const supabase = await createClient();
   const [items, images] = await Promise.all([
-    supabase.from("public_realisations").select("id, title, description, origin, client_label, result_figure, link_url, stack, published_at").order("published_at", { ascending: false }).order("id"),
+    supabase.from("public_realisations").select("id, title, description, origin, client_label, result_figure, link_url, stack, published_at, status, problem, tests, stack_is_recommended").order("published_at", { ascending: false }).order("id"),
     supabase.from("public_realisation_images").select("id, realisation_id, path, alt, created_at").order("created_at").order("id"),
   ]);
   if (items.error || images.error) throw new Error("Impossible de charger le portfolio.");
