@@ -95,7 +95,8 @@ test("en-tête : sur la photo au chargement (voile), translucide et flou au déf
   assert.ok(contrastRgb(cream, worst) >= 4.5, `contraste ${contrastRgb(cream, worst).toFixed(2)}:1 avec un voile à ${alpha}`);
   const sections = readFileSync("components/portfolio-sections.tsx", "utf8");
   assert.ok(!/backdrop-blur/.test(sections), "le flou est réservé à l'en-tête");
-  for (const id of ["qui-suis-je", "contact"]) assert.ok(sections.includes(`id="${id}"`), `la section #${id} est la cible d'un bouton de l'en-tête`);
+  assert.ok(sections.includes('id="contact"'), "la section #contact est la cible du bouton Contact de l'en-tête");
+  assert.ok(sections.includes('href="/portfolio/qui-suis-je"'), "« Qui suis-je » mène à sa propre page");
 });
 
 test("direction éditoriale : ni carte de verre, bandeau défilant, vidéo ni pause d'animations ; le verre liquide est réservé aux boutons d'appel à l'action", () => {
@@ -237,8 +238,3 @@ test("composition de la page : toutes les sections, dans l'ordre, une seule fois
   assert.ok(/<main id="contenu"/.test(body), "le lien d'évitement vise <main id=contenu>");
 });
 
-test("contact : le lien « m'écrire » porte l'objet encodé du courriel", async () => {
-  const { mailtoHref } = await import("./domain/portfolio.ts");
-  const { CONTACT_EMAIL, CONTACT_SUBJECT } = await import("./portfolio-content.ts");
-  assert.equal(mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT), `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(CONTACT_SUBJECT)}`);
-});

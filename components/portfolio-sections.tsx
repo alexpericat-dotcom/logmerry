@@ -2,15 +2,15 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Fragment, type CSSProperties, type ReactNode } from "react";
 
+import type { ContactMessageState } from "@/app/portfolio/contact-action";
 import { LogoMark } from "@/components/logo-mark";
+import { PortfolioContactForm } from "@/components/portfolio-contact-form";
 import { PortfolioHeaderFrame } from "@/components/portfolio-header-frame";
 import { Sketch, type SketchName } from "@/components/sketches";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ToolIcon } from "@/components/tool-icon";
-import { mailtoHref } from "@/lib/domain/portfolio";
-import { BRAND, CONTACT, CONTACT_EMAIL, CONTACT_SUBJECT, FOOTER, HEADER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, STACK } from "@/lib/portfolio-content";
+import { BRAND, CONTACT, FOOTER, HEADER, HERO, LEVER, LOGOS_NOTE, PROCESS, SERVICES, STACK } from "@/lib/portfolio-content";
 
-const contactHref = mailtoHref(CONTACT_EMAIL, CONTACT_SUBJECT);
 /** Étiquette en monospace, petites capitales espacées : eyebrow, légendes, mentions. */
 const MONO = "font-mono text-phi-n1 uppercase tracking-[0.18em]";
 /** Texte crème posé sur la photo (grand écran) : la couleur sur laquelle est calculé le contraste du voile (`--photo`, `lib/portfolio-page.test.ts`). */
@@ -63,9 +63,9 @@ export function PortfolioHeader() {
             </a>
           ))}
           <ThemeSwitcher className={`rounded-md px-3 md:h-9 ${GHOST_HOVER}`} iconClassName="text-current" />
-          <a href="#qui-suis-je" className={`inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium md:h-9 ${GHOST_HOVER}`}>
+          <Link href="/portfolio/qui-suis-je" className={`inline-flex h-11 items-center rounded-md px-3 text-phi-n1 font-medium md:h-9 ${GHOST_HOVER}`}>
             {HEADER.about}
-          </a>
+          </Link>
           <LiquidButton href="#contact" tone="orange" size="sm" className="ml-1 px-8">
             {HEADER.contact}
           </LiquidButton>
@@ -137,7 +137,7 @@ export function PortfolioHero() {
               {HERO.primary}
               <ArrowRight size={18} aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
             </LiquidButton>
-            <LiquidButton href={contactHref} tone="clear" size="lg">
+            <LiquidButton href="#contact" tone="clear" size="lg">
               {HERO.secondary}
             </LiquidButton>
           </div>
@@ -149,7 +149,7 @@ export function PortfolioHero() {
 
 export function PortfolioLever() {
   return (
-    <section id="qui-suis-je" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
+    <section id="parti-pris" aria-labelledby="lever-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <SectionHead id="lever-title" eyebrow={LEVER.eyebrow} title={LEVER.title} sketch="head" />
       <p className="reveal-right border-l-4 border-tone-orange pl-6 font-serif text-phi-3 md:text-phi-4">{LEVER.after}</p>
       <p className="reveal mt-phi-1 max-w-3xl text-phi-1 text-muted-foreground">{LEVER.note}</p>
@@ -277,19 +277,17 @@ export function PortfolioShowcaseFrame({ eyebrow, title, intro, children }: { ey
   );
 }
 
-export function PortfolioContact() {
+/** L'action d'envoi vient de la page (comme les formulaires de l'application) : ce composant reste testable sans Next. */
+export function PortfolioContact({ action }: { action: (state: ContactMessageState, formData: FormData) => Promise<ContactMessageState> }) {
   return (
     <section id="contact" aria-labelledby="contact-title" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-phi-3 md:px-6 md:py-phi-4">
       <div className="reveal-scale flex items-center justify-between gap-phi-2">
         <div className="max-w-2xl">
-        <h2 id="contact-title" className="text-phi-4 md:text-phi-5">
-          {CONTACT.title}
-        </h2>
-        <p className="mt-4 text-phi-1 text-muted-foreground">{CONTACT.text}</p>
-        <LiquidButton href={contactHref} tone="orange" size="lg" className="mt-8">
-          {CONTACT.button}
-          <ArrowRight size={18} aria-hidden="true" />
-        </LiquidButton>
+          <h2 id="contact-title" className="text-phi-4 md:text-phi-5">
+            {CONTACT.title}
+          </h2>
+          <p className="mt-4 text-phi-1 text-muted-foreground">{CONTACT.text}</p>
+          <PortfolioContactForm action={action} />
         </div>
         <Sketch name="talk" className="hidden w-72 shrink-0 text-foreground/80 md:block xl:w-80" />
       </div>
@@ -305,9 +303,6 @@ export function PortfolioFooter() {
           <p>{FOOTER}</p>
           <p className="mt-1 text-phi-n1">{LOGOS_NOTE}</p>
         </div>
-        <a href={contactHref} className="underline underline-offset-4">
-          {CONTACT_EMAIL}
-        </a>
       </div>
     </footer>
   );
