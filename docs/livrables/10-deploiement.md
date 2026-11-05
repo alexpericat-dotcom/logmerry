@@ -1,6 +1,6 @@
 # Déploiement et retour arrière
 
-> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne aujourd'hui sur le dernier commit de `main` (30 octobre 2026) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit est en échec depuis le 30 octobre** parce que ses secrets n'ont jamais été créés.
+> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne aujourd'hui sur le dernier commit de `main` (30 octobre 2026) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre, et il échoue encore sur un seul contrôle, parce que la base est en avance sur `main`.
 
 Faits relevés le 5 novembre 2026 par la ligne de commande de Vercel, l'API de GitHub et des requêtes sur l'adresse publique (lecture seule). Aucune action de déploiement n'a été lancée pour écrire ce chapitre.
 
@@ -32,18 +32,19 @@ flowchart LR
 |---|---|---|---|
 | `.github/workflows/ci.yml`, tâche `check` | Chaque envoi, chaque pull request | Typage (`tsc`), analyse (`lint`), tests (`npm test`), construction (`next build`), Node 24 | Aucune base ni clé : les tests qui interrogent la vraie base n'y tournent pas |
 | `ci.yml`, tâche `audit` | Idem | `npm audit` des dépendances de production, niveau « élevé » | Séparée pour qu'une panne du registre ne passe pas pour un échec du code |
-| `.github/workflows/isolation.yml` | Chaque nuit (cron 3 h 17 UTC) et à la demande | Rejoue `npm run test:isolation` contre la vraie base, avec deux comptes fictifs ; option `leak` (appelle Claude et Mistral, quelques centimes) | **En échec, voir ci-dessous** |
+| `.github/workflows/isolation.yml` | Chaque nuit (cron 3 h 17 UTC) et à la demande | Rejoue `npm run test:isolation` contre la vraie base, avec deux comptes fictifs ; option `leak` (appelle Claude et Mistral, quelques centimes) | **Réparé en partie, voir ci-dessous** |
 
-### Le test d'isolation de nuit ne fonctionne pas
+### Le test d'isolation de nuit : secrets créés, un contrôle encore en échec
 
 | Constat | Détail |
 |---|---|
-| État | **7 exécutions sur 7 en échec**, du 30 octobre au 5 novembre 2026 |
-| Cause | Le journal de la dernière exécution dit : « Secret manquant : SUPABASE_URL ». La liste des secrets du dépôt (`gh secret list`) est **vide** : les six secrets décrits dans l'en-tête du fichier n'ont jamais été créés |
-| Conséquence | Ce test n'a **jamais tourné** automatiquement contre la vraie base. Les contrôles d'isolation réels reposent sur `npm run test:isolation`, lancé à la main sur le poste d'Alex. Une régression de la sécurité par ligne ne serait donc pas vue en moins de 24 h, contrairement à ce que dit l'en-tête du fichier |
-| Réparation | Créer dans GitHub (Settings, Secrets and variables, Actions) `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`. Je ne peux pas le faire à ta place et je ne manipule aucun mot de passe. **Décision d'Alex** |
+| Avant le 5 novembre | **7 exécutions sur 7 en échec**, du 30 octobre au 5 novembre 2026 : « Secret manquant : SUPABASE_URL », `gh secret list` vide. Le test n'avait **jamais tourné** contre la vraie base ; une régression de la sécurité par ligne n'aurait pas été vue en moins de 24 h |
+| Réparation (Alex, 5 novembre) | Les six secrets (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`) ont été créés dans GitHub ; `gh secret list` les montre tous |
+| Première exécution à la main (5 novembre, branche `main`) | Le test se connecte à la vraie base : **151 contrôles sur 152 passent**, dont tous ceux d'isolation entre deux comptes (notes, extraits, historique, recherche, réalisations hors publication). **1 échec** |
+| L'échec | « publication : avec l'accord elle passe… » : la base refuse la ligne (contrainte `realisations_published_needs_status`). **Cause probable, non vérifiée par un essai sur la branche concernée** : le test de `main` est plus ancien que la migration sur le statut des réalisations, déjà appliquée à la base partagée mais livrée par la branche `feat/realisation-status`, non fusionnée. Ce n'est pas une fuite de données |
+| Conséquence | Le test de nuit continuera d'échouer tant que cette branche n'est pas fusionnée dans `main` (ou tant que le test de `main` n'est pas aligné sur la base). Il est néanmoins **utile dès maintenant** : tout autre échec d'isolation apparaîtrait dans les 151 autres contrôles |
 
-Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée sont restés sans réaction (aucune alerte lue ou configurée : **À confirmer**).
+Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, du 30 octobre au 5 novembre, sont restés sans réaction (aucune alerte lue ou configurée : **À confirmer**).
 
 ## Configuration de production
 
@@ -106,7 +107,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 
 | Limite | Piste |
 |---|---|
-| Test de nuit en échec | Créer les six secrets (décision d'Alex), puis lancer le test à la main une fois pour vérifier |
+| Test de nuit encore en échec sur un contrôle | Fusionner `feat/realisation-status` (décision d'Alex) ou aligner le test de `main` ; relancer ensuite `gh workflow run isolation.yml` |
 | Fusion possible malgré une CI rouge | Discipline ; ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |

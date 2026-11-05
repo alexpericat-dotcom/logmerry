@@ -833,3 +833,8 @@
 - Alex a relu le PDF et scanné le QR code avec son téléphone (ce que le téléphone a ouvert n'est pas noté : à confirmer, doit être la page de connexion).
 - Capture du tableau de bord Supabase fournie par Alex : intégrée au chapitre 5 (`captures/supabase-dashboard.jpg`, JPEG). Relevé : « Healthy », calcul Nano, Paris, CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, **« No backups »** (confirme l'absence de sauvegarde, chapitre 12), « GitHub : No repository connected » (migrations manuelles).
 - Chapitre 6 : mention « QR non vérifié » remplacée par « scanné par Alex le 5 novembre ».
+
+## 2026-11-05 — Secrets GitHub et test d'isolation de nuit
+- Alex a créé les six secrets (`gh secret list` : les six noms, valeurs jamais lues par moi). Test lancé à la main avec son accord : `gh workflow run isolation.yml --ref main` (run 42079996155, sans option de fuite, donc gratuit).
+- Résultat : 152 contrôles, **151 passent, 1 échoue** (« publication : avec l'accord elle passe… », contrainte `realisations_published_needs_status`). Cause probable, non vérifiée sur la branche concernée : le test de `main` est en retard sur la migration du statut des réalisations (branche `feat/realisation-status` non fusionnée, migration déjà appliquée à la base). Aucune fuite entre comptes.
+- Chapitres 5, 8, 10, 11, 13 et README mis à jour (avant : « 7 échecs sur 7, secrets manquants »).

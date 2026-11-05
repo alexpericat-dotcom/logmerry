@@ -68,7 +68,7 @@ Règles appliquées dans le code :
 | Sujet | Règle ou état |
 |---|---|
 | Propriétaire des données | Le compte qui les a créées (`owner_id`) ; aucune donnée partagée entre comptes |
-| Isolation | 22 tables sous RLS ; la recherche vectorielle filtre aussi par propriétaire ; test de fuite entre deux comptes fictifs, lancé à la main (le test nocturne est prévu mais en échec faute de secrets : chapitres 10 et 11) |
+| Isolation | 22 tables sous RLS ; la recherche vectorielle filtre aussi par propriétaire ; test de fuite entre deux comptes fictifs, lancé à la main et chaque nuit sur GitHub (secrets créés le 5 novembre ; 151 contrôles sur 152 passent, l'échec restant vient d'un écart entre `main` et la base : chapitres 10 et 11) |
 | Historique | `messages` et `message_citations` ne se modifient jamais (aucune politique de modification) ; ils se lisent, s'ajoutent, se suppriment |
 | Droit à l'effacement | « Vider la conversation » supprime tout l'historique **du compte seulement**, citations comprises (test `tests/purge.test.ts`, qui vérifie que l'historique de l'autre compte reste intact) ; la suppression d'une note supprime ses extraits |
 | Purge au passage à l'outil pro | Décision du projet : purge complète de la base (embeddings et historique inclus), seul le portfolio est conservé, puis saisie des vraies données. Démo et réel sont isolés par la RLS, sans colonne « fictif ». **Procédure non encore exécutée** |
