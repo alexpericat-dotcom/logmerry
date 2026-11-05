@@ -1,0 +1,97 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import * as content from "./portfolio-content.ts";
+
+const year = String(new Date().getFullYear());
+const texts = JSON.stringify(content);
+// Seuls sont retirés : l'année du pied de page, l'adresse de contact, le nom d'outil « n8n » et l'année de la source de la citation. Tout autre chiffre est une promesse.
+const promises = texts.replaceAll(year, "").replace(/alexandre\.pericat@gmail\.com/g, "").replace(/\bn8n\b/gi, "").replace("Wherever You Go, There You Are, 1994", "");
+
+test("aucun chiffre, tarif ni mot de prix dans les textes publics (formules sans prix)", () => {
+  assert.ok(!/\d/.test(promises), `chiffre dans : ${promises.match(/.{20}\d.{20}/)?.[0]}`);
+  assert.ok(!/[€$£]|\beuros?\b|\bHT\b|\bTTC\b|gratuit|devis|tarif|prix|forfait/i.test(promises));
+});
+
+test("aucun « À confirmer » ni marque de brouillon visible du public", () => {
+  assert.ok(!/à confirmer|lorem|todo|xxx/i.test(texts));
+});
+
+test("vouvoiement : aucune forme de tutoiement dans TOUT le contenu (titre, description, pied de page, objet du courriel compris)", () => {
+  // `\b` de JavaScript ne connaît pas les lettres accentuées (« coûte » contiendrait « te ») : bornes Unicode explicites.
+  const tutoiement = /(?<![\p{L}'])(tu|te|toi|ton|ta|tes|tien|tiens|tienne|tiennes)(?![\p{L}])|(?<![\p{L}])[tT]'(?=\p{L})/u;
+  assert.ok(!tutoiement.test(texts), texts.match(new RegExp(`.{15}${tutoiement.source}.{15}`, "u"))?.[0]);
+  assert.ok(tutoiement.test("Je t'aide"), "le motif détecte bien « t'aide »");
+  assert.ok(tutoiement.test("tu peux"), "le motif détecte bien « tu »");
+  assert.ok(!tutoiement.test("la tâche qui coûte le plus, et votre équipe"), "pas de faux positif sur « coûte » ni « tâche »");
+});
+
+test("la chaîne « problème métier → maintenance » de la référence : six étapes dans l'ordre", () => {
+  assert.deepEqual(
+    content.PROCESS.steps.map((s) => s.title),
+    ["Problème métier", "Analyse du processus", "Architecture", "IA, automatisation et données", "Déploiement", "Maintenance"],
+  );
+});
+
+test("contenu validé par Alex, figé : positionnement et cinq formules", () => {
+  assert.equal(content.LEVER.title, "L'outil vient après le problème.");
+  assert.deepEqual(content.LEVER.points.map((p) => p.title), ["Observer d'abord", "Construire sobre", "Mesurer le temps rendu"]);
+  assert.deepEqual(content.SERVICES.items.map((s) => s.title), ["Audit et cadrage", "Automatisation", "Application et données sur mesure", "Assistant IA sur vos documents", "Maintenance et évolution"]);
+  for (const x of [...content.PROCESS.steps, ...content.SERVICES.items, ...content.LEVER.points]) assert.ok(x.title.trim() && x.text.trim());
+});
+
+test("« Mon parti pris » : le texte fourni par Alex (5 novembre 2026), mot pour mot, sans citation barrée ; trois colonnes", () => {
+  assert.deepEqual(Object.keys(content.LEVER).sort(), ["after", "eyebrow", "note", "points", "title"], "aucun champ ajouté, plus de citation barrée");
+  assert.equal(content.LEVER.after, "Avant d'écrire la moindre automatisation, je cherche la tâche qui coûte le plus de temps, et pourquoi elle existe.");
+  assert.equal(content.LEVER.note, "Les heures perdues se cachent rarement là où on les attend : un export refait chaque lundi, une saisie recopiée d'un outil à l'autre, une relance qu'on oublie. Je commence par les trouver.");
+  assert.deepEqual(content.LEVER.points, [
+    { title: "Observer d'abord", text: "Qui fait quoi, avec quelles données, et où ça bloque : je regarde le travail réel avant de choisir un outil." },
+    { title: "Construire sobre", text: "Le plus simple qui règle le problème. Si un tableau suffit, je ne vous vends pas une IA." },
+    { title: "Mesurer le temps rendu", text: "Je mesure avant, puis après. Vous voyez ce que ça change, en heures." },
+  ]);
+});
+
+test("contact : l'adresse donnée par Alex et un objet de courriel défini", () => {
+  assert.equal(content.CONTACT_EMAIL, "alexandre.pericat@gmail.com");
+  assert.ok(content.CONTACT_SUBJECT.trim());
+});
+
+test("le choix des briques est présenté comme sur mesure, jamais comme une liste imposée ; l'introduction ne cite aucun type de livrable", () => {
+  assert.match(content.PROCESS.steps[2].text, /stack technique sur mesure/);
+  assert.equal(content.STACK.intro, "Une automatisation, un assistant, un outil\u00a0: derrière, ce sont toujours des briques. Je choisis celles qui conviennent à votre métier et à votre portée, et je m'adapte aux outils que vous utilisez déjà.");
+  assert.ok(!/\b(site|application|web ?app)s?\b/i.test(content.STACK.intro), "pas de type de livrable dans l'introduction");
+});
+
+test("« Sous le capot » : frontend, backend, base de données, IA et agents, hébergement (VPS, auto-hébergement) et RGPD, chacune traduite « en clair »", () => {
+  assert.deepEqual(content.STACK.bricks.map((l) => l.title), ["Frontend", "Backend", "Base de données", "IA et agents", "Hébergement et auto-hébergement", "Données personnelles et RGPD"]);
+  const all = JSON.stringify(content.STACK);
+  for (const brick of content.STACK.bricks) assert.ok(brick.plain.trim().length > 10, `pas de traduction en clair pour ${brick.title}`);
+  assert.ok(!/couche/i.test(all), "on parle de briques, pas de couches");
+  assert.ok(!/front end|back end/i.test(all), "« frontend » et « backend » s'écrivent en un seul mot");
+  const ia = content.STACK.bricks.find((b) => b.title === "IA et agents")!;
+  for (const tool of ["Mistral", "RAG", "MCP"]) assert.ok(ia.tools.includes(tool), `${tool} manque dans les agents et l'IA`);
+  assert.match(ia.text, /RAG \(génération augmentée par la recherche\)/, "le RAG est expliqué en clair");
+  for (const word of ["VPS", "auto-hébergé", "PostgreSQL", "Supabase", "RGPD"]) assert.ok(all.includes(word), word);
+  // Aucune promesse juridique : on parle de conception attentive, jamais de « conforme » ni de garantie.
+  assert.ok(!/conforme|certifi|garanti|100 ?%/i.test(all));
+});
+
+test("hero : texte d'Alex, mot pour mot (3 novembre 2026)", () => {
+  assert.equal(content.HERO.eyebrow, "Automatisation & IA pour les entreprises");
+  assert.equal(content.HERO.title, "«\u00a0Laissez la vague faire le travail.\u00a0»", "entre guillemets français, espaces insécables");
+  assert.equal(content.HERO.lead, "La puissance est déjà là\u00a0: le no-code et l'IA.\nJe\u00a0la\u00a0mets au service de vos processus, pour que vos équipes retrouvent du temps pour ce qui compte vraiment.");
+  assert.ok(content.HERO.lead.includes("Je\u00a0la\u00a0mets"), "« Je la » ne reste jamais seul en bout de ligne");
+  assert.equal(content.HERO.primary, "Voir les réalisations");
+  assert.equal(content.HERO.secondary, "Parler de votre problème");
+  assert.ok(content.HERO.imageAlt.trim(), "la photo a un texte alternatif");
+});
+
+test("épigraphe : la citation donnée par Alex, traduite et attribuée (auteur, ouvrage, année)", () => {
+  assert.deepEqual(content.PROCESS.epigraph, { text: "On n'arrête pas les vagues, mais on peut apprendre à surfer.", author: "Jon Kabat-Zinn", source: "Wherever You Go, There You Are, 1994" });
+});
+
+test("outils : seuls ceux validés par Alex (30 octobre et 3 novembre 2026), sans notation ni étoile ; chaque outil cité sur la page est dans la liste", () => {
+  assert.deepEqual(content.VALIDATED_TOOLS.slice(0, 11), ["n8n", "Supabase", "PostgreSQL", "Baserow", "Airtable", "OpenAI", "Claude", "Gemini", "Notion", "MCP", "Node.js"]);
+  for (const brick of content.STACK.bricks) for (const tool of brick.tools) assert.ok(content.VALIDATED_TOOLS.includes(tool), `outil non validé : ${tool}`);
+  assert.ok(!/[★☆⭐]|étoile|\/5\b|note :/i.test(texts));
+});

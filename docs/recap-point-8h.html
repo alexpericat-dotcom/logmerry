@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LogMerry · Récap du point de 8 h</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --card: #ffffff; --ink: #1b1a17; --muted: #6b665d; --line: #e4ded3;
+    --accent: #c44a00; --accent-soft: #fbe9dc; --ok: #1f7a4d; --ok-soft: #dff3e8;
+    --warn: #9a6200; --warn-soft: #fbefd2; --track: #ece6da; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(60,40,10,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1420; --card: #171e2e; --ink: #eef1f7; --muted: #9aa5ba; --line: #263049;
+      --accent: #ff8a3d; --accent-soft: #3a2415; --ok: #5fd39a; --ok-soft: #14352a;
+      --warn: #f0b84a; --warn-soft: #3a2d10; --track: #232c42; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 56px; }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; }
+  h1 { margin: 10px 0 4px; font-size: clamp(28px, 5vw, 40px); line-height: 1.1; letter-spacing: -.02em; }
+  .sub { color: var(--muted); margin: 0; }
+  .score { text-align: right; }
+  .score .big { font-size: 56px; font-weight: 800; line-height: 1; color: var(--accent); letter-spacing: -.03em; }
+  .score .lbl { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow); }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 30px 0 12px; }
+  h3 { margin: 0 0 8px; font-size: 18px; }
+  ul { margin: 0; padding-left: 20px; } li { margin: 5px 0; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; margin-right: 6px; vertical-align: 1px; }
+  .ok { background: var(--ok-soft); color: var(--ok); } .warn { background: var(--warn-soft); color: var(--warn); } .acc { background: var(--accent-soft); color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: end; margin: 16px 0 4px; }
+  .row b { font-weight: 650; } .row .pc { font-weight: 800; font-size: 20px; color: var(--accent); }
+  .track { grid-column: 1 / -1; height: 12px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #ffb27a); }
+  .bar.ok { background: linear-gradient(90deg, var(--ok), #8fe3b8); }
+  .bar.zero { width: 2%; background: var(--warn); }
+  .note { color: var(--muted); font-size: 14px; margin: 3px 0 0; grid-column: 1 / -1; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .stat .n { font-size: 30px; font-weight: 800; letter-spacing: -.02em; } .stat .t { color: var(--muted); font-size: 13px; }
+  .check li { list-style: none; margin-left: -20px; padding-left: 28px; position: relative; }
+  .check li::before { content: ""; position: absolute; left: 0; top: .35em; width: 16px; height: 16px; border: 2px solid var(--accent); border-radius: 5px; }
+  .debt { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
+  .debt-score { display: flex; align-items: baseline; gap: 6px; }
+  .debt-score .big { font-size: 56px; font-weight: 800; line-height: 1; color: var(--accent); letter-spacing: -.03em; }
+  .debt-score .of { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .callout { border-left: 5px solid var(--accent); background: var(--accent-soft); border-radius: 0 14px 14px 0; padding: 16px 20px; }
+  .callout h3 { color: var(--accent); }
+  footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+  @media print { body { background: #fff; } .card, .stat { box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <span class="tag">Point de 8 h · 31 octobre 2026</span>
+      <h1>LogMerry : où on en est</h1>
+      <p class="sub">Récap depuis la semaine dernière · état au 30 octobre 2026</p>
+    </div>
+    <div class="score">
+      <div class="big">~90 %</div>
+      <div class="lbl">du MVP livré (estimation)</div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="n">55 / 60</div><div class="t">stories livrées (estimé)</div></div>
+    <div class="stat"><div class="n">0</div><div class="t">point critique à l'audit de sécurité</div></div>
+    <div class="stat"><div class="n">135</div><div class="t">tests d'isolation sur la vraie base, tous OK</div></div>
+    <div class="stat"><div class="n">1 PR</div><div class="t">#92 en attente de ton « fusionne »</div></div>
+  </div>
+
+  <h2>Ce qu'on a fait</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>🧭 Cockpit et démo</h3>
+      <ul>
+        <li>Nouvelle règle <b>« Facturer »</b> : une mission terminée sans facture produit un rappel.</li>
+        <li><b>Parcours de démo en 14 étapes</b> déroulé de bout en bout, 4 petits défauts corrigés.</li>
+        <li><b>Accessibilité</b> : focus au bon endroit dans les formulaires, titre plus lisible en thème clair, retour du focus après « Annuler ».</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🧪 Qualité</h3>
+      <ul>
+        <li>Gros ménage de la dette technique : <b>plus de 300 tests</b> d'actions et des tests de composants.</li>
+        <li><b>Plan de recette</b> en français simple : 8 parcours, tests de droits, cas d'erreur.</li>
+        <li><b>PRD aligné</b> sur le code (statut « brouillon » des devis).</li>
+      </ul>
+    </div>
+    <div class="card" style="grid-column: 1 / -1">
+      <h3>🔐 Audit de sécurité complet <span class="pill ok">aucun point critique</span></h3>
+      <ul>
+        <li><span class="pill acc">A</span><b>En-têtes de sécurité</b> sur toutes les pages (anti-clickjacking, HSTS, etc.).</li>
+        <li><span class="pill acc">B</span><b>Plafond d'appels à l'IA</b> : 20 par minute, 300 par jour et par compte. Les relecteurs ont trouvé et fait corriger une vraie faille dans ma première version.</li>
+        <li><span class="pill acc">C</span><b>Filet en CI</b> : tests statiques à chaque PR, vérification de la vraie base chaque nuit, <code>npm audit</code>.</li>
+        <li><span class="pill acc">D</span><b>Durcissements de l'assistant</b> : liens inventés rejetés, requêtes trop grosses refusées, droits <code>anon</code> retirés, bandeau « aucune source ».</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Où on en est (estimations)</h2>
+  <div class="card">
+    <div class="row"><b>Fonctionnalités du MVP</b><span class="pc">~90 %</span><div class="track"><div class="bar" style="width:90%"></div></div><p class="note">CRM, missions et sprints avec l'IA, factures, échéances, cockpit, assistant avec sources. Reste : portfolio public (3 stories) et sauvegarde vérifiée.</p></div>
+    <div class="row"><b>Sécurité et qualité</b><span class="pc">~90 %</span><div class="track"><div class="bar ok" style="width:90%"></div></div><p class="note">Code terminé. Restent tes réglages hors code (plafonds de dépense, secrets GitHub).</p></div>
+    <div class="row"><b>Livraison (démo, vitesse en production, documentation)</b><span class="pc">~75 %</span><div class="track"><div class="bar" style="width:75%"></div></div><p class="note">Restent : la mesure « moins de 3 secondes » sur le déploiement et la dernière étape de la démo (portfolio).</p></div>
+    <div class="row"><b>Fonctionnalités bloquées par toi</b><span class="pc">0 %</span><div class="track"><div class="bar zero"></div></div><p class="note">Estimation de cotisations et garde-fous sur les estimations : à débloquer en écrivant tes règles (prorata, fin d'ACRE, TVA) avec leurs sources officielles.</p></div>
+    <p class="note" style="margin-top:14px">Le fichier de suivi affiche 85 % (51 stories sur 60), mais il n'est pas à jour : l'audit d'accessibilité et le parcours de démo sont faits sans y être cochés.</p>
+  </div>
+
+  <h2>Dette technique</h2>
+  <div class="card">
+    <div class="debt">
+      <div class="debt-score"><span class="big">7,5</span><span class="of">/ 10</span></div>
+      <div style="flex:1; min-width:240px">
+        <div class="track"><div class="bar" style="width:75%"></div></div>
+        <p class="note" style="margin-top:8px">Note subjective (mon avis), pas une mesure : 10 = aucune dette.</p>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div>
+        <h3 style="font-size:15px"><span class="pill ok">Ce qui tire la note vers le haut</span></h3>
+        <ul>
+          <li>Revue de dette terminée, tests solides (plus de 300 d'actions, 135 d'isolation, mutations faites à la main).</li>
+          <li>CI à chaque PR, migrations versionnées, types de la base générés.</li>
+          <li>Aucun point critique de sécurité.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:15px"><span class="pill warn">Ce qui la tire vers le bas</span></h3>
+        <ul>
+          <li>51 points ouverts dans <code>deferred-work.md</code>, presque tous mineurs.</li>
+          <li>Pages et plusieurs composants sans test ; 1 test instable.</li>
+          <li>Listes sans pagination au-delà de 1 000 lignes.</li>
+          <li>Suivi des stories pas à jour ; job nocturne jamais lancé.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h2>À faire de ton côté</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>🔧 Réglages (quelques minutes chacun)</h3>
+      <ul class="check">
+        <li><b>Plafonds de dépense mensuels</b> chez Anthropic et Mistral.</li>
+        <li><b>Secrets GitHub</b> pour le job nocturne, puis un lancement manuel.</li>
+        <li><b>Script <code>tests/sql/ai-quota.sql</code></b> dans l'éditeur SQL de Supabase (attendu : « ROLLBACK_OK … failed=0 »).</li>
+        <li><b>Mots de passe fuités</b> : dis « revérifie » et je relance l'analyse (option parfois réservée au plan Pro).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>✋ Tes contrôles</h3>
+      <ul class="check">
+        <li>Parcours <b>clavier sans souris</b> (section 11 de <code>docs/controles-visuels.md</code>).</li>
+        <li><b>Recette</b> : <code>docs/plan-recette.md</code>.</li>
+        <li><b>Fusionner la PR #92</b> (dis « fusionne »).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Prochaine étape recommandée</h2>
+  <div class="callout">
+    <h3>Le portfolio public (épopée 6)</h3>
+    <p style="margin:0">C'est la plus grosse partie qui reste. Elle demande une spec complète et un cloisonnement testé avec deux comptes. On commence par la spec dès que tu le décides.</p>
+  </div>
+
+  <footer>Pourcentages = estimations, pas des mesures. Tous les chiffres de tests viennent des dernières exécutions du 30 octobre 2026.</footer>
+</div>
+</body>
+</html>

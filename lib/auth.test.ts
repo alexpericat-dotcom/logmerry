@@ -91,3 +91,14 @@ test("garde d'accès : le chemin d'une vraie adresse (`new URL`) est normalisé 
   assert.deepEqual(accessDecision(path("//auth/login"), false), to("/auth/login")); // double barre : pas un chemin /auth/
   assert.deepEqual(accessDecision(path("/%61uth/login"), false), to("/auth/login")); // encodé : jamais public (redirigé vers la vraie page de connexion)
 });
+
+test("garde d'accès : /portfolio est public (sans session comme avec), mais ni ses sous-chemins ni un faux ami", () => {
+  assert.deepEqual(accessDecision("/portfolio", false), NEXT);
+  assert.deepEqual(accessDecision("/portfolio", true), NEXT);
+  for (const path of ["/portfolio/x", "/portfolio/", "/portfolios", "/portfolio-x", "/Portfolio", "/realisations"]) assert.deepEqual(accessDecision(path, false), to("/auth/login"), path);
+});
+
+test("garde d'accès : l'API reste fermée même sous un nom de portfolio ; chemins encodés ou doublés jamais publics", () => {
+  assert.deepEqual(accessDecision("/api/portfolio", false), { action: "unauthorized" });
+  for (const path of ["/%70ortfolio", "//portfolio", "/portfolio//", "/portfolio%2F"]) assert.deepEqual(accessDecision(path, false), to("/auth/login"), path);
+});

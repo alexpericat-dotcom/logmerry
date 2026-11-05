@@ -12,8 +12,10 @@ export function securityHeaders(supabaseUrl: string | undefined): { key: string;
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
+    `img-src 'self' data:${supabaseOrigin}`,
     `connect-src 'self'${supabaseOrigin}`,
+    // Aperçu en direct des réalisations (page publique) : le propriétaire ne saisit que des adresses https.
+    "frame-src https:",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",

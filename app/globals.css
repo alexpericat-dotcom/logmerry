@@ -206,3 +206,402 @@
     }
   }
 }
+
+/* Page publique du portfolio (story 6.4), direction « éditoriale » : papier, encre et turquoise tirés de la photo du hero, un seul accent orange, aucun verre
+   dépoli ni ombre dure. Les jetons ne valent que sous `.folio` (l'application garde les siens). Mouvement rare et lent, une seule fois, jamais obligatoire :
+   sans `animation-timeline` ou avec « réduire les animations », tout est affiché tout de suite. Aucune animation ne boucle (rien à mettre en pause, WCAG 2.2.2). */
+@layer base {
+  /* Échelle typographique du nombre d'or : φ = 1,618034. Les tailles avancent de φ^½ (1,272) par pas, donc deux pas valent exactement φ ; le corps (pas 0) est fluide, de 16 px (téléphone)
+     à 18 px (dès 990 px). L'interligne suit 1 + φ⁻¹ / taille : 1,618 pour le corps, de plus en plus serré à mesure que le texte grossit. Les espacements (`tailwind.config.ts`) sont φ^n rem. */
+  .folio {
+    --phi: 1.618034;
+    --fs: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+    --phi-n1: calc(var(--fs) * 0.7862);
+    --phi-0: calc(var(--fs) * 1);
+    --phi-1: calc(var(--fs) * 1.272);
+    --phi-2: calc(var(--fs) * 1.618);
+    --phi-3: calc(var(--fs) * 2.0582);
+    --phi-4: calc(var(--fs) * 2.618);
+    --phi-5: calc(var(--fs) * 3.3302);
+    --phi-6: calc(var(--fs) * 4.2361);
+    --phi-7: calc(var(--fs) * 5.3884);
+    --phi-8: calc(var(--fs) * 6.8541);
+    --lh-n1: 1.786;
+    --lh-0: 1.618;
+    --lh-1: 1.486;
+    --lh-2: 1.382;
+    --lh-3: 1.3;
+    --lh-4: 1.236;
+    --lh-5: 1.186;
+    --lh-6: 1.146;
+    --lh-7: 1.115;
+    --lh-8: 1.09;
+    font-size: var(--phi-0);
+    line-height: var(--lh-0);
+    --background: 36.5 51.1% 91.2%; /* #F4EBDD papier : dérivé (la photo n'a pas de sable) */
+    --foreground: 84 14.3% 6.9%; /* #12140F encre : pixel le plus sombre de la photo */
+    --card: 40 65.2% 95.5%; /* #FBF6EC */
+    --card-foreground: 84 14.3% 6.9%;
+    --popover: 40 65.2% 95.5%;
+    --popover-foreground: 84 14.3% 6.9%;
+    --primary: 182.2 34.2% 15.5%; /* #1A3435 turquoise profond (mur de la vague) */
+    --primary-foreground: 36.5 51.1% 91.2%;
+    --action-foreground: 84 14.3% 6.9%; /* texte des boutons orange */
+    --photo: 34.7 70.4% 94.7%; /* #FBF3E8 crème : texte posé sur la photo du hero, voile compris (même valeur dans les deux thèmes) */
+    --secondary: 38.7 42.5% 85.7%;
+    --secondary-foreground: 84 14.3% 6.9%;
+    --muted: 38.7 42.5% 85.7%; /* #EADFCB */
+    --muted-foreground: 46.4 14.9% 29%; /* #55503F */
+    --accent: 38.7 42.5% 85.7%;
+    --accent-foreground: 84 14.3% 6.9%;
+    --border: 39.4 31.5% 78.2%; /* #D9CDB6 filet fin */
+    --input: 41.2 15.1% 41.6%; /* #7A705A */
+    --ring: 182.2 34.2% 15.5%;
+    --display: 182.2 34.2% 15.5%;
+    --tone-orange: 25 96.2% 69.2%; /* #FCA465 : ciel le plus clair de la photo, l'unique accent vif (aplat, jamais du texte sur le papier) */
+    --veil: 18 20 15; /* #12140F encre, couleur des voiles posés sur la photo */
+    --radius: 0.125rem;
+    --shadow-hard: none;
+    --border-w: 1px;
+    --gradient-action: linear-gradient(hsl(var(--tone-orange)), hsl(var(--tone-orange)));
+  }
+  .dark .folio {
+    --background: 185 28.6% 8.2%; /* #0F1A1B turquoise très sombre */
+    --foreground: 36.5 51.1% 91.2%; /* #F4EBDD */
+    --card: 186.3 30.2% 12.4%; /* #162729 */
+    --card-foreground: 36.5 51.1% 91.2%;
+    --popover: 186.3 30.2% 12.4%;
+    --popover-foreground: 36.5 51.1% 91.2%;
+    --primary: 25 96.2% 69.2%; /* #FCA465 */
+    --primary-foreground: 84 14.3% 6.9%;
+    --secondary: 183.8 32% 9.8%;
+    --secondary-foreground: 36.5 51.1% 91.2%;
+    --muted: 183.8 32% 9.8%; /* #112021 */
+    --muted-foreground: 43.2 15.2% 67.6%; /* #B9B2A0 */
+    --accent: 186.3 30.2% 12.4%;
+    --accent-foreground: 36.5 51.1% 91.2%;
+    --border: 182.4 22.5% 21.8%; /* #2B4344 */
+    --input: 43.2 15.2% 67.6%;
+    --ring: 25 96.2% 69.2%;
+    --display: 25 96.2% 69.2%;
+  }
+}
+.folio h1,
+.folio h2,
+.folio h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Voile du hero : encre à 55 % jusqu'à la moitié de la largeur (là où se tient le texte), qui s'efface avant le surfeur. 55 % est calculé pour le PIRE pixel de la zone
+   (#FFC87D, 0,64 de luminance) : crème sur ce pixel voilé = 5,0:1 ; un test relit ces valeurs et refait le calcul. */
+.hero-veil {
+  background: linear-gradient(90deg, rgb(var(--veil) / 0.55) 0%, rgb(var(--veil) / 0.55) 50%, rgb(var(--veil) / 0) 76%);
+}
+
+/* Voile de l'en-tête quand il est posé sur la photo (avant tout défilement) : encre à 65 %, calculé pour le pire pixel de la bande du haut (#FFE7BA bureau, #FFFFBF
+   mobile) : crème dessus = 5,3:1 au plus bas. Un test relit cette valeur. */
+.header-veil {
+  background: linear-gradient(rgb(var(--veil) / 0.65) 0%, rgb(var(--veil) / 0.65) 70%, rgb(var(--veil) / 0) 100%);
+}
+
+/* Mouvements au défilement, légers : `transform` et `opacity` seulement, liés à la position (jamais en boucle), une seule fois par élément. `--i` décale le début
+   d'un élément d'une grille (cascade). Sans `animation-timeline` ou avec « réduire les animations », tout est affiché tout de suite : aucun contenu n'est caché. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-90px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-right {
+  from {
+    opacity: 0;
+    transform: translateX(90px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Croquis : le trait se dessine, tracé par tracé. Colonne vertébrale de la méthode : elle se trace au fil du défilement. Titre du hero : les mots montent un à un. */
+@keyframes sketch-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes spine-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes word-up {
+  from {
+    transform: translateY(115%);
+  }
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+  }
+}
+/* Hero au défilement : la photo s'élargit doucement, le texte monte et s'efface. */
+@keyframes hero-zoom {
+  to {
+    transform: scale(1.2);
+  }
+}
+@keyframes hero-lift {
+  to {
+    opacity: 0;
+    transform: translateY(-90px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* `forwards` et non `both` : avant son entrée à l'écran, l'élément n'est PAS dans l'état de départ (invisible) ; sinon une capture pleine page,
+       une impression ou un robot d'indexation verraient une page vide. */
+    .reveal {
+      animation: reveal-up linear forwards;
+    }
+    .reveal-left {
+      animation: reveal-left linear forwards;
+    }
+    .reveal-right {
+      animation: reveal-right linear forwards;
+    }
+    .reveal-scale {
+      animation: reveal-scale linear forwards;
+    }
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale {
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 7%) entry calc(60% + var(--i, 0) * 7%);
+    }
+  }
+  @supports (animation-timeline: view()) {
+    .sketch path {
+      animation: sketch-draw linear forwards;
+      animation-timeline: view();
+      animation-range: entry calc(var(--p, 0) * 3%) entry calc(60% + var(--p, 0) * 3%);
+    }
+    .spine {
+      transform-origin: top;
+      animation: spine-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 60%;
+    }
+  }
+  .word {
+    animation: word-up 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(250ms + var(--w, 0) * 120ms);
+  }
+  @supports (animation-timeline: scroll()) {
+    .hero-zoom {
+      transform-origin: 70% 50%;
+      animation: hero-zoom linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+    .hero-lift {
+      animation: hero-lift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60vh;
+    }
+  }
+  /* Repli sans `animation-timeline` (voir `components/scroll-effects.tsx`) : mêmes mouvements par transitions, déclenchés à l'entrée à l'écran. */
+  @supports not (animation-timeline: view()) {
+    .rv-pending {
+      opacity: 0;
+    }
+    .reveal.rv-pending {
+      transform: translateY(56px);
+    }
+    .reveal-left.rv-pending {
+      transform: translateX(-90px);
+    }
+    .reveal-right.rv-pending {
+      transform: translateX(90px);
+    }
+    .reveal-scale.rv-pending {
+      transform: scale(0.84);
+    }
+    .rv-run {
+      transition:
+        opacity 700ms ease-out,
+        transform 700ms ease-out;
+      transition-delay: calc(var(--i, 0) * 90ms);
+    }
+    .sketch.rv-pending path {
+      stroke-dashoffset: 1;
+    }
+    .sketch.rv-run path {
+      transition: stroke-dashoffset 1300ms ease-out;
+      transition-delay: calc(var(--p, 0) * 90ms);
+    }
+  }
+  @supports not (animation-timeline: scroll()) {
+    .hero-zoom {
+      transform-origin: 70% 50%;
+      transform: scale(calc(1 + var(--hero-p, 0) * 0.2));
+    }
+    .hero-lift {
+      opacity: calc(1 - var(--hero-p, 0) * 1.6);
+      transform: translateY(calc(var(--hero-p, 0) * -90px));
+    }
+  }
+  .hero-in {
+    animation: hero-in 1100ms ease-out backwards;
+    animation-delay: var(--d, 0ms);
+  }
+}
+
+/* Boutons d'appel à l'action en verre liquide : une pastille TRANSPARENTE qui floute ce qu'elle recouvre (la photo, la page), un fin liseré lumineux, une ombre douce
+   et un éclat oblique au survol (`transform` seulement, une seule fois, jamais en boucle). Le texte garde la couleur de son contexte (crème sur la photo, encre sur le papier).
+   `--liquid-shade` ajoute un voile d'encre léger là où le bouton est posé sur la photo (hero, en-tête avant défilement) pour garder le contraste ; 0 ailleurs. Réservé aux
+   boutons : pas de carte en verre. */
+.liquid {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 600;
+  color: inherit;
+  border-radius: 9999px;
+  background:
+    linear-gradient(rgb(var(--veil) / var(--liquid-shade, 0)), rgb(var(--veil) / var(--liquid-shade, 0))),
+    color-mix(in srgb, currentColor 6%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 1px color-mix(in srgb, currentColor 45%, transparent),
+    0 14px 28px -14px rgb(0 0 0 / 0.4);
+}
+/* Version principale : le même verre, teinté d'orange (22 %) avec un liseré orange et une lueur. */
+.liquid-orange {
+  background:
+    linear-gradient(rgb(var(--veil) / var(--liquid-shade, 0)), rgb(var(--veil) / var(--liquid-shade, 0))),
+    color-mix(in srgb, hsl(var(--tone-orange)) 22%, transparent);
+  border-color: hsl(var(--tone-orange) / 0.8);
+  box-shadow:
+    inset 0 1px 1px hsl(var(--tone-orange) / 0.7),
+    0 14px 30px -12px hsl(var(--tone-orange) / 0.55);
+}
+/* Éclat : une bande oblique et douce qui traverse la pastille quand on la survole ou qu'on la focalise. */
+.liquid::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -30%;
+  bottom: -30%;
+  left: -45%;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: translateX(0) skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+}
+.liquid:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .liquid {
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease;
+  }
+  .liquid::after {
+    transition:
+      transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 200ms ease;
+  }
+  .liquid:hover,
+  .liquid:focus-visible {
+    transform: translateY(-2px);
+  }
+  .liquid:hover::after,
+  .liquid:focus-visible::after {
+    transform: translateX(560%) skewX(-18deg);
+    opacity: 1;
+  }
+  .liquid:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+/* Tracés des croquis (`components/sketches.tsx`) : `pathLength=1`, donc un seul réglage de pointillés pour tous. Sans mouvement, le croquis est tracé en entier. */
+.sketch path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.sketch .sk-accent {
+  stroke: hsl(var(--tone-orange));
+}
+.sketch .sk-thin {
+  opacity: 0.75;
+}
+/* Masque des mots du titre : les descendantes (g, p, q) ne sont pas coupées. */
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
+}
+.word {
+  display: inline-block;
+}
+
+/* L'en-tête de la page publique est collant : un élément qui reçoit le focus ou une ancre ne doit pas passer dessous (WCAG 2.4.11). */
+html:has(#contenu) {
+  scroll-padding-top: 5rem;
+}
+/* Impression : rendu statique, sans en-tête collant ni hauteur d'écran. */
+@media print {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .hero-zoom,
+  .hero-lift,
+  .spine,
+  .word,
+  .sketch path {
+    animation: none !important;
+  }
+  header[data-portfolio-header] {
+    position: static;
+  }
+}

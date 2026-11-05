@@ -12,7 +12,8 @@ import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-const ThemeSwitcher = () => {
+/** `className` s'ajoute au bouton ; `iconClassName` remplace la couleur de l'icône du bouton (par défaut « text-muted-foreground ») : la page publique les utilise pour que la lune réagisse au survol comme ses autres liens. */
+const ThemeSwitcher = ({ className, iconClassName = "text-muted-foreground" }: { className?: string; iconClassName?: string } = {}) => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -31,24 +32,24 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"} aria-label="Changer de thème">
+        <Button variant="ghost" size={"sm"} aria-label="Changer de thème" className={className}>
           {theme === "light" ? (
             <Sun
               key="light"
               size={ICON_SIZE}
-              className={"text-muted-foreground"}
+              className={iconClassName}
             />
           ) : theme === "dark" ? (
             <Moon
               key="dark"
               size={ICON_SIZE}
-              className={"text-muted-foreground"}
+              className={iconClassName}
             />
           ) : (
             <Laptop
               key="system"
               size={ICON_SIZE}
-              className={"text-muted-foreground"}
+              className={iconClassName}
             />
           )}
         </Button>

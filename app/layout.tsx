@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono, Pixelify_Sans } from "next/font/google";
+import { Bricolage_Grotesque, Hanken_Grotesk, IBM_Plex_Mono, Instrument_Serif, Pixelify_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+// Adresse de production d'abord : les adresses absolues (canonique, partage) ne doivent pas pointer vers l'URL figée d'un déploiement.
+const host = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+const defaultUrl = host
+  ? `https://${host}`
   : "http://localhost:3000";
 
 export const metadata: Metadata = {
@@ -19,6 +21,8 @@ const sans = Hanken_Grotesk({ display: "swap", subsets: ["latin"], variable: "--
 const brand = Bricolage_Grotesque({ display: "swap", subsets: ["latin"], weight: ["700"], variable: "--font-brand" });
 // Pixelify Sans : titres et étiquettes seulement (jamais le texte courant), classe `font-pixel`.
 const pixel = Pixelify_Sans({ display: "swap", subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-pixel" });
+// Instrument Serif : titres de la page publique `/portfolio` seulement (direction éditoriale, `.folio h1-h3`).
+const serif = Instrument_Serif({ display: "swap", subsets: ["latin"], weight: "400", variable: "--font-serif" });
 const mono = IBM_Plex_Mono({ display: "swap", subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export default function RootLayout({
@@ -28,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${sans.variable} ${mono.variable} ${brand.variable} ${pixel.variable} font-sans antialiased`}>
+      <body className={`${sans.variable} ${mono.variable} ${brand.variable} ${pixel.variable} ${serif.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

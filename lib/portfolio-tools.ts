@@ -1,0 +1,26 @@
+/** Outils affichés avec leur logo sur la page publique : nom affiché → fichier de `public/images/tools` (sans extension). Un outil absent d'ici s'affiche sans logo. */
+export const TOOL_ICONS: Record<string, string> = {
+  n8n: "n8n",
+  Supabase: "supabase",
+  Notion: "notion",
+  PostgreSQL: "postgresql",
+  Airtable: "airtable",
+  Baserow: "baserow",
+  Claude: "anthropic",
+  OpenAI: "openai",
+  Gemini: "googlegemini",
+  Docker: "docker",
+  "Next.js": "nextdotjs",
+  React: "react",
+  Telegram: "telegram",
+  Gmail: "gmail",
+  "Node.js": "nodedotjs",
+  MCP: "modelcontextprotocol",
+  Make: "make",
+  Zapier: "zapier",
+  Vercel: "vercel",
+  Cursor: "cursor",
+  Mistral: "mistralai",
+};
+
+export const toolIconPath = (tool: string): string | null => (Object.hasOwn(TOOL_ICONS, tool) ? `/images/tools/${TOOL_ICONS[tool]}.svg` : null);

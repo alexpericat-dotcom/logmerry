@@ -2848,6 +2848,78 @@ describe("captures des réalisations (table realisation_images et bucket portfol
   });
 });
 
+describe("vues publiques du portfolio (public_realisations, public_realisation_images) : ce qu'un visiteur sans connexion voit", () => {
+  const uuid = () => crypto.randomUUID();
+  let a: Account;
+  const ids: Record<"published" | "draft" | "unconsented", string> = { published: "", draft: "", unconsented: "" };
+  let imagePath = "";
+
+  const cleanup = async () => {
+    if (!a) return;
+    if (imagePath) await a.client.storage.from("portfolio").remove([imagePath]);
+    const { error } = await a.client.from("realisations").delete().like("title", `${PREFIX}%`);
+    if (error) console.warn(`Nettoyage des vues publiques incomplet : ${error.message}`);
+  };
+
+  before(async () => {
+    a = await signIn("A");
+    await cleanup();
+    const base = { description: "d", origin: "demo" as const };
+    const pub = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} publique`, client_consent: true, published: true, client_name: "Atelier Test", result_figure: "-30 %", link_url: "https://exemple.fr/", stack: ["Lovable"] }).select("id").single();
+    const draft = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} brouillon`, client_consent: true }).select("id").single();
+    const noConsent = await a.client.from("realisations").insert({ ...base, title: `${PREFIX} sans accord`, client_name: "Secret SA", client_sector: "Banque", result_figure: "9 M€" }).select("id").single();
+    for (const r of [pub, draft, noConsent]) assert.ifError(r.error);
+    ids.published = pub.data!.id;
+    ids.draft = draft.data!.id;
+    ids.unconsented = noConsent.data!.id;
+    imagePath = `${a.userId}/${ids.published}/${uuid()}.png`;
+    assert.ifError((await a.client.storage.from("portfolio").upload(imagePath, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"), { contentType: "image/png" })).error);
+    assert.ifError((await a.client.from("realisation_images").insert({ realisation_id: ids.published, path: imagePath, alt: "Capture publique" })).error);
+    // Une capture d'une réalisation NON publiée : elle ne doit jamais apparaître.
+    assert.ifError((await a.client.from("realisation_images").insert({ realisation_id: ids.draft, path: `${a.userId}/${ids.draft}/${uuid()}.png`, alt: "Capture du brouillon" })).error);
+  });
+
+  after(cleanup);
+
+  test("sans connexion : seule la réalisation publiée avec accord est visible, avec exactement les colonnes publiables", async () => {
+    const anon = newClient();
+    const { data, error } = await anon.from("public_realisations").select("*").like("title", `${PREFIX}%`);
+    assert.ifError(error);
+    assert.deepEqual(data!.map((r) => r.title), [`${PREFIX} publique`]);
+    assert.deepEqual(Object.keys(data![0]).sort(), ["client_label", "description", "id", "link_url", "origin", "published_at", "result_figure", "stack", "title"]);
+    assert.equal(data![0].client_label, "Atelier Test");
+    assert.ok(data![0].published_at);
+  });
+
+  test("les captures publiques sont celles de la réalisation publiée seulement, sans identifiant de propriétaire", async () => {
+    const { data, error } = await newClient().from("public_realisation_images").select("*").in("realisation_id", [ids.published, ids.draft, ids.unconsented]);
+    assert.ifError(error);
+    assert.deepEqual(data!.map((i) => i.alt), ["Capture publique"]);
+    assert.deepEqual(Object.keys(data![0]).sort(), ["alt", "created_at", "id", "path", "realisation_id"]);
+  });
+
+  test("dépublier ou retirer l'accord la retire aussitôt des vues ; republier la remet", async () => {
+    const anon = newClient();
+    const visible = async () => ((await anon.from("public_realisations").select("id").eq("id", ids.published)).data ?? []).length === 1;
+    assert.equal(await visible(), true);
+    assert.ifError((await a.client.from("realisations").update({ published: false }).eq("id", ids.published)).error);
+    assert.equal(await visible(), false);
+    assert.equal(((await anon.from("public_realisation_images").select("id").eq("realisation_id", ids.published)).data ?? []).length, 0, "ses captures disparaissent aussi");
+    assert.ifError((await a.client.from("realisations").update({ published: true }).eq("id", ids.published)).error);
+    assert.equal(await visible(), true);
+    assert.ifError((await a.client.from("realisations").update({ client_consent: false }).eq("id", ids.published)).error);
+    assert.equal(await visible(), false, "accord retiré : dépubliée d'office, donc invisible");
+  });
+
+  test("les tables restent fermées à un visiteur : seules les vues sont lisibles", async () => {
+    const anon = newClient();
+    for (const table of ["realisations", "realisation_images", "clients", "notes", "missions", "invoices"] as const) {
+      assert.equal((await anon.from(table).select("id")).error?.code, "42501", table);
+    }
+    assert.ok((await anon.from("public_realisations").insert({ title: "x" } as never)).error, "vue en lecture seule");
+  });
+});
+
 describe("sécurité par ligne de la base RÉELLE (rls_audit) : aucune table oubliée, même créée à la main", () => {
   // Complète `lib/security-static.test.ts`, qui ne lit que les migrations : une table créée dans l'éditeur SQL sans migration, ou une politique supprimée à la main, n'y apparaîtrait pas.
   test("chaque table de `public` a la sécurité par ligne activée et au moins une politique", async () => {

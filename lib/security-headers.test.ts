@@ -41,6 +41,19 @@ describe("securityHeaders", () => {
     }
   });
 
+  test("la CSP autorise les images du bucket public de Supabase (page du portfolio)", () => {
+    const csp = get(securityHeaders("https://abc.supabase.co"), "Content-Security-Policy-Report-Only") ?? "";
+    const imgSrc = csp.split("; ").find((d) => d.startsWith("img-src"));
+    assert.equal(imgSrc, "img-src 'self' data: https://abc.supabase.co");
+    const without = get(securityHeaders(undefined), "Content-Security-Policy-Report-Only") ?? "";
+    assert.equal(without.split("; ").find((d) => d.startsWith("img-src")), "img-src 'self' data:");
+  });
+
+  test("la CSP n'autorise les cadres que vers des adresses https (aperçu en direct des réalisations)", () => {
+    const csp = get(h, "Content-Security-Policy-Report-Only") ?? "";
+    assert.ok(csp.split("; ").includes("frame-src https:"));
+  });
+
   test("la CSP couvre aussi base-uri, form-action et object-src", () => {
     const csp = get(h, "Content-Security-Policy-Report-Only") ?? "";
     for (const d of ["base-uri 'self'", "form-action 'self'", "object-src 'none'", "script-src 'self'", "img-src 'self' data:"]) assert.ok(csp.includes(d), d);

@@ -69,9 +69,9 @@ export async function createRealisation(_prev: RealisationFormState, formData: F
 export async function updateRealisation(id: string, _prev: RealisationFormState, formData: FormData): Promise<RealisationFormState> {
   return save(readValues(formData), async (supabase, value) => {
     if (!isUuid(id)) return "not-found";
-    // Case d'accord décochée : « dépubliée » est écrit explicitement (la base le ferait aussi, et refuse de toute façon published sans accord) ;
-    // accord coché : `published` n'est pas dans la requête, la publication ne bouge pas.
-    const patch = value.client_consent ? value : { ...value, published: false };
+    // Décision d'Alex (30 octobre 2026) : toute modification d'une réalisation la remet « non publiée » ; il la republie ensuite, en connaissance de cause.
+    // (Sans accord coché, la base dépublie aussi, et refuse de toute façon published sans accord.)
+    const patch = { ...value, published: false };
     const { data, error } = await supabase.from("realisations").update(patch).eq("id", id).select("id");
     if (error) return "error";
     return data?.length ? "saved" : "not-found";
@@ -145,6 +145,9 @@ export async function addRealisationImage(realisationId: string, path: string, a
     const { data: claims } = await supabase.auth.getClaims();
     const owner = claims?.claims?.sub;
     if (typeof owner !== "string" || !pathBelongsTo(path, owner, realisationId)) return "not-found";
+    // Comme toute modification d'une réalisation publiée : elle repasse « non publiée » AVANT l'ajout, pour que la nouvelle capture ne soit jamais en ligne un instant.
+    const unpublished = await supabase.from("realisations").update({ published: false }).eq("id", realisationId);
+    if (unpublished.error) return "error";
     const { error } = await supabase.from("realisation_images").insert({ realisation_id: realisationId, path, alt: checked.value });
     if (!error) return "saved";
     // 23514 vient aussi des contrôles du chemin et du texte alternatif : seul le déclencheur de plafond a ce message.
@@ -158,6 +161,7 @@ export async function addRealisationImage(realisationId: string, path: string, a
   if (result.value === "limit") return { message: "Six captures au plus par réalisation. Supprime-en une avant d'en ajouter." };
   if (result.value === "not-found") return { message: NOT_FOUND };
 
+  revalidatePath("/realisations");
   revalidatePath(`/realisations/${realisationId}/modifier`);
   return {};
 }
@@ -170,6 +174,9 @@ export async function deleteRealisationImage(id: string): Promise<ImageState> {
     const found = await supabase.from("realisation_images").select("path, realisation_id").eq("id", id).maybeSingle();
     if (found.error) return "error";
     if (!found.data) return "not-found";
+    // Retirer une capture modifie la réalisation : elle repasse « non publiée » avant (voir addRealisationImage).
+    const unpublished = await supabase.from("realisations").update({ published: false }).eq("id", found.data.realisation_id);
+    if (unpublished.error) return "error";
     const { data, error } = await supabase.from("realisation_images").delete().eq("id", id).select("id");
     if (error) return "error";
     if (!data?.length) return "not-found";
@@ -184,6 +191,7 @@ export async function deleteRealisationImage(id: string): Promise<ImageState> {
   if (result.status === "failed" || result.value === "error") return { message: "Suppression impossible. La capture est conservée. Réessaie." };
   if (result.value === "not-found") return { message: "Cette capture n'existe plus." };
 
+  revalidatePath("/realisations");
   revalidatePath(`/realisations/${realisationId}/modifier`);
   return fileKept ? { message: "La capture est retirée de la réalisation, mais son fichier n'a pas pu être supprimé du stockage : il reste accessible à son adresse." } : {};
 }

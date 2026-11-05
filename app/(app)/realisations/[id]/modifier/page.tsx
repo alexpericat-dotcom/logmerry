@@ -26,6 +26,11 @@ async function EditRealisation({ params }: { params: Promise<{ id: string }> }) 
   return (
     <div className="flex flex-col gap-6">
       <PageBanner title="Modifier la réalisation" />
+      {r.published && (
+        <p role="note" className="max-w-2xl rounded-md border p-3 text-sm">
+          Cette réalisation est publiée. Enregistrer une modification la remet « non publiée » : tu la republieras ensuite avec le bouton « Publier » en bas de page.
+        </p>
+      )}
       <RealisationForm
         // La clé suit le contenu enregistré, pas `updated_at` : publier ou retirer (qui le modifie) ne doit pas effacer une saisie en cours.
         key={[r.title, r.description, r.origin, r.client_name, r.client_sector, r.result_figure, r.link_url, r.client_consent, r.stack.join("|")].join("\u0001")}
