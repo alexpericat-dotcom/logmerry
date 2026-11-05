@@ -98,6 +98,7 @@ pre.mermaid { background: none; border: 0; color: var(--ink); padding: 0; border
 /* Captures de l'application */
 figure.shot { margin: 4mm 0 6mm; break-inside: avoid; }
 figure.shot img { display: block; width: 100%; height: auto; border: 0.3mm solid var(--line); border-radius: 1.2mm; }
+figure.shot img[src*="qr-"] { width: 42mm; border: 0; }
 figure.shot figcaption { margin-top: 1.6mm; font: 500 7.6pt/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.04em; color: var(--muted); }
 
 /* À confirmer : visible, jamais caché */
