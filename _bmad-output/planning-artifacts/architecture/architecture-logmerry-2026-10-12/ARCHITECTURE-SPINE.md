@@ -202,7 +202,7 @@ Extension prévue pour la phase suivante (FR-26 à FR-28, non construite) : les 
 
 - **Binds:** FR-16, UJ-3
 - **Prevents:** fuite de données privées via la page publique.
-- **Rule:** `/portfolio` est la seule route publique de données ; elle lit **exclusivement** la vue `public_realisations` avec le rôle `anon`. Elle est en lecture seule (pas d'écriture anonyme au MVP ; contact par `mailto:`). Aucune autre table n'a de policy pour `anon`.
+- **Rule:** `/portfolio` est la seule route publique de données ; elle lit **exclusivement** la vue `public_realisations` avec le rôle `anon`. Elle est en lecture seule, **sauf une exception exacte** (amendement du 4 novembre 2026, formulaire de contact demandé par Alex ; avant : contact par `mailto:`) : la fonction SQL `submit_contact_message`, seule écriture anonyme. Elle valide les champs, plafonne (5 messages par heure et 30 par jour au total, 3 par jour pour une même adresse, doublons ignorés ; journal `contact_submissions` d'empreintes, sans texte de message), et n'écrit que chez le destinataire désigné dans `contact_form_settings` (un seul activé, jamais choisi par le visiteur) une note en **brouillon**, non indexée (l'indexation ne passe que par l'application). Aucune table n'a de policy pour `anon` ; `lib/security-static.test.ts` fige les deux seuls droits d'`anon` (lecture des deux vues, exécution de cette fonction).
 - **En clair :** le public passe par une seule « fenêtre » étroite sur la base.
 
 ### AD-11 — Hébergement, environnements, secrets

@@ -51,9 +51,9 @@ test("« Mon parti pris » : le texte fourni par Alex (5 novembre 2026), mot pou
   ]);
 });
 
-test("contact : l'adresse donnée par Alex et un objet de courriel défini", () => {
-  assert.equal(content.CONTACT_EMAIL, "alexandre.pericat@gmail.com");
-  assert.ok(content.CONTACT_SUBJECT.trim());
+test("contact : formulaire sans adresse affichée, textes au vouvoiement", () => {
+  assert.ok(!("CONTACT_EMAIL" in content), "plus d'adresse dans le contenu public");
+  for (const t of Object.values(content.CONTACT.form)) assert.ok(t.trim() && !/@/.test(t));
 });
 
 test("le choix des briques est présenté comme sur mesure, jamais comme une liste imposée ; l'introduction ne cite aucun type de livrable", () => {

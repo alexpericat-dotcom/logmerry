@@ -6,14 +6,11 @@
  */
 
 export const BRAND = "LogMerry";
-/** Adresse publique du lien « m'écrire » (donnée par Alex le 30 octobre 2026). */
-export const CONTACT_EMAIL = "alexandre.pericat@gmail.com";
-export const CONTACT_SUBJECT = "Prise de contact via votre portfolio";
 
 export const PAGE_TITLE = `${BRAND} · Automatisation & IA pour les entreprises`;
 export const PAGE_DESCRIPTION = "Je pars de votre problème métier pour trouver ce qu'il faut automatiser, puis je construis l'automatisation, l'IA et les données qui le résolvent. Réalisations et méthode.";
 
-/** Boutons de l'en-tête : « Qui suis-je » mène à la section de présentation, « Contact » à la section de contact (qui porte le lien courriel). */
+/** Boutons de l'en-tête : « Qui suis-je » mène à sa page (`/portfolio/qui-suis-je`), « Contact » à la section de contact (qui porte le lien courriel). */
 export const HEADER = { about: "Qui suis-je", contact: "Contact" };
 
 export const HERO = {
@@ -142,7 +139,21 @@ export const SHOWCASE = {
 export const CONTACT = {
   title: "Parlons de votre problème",
   text: "Décrivez-moi ce qui prend du temps à vos équipes. Je reviens vers vous avec des questions et des pistes.",
-  button: "M'écrire",
+  /**
+   * Formulaire (4 novembre 2026, option A : l'adresse n'est plus affichée). Textes validés par Alex le 4 novembre 2026, mention sur l'usage des données
+   * comprise : elle décrit ce que fait l'application (les messages arrivent dans ses notes, en brouillon), ce n'est pas un avis juridique.
+   */
+  form: {
+    name: "Votre nom",
+    email: "Votre adresse e-mail",
+    message: "Votre message",
+    send: "Envoyer",
+    sending: "Envoi en cours…",
+    success: "Merci, votre message est bien envoyé.",
+    fail: "Le message n'a pas pu être envoyé. Réessayez dans un instant.",
+    rate: "Trop de messages en ce moment. Réessayez un peu plus tard.",
+    privacy: "Votre nom, votre adresse e-mail et votre message ne servent qu'à vous répondre.",
+  },
 };
 
 export const LOGOS_NOTE = "Les logos appartiennent à leurs propriétaires et ne désignent que les outils utilisés.";

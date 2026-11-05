@@ -15,8 +15,8 @@ export type AccessDecision = { action: "next" } | { action: "redirect"; to: stri
 /** Pages d'authentification, publiques : `/auth` et tout ce qui est sous `/auth/`. */
 const isAuthPath = (pathname: string) => pathname === "/auth" || pathname.startsWith("/auth/");
 
-/** Le portfolio public (AD-10) : cette page seulement, aucun sous-chemin. */
-const isPortfolioPath = (pathname: string) => pathname === "/portfolio";
+/** Le portfolio public (AD-10) : ces deux pages seulement (la page principale et « Qui suis-je », 4 novembre 2026), aucun autre sous-chemin. */
+const isPortfolioPath = (pathname: string) => pathname === "/portfolio" || pathname === "/portfolio/qui-suis-je";
 
 /** L'API : `/api` et tout ce qui est sous `/api/` (un faux ami comme `/apiary` n'en est pas). */
 const isApiPath = (pathname: string) => pathname === "/api" || pathname.startsWith("/api/");

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
 import { Suspense } from "react";
 
+import { sendContactMessage } from "@/app/portfolio/contact-action";
 import { PortfolioShowcaseFilter } from "@/components/portfolio-showcase-filter";
 import { ScrollEffects } from "@/components/scroll-effects";
 import {
@@ -54,7 +55,7 @@ export default function PortfolioPage() {
             <Showcase />
           </Suspense>
         </PortfolioShowcaseFrame>
-        <PortfolioContact />
+        <PortfolioContact action={sendContactMessage} />
       </main>
       <PortfolioFooter />
     </div>

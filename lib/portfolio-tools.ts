@@ -21,6 +21,10 @@ export const TOOL_ICONS: Record<string, string> = {
   Vercel: "vercel",
   Cursor: "cursor",
   Mistral: "mistralai",
+  "Mistral AI": "mistralai",
+  ChatGPT: "openai",
+  Webflow: "webflow",
+  Figma: "figma",
 };
 
 export const toolIconPath = (tool: string): string | null => (Object.hasOwn(TOOL_ICONS, tool) ? `/images/tools/${TOOL_ICONS[tool]}.svg` : null);
