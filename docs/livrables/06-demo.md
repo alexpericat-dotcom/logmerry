@@ -1,6 +1,6 @@
 # Démonstration de l'application
 
-> **En deux phrases.** La démonstration se fait sur l'adresse de production **`https://logmerry.vercel.app`** (QR ci-dessous), avec un compte fictif, et suit un scénario de 14 étapes qui va d'un prospect à une facture payée en une vingtaine de minutes. Ce scénario a été déroulé en développement le 29 octobre 2026 ; **il n'a pas été rejoué sur la production**, et la production ne contient pas tout ce qui a été fait depuis le 30 octobre.
+> **En deux phrases.** La démonstration se fait sur l'adresse de production **`https://logmerry.vercel.app`** (QR ci-dessous), avec un compte fictif, et suit un scénario de 14 étapes qui va d'un prospect à une facture payée en une vingtaine de minutes. Ce scénario a été déroulé en développement le 29 octobre 2026 ; **il n'a pas été rejoué sur la production**, et la production ne contient pas tout ce qui a été fait depuis : le portfolio public y est depuis le 5 novembre 2026, mais pas la page « Qui suis-je » ni le formulaire de contact.
 
 ## Où et comment
 
@@ -10,6 +10,7 @@
 | Compte de démonstration | `demo-a@example.com`, compte **fictif**. Le mot de passe n'est écrit nulle part dans ce document : il est dans le gestionnaire de mots de passe d'Alex (ou le fichier local `.env.test.local`, ignoré par Git) |
 | Inscription | Désactivée : on ne peut pas créer de compte depuis l'adresse publique |
 | Données | Fictives, étiquetées « démo » ; la base ne contient aucune vraie donnée client |
+| Portfolio public | `https://logmerry.vercel.app/portfolio`, **sans connexion** (vérifié le 5 novembre : réponse 200) |
 | Second compte | Un compte B fictif sert au test d'isolation (`TEST_B_EMAIL`, dans `.env.test.local`, que je ne lis pas) : son adresse n'est pas écrite ici |
 
 ![QR code vers https://logmerry.vercel.app](captures/qr-production.png)
@@ -18,14 +19,14 @@
 
 ## Ce que la production contient (et ne contient pas)
 
-Production = branche `main` au 30 octobre 2026 (pull request n° 95).
+Production = branche `main` au 5 novembre 2026, commit `da3614c` (fusion de la pull request n° 97, qui contient la n° 96). Déploiement « Ready » dans Vercel.
 
 | Visible en démonstration | **Absent de la production** (branches non fusionnées) |
 |---|---|
-| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Page « Qui suis-je » du portfolio, formulaire de contact public, statut et choix de présentation des réalisations |
-| Réalisations (gestion dans l'application, captures avec texte alternatif) | Vue publique du portfolio : **l'adresse `/portfolio` renvoie à la connexion sur la production** |
+| Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Page « Qui suis-je » du portfolio, formulaire de contact public, champs « Choix de conception » et « Validation » des réalisations |
+| Réalisations (gestion dans l'application, captures avec texte alternatif, statut) ; **portfolio public** (`/portfolio`) | Page « Qui suis-je » (`/portfolio/qui-suis-je` renvoie à la connexion), choix de présentation des réalisations (« Choix de conception », « Validation ») |
 
-> **À décider par Alex.** Montrer le portfolio le jour de la soutenance suppose de fusionner ces branches avant (voir le chapitre « Déploiement »). Sinon, la partie publique se montre sur une préversion (protégée par la connexion Vercel) ou par les captures du chapitre « UX et maquettes ».
+> **À décider par Alex.** Le portfolio public est en production depuis le 5 novembre. Montrer aussi « Qui suis-je » et le formulaire de contact suppose de fusionner leurs branches avant (voir le chapitre « Déploiement »).
 
 ## Avant de commencer : la liste de contrôle
 
@@ -80,7 +81,7 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 ## Ce qui n'est pas démontrable aujourd'hui
 
 - Les **performances en production** : les pages ont été mesurées en développement (0,4 à 1,5 s par page, à chaud) ; la mesure sur le déploiement avec une session connectée reste à faire.
-- Le **portfolio public** depuis la production (voir plus haut).
+- La page **« Qui suis-je »** et le **formulaire de contact** depuis la production (non fusionnés).
 - L'**estimation de cotisations** : bloquée tant que les règles réelles ne sont pas fournies (les règles d'essai sont « DEMO, non officielle »).
 - Les **vraies données** : aucune ; tout est fictif.
 

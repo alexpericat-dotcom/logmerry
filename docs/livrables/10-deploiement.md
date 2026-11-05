@@ -1,6 +1,6 @@
 # Déploiement et retour arrière
 
-> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne aujourd'hui sur le dernier commit de `main` (30 octobre 2026) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre, et il échoue encore sur un seul contrôle, parce que la base est en avance sur `main`.
+> **En deux phrases.** Une fusion sur la branche `main` met automatiquement le code en production sur Vercel (Paris), après une vérification de GitHub qui **ne bloque pas** la fusion. La production tourne depuis le 5 novembre 2026 sur le dernier commit de `main` (fusion des pull requests n° 96 et 97, avec le portfolio public) ; le retour arrière existe mais **n'a jamais été exercé**, et **le test d'isolation de nuit a échoué du 30 octobre au 5 novembre** faute de secrets ; les secrets ont été créés le 5 novembre, et il échoue encore sur un seul contrôle, parce que la base est en avance sur `main`.
 
 Faits relevés le 5 novembre 2026 par la ligne de commande de Vercel, l'API de GitHub et des requêtes sur l'adresse publique (lecture seule). Aucune action de déploiement n'a été lancée pour écrire ce chapitre.
 
@@ -40,9 +40,10 @@ flowchart LR
 |---|---|
 | Avant le 5 novembre | **7 exécutions sur 7 en échec**, du 30 octobre au 5 novembre 2026 : « Secret manquant : SUPABASE_URL », `gh secret list` vide. Le test n'avait **jamais tourné** contre la vraie base ; une régression de la sécurité par ligne n'aurait pas été vue en moins de 24 h |
 | Réparation (Alex, 5 novembre) | Les six secrets (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`) ont été créés dans GitHub ; `gh secret list` les montre tous |
-| Première exécution à la main (5 novembre, branche `main`) | Le test se connecte à la vraie base : **151 contrôles sur 152 passent**, dont tous ceux d'isolation entre deux comptes (notes, extraits, historique, recherche, réalisations hors publication). **1 échec** |
-| L'échec | « publication : avec l'accord elle passe… » : la base refuse la ligne (contrainte `realisations_published_needs_status`). **Cause probable, non vérifiée par un essai sur la branche concernée** : le test de `main` est plus ancien que la migration sur le statut des réalisations, déjà appliquée à la base partagée mais livrée par la branche `feat/realisation-status`, non fusionnée. Ce n'est pas une fuite de données |
-| Conséquence | Le test de nuit continuera d'échouer tant que cette branche n'est pas fusionnée dans `main` (ou tant que le test de `main` n'est pas aligné sur la base). Il est néanmoins **utile dès maintenant** : tout autre échec d'isolation apparaîtrait dans les 151 autres contrôles |
+| Première exécution à la main (5 novembre, `main` avant les fusions) | **151 contrôles sur 152 passent**, dont tous ceux d'isolation entre deux comptes. 1 échec (statut des réalisations) |
+| Seconde exécution (5 novembre, `main` après les n° 96 et 97) | **157 contrôles sur 158 passent** : l'échec du statut a disparu |
+| L'échec restant | « seule la réalisation publiée avec accord est visible, avec exactement les colonnes publiables » : la vue publique expose deux colonnes de plus que celles attendues par le test, `design_choice` et `validation`. Elles viennent de la migration `20261106100000_realisation_design_choice.sql` de la branche `feat/realisation-design-choice` (4 commits, aucune pull request), **déjà appliquée à la base** ; la même branche met le test à jour d'une ligne. Deux champs texte facultatifs sans donnée privée : le test signale leur **nouveauté**, ce n'est pas une fuite |
+| Conséquence | Le test de nuit restera en échec sur ce seul contrôle tant que cette branche n'est pas fusionnée dans `main`. Il est néanmoins utile dès maintenant : tout autre échec d'isolation apparaîtrait parmi les 157 autres contrôles |
 
 Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, du 30 octobre au 5 novembre, sont restés sans réaction (aucune alerte lue ou configurée : **À confirmer**).
 
@@ -69,15 +70,17 @@ Deux écarts à connaître :
 
 | Élément | Valeur |
 |---|---|
-| Dernier déploiement de production | 30 octobre 2026 à 12 h 39 (heure de Paris), statut **Ready**, construction 38 s |
-| Commit déployé | `5db86bf`, fusion de la pull request n° 95 (captures d'écran des réalisations, texte alternatif obligatoire) |
-| CI sur ce commit | Succès (1 min 34 s) |
-| Adresse | `https://logmerry.vercel.app` : répond (la racine renvoie vers `/auth/login`, qui répond en 200 ; `/api/chat` sans connexion répond 401, comme prévu) |
-| Historique | Une vingtaine de déploiements de production visibles, tous « Ready », de 19 à 54 secondes, du 29 au 30 octobre |
-| **Ce qui n'est pas en production** | Tout ce qui a été fait depuis le 30 octobre et n'est pas fusionné dans `main` : au 5 novembre, `main` n'a aucun commit après la pull request n° 95. Les branches `feat/about-page`, `feat/realisation-status`, `feat/realisation-design-choice` et `feat/contact-form` ont des préversions mais **ne sont pas fusionnées** |
-| Migrations déjà appliquées à la base partagée | Certaines migrations de ces branches sont **déjà appliquées** (par exemple le formulaire de contact) alors que leur code n'est pas en production : la base est en avance sur le code publié |
+| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96 puis 97 par Alex (accord donné dans la conversation) ; statut **Ready**, construction 33 s (capture Vercel) |
+| Commit déployé | `da3614c`, fusion de la pull request n° 97 ; la n° 96 (`7a2103e`, page publique du portfolio) l'avait précédé |
+| CI sur ces commits | Succès. La CI de `main` a échoué une première fois sur un test (« double clic sur Ajouter », attente d'une seconde) puis réussi à la relance : test **instable**, noté |
+| Adresse | `https://logmerry.vercel.app` : `/` et `/portfolio/qui-suis-je` renvoient à la connexion, `/auth/login` répond 200, **`/portfolio` répond 200 sans connexion** (vérifié le 5 novembre) |
+| Historique | Avant le 5 novembre : une vingtaine de déploiements « Ready » du 29 au 30 octobre |
+| **Ce qui n'est pas en production** | Les branches `feat/about-page` (n° 98), `feat/realisation-design-choice` (aucune PR) et `feat/contact-form`, **non fusionnées** |
+| Migrations déjà appliquées à la base partagée | Certaines migrations de ces branches sont **déjà appliquées** (formulaire de contact, champs « Choix de conception » et « Validation ») alors que leur code n'est pas en production : la base reste en avance sur le code publié |
 
-> **À décider avant la soutenance.** Ce qui doit être en production le 16 novembre, et dans quel ordre le fusionner. Je ne fusionne rien, n'ouvre aucune pull request et ne pousse rien sans ton accord explicite.
+Une méprise à noter : juste après la fusion, ma première vérification (API de GitHub et de Vercel) n'a pas montré le déploiement et m'a fait croire à tort qu'il n'avait pas eu lieu. La capture de Vercel et une nouvelle requête sur l'adresse l'ont corrigé.
+
+> **À décider avant la soutenance.** Ce qui doit encore être mis en production le 16 novembre (« Qui suis-je », formulaire de contact, champs de conception), et dans quel ordre le fusionner. Je ne fusionne rien, n'ouvre aucune pull request et ne pousse rien sans ton accord explicite.
 
 ## Retour arrière
 
@@ -107,7 +110,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 
 | Limite | Piste |
 |---|---|
-| Test de nuit encore en échec sur un contrôle | Fusionner `feat/realisation-status` (décision d'Alex) ou aligner le test de `main` ; relancer ensuite `gh workflow run isolation.yml` |
+| Test de nuit encore en échec sur un contrôle | Fusionner `feat/realisation-design-choice` (décision d'Alex) ; relancer ensuite `gh workflow run isolation.yml` |
 | Fusion possible malgré une CI rouge | Discipline ; ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |

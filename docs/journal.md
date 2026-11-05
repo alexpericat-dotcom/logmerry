@@ -838,3 +838,9 @@
 - Alex a créé les six secrets (`gh secret list` : les six noms, valeurs jamais lues par moi). Test lancé à la main avec son accord : `gh workflow run isolation.yml --ref main` (run 42079996155, sans option de fuite, donc gratuit).
 - Résultat : 152 contrôles, **151 passent, 1 échoue** (« publication : avec l'accord elle passe… », contrainte `realisations_published_needs_status`). Cause probable, non vérifiée sur la branche concernée : le test de `main` est en retard sur la migration du statut des réalisations (branche `feat/realisation-status` non fusionnée, migration déjà appliquée à la base). Aucune fuite entre comptes.
 - Chapitres 5, 8, 10, 11, 13 et README mis à jour (avant : « 7 échecs sur 7, secrets manquants »).
+
+## 2026-11-05 — Fusion des pull requests n° 96 et 97, production
+- Accord explicite d'Alex (« go ») pour fusionner n° 96 puis n° 97 uniquement. Les PR étaient empilées (n° 97 avait pour base la branche du n° 96) : n° 96 fusionnée (`7a2103e`), n° 97 redirigée vers `main` (`gh pr edit 97 --base main`), CI de `main` verte, puis n° 97 fusionnée (`da3614c`). Rien d'autre fusionné ; `preview/realisation-status` non touchée.
+- CI de `main` : un échec sur le test « double clic sur Ajouter » (attente de 1 s), réussi à la relance de la tâche : test instable, à durcir plus tard.
+- Production : déploiement bien créé (Ready, 33 s), `/portfolio` répond 200 sans connexion. Mon premier relevé (API GitHub/Vercel, `curl` précoce) l'avait manqué : erreur de ma part, corrigée par la capture de Vercel d'Alex et une nouvelle requête.
+- Test d'isolation relancé : 157/158. L'échec restant : la vue publique expose `design_choice` et `validation` (migration de `feat/realisation-design-choice`, appliquée à la base, branche non fusionnée, sans PR). Décision en attente d'Alex.
