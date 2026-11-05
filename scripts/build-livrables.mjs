@@ -46,6 +46,10 @@ const chapters = files.map((file) => {
       code({ text, lang }) {
         return lang === "mermaid" ? `<figure class="diagram"><pre class="mermaid">${esc(text)}</pre></figure>` : `<pre><code>${esc(text)}</code></pre>`;
       },
+      image({ href, text }) {
+        const src = /^https?:|^file:/.test(href) ? href : `file://${process.cwd()}/${DIR}/${href}`;
+        return `<figure class="shot"><img src="${esc(src)}" alt="${esc(text)}"/><figcaption>${esc(text)}</figcaption></figure>`;
+      },
       heading({ tokens, depth }) {
         const html = this.parser.parseInline(tokens);
         const plain = tokens.map((t) => t.raw ?? "").join("");

@@ -95,5 +95,10 @@ figure.diagram { margin: 0; break-inside: avoid; }
 pre.mermaid { background: none; border: 0; color: var(--ink); padding: 0; border-radius: 0; font: inherit; white-space: normal; text-align: center; margin: 4mm 0 7mm; }
 .mermaid svg { display: block; margin: 0 auto; width: auto !important; max-width: 100% !important; height: auto; max-height: 170mm; }
 
+/* Captures de l'application */
+figure.shot { margin: 4mm 0 6mm; break-inside: avoid; }
+figure.shot img { display: block; width: 100%; height: auto; border: 0.3mm solid var(--line); border-radius: 1.2mm; }
+figure.shot figcaption { margin-top: 1.6mm; font: 500 7.6pt/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.04em; color: var(--muted); }
+
 /* À confirmer : visible, jamais caché */
 .todo { background: var(--card); border: 0.3mm dashed var(--orange); border-radius: 1.5mm; padding: 2.5mm 3.5mm; margin: 0 0 4mm; }

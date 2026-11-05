@@ -41,9 +41,14 @@ Un cockpit personnel pour piloter une activité de conseil No-Code/IA, avec un a
 4. Elle écrit à Alex par le lien « m'écrire ». Le nom du client n'apparaît jamais sans son accord.
 
 ## Le style visuel
-- **Ambiance** : sobre, grille nette, fort contraste.
-- **Couleurs** : fond Chalk, cartes Dawn, texte Forest, boutons et focus en vert Kyuri. Mode sombre : fond Forest, accent jaune Sneezeweeds. L'orange Tobiko ne marque que les 90 % de la jauge. Quelques dégradés (portfolio, connexion, en-tête du cockpit), jamais derrière les tâches ou les tableaux.
-- **Typographie** : Hanken Grotesk (texte), IBM Plex Mono (chiffres alignés pour les montants et les dates), Pixelify Sans (titres de bandeau, thème clair seulement), Bricolage Grotesque (logotype) ; voir `DESIGN.md`.
+*Mis à jour le 5 novembre 2026 d'après `DESIGN.md` (statut « final », 18 octobre 2026) et `docs/ui-rules.md`. La palette de la session du 11 octobre (Chalk, Dawn, Forest, Kyuri, Sneezeweeds, Tobiko) a été remplacée.*
+
+- **Ambiance** : sobre, grille nette, fort contraste. Thème **sombre par défaut** (« Cobalt »), thème clair « Arcade clair » (choix du 15 octobre 2026) disponible par le bouton « Changer de thème » ; le choix est mémorisé.
+- **Thème sombre** : fond `#0E1014`, cartes `#161A21`, texte `#F2F1EC`, signature cobalt clair `#8195FF`, focus orange `#FFA94D`, succès `#5FD3A0`, attention `#F5B547`, erreur `#FF8A80`.
+- **Thème clair** : fond ciel très pâle `#F7FAFF`, encre marine `#1B1F4B`, signature cobalt `#1D3BFF`, traits marine de 2 px et ombre dure, succès `#097145`, attention `#954F00`, erreur `#B3261E`. Accents décoratifs turquoise, violet, orange, rose et jaune, jamais en texte.
+- **Règles de couleur** : le cobalt est la signature (lien, élément actif, case cochée), jamais un statut ni une série de graphique. Un statut = icône + mot + couleur. Cinq jetons de série pour les graphiques. Aucune valeur de couleur dans un composant : uniquement des jetons.
+- **Dégradés** : connexion, bandeau du cockpit et portfolio ; jamais derrière les tâches ou les tableaux.
+- **Typographie** : Hanken Grotesk (texte et titres), IBM Plex Mono (chiffres alignés : montants, dates), Pixelify Sans (titres de bandeau en capitales, thème clair seulement), Bricolage Grotesque (logotype « LogMerry » en sombre).
 
 ## Les points encore ouverts
 - Tester le raccourci `⌘K` (recherche et assistant) sur Safari, Chrome et Firefox Mac.

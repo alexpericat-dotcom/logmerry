@@ -76,7 +76,7 @@ Le contrat tient en 13 règles (`docs/ui-rules.md`), dont :
 | Polices | Hanken Grotesk (texte), IBM Plex Mono (chiffres), Pixelify Sans (titres de bandeau, thème clair), Bricolage Grotesque (logotype) |
 | Composants | shadcn/ui (style new-york, icônes lucide), recolorés par les jetons ; on ne redessine pas sans raison de marque |
 
-> **Attention, document périmé.** `docs/ux-resume.md` (session du 11 et 12 octobre) décrit encore une palette « Chalk, Dawn, Forest, Kyuri » : elle a été **remplacée** depuis par la direction ci-dessus (« Arcade clair » en clair, choix du 15 octobre 2026 noté dans `ui-rules.md`). Pour la soutenance, citer `DESIGN.md` et `ui-rules.md`, pas ce résumé.
+> **Mise à jour du 5 novembre 2026.** `docs/ux-resume.md` décrivait encore l'ancienne palette (Chalk, Dawn, Forest, Kyuri) de la session du 11 octobre ; il a été corrigé d'après `DESIGN.md`. En cas de doute, `DESIGN.md` et `ui-rules.md` font foi.
 
 ## Accessibilité
 
@@ -127,11 +127,19 @@ Réalisé sur une version de production locale, compte de démonstration, WCAG 2
 
 Vérification annoncée dans `ui-rules.md` : émulation Pixel 6a (412 × 915) dans Chrome, clair et sombre, puis essai sur un vrai téléphone ; **l'essai sur le vrai téléphone n'est pas documenté** (À confirmer).
 
+## Aperçu de l'application réelle
+
+Captures prises le 5 novembre 2026 sur une version de production locale (`next build` puis `next start`), avec des données **fictives** (compte de démonstration) ; elles montrent donc l'état du code du jour, qui n'est pas celui de la production Vercel (voir le chapitre 10).
+
+![Page de connexion, thème sombre par défaut : carte centrée sur le dégradé, nom et logo en haut à gauche.](captures/connexion-sombre.png)
+
+![Portfolio public (page d'accueil) : bandeau photographique, titre en serif, étiquettes en police à chasse fixe.](captures/portfolio-public.png)
+
 ## Maquettes
 
 Cinq maquettes interactives (HTML) existent dans `_bmad-output/planning-artifacts/ux-designs/ux-logmerry-2026-10-11/mockups/` : l'assistant, le cockpit, le portfolio, une référence de palette et une référence de dégradés.
 
-> **À confirmer avec Alex : lesquelles montrer.** Les cinq datent du **12 octobre 2026**, avant la refonte visuelle des 15 à 18 octobre : elles ne reflètent plus l'identité actuelle. Pour la soutenance, les captures de l'application **réelle** (cockpit, assistant, notes, missions, portfolio public) sont plus fidèles ; elles sont à prendre par Alex, et ce chapitre les accueillera.
+> **Elles ne sont pas reprises dans ce document.** Les cinq datent du **12 octobre 2026**, avant la refonte visuelle des 15 à 18 octobre : elles ne reflètent plus l'identité actuelle. Les captures de l'application réelle ci-dessus les remplacent.
 
 ## Points ouverts de la conception
 
