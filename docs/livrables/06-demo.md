@@ -14,7 +14,7 @@
 
 ![QR code vers https://logmerry.vercel.app](captures/qr-production.png)
 
-*QR généré en local depuis l'adresse ci-dessus (bibliothèque `qrcode`, installée hors du dépôt). **À scanner avec un téléphone avant la réunion** : je n'ai pas de lecteur de QR pour le vérifier moi-même.*
+*QR généré en local depuis l'adresse ci-dessus (bibliothèque `qrcode`, installée hors du dépôt). **Scanné par Alex avec un téléphone le 5 novembre 2026** (résultat de l'ouverture : voir la liste de contrôle, ligne 2).*
 
 ## Ce que la production contient (et ne contient pas)
 
@@ -90,4 +90,4 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 |---|---|
 | Scénario déroulé le 29 octobre en développement, pas sur la production | Un écart entre les deux reste possible (**À confirmer** par une répétition) |
 | Je ne me suis pas connecté à la production | Je ne peux pas affirmer que le compte fonctionne aujourd'hui |
-| QR non vérifié avec un lecteur | À scanner avant la réunion |
+| QR scanné par Alex le 5 novembre ; ce que le téléphone a ouvert n'est pas noté ici | À confirmer : il doit arriver sur la page de connexion |

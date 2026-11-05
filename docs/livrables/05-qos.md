@@ -93,7 +93,20 @@ Le test d'isolation entre deux comptes a son propre fichier (`isolation.yml`) : 
 | 3 clés étrangères sans index | `message_citations.owner_id`, `realisation_images.owner_id`, `regulatory_rules.previous_version_id` | À ajouter si ces tables grossissent ; sans effet visible avec les volumes de démonstration |
 | 4 index jamais utilisés | `note_chunks_embedding_idx`, `notes_search_idx`, `message_citations_note_idx`, `message_citations_chunk_idx` | **Pas supprimés** : l'index vectoriel et l'index de recherche servent quand le volume monte ; avec quelques notes, la base lit la table entière, ce qui est plus rapide |
 
-> **Captures du tableau de bord Supabase : à fournir par Alex.** Je n'y ai pas accès par image ; les chiffres ci-dessus viennent de requêtes en lecture seule et de mesures que j'ai faites moi-même.
+### Capture du tableau de bord (fournie par Alex, 5 novembre 2026)
+
+![Tableau de bord Supabase du projet LogMerry : état « Healthy », calcul Nano, base à Paris (eu-west-3), CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, aucune sauvegarde, 7 requêtes sur la dernière heure, toutes réussies.](captures/supabase-dashboard.jpg)
+
+| Ce que la capture montre | Lecture |
+|---|---|
+| État « Healthy », calcul **Nano**, base principale à Paris (`eu-west-3`) | Cohérent avec l'offre gratuite et la région annoncée |
+| CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60 | Instantané d'un moment de faible activité, **pas une mesure de charge**. La mémoire à 57 % est normale pour un petit calcul mais laisse peu de marge si le volume monte |
+| « Last backup : **No backups** » | **Confirme l'absence de sauvegarde automatique** (voir le chapitre « Continuité ») |
+| « GitHub : No repository connected » | Les migrations ne passent pas par l'intégration GitHub de Supabase : elles sont appliquées à la main (voir « Déploiement ») |
+| Dernière migration : `revoke_anon_helper_fun…` | Correspond à la migration qui a retiré les droits d'`anon` sur quatre fonctions d'aide |
+| 7 requêtes sur 60 minutes, taux de réussite 100 % | Trafic quasi nul au moment de la capture ; aucun avertissement ni erreur |
+
+Les autres chiffres de ce chapitre viennent de requêtes en lecture seule et de mesures faites depuis le poste d'Alex.
 
 ## Ce qui n'existe pas
 

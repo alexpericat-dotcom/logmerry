@@ -828,3 +828,8 @@
 - Conditions des prestataires d'IA relevées sur les pages officielles par deux agents de lecture web (dates et adresses dans le chapitre). Anthropic : pas d'entraînement par défaut sur l'API, suppression sous 30 jours, DPA et clauses types dans les conditions commerciales, traitement mondial par défaut (pas d'option UE trouvée). Mistral : hébergement UE par défaut, DPA applicable, rétention zéro possible sur demande (dont embeddings) ; **comportement d'entraînement par défaut non clair, désactivation à faire dans la console : à vérifier par Alex** ; durée de conservation par défaut non trouvée. Listes de sous-traitants illisibles (pages dynamiques). Rien de ces rapports n'est copié sans réserve ; les citations sont dans mes notes de session.
 - Constat : le formulaire de contact n'a aucun texte d'information RGPD (vérifié dans le code).
 - Mention et registre : **projets, aucun avis juridique**, bases légales laissées à Alex.
+
+## 2026-11-05 — Relecture du PDF par Alex, capture Supabase, QR
+- Alex a relu le PDF et scanné le QR code avec son téléphone (ce que le téléphone a ouvert n'est pas noté : à confirmer, doit être la page de connexion).
+- Capture du tableau de bord Supabase fournie par Alex : intégrée au chapitre 5 (`captures/supabase-dashboard.jpg`, JPEG). Relevé : « Healthy », calcul Nano, Paris, CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, **« No backups »** (confirme l'absence de sauvegarde, chapitre 12), « GitHub : No repository connected » (migrations manuelles).
+- Chapitre 6 : mention « QR non vérifié » remplacée par « scanné par Alex le 5 novembre ».
