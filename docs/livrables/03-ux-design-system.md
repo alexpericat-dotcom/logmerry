@@ -17,7 +17,7 @@ Sources : `DESIGN.md` (aspect, statut « final », mis à jour le 18 octobre 202
 
 ## Architecture de l'information
 
-Barre latérale fixe à gauche (repliable en icônes), le cockpit en première entrée, assistant en panneau poussé à droite (décision confirmée par Alex).
+Barre latérale fixe à gauche (repliable en icônes), le cockpit en première entrée, assistant en panneau poussé à droite (décision d'Alex, déclarée ; non revérifiée dans cette version).
 
 | Surface | Rôle |
 |---|---|

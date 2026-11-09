@@ -9,7 +9,7 @@ Faits relevés dans le code et les tests le 5 novembre 2026. Les délais annonc�
 | N° | Workflow | Déclencheur | Résultat |
 |---|---|---|---|
 | A | Saisie et indexation d'une note | Le propriétaire enregistre, modifie ou supprime une note | Note enregistrée, extraits vectorisés (ou état « échec » rattrapable) |
-| B | Question à l'assistant | Le propriétaire pose une question | Réponse sourcée et vérifiée, ou refus clair ; échange enregistré |
+| B | Question à l'assistant | Le propriétaire pose une question | Réponse sourcée et vérifiée, message fixe sans appel à Claude, ou réponse prudente accompagnée d'un avertissement ; échange enregistré |
 | C | Propositions de l'IA (stories, tâches, ordre, sprint, prompt, résumé) | Le propriétaire demande une proposition | Proposition **éphémère**, rien d'écrit tant qu'elle n'est pas gardée |
 
 ## A. Saisie et indexation d'une note
@@ -72,7 +72,7 @@ sequenceDiagram
   R->>D: match_chunks (seuil 0,76) + mots-clés
   D-->>R: extraits du compte
   alt aucun extrait pertinent
-    R-->>U: refus fixe (Claude non appelé)
+    R-->>U: message fixe (Claude non appelé)
   else extraits trouvés
     R->>C: question + extraits échappés
     C-->>R: réponse + identifiants cités
@@ -87,7 +87,7 @@ sequenceDiagram
 - Sans extrait pertinent : message fixe « Je n'ai trouvé aucune procédure documentée correspondant à cette requête », **sans appel à Claude**, avec l'offre de créer une note à documenter.
 - Claude ne renvoie que des **identifiants** de sources ; le texte des sources est relu en base.
 - La réponse est vérifiée (citations envoyées, nombres, adresses) **avant** l'affichage ; sinon rejet.
-- Une réponse sans citation s'affiche avec « Aucune de tes notes ne soutient cette réponse ».
+- **Deux comportements à ne pas confondre quand la réponse n'est pas dans les notes.** (1) Aucun extrait n'atteint le seuil : message fixe, Claude n'est pas appelé. (2) Des extraits proches existent, mais ils ne contiennent pas l'information : Claude répond avec prudence (la note ne contient pas l'information, parfois en rappelant un fait voisin) et le code ajoute « Aucune de tes notes ne soutient cette réponse » avec l'offre de créer une note à documenter. **Le cas (2) n'est pas un refus à phrase fixe** : c'est une limite connue, avec une amélioration possible (refuser plutôt que répondre quand aucune source n'est citée), **non réalisée** (périmètre gelé). Constat sur la production le 9 novembre 2026 : voir le chapitre 7.
 - L'enregistrement de l'historique **ne bloque jamais** la réponse.
 
 ### Exceptions
@@ -153,4 +153,5 @@ Aucun serveur MCP n'est intégré à LogMerry : pas de fichier `.mcp.json`, pas 
 | Indexation synchrone dans l'enregistrement | Enregistrer une note peut durer jusqu'à 20 s si Mistral est lent | Indexer en arrière-plan (file d'attente), si l'usage le justifie |
 | Pas de nouvelle tentative automatique | Une panne brève se voit tout de suite | Une reprise unique avec attente |
 | Aucun passage de `draft` à `active` | Un brouillon complété n'alimente pas les propositions agiles | À trancher avec Alex |
+| Hors corpus avec extraits proches : réponse prudente et avertissement, pas un refus sec | Un fait voisin peut être rappelé ; la réponse reste signalée comme non soutenue par les notes | Refuser plutôt que répondre quand aucune source n'est citée (non fait : périmètre gelé) |
 | Pas de flux de réponse | L'utilisateur attend la réponse complète | Flux (streaming), après le MVP |

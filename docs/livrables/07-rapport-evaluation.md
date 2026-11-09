@@ -52,7 +52,22 @@ Mesurée le 4 novembre 2026, de bout en bout pour une question : embedding de la
 | 95e centile | 7 046 ms | 6 100 ms |
 | Appel à Claude seul (moyenne) | 2 866 ms | 3 014 ms |
 
-Lecture : une réponse arrive en **environ 3,4 secondes**, et dans la pire des vingt questions en **6 à 7 secondes**. L'appel à Claude représente la plus grande part du temps. Une question sur 20 n'appelle pas Claude (aucun extrait au-dessus du seuil) : le message fixe est alors immédiat.
+**Origine de ces chiffres : test local** (script `npm run test:rag` lancé depuis le poste d'Alex, appels réels à Claude et à Mistral, chronomètre du script ; mesures du 4 novembre 2026). Lecture : une réponse arrive en **environ 3,4 secondes**, et dans la pire des vingt questions en **6 à 7 secondes**. L'appel à Claude représente la plus grande part du temps. Une question sur 20 n'appelle pas Claude (aucun extrait au-dessus du seuil) : le message fixe est alors immédiat.
+
+### Mesures sur la production (9 novembre 2026)
+
+Relevées sur `logmerry.vercel.app` avec le compte de démonstration, dans un navigateur du poste d'Alex (connexion saisie par Alex), parcours conduit par l'assistant de code. **Une seule exécution par ligne** : ce sont des constats, pas des moyennes. Le temps va du clic jusqu'à l'affichage complet, relevé toutes les 0,5 seconde (**précision d'environ 0,5 s**) ; il comprend le réseau et l'interface.
+
+| Mesure | Valeur | Origine | Remarque |
+|---|---|---|---|
+| Assistant : question dont la réponse est dans une note | 3,5 s, 1 source citée | **Mesure sur la production** | 3 puces ; la source ouvre la note |
+| Assistant : question hors corpus (extraits proches) | 3,5 s | **Mesure sur la production** | Réponse prudente + « Aucune de tes notes ne soutient cette réponse » (voir les limites) |
+| Assistant : question sur le taux de TVA | 2,5 s | **Mesure sur la production** | Aucun taux donné, renvoi vers un expert-comptable ; même avertissement |
+| Propositions de user stories (7 propositions, avec tâches) | 19,6 s | **Mesure sur la production** | Trop long pour attendre sans rien dire en direct |
+| Recherche par sens | 1 passage, score 0,82 | **Mesure sur la production** | Question reformulée avec d'autres mots que la note ; aucun temps relevé |
+| Recherche par mots-clés (« SMS ») | 1 passage, étiqueté « mot-clé » | **Constat sur la production** | Aucun temps relevé |
+
+Ces six lignes viennent d'une seule session : elles ne remplacent pas les deux exécutions du 4 novembre (test local, 20 questions) et ne prouvent rien sur la variabilité.
 
 ## Coût
 
@@ -66,7 +81,7 @@ Jetons consommés, lus dans les réponses de Claude et de Mistral :
 | Mistral embed, indexation (12 appels) | 945 jetons | 945 jetons |
 | Mistral embed, questions (20 appels) | 343 jetons | 343 jetons |
 
-**Estimation du coût de Claude**, au tarif de la référence de l'API Claude consultée le 4 novembre 2026 (en cache au 6 octobre 2026) : 2 dollars par million de jetons en entrée, 10 dollars par million en sortie, sans cache.
+****Origine : estimation calculée** (jetons relevés lors du test local du 4 novembre, multipliés par un tarif de référence ; ce n'est pas un montant facturé). Estimation du coût de Claude**, au tarif de la référence de l'API Claude consultée le 4 novembre 2026 (en cache au 6 octobre 2026) : 2 dollars par million de jetons en entrée, 10 dollars par million en sortie, sans cache.
 
 - Exécution 1 : 0,058 + 0,032 = **0,090 dollar**.
 - Exécution 2 : 0,058 + 0,035 = **0,093 dollar**.
@@ -77,6 +92,8 @@ Jetons consommés, lus dans les réponses de Claude et de Mistral :
 > Ce sont des **estimations calculées**, pas des montants facturés. Le coût réel est à lire sur les consoles d'Anthropic et de Mistral.
 
 ## Limites de cette évaluation
+
+- **Hors corpus : réponse prudente, pas refus sec.** Sur la production le 9 novembre 2026, une question hors corpus pour laquelle des extraits proches existaient a reçu une réponse prudente suivie de l'avertissement « Aucune de tes notes ne soutient cette réponse », et non la phrase fixe de refus. Deux questions, une exécution : c'est un constat, pas une mesure de fréquence. Le test automatique des 20 questions (test local) tient ses 3 refus attendus, mais il ne couvre pas ce cas précis. **Limite connue, amélioration possible** (refuser plutôt que répondre quand aucune source n'est citée), **non réalisée** : périmètre gelé, aucun changement de code.
 
 - **Corpus petit** : 11 notes. Les questions sont plus faciles qu'avec de vraies notes ; le score est **optimiste**. Il sert à comparer deux exécutions, pas à certifier la qualité.
 - **Jugement automatique grossier** : il ne détecte pas toute invention écrite en toutes lettres, ni un conseil fiscal ou juridique reformulé. En cas de doute, relire les réponses à la main.
