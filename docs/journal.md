@@ -880,3 +880,8 @@
 - Constat : le test d'isolation de nuit (`isolation.yml`) crée puis supprime des notes dans la vraie base chaque jour (`tests/isolation.test.ts`, insert et delete). Aucun ping dédié ajouté (n8n hors MVP, GitHub Actions redondant).
 - Sources lues : FAQ Supabase « Do Supabase projects pause when they're inactive? » et discussion GitHub n° 51126. La définition exacte de l'« activité » n'est pas publiée : l'effet du test de nuit reste **À confirmer**.
 - Chapitre 12 (ligne « Pause du projet » et scénario de pause) mis à jour ; PDF régénéré (80 pages), rendu du tableau vérifié dans Chrome. Vérification manuelle de la veille (15 nov) conservée.
+
+## 2026-11-09 — RGPD : listes de sous-traitants lues
+- `trust.anthropic.com/subprocessors` (22 entrées) et `trust.mistral.ai/subprocessors` (25 entrées) lues dans Chrome (pages en JavaScript, non lisibles par l'outil de lecture simple). Chapitre 13 mis à jour : ce qui était « non lu » est maintenant relevé, daté du 9 novembre 2026.
+- Constat utile : chez Mistral, l'hébergement par défaut est dans l'UE (Microsoft Suède et Norvège, Google Pays-Bas et Belgique, Mistral Compute France, CoreWeave EEE) ; le point d'accès américain de l'API s'appuie sur Google aux États-Unis. Chez Anthropic : Google Cloud, AWS et Azure « monde entier ».
+- Reste **À confirmer** : quels sous-traitants reçoivent réellement les appels de LogMerry ; réglage d'entraînement et durée de conservation chez Mistral (console d'Alex) ; point d'accès Mistral réellement utilisé par le code.
