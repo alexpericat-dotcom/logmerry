@@ -19,7 +19,7 @@ export const PREVIEW_ROOT_MARGIN = "300px";
  * Le site est dans un cadre isolé : son origine est la sienne, il n'a aucun accès à cette page. `allow-scripts` avec `allow-same-origin` n'isole QUE parce que l'adresse
  * est d'une autre origine : une adresse de la même origine que la page n'est jamais affichée. `url` doit déjà être une adresse https sûre.
  */
-export function LivePreview({ url, title, poster, auto, label }: { url: string; title: string; poster: ReactNode; auto: boolean; label: string }) {
+export function LivePreview({ url, title, poster, auto, label, note }: { url: string; title: string; poster: ReactNode; auto: boolean; label: string; note: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
   const [clicked, setClicked] = useState(false);
@@ -93,6 +93,8 @@ export function LivePreview({ url, title, poster, auto, label }: { url: string; 
             {label}
             <span className="sr-only"> : {title}</span>
           </span>
+          {/* Le clic envoie l'adresse IP du visiteur au site affiché : on le dit à côté du bouton. */}
+          <span className="absolute inset-x-0 bottom-2 text-center text-xs font-medium text-foreground">{note}</span>
         </button>
       )}
     </div>

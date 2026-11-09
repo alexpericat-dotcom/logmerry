@@ -134,6 +134,7 @@ export const SHOWCASE = {
   notMeasured: (statusLabel: string) => `${statusLabel} : résultat non mesuré chez un client.`,
   filter: { label: "Filtrer par statut", all: "Tous", empty: "Aucune réalisation avec ce statut pour l'instant." },
   liveLabel: "Voir en direct",
+  liveNote: "Ouvre un site externe",
 };
 
 export const CONTACT = {

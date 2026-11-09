@@ -328,6 +328,14 @@ describe("aperçu en direct d'une réalisation", () => {
     assert.equal(screen.getAllByRole("button", { name: /Voir en direct/ }).length, 1);
   });
 
+  test("le bouton « Voir en direct » dit qu'il ouvre un site externe (l'adresse IP du visiteur lui est envoyée au clic)", () => {
+    const two = [item({ id: "r1", published_at: "2026-10-30T10:00:00Z" }), item({ id: "r2", title: "Second", published_at: "2026-10-29T10:00:00Z" })];
+    render(<PortfolioShowcase cards={buildCards(two, [])} supabaseUrl="https://x.supabase.co" />);
+    intersect(true);
+    const button = screen.getByRole("button", { name: /Voir en direct/ });
+    assert.match(button.textContent ?? "", /Ouvre un site externe/);
+  });
+
   test("mode « économie de données » : aucun chargement automatique", () => {
     Object.defineProperty(navigator, "connection", { configurable: true, value: { saveData: true } });
     const { container } = render(withLink());
