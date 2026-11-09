@@ -867,3 +867,7 @@
 - Vérifié en production : `/portfolio` 200 avec formulaire, plus de `mailto:`, ligne d'information présente ; `/portfolio/qui-suis-je` 200. Test d'isolation relancé : 158 sur 158.
 - Erreur de ma part corrigée dans la signature de la PR n° 102 (j'avais mis le lien de la page récap au lieu de celui de Claude Code).
 - Branche `docs/livrables-only` mise à jour (fusion de `main`, conflit du journal résolu en gardant les deux côtés) et poussée ; chapitres 6, 10, 13 et README mis à jour. PR n° 98 devenue redondante (non fermée sans l'accord d'Alex).
+
+## 2026-11-09 — Retour du tuteur sur les livrables
+- Richard juge les 13 livrables « parfaits » (retour rapporté par Alex). Aucun ajustement demandé : les chapitres ne changent pas.
+- Vérifié en lecture seule : #102 fusionnée le 5 nov ; formulaire de contact et mention « ne servent qu'à vous répondre » en production ; #101 et #100 toujours ouvertes (accord d'Alex en attente) ; commit déployé sur Vercel : À confirmer (accès refusé par l'API).
