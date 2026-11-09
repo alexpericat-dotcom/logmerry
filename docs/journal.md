@@ -889,3 +889,6 @@
 ## 2026-11-09 — RGPD : réglage d'entraînement chez Mistral constaté
 - Alex a ouvert la console Mistral (Admin, API, Confidentialité) et fourni la capture : « Autoriser l'utilisation de vos appels API pour entraîner les modèles d'IA de Mistral » est désactivé ; « Activer les modèles Labs » désactivé. Première capture envoyée par erreur : page de la section Vibe (sans lien avec LogMerry), rien modifié.
 - Chapitre 13 et README mis à jour (état daté, non vérifié par moi dans la console). Reste **À confirmer** : durée de conservation par défaut chez Mistral, validation du registre par Alex.
+
+## 2026-11-09 — RGPD : durée de conservation chez Mistral
+- Lue dans `legal.mistral.ai/terms/privacy-policy` : pour les API, entrées et sorties gardées le temps de produire la sortie, puis 30 jours glissants pour surveiller les abus, sauf rétention à zéro activée ; exceptions : API Agents, mise au point. La page ne dit pas si `/v1/embeddings` est une « API spécifique » : **À confirmer**. Chapitre 13 mis à jour.
