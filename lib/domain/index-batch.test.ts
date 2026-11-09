@@ -26,11 +26,11 @@ test("liste vide : rien à faire", () => {
 });
 
 test("les messages du formulaire de contact ne sont jamais envoyés à l'indexation en lot", () => {
-  const contact = { id: 10, index_status: "pending", status: "draft", title: `${CONTACT_TITLE_PREFIX}Visiteur` };
-  const ownDraft = { id: 11, index_status: "pending", status: "draft", title: "Mon brouillon" };
-  const published = { id: 12, index_status: "pending", status: "published", title: `${CONTACT_TITLE_PREFIX}repris par moi` };
-  const { todo, remaining } = pickToIndex([contact, ownDraft, published]);
-  assert.deepEqual(todo.map((n) => n.id), [11, 12]); // mes brouillons restent indexés ; une note publiée n'est plus un message reçu
+  const contact = { id: 10, index_status: "pending", title: `${CONTACT_TITLE_PREFIX}Visiteur` };
+  const kept = { id: 11, index_status: "pending", title: "Mon brouillon" };
+  const active = { id: 12, index_status: "pending", title: `${CONTACT_TITLE_PREFIX}gardé par moi` }; // même gardée (statut « active »), la note reste un message reçu
+  const { todo, remaining } = pickToIndex([contact, kept, active]);
+  assert.deepEqual(todo.map((n) => n.id), [11]); // mes autres notes restent indexées
   assert.equal(remaining, 0);
   assert.deepEqual(pickToIndex([contact]), { todo: [], remaining: 0 });
 });

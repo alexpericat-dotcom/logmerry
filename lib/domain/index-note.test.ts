@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CONTACT_TITLE_PREFIX } from "./contact-message.ts";
 import { indexNoteWith, type ChunkRow, type IndexDeps } from "./index-note.ts";
 
 function fake(overrides: Partial<IndexDeps> = {}) {
@@ -87,4 +88,11 @@ test("le journal ne contient ni le texte de la note ni le titre", async () => {
   await indexNoteWith(f.deps, { title: "TITRE-SECRET", body: "CORPS-SECRET" });
   console.error = original;
   assert.ok(!JSON.stringify(logs).includes("SECRET"));
+});
+
+test("un message du formulaire de contact n'est jamais envoyé au fournisseur : ni vecteur, ni écriture", async () => {
+  const { deps, calls } = fake();
+  const result = await indexNoteWith(deps, { title: `${CONTACT_TITLE_PREFIX}Visiteur`, body: "Bonjour, un texte assez long pour être découpé." });
+  assert.equal(result, "skipped");
+  assert.deepEqual(calls, []);
 });

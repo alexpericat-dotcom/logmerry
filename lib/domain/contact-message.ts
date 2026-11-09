@@ -6,8 +6,11 @@ export const MESSAGE_MIN = 10;
 export const MESSAGE_MAX = 4000;
 /** Début du titre posé par la fonction SQL `submit_contact_message` (migration 20261107110000) : seul repère d'un message du formulaire public. */
 export const CONTACT_TITLE_PREFIX = "Message reçu · ";
-/** Brouillon issu du formulaire public : texte d'un visiteur, à ne jamais envoyer à Mistral par l'indexation en lot. */
-export const isContactMessage = (note: { title?: string; status?: string }) => note.status === "draft" && (note.title ?? "").startsWith(CONTACT_TITLE_PREFIX);
+/**
+ * Message du formulaire public : texte d'un visiteur, à ne jamais envoyer à Mistral, par aucun chemin d'indexation.
+ * ponytail : le titre est le seul repère ; si le propriétaire le renomme, la note redevient indexable. Un marqueur en base (migration) fermerait cette limite.
+ */
+export const isContactMessage = (note: { title?: string }) => (note.title ?? "").startsWith(CONTACT_TITLE_PREFIX);
 /** Un humain met plus de temps à écrire dix caractères : en dessous, c'est un robot. */
 export const MIN_FILL_MS = 3000;
 
