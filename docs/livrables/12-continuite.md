@@ -10,7 +10,7 @@ Faits relevés sur les pages officielles de Supabase le 4 novembre 2026 (pages n
 |---|---|---|
 | Sauvegardes automatiques | **Non incluses.** Supabase recommande d'exporter régulièrement les données avec `db dump` et de garder des copies hors du service | Quotidiennes, conservées 7 jours |
 | Restauration à la minute près (PITR) | Non incluse | Module payant |
-| Pause du projet | **Après 1 semaine d'inactivité** | Jamais |
+| Pause du projet | **Si l'activité sur la base est trop faible pendant 1 semaine** (la définition exacte de l'« activité » n'est pas publiée par Supabase : **À confirmer**) | Jamais |
 | Protection contre les mots de passe divulgués | Non incluse | Incluse |
 | Disponibilité contractuelle (SLA) | Non incluse | Non incluse (réservée à l'offre Enterprise) |
 
@@ -71,7 +71,7 @@ L'IA sert à l'assistant, à l'indexation des notes et aux propositions (stories
 
 | Scénario | Effet | Réponse |
 |---|---|---|
-| Le projet Supabase est mis en pause (1 semaine sans activité) | L'application ne répond plus | Réactiver depuis le tableau de bord Supabase (**À confirmer** : durée et conditions) ; avant la soutenance, vérifier la veille que le projet est actif |
+| Le projet Supabase est mis en pause (1 semaine sans activité) | L'application ne répond plus | Réactiver depuis le tableau de bord Supabase (« Resume project ») ; avant la soutenance, vérifier la veille que le projet est actif. **Prévention :** le test d'isolation de nuit (`isolation.yml`, 3 h 17 UTC) crée puis supprime des notes dans la vraie base chaque jour, donc la base reçoit des écritures quotidiennes. Qu'elles suffisent à éviter la pause reste **À confirmer** : aucun ping dédié n'a été ajouté (sources : `supabase.com/kb/faqs/platform/free-project-pausing`, discussion `github.com/orgs/supabase/discussions/51126`) |
 | Suppression ou corruption de données | Perte jusqu'au dernier export | Réimporter l'export ; sans export, la perte est définitive |
 | Panne de Supabase | Application indisponible | Attendre ; aucun engagement de délai sur l'offre gratuite |
 | Mauvais déploiement | Fonctionnalité cassée | Rétablir le déploiement précédent sur Vercel |

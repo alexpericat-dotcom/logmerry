@@ -875,3 +875,8 @@
 ## 2026-11-09 — Fusion de la pull request n° 101, fermeture de la n° 100
 - Accord explicite d'Alex (« fusionne 101 et ferme 100 »). #101 (livrables seuls) fusionnée à 11 h 59 UTC (969c671), CI verte, état CLEAN. #100 (brouillon) fermée avec un commentaire renvoyant à #101 et #102.
 - Non fait faute d'accord : aucun push de ce journal, #98 (redondante) laissée ouverte.
+
+## 2026-11-09 — Anti-pause Supabase : pas de nouveau workflow
+- Constat : le test d'isolation de nuit (`isolation.yml`) crée puis supprime des notes dans la vraie base chaque jour (`tests/isolation.test.ts`, insert et delete). Aucun ping dédié ajouté (n8n hors MVP, GitHub Actions redondant).
+- Sources lues : FAQ Supabase « Do Supabase projects pause when they're inactive? » et discussion GitHub n° 51126. La définition exacte de l'« activité » n'est pas publiée : l'effet du test de nuit reste **À confirmer**.
+- Chapitre 12 (ligne « Pause du projet » et scénario de pause) mis à jour ; PDF régénéré (80 pages), rendu du tableau vérifié dans Chrome. Vérification manuelle de la veille (15 nov) conservée.
