@@ -26,7 +26,7 @@ export async function indexAllNotes(): Promise<IndexAllState> {
     } else {
       const { data, error } = await supabase
         .from("notes")
-        .select("id, title, body, index_status")
+        .select("id, title, body, status, index_status")
         .neq("index_status", "indexed")
         // « en attente » avant « en échec » (ordre de l'enum), pour qu'un échec persistant ne bloque pas la file.
         // ponytail: lit tous les textes à indexer pour n'en garder que 25 ; limit() + compte si l'arriéré devient grand.
