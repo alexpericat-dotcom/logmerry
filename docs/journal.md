@@ -871,3 +871,7 @@
 ## 2026-11-09 — Retour du tuteur sur les livrables
 - Richard juge les 13 livrables « parfaits » (retour rapporté par Alex). Aucun ajustement demandé : les chapitres ne changent pas.
 - Vérifié en lecture seule : #102 fusionnée le 5 nov ; formulaire de contact et mention « ne servent qu'à vous répondre » en production ; #101 et #100 toujours ouvertes (accord d'Alex en attente) ; commit déployé sur Vercel : À confirmer (accès refusé par l'API).
+
+## 2026-11-09 — Fusion de la pull request n° 101, fermeture de la n° 100
+- Accord explicite d'Alex (« fusionne 101 et ferme 100 »). #101 (livrables seuls) fusionnée à 11 h 59 UTC (969c671), CI verte, état CLEAN. #100 (brouillon) fermée avec un commentaire renvoyant à #101 et #102.
+- Non fait faute d'accord : aucun push de ce journal, #98 (redondante) laissée ouverte.
