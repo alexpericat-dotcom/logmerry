@@ -892,3 +892,9 @@
 
 ## 2026-11-09 — RGPD : durée de conservation chez Mistral
 - Lue dans `legal.mistral.ai/terms/privacy-policy` : pour les API, entrées et sorties gardées le temps de produire la sortie, puis 30 jours glissants pour surveiller les abus, sauf rétention à zéro activée ; exceptions : API Agents, mise au point. La page ne dit pas si `/v1/embeddings` est une « API spécifique » : **À confirmer**. Chapitre 13 mis à jour.
+
+## 2026-11-09 — Registre RGPD validé par Alex (bases légales, durées), T8, correction T4
+- Décisions d'Alex appliquées au chapitre 13 : bases légales T1 à T7, durées T1 (5 ans clients, 3 ans prospects), T3 (12 mois), T6 (10 ans), T7 (À confirmer). Entrée T8 (accès client, prévu, non développé) avec trois prérequis, rien d'implémenté. Colonne « Transfert hors UE + garantie » ajoutée aux sous-traitants (garantie écrite seulement si documentée : Anthropic ; sinon À confirmer). Mistral : entraînement et rétention conservés À confirmer à sa demande, bien que la capture du 9 nov les montre désactivés.
+- Correction T4 : `pickToIndex` écarte les brouillons dont le titre commence par « Message reçu · » (`isContactMessage`, `lib/domain/contact-message.ts`) ; la lecture des notes de `indexAllNotes` ajoute `status`. Test ajouté dans `lib/domain/index-batch.test.ts`. Tests unitaires 650/650, actions 360/360, `tsc` propre. Branche `fix/index-all-skips-contact-messages`, commit local, NON poussée. Limite connue : l'enregistrement volontaire d'une telle note par son propriétaire l'indexe toujours.
+- Chapitre 9 (risque du brouillon) : correction décrite comme non fusionnée, donc le risque demeure en production.
+- Purge T3 et T1 : proposition à valider, rien implémenté (pg_cron disponible dans le projet, non installé ; aucune colonne « dernier contact » dans `clients`).
