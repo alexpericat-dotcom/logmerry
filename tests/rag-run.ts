@@ -41,6 +41,36 @@ const corpus = JSON.parse(readFileSync("tests/rag-cases.json", "utf8")) as Corpu
 // Note que seul « démo B » possède : la question du piège inter-comptes (« tarif de Mme Dupont ») ne doit rien en recevoir.
 const DUPONT = { title: "Tarif de Mme Dupont", body: "Mme Dupont paie un forfait de 900 euros par mois pour son accompagnement." };
 
+// Mesures de latence et de jetons (livrable « rapport d'évaluation ») : un `fetch` enveloppé, SEULEMENT dans ce script, lit le temps et l'usage renvoyés par Mistral et
+// Claude. Le code de l'application n'est pas touché. Phase « indexation » (embeddings des notes) puis « questions » (recherche, Claude).
+type Phase = "indexation" | "questions";
+let phase: Phase = "indexation";
+const metrics = {
+  claude: [] as { ms: number; input: number; output: number }[],
+  mistral: { indexation: { calls: 0, tokens: 0 }, questions: { calls: 0, tokens: 0 } },
+  perQuestionMs: [] as number[],
+};
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  const t0 = performance.now();
+  const res = await realFetch(input, init);
+  const ms = performance.now() - t0;
+  try {
+    if (url.startsWith("https://api.anthropic.com/")) {
+      const u = ((await res.clone().json()) as { usage?: { input_tokens?: number; output_tokens?: number } }).usage;
+      metrics.claude.push({ ms, input: u?.input_tokens ?? 0, output: u?.output_tokens ?? 0 });
+    } else if (url.startsWith("https://api.mistral.ai/")) {
+      const u = ((await res.clone().json()) as { usage?: { total_tokens?: number; prompt_tokens?: number } }).usage;
+      metrics.mistral[phase].calls++;
+      metrics.mistral[phase].tokens += u?.total_tokens ?? u?.prompt_tokens ?? 0;
+    }
+  } catch {
+    // Une mesure manquée ne doit jamais faire échouer le test.
+  }
+  return res;
+};
+
 const a = await signIn("A");
 const b = await signIn("B");
 // Les notes créées par le script : identifiants retenus (par compte), pour ne supprimer que celles-là.
@@ -88,8 +118,10 @@ try {
   created.B.push(noteB.data!.id);
   assert.equal(await indexNote(b, noteB.data!.id, DUPONT), "indexed");
 
+  phase = "questions";
   for (const c of corpus.questions) {
     let j: Judgement;
+    const q0 = performance.now();
     try {
       const r = await answerQuestion(c.question, { retrieve: (q) => retrieveChunks(a, q), ask: askClaude });
       const titles = r.sources.map((s) => s.title);
@@ -111,6 +143,7 @@ try {
       errors++;
       j = { extract: false, faithful: false, pass: false, note: `ERREUR (pas un échec de qualité) : ${e instanceof Error ? e.message.slice(0, 120) : "inconnue"}` };
     }
+    metrics.perQuestionMs.push(performance.now() - q0);
     judgements.push(j);
     rows.push(`${String(c.n).padStart(2)} ${j.pass ? "OK   " : "ÉCHEC"} ${c.question.slice(0, 56).padEnd(56)}${j.note ? `  → ${j.note}` : ""}`);
   }
@@ -122,6 +155,17 @@ const { passed, total, meetsTarget } = summarize(judgements);
 const model = env("AI_CHAT_MODEL");
 console.log(rows.join("\n"));
 console.log(`\nSCORE ${passed}/${total} (cible ${TARGET}/20) | seuil de similarité ${MATCH_THRESHOLD} | modèle ${model} | fuites ${leaks} | erreurs ${errors}`);
+
+const sorted = [...metrics.perQuestionMs].sort((x, y) => x - y);
+const pct = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
+const sum = (xs: number[]) => xs.reduce((x, y) => x + y, 0);
+const claudeIn = sum(metrics.claude.map((m) => m.input));
+const claudeOut = sum(metrics.claude.map((m) => m.output));
+console.log(
+  `MESURES | latence par question (recherche + Claude) : moyenne ${Math.round(sum(sorted) / (sorted.length || 1))} ms, médiane ${Math.round(pct(0.5))} ms, 95e centile ${Math.round(pct(0.95))} ms, max ${Math.round(sorted.at(-1) ?? 0)} ms` +
+    ` | Claude : ${metrics.claude.length} appels, ${claudeIn} jetons en entrée, ${claudeOut} jetons en sortie, ${Math.round(sum(metrics.claude.map((m) => m.ms)) / (metrics.claude.length || 1))} ms par appel` +
+    ` | Mistral embed : indexation ${metrics.mistral.indexation.calls} appels, ${metrics.mistral.indexation.tokens} jetons ; questions ${metrics.mistral.questions.calls} appels, ${metrics.mistral.questions.tokens} jetons`,
+);
 
 const i = process.argv.indexOf("--record");
 if (i !== -1 && errors > 0) {
