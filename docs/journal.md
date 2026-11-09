@@ -932,3 +932,9 @@
 - Comportement hors corpus (constat, aucun changement de code) : réponse prudente suivie de « Aucune de tes notes ne soutient cette réponse », pas un refus à phrase fixe ; documenté comme limite connue et amélioration possible (chapitres 2 et 7, scénario de démo, plan de diaporama).
 - Chapitres 2, 6 et 7 mis à jour avec les mesures, chacune étiquetée (mesure sur la production, test local, estimation). Formulations « confirmé par Alex » remplacées par « déclaré par Alex » (chapitres 3, 11, README des livrables) ; le chapitre 13 dit que la page BOFiP est un constat d'Alex que je n'ai pas pu rouvrir, et que le SQL des purges est non testé.
 - PDF non régénéré (jeudi) : les sources Markdown sont en avance sur le PDF jusque-là.
+
+## 2026-11-09 — Corrections d'Alex sur les sources et les statuts (chapitres 2, 6, 7 et 13)
+- Sources juridiques du chapitre 13 : la page BOFiP a été consultée le 9 novembre 2026 hors de cette session (recherche menée par Claude avec Alex), URL à ajouter ; pour L110-4 et L102 B, ce qui a été vu hors session : des extraits Légifrance et des sources de cabinets, pas le texte complet. Plus rien n'est attribué à Alex que ce qu'il a lui-même dit.
+- Rejeu du 9 novembre : fait par Claude Code ; Alex n'a saisi que la connexion ; aucun identifiant lu par l'assistant (ni fichier d'environnement, ni variable, ni scratchpad).
+- Cas « aucun extrait retrouvé » : `answerQuestion` (`lib/domain/chat-flow.ts`, lignes 61 et 62) renvoie `NOT_FOUND` avant d'appeler Claude ; seuil `MATCH_THRESHOLD = 0.76` (`lib/domain/matching.ts`) ; lu dans le code et testé en local (`chat-flow.test.ts`), non observé sur la production.
+- Brouillon local du PDF généré (97 pages) hors dépôt : `docs/soutenance/brouillon/`. Aucun `git add -A` à partir de maintenant : fichiers ajoutés un par un.

@@ -56,12 +56,12 @@ Mesurée le 4 novembre 2026, de bout en bout pour une question : embedding de la
 
 ### Mesures sur la production (9 novembre 2026)
 
-Relevées sur `logmerry.vercel.app` avec le compte de démonstration, dans un navigateur du poste d'Alex (connexion saisie par Alex), parcours conduit par l'assistant de code. **Une seule exécution par ligne** : ce sont des constats, pas des moyennes. Le temps va du clic jusqu'à l'affichage complet, relevé toutes les 0,5 seconde (**précision d'environ 0,5 s**) ; il comprend le réseau et l'interface.
+Relevées sur `logmerry.vercel.app` avec le compte de démonstration, dans un navigateur du poste d'Alex. **Le rejeu a été fait par Claude Code (l'assistant de code), pas par Alex** ; Alex a seulement saisi lui-même l'e-mail et le mot de passe de la connexion (je n'ai lu aucun identifiant). **Une seule exécution par ligne** : ce sont des constats, pas des moyennes. Le temps va du clic jusqu'à l'affichage complet, relevé toutes les 0,5 seconde (**précision d'environ 0,5 s**) ; il comprend le réseau et l'interface.
 
 | Mesure | Valeur | Origine | Remarque |
 |---|---|---|---|
 | Assistant : question dont la réponse est dans une note | 3,5 s, 1 source citée | **Mesure sur la production** | 3 puces ; la source ouvre la note |
-| Assistant : question hors corpus (extraits proches) | 3,5 s | **Mesure sur la production** | Réponse prudente + « Aucune de tes notes ne soutient cette réponse » (voir les limites) |
+| Assistant : question hors corpus (des extraits retrouvés) | 3,5 s | **Mesure sur la production** | Réponse prudente + « Aucune de tes notes ne soutient cette réponse » (voir les limites) |
 | Assistant : question sur le taux de TVA | 2,5 s | **Mesure sur la production** | Aucun taux donné, renvoi vers un expert-comptable ; même avertissement |
 | Propositions de user stories (7 propositions, avec tâches) | 19,6 s | **Mesure sur la production** | Trop long pour attendre sans rien dire en direct |
 | Recherche par sens | 1 passage, score 0,82 | **Mesure sur la production** | Question reformulée avec d'autres mots que la note ; aucun temps relevé |
@@ -93,7 +93,7 @@ Jetons consommés, lus dans les réponses de Claude et de Mistral :
 
 ## Limites de cette évaluation
 
-- **Hors corpus : réponse prudente, pas refus sec.** Sur la production le 9 novembre 2026, une question hors corpus pour laquelle des extraits proches existaient a reçu une réponse prudente suivie de l'avertissement « Aucune de tes notes ne soutient cette réponse », et non la phrase fixe de refus. Deux questions, une exécution : c'est un constat, pas une mesure de fréquence. Le test automatique des 20 questions (test local) tient ses 3 refus attendus, mais il ne couvre pas ce cas précis. **Limite connue, amélioration possible** (refuser plutôt que répondre quand aucune source n'est citée), **non réalisée** : périmètre gelé, aucun changement de code.
+- **Hors corpus : réponse prudente, pas refus sec.** Sur la production le 9 novembre 2026, deux questions dont la réponse n'était pas dans les notes (le numéro de téléphone d'un fournisseur, le taux de TVA) ont reçu une réponse prudente suivie de l'avertissement « Aucune de tes notes ne soutient cette réponse », et non la phrase fixe de refus ; des extraits avaient donc été retrouvés et Claude a été appelé (**déduit du contenu des réponses, qui rappellent des faits de la note ; l'appel n'a pas été observé directement**). Deux questions, une exécution chacune : c'est un constat, pas une mesure de fréquence. Le cas « aucun extrait retrouvé » (message fixe, sans appel à Claude) est **lu dans le code et vérifié par un test unitaire local**, **non observé sur la production**. Le test automatique des 20 questions (test local) tient ses 3 refus attendus, mais il ne couvre pas ce cas précis. **Limite connue, amélioration possible** (refuser plutôt que répondre quand aucune source n'est citée), **non réalisée** : périmètre gelé, aucun changement de code.
 
 - **Corpus petit** : 11 notes. Les questions sont plus faciles qu'avec de vraies notes ; le score est **optimiste**. Il sert à comparer deux exécutions, pas à certifier la qualité.
 - **Jugement automatique grossier** : il ne détecte pas toute invention écrite en toutes lettres, ni un conseil fiscal ou juridique reformulé. En cas de doute, relire les réponses à la main.

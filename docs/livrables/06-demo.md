@@ -70,7 +70,7 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 
 ## Rejeu du 9 novembre 2026 (production)
 
-Étapes rejouées en lecture et en questions : cockpit, notes, recherche par mots-clés et par sens, assistant (3 questions), propositions de user stories (non gardées). **Origine des chiffres : mesure sur la production, une seule exécution, précision d'environ 0,5 s** (détail et limites au chapitre 7).
+**Le rejeu a été fait par Claude Code (l'assistant de code), pas par Alex** ; Alex a seulement saisi lui-même l'e-mail et le mot de passe de la connexion (aucun identifiant n'a été lu ni enregistré par l'assistant). Étapes rejouées en lecture et en questions : cockpit, notes, recherche par mots-clés et par sens, assistant (3 questions), propositions de user stories (non gardées). **Origine des chiffres : mesure sur la production, une seule exécution, précision d'environ 0,5 s** (détail et limites au chapitre 7).
 
 | Étape | Constat | Temps |
 |---|---|---|
@@ -105,5 +105,5 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 | Limite | Conséquence |
 |---|---|
 | Scénario déroulé le 29 octobre en développement, pas sur la production | Un écart entre les deux reste possible (**À confirmer** par une répétition) |
-| Rejeu partiel sur la production le 9 novembre 2026 (connexion saisie par Alex, parcours conduit par l'assistant de code) | Les étapes de création (devis, facture, sprint) n'ont pas été rejouées : elles écrivent dans la base |
+| Rejeu partiel sur la production le 9 novembre 2026, **fait par Claude Code** (connexion saisie par Alex) | Les étapes de création (devis, facture, sprint) n'ont pas été rejouées : elles écrivent dans la base |
 | QR scanné par Alex le 5 novembre : le téléphone ouvre la page de connexion | Aucune, vérifié |
