@@ -26,7 +26,7 @@ Production = branche `main` au 5 novembre 2026, commit `59c9d8c` (fusion de la p
 | Cockpit « Aujourd'hui », clients, notes, assistant, devis, missions, backlog, sprints, factures, plafonds, échéances | Rien de prévu qui ne soit pas en ligne ; voir « Ce qui n'est pas démontrable » |
 | Réalisations (gestion dans l'application, captures avec texte alternatif, statut, « Choix de conception » et « Validation ») ; **portfolio public** (`/portfolio`, sans connexion) ; page **« Qui suis-je »** (`/portfolio/qui-suis-je`) ; **formulaire de contact** (remplace le lien « M'écrire ») | — |
 
-> **À savoir.** Le formulaire de contact écrit dans les notes du compte propriétaire, en brouillon. Un message envoyé pendant la démonstration y apparaît ; à supprimer ensuite. Sa ligne d'information est courte (durée de conservation, base légale et droits restent à compléter : chapitre « Exploitation et conformité »).
+> **À savoir.** Le formulaire de contact écrit dans les notes du compte propriétaire, en brouillon. Un message envoyé pendant la démonstration y apparaît ; à supprimer ensuite. Sa ligne d'information est courte (base légale et durée sont décidées ; les droits et le contact restent à compléter : chapitre « Exploitation et conformité »).
 
 ## Avant de commencer : la liste de contrôle
 

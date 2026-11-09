@@ -66,7 +66,7 @@ Les propositions de l'IA sont **éphémères** : rien n'est écrit en base tant 
 | Journaux | Jamais le contenu d'une question, d'une note ou d'une clé : seulement la nature d'un échec | Les journaux de Vercel et de Supabase ne sont pas contrôlés par l'application (chapitre 13) |
 | Droit à l'effacement | « Vider la conversation » ; suppression d'une note avec ses extraits | Pas d'expiration automatique de l'historique |
 | Données de démonstration | Fictives ou anonymisées, étiquetées ; aucune vraie donnée client pendant le Workshop 8 | Règle de travail, pas un contrôle du code |
-| Mention d'information (RGPD) sur l'envoi à des prestataires d'IA | **Non rédigée** | Point ouvert (chapitre 13) |
+| Mention d'information (RGPD) sur l'envoi à des prestataires d'IA | **Projet rédigé** (chapitre 13), à compléter | Droits et contact à ajouter ; validation d'Alex |
 
 ## Garde-fous de l'application hors IA
 

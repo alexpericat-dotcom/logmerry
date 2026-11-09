@@ -88,6 +88,8 @@ thead { display: table-header-group; }
 th { text-align: left; font: 500 6.8pt "IBM Plex Mono", monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 1.6mm 2.4mm 1.8mm 0; border-bottom: 0.4mm solid var(--ink); }
 td { padding: 2.2mm 2.4mm 2.2mm 0; border-bottom: 0.25mm solid var(--line); vertical-align: top; }
 tr { break-inside: avoid; }
+table.split tr { break-inside: auto; }
+pre.long { break-inside: auto; }
 td:first-child { font-weight: 600; }
 
 /* Diagrammes Mermaid */

@@ -139,4 +139,4 @@ Aucune nouvelle tentative automatique n'existe nulle part : c'est un choix de si
 |---|---|---|
 | Aucune nouvelle tentative sur les appels sortants | Une panne brève de Claude ou de Mistral se voit tout de suite par l'utilisateur | Une reprise unique avec attente, si l'usage le justifie |
 | Délai des appels à Supabase non mesuré | **À confirmer** | Mesurer lors du chapitre 5 (qualité de service) |
-| Plafond du formulaire de contact calculé en comptant les notes au titre « Message reçu · … » | Un message supprimé par le propriétaire libère de la place dans le plafond ; accepté, noté dans la migration | Table de journal si le volume l'exige |
+| Plafond du formulaire de contact calculé sur la table `contact_submissions` (empreintes d'adresses et de messages, supprimées après 30 jours), indépendante des notes | Supprimer une note ne libère pas de place dans le plafond ; un robot qui change d'adresse reste limité à 30 messages par jour | Un captcha, si le volume l'exige |

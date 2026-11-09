@@ -61,7 +61,7 @@ Règles appliquées dans le code :
 - Le texte des notes est traité comme une **donnée**, jamais comme une consigne (note piégée « IGNORE TES CONSIGNES » dans le jeu de test).
 - Les appels se font **côté serveur uniquement** ; les clés ne sont jamais visibles du navigateur.
 
-> **À confirmer.** Conditions d'Anthropic et de Mistral sur la conservation des données envoyées (durée, usage pour l'entraînement) : **non relevées à ce jour**. La mention RGPD correspondante est un point ouvert du projet (`CLAUDE.md`) ; elle sera rédigée au chapitre 13, avec la validation d'Alex.
+> **À confirmer.** Conditions d'Anthropic et de Mistral sur la conservation des données envoyées : **relevées le 9 novembre 2026 au chapitre 13** (Mistral : 30 jours glissants et entraînement désactivé constaté sur capture, tous deux **À confirmer** ; Anthropic : suppression sous 30 jours). La mention RGPD est un projet à compléter au chapitre 13.
 
 ## Gouvernance
 
@@ -81,7 +81,7 @@ Règles appliquées dans le code :
 
 | Limite | Conséquence | Piste |
 |---|---|---|
-| Historique conservé sans limite de durée | Des questions anciennes restent en base tant que le propriétaire ne vide pas la conversation | Expiration après N jours, une fois la durée décidée |
-| Conditions des prestataires d'IA non relevées | La mention RGPD ne peut pas être complète | Relever les pages officielles de Mistral et d'Anthropic, puis valider avec Alex |
+| Historique conservé sans expiration codée | Des questions anciennes restent en base tant que le propriétaire ne vide pas la conversation | Durée décidée le 9 novembre 2026 : 12 mois glissants ; purge proposée en annexe (chapitre 14), non activée |
+| Conditions des prestataires d'IA relevées, avec des points **À confirmer** | La mention RGPD reste à compléter | Voir le chapitre 13 (limites connues et plan d'action) |
 | Texte des notes copié dans `note_chunks` | Une donnée personnelle existe deux fois ; la suppression d'une note les supprime ensemble (cascade), mais une copie de sauvegarde, si elle existait, contiendrait les deux | À traiter avec la politique de sauvegarde (chapitre 12) |
 | Un seul modèle d'embeddings, sans plan de migration automatisé | Un changement impose une réindexation manuelle de toutes les notes | Le bouton « Tout indexer » existe ; mesurer sa durée si le volume grandit |

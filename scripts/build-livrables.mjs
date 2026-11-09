@@ -44,7 +44,7 @@ const chapters = files.map((file) => {
   const marked = new Marked({
     renderer: {
       code({ text, lang }) {
-        return lang === "mermaid" ? `<figure class="diagram"><pre class="mermaid">${esc(text)}</pre></figure>` : `<pre><code>${esc(text)}</code></pre>`;
+        return lang === "mermaid" ? `<figure class="diagram"><pre class="mermaid">${esc(text)}</pre></figure>` : `<pre${n === "14" ? ' class="long"' : ""}><code>${esc(text)}</code></pre>`;
       },
       image({ href, text }) {
         const src = /^https?:|^file:/.test(href) ? href : `file://${process.cwd()}/${DIR}/${href}`;
@@ -65,12 +65,12 @@ const chapters = files.map((file) => {
   });
   const md = readFileSync(`${DIR}/${file}`, "utf8");
   const title = md.match(/^#\s+(.+)$/m)?.[1] ?? file;
-  const body = marked.parse(md);
-  toc.push({ n, title, h2 });
+  const body = marked.parse(md).replace(/<table>(?=\s*<thead>\s*<tr>(?:(?!<\/thead>)[\s\S])*Ce qui est établi)/g, '<table class="split">');
+  toc.push({ n, title, h2: n === "14" ? [] : h2 }); // annexe : une seule ligne au sommaire
   return `<section class="chap">${sketch(SKETCH_OF[Number(n)])}${body}</section>`;
 });
 
-const tocHtml = (pageOf) => `<section class="toc"><div class="eyebrow">Livrables de soutenance</div><h2>Sommaire</h2><p class="lead">Treize livrables, un chapitre chacun. Les mentions « À confirmer » signalent ce qui n'est pas vérifié.</p><ol>${toc
+const tocHtml = (pageOf) => `<section class="toc"><div class="eyebrow">Livrables de soutenance</div><h2>Sommaire</h2><p class="lead">Treize livrables, un chapitre chacun, et une annexe. Les mentions « À confirmer » signalent ce qui n'est pas vérifié.</p><ol>${toc
   .map(
     (c) =>
       `<li class="l1"><span class="n">${c.n}</span><a class="t" href="#c${c.n}">${esc(c.title)}</a><span class="p">${pageOf[`c${c.n}`] ?? ""}</span></li>${c.h2

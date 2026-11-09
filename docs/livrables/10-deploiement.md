@@ -23,7 +23,7 @@ flowchart LR
 | 2. Vérification | `ci.yml` à chaque envoi et chaque pull request | Dernière exécution sur `main` (5 novembre, après la fusion du n° 99) : succès en 2 min 40 s |
 | 3. Préversion | Vercel déploie chaque branche à une adresse propre | Alias du type `logmerry-git-<branche>-new-team-adce.vercel.app` |
 | 4. Fusion | Alex fusionne la pull request dans `main` | Aucune règle de protection de branche (voir plus bas) |
-| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Commit `475a7f9` : statut GitHub « Deployment has completed » (Vercel) |
+| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Dernier commit déployé au 9 novembre 2026 : `89bd458` (API des déploiements de GitHub) ; au 5 novembre : `59c9d8c` ; statut « Deployment has completed » (Vercel) |
 | 6. Base de données | Les migrations de `supabase/migrations/` sont appliquées **à la main**, après que le SQL m'a été montré | Journal : « appliquée par Alex » ; aucune étape de migration dans la CI |
 
 ## Ce que la CI contrôle
@@ -79,7 +79,7 @@ Deux écarts à connaître :
 | **Ce qui n'est pas en production** | Rien de planifié : tout ce qui est fusionné est déployé. La pull request n° 98 (`feat/about-page`) devient redondante, ses commits étant dans la n° 102 |
 | Migrations déjà appliquées à la base partagée | Plus d'écart connu : la base et `main` sont alignés (test de nuit : 158 sur 158 après la fusion de la n° 102) |
 
-> **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) reste à fusionner.
+> **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) a été fusionnée le 9 novembre 2026 avec son accord, et la n° 100 (brouillon) fermée.
 
 ## Retour arrière
 
