@@ -885,3 +885,7 @@
 - `trust.anthropic.com/subprocessors` (22 entrées) et `trust.mistral.ai/subprocessors` (25 entrées) lues dans Chrome (pages en JavaScript, non lisibles par l'outil de lecture simple). Chapitre 13 mis à jour : ce qui était « non lu » est maintenant relevé, daté du 9 novembre 2026.
 - Constat utile : chez Mistral, l'hébergement par défaut est dans l'UE (Microsoft Suède et Norvège, Google Pays-Bas et Belgique, Mistral Compute France, CoreWeave EEE) ; le point d'accès américain de l'API s'appuie sur Google aux États-Unis. Chez Anthropic : Google Cloud, AWS et Azure « monde entier ».
 - Reste **À confirmer** : quels sous-traitants reçoivent réellement les appels de LogMerry ; réglage d'entraînement et durée de conservation chez Mistral (console d'Alex) ; point d'accès Mistral réellement utilisé par le code.
+
+## 2026-11-09 — RGPD : réglage d'entraînement chez Mistral constaté
+- Alex a ouvert la console Mistral (Admin, API, Confidentialité) et fourni la capture : « Autoriser l'utilisation de vos appels API pour entraîner les modèles d'IA de Mistral » est désactivé ; « Activer les modèles Labs » désactivé. Première capture envoyée par erreur : page de la section Vibe (sans lien avec LogMerry), rien modifié.
+- Chapitre 13 et README mis à jour (état daté, non vérifié par moi dans la console). Reste **À confirmer** : durée de conservation par défaut chez Mistral, validation du registre par Alex.
