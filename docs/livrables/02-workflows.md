@@ -119,6 +119,85 @@ flowchart LR
 
 Propositions : user stories (avec tâches si demandé), tâches d'une story, ordre du backlog, composition d'un sprint, relecture d'une story, prompt de mission, résumé d'une note. Règles communes : **éphémères** tant que le propriétaire ne les garde pas ; seules les notes **actives liées à la fiche du client de la mission** sont envoyées ; un chiffre absent des sources fait écarter la proposition (ou sa raison) ; texte fourni traité comme **donnée**. Détail au chapitre 9.
 
+## Workflows métier existants
+
+Cette section décrit, d'après le code et les migrations relus le 10 novembre 2026, les états des entités métier qui existent réellement. Elle ne décrit rien qui n'existe pas (voir « Ce qui n'existe pas » en fin de section). **Rendu des diagrammes non contrôlé** : aucun outil de rendu n'a été lancé pour cette section ; la syntaxe suit celle des diagrammes ci-dessus.
+
+### Devis
+
+```mermaid
+stateDiagram-v2
+  [*] --> brouillon: création
+  brouillon --> envoye: « Envoyer » (date d'envoi obligatoire)
+  envoye --> refuse: « Refuser »
+  envoye --> accepte: « Accepter » (fonction accept_quote seulement)
+  brouillon --> [*]: suppression (un brouillon seulement)
+```
+
+- Statuts : `supabase/migrations/20261018100100_quotes.sql:2` ; libellés `lib/domain/quotes.ts:5-7`. Dès que le statut n'est plus « brouillon », la date d'envoi est obligatoire (`quotes.sql:16`).
+- La base impose les transitions : brouillon vers envoyé, envoyé vers refusé, envoyé vers accepté **seulement** quand `accept_quote` a posé le réglage `app.accepting_quote` (`quotes.sql:48-66`) ; un devis accepté ou refusé est figé (`quotes.sql:54-56`) ; déclencheur `quotes_guard` (`quotes.sql:68-69`). Seul un brouillon se supprime (règle d'accès `quotes.sql:44-46`).
+- Ce que l'interface permet selon le statut : modifier un brouillon ou un devis envoyé, envoyer un brouillon, refuser ou accepter un devis envoyé, supprimer un brouillon (`lib/domain/quotes.ts:10-14`). Actions : `sendQuote` (`app/(app)/clients/quote-actions.ts:97-101`), `refuseQuote` (`:105-106`), `acceptQuote` (`:110-113`, appelle `accept_quote`), `deleteQuote` (`:129-132`).
+- `accept_quote` (version en vigueur : `supabase/migrations/20261029210000_accept_quote_title.sql:4-33`, qui remplace celle de `quotes.sql:73-102` pour le seul titre de la mission) : un devis déjà accepté renvoie sa mission sans rien créer (`:15`) ; un devis qui n'est pas « envoyé » est refusé (`:16`) ; si le devis n'est lié à aucune mission (`:20`), la fiche passe de prospect à client (`:22-24`) et une mission au statut « planned » est créée, titrée « {nom du client} — devis du JJ/MM/AAAA » (`:25-27`) ; le devis devient accepté et pointe vers la mission (`:29`). L'acceptation est faite « en une action, tout ou rien » (`quotes.sql:71`).
+
+### Sprint
+
+Lecture préalable des actions : `app/(app)/missions/sprint-actions.ts` (`startSprint` `:93-117`, `closeSprint` `:124-160`, `deleteSprint` `:163-187`).
+
+```mermaid
+stateDiagram-v2
+  [*] --> planifie: création (statut par défaut)
+  planifie --> en_cours: « Démarrer »
+  en_cours --> clos: « Clore »
+  planifie --> [*]: suppression
+  en_cours --> [*]: suppression
+  clos --> [*]: suppression
+```
+
+- Statuts : `supabase/migrations/20261017120000_sprints.sql:2` ; statut par défaut « planned » (`:12`) ; libellés `lib/domain/sprints.ts:7-9`. À la création, l'action n'écrit pas le statut (`sprint-actions.ts:65`).
+- **Démarrer** : `startSprint` ne change que les sprints « planned » (`sprint-actions.ts:96`). **Un seul sprint en cours par mission** : index unique `sprints_one_active_per_mission` (`sprints.sql:20-21`) ; son refus (code 23505) donne « Un sprint est déjà en cours » (`sprint-actions.ts:97,113`). Dans un second temps, une mission « planned » passe à « in_progress » (`:101`) ; l'échec de cette seconde écriture ne défait pas le démarrage (`:99-104`).
+- **Clore** : seulement un sprint « active » (`sprint-actions.ts:130`). Les stories non terminées sont déplacées **avant** le changement d'état, vers le backlog ou vers un sprint « planned » de la même mission (`:133-148`, contrôle de la cible `:139`) ; en cas d'échec le sprint reste en cours (`:119-122`). Puis le statut passe à « closed » (`:149`).
+- **Sprint clos** : seuls le nom et l'objectif se modifient (`sprint-actions.ts:85`) ; son contenu est figé **en base** par le déclencheur `user_stories_guard_closed_sprint`, qui refuse l'entrée comme la sortie d'une story (`supabase/migrations/20261017150000_user_stories_closed_sprint_guard.sql:5-23`).
+- **Suppression** : `deleteSprint` ne vérifie aucun statut (`sprint-actions.ts:163-187`) ; les stories retournent au backlog (`:162,166-177`).
+- Dans le code de l'application (`app/`), seules deux actions écrivent le statut d'un sprint : `startSprint` (`:96`) et `closeSprint` (`:149`) ; la création laisse le statut par défaut et `updateSprint` n'envoie jamais le statut (`:85-86`). Les scripts de données de démonstration, eux, insèrent des sprints avec un statut choisi (`scripts/seed-demo-backlog.ts:199`, `scripts/seed-demo-to-invoice.ts:51`).
+
+### Mission : valeurs de statut seulement
+
+**Statut libre, aucune transition imposée.**
+
+- Valeurs : `in_progress`, `done`, `cancelled` (`supabase/migrations/20261015162137_missions.sql:2`) et `planned` (`supabase/migrations/20261018100000_mission_status_planned.sql:3`) ; libellés « À planifier », « En cours », « Terminée », « Annulée » (`lib/domain/missions.ts:6-9`). Valeur par défaut en base : « in_progress » (`missions.sql:9`).
+- Aucun déclencheur ne contrôle le statut : seul `missions_set_updated_at` existe (`missions.sql:20`). Le formulaire écrit le statut choisi (`app/(app)/missions/actions.ts:83-89`, validation `lib/domain/missions.ts:42`).
+- **Deux écritures automatiques existent pourtant** : l'acceptation d'un devis crée une mission « planned » (`supabase/migrations/20261029210000_accept_quote_title.sql:25-27`), et le démarrage d'un sprint fait passer une mission « planned » à « in_progress » (`sprint-actions.ts:101`). Elles ne sont pas des transitions imposées : le statut reste modifiable à la main.
+
+### Facture : un statut calculé, pas une machine d'états stockée
+
+- La table `invoices` n'a aucune colonne de statut (`lib/supabase/database.types.ts:197`, et dictionnaire du chapitre 1). Le statut est **déduit des encaissements** par `invoiceBalance` (`lib/domain/payments.ts:77-91`) : sans encaissement, « Non payée » ; total encaissé au moins égal au dû, « Payée » ; sinon « Partiellement payée » (`:81`). Le dû est calculé toutes taxes comprises si la taxe de la facture est connue, hors taxe sinon (`:78-80`). Libellés `:52-54`.
+- **Échue** : pas totalement payée et échéance strictement avant aujourd'hui (`lib/domain/invoices.ts:73-74`). C'est une règle de date, pas un état stocké.
+- Garde des encaissements : `payments_guard` (`supabase/migrations/20261023110000_payments.sql:43-67`) : un encaissement ne change ni de facture ni de propriétaire (`:50-57`), sa date n'est jamais dans le futur, jour de Paris (`:58-61`) ; un encaissement est toujours supprimable (`:39-41`). Un trop-perçu déclenche un avertissement, rien ne le bloque (`lib/domain/payments.ts:93-95`).
+
+### Réalisation du portfolio
+
+```mermaid
+stateDiagram-v2
+  [*] --> non_publiee: création
+  non_publiee --> publiee: « Publier » (accord coché et statut choisi)
+  publiee --> non_publiee: « Retirer de la publication »
+  publiee --> non_publiee: modification, ajout ou retrait d'une capture
+  publiee --> non_publiee: accord du client décoché (déclencheur)
+```
+
+- Publier exige l'accord du client et un statut : `setRealisationPublication` (`app/(app)/realisations/actions.ts:90-110`, filtre `:102`) ; la base refuse de toute façon une publication sans accord (contrainte `realisations_publish_needs_consent`, `supabase/migrations/20261030130000_realisations.sql:21-22`).
+- Retirer l'accord d'une réalisation publiée la **dépublie d'office** (`supabase/migrations/20261030160000_realisations_unpublish_on_consent_removed.sql:8-10`) ; la date de publication est posée à la publication et effacée à la dépublication (`:11-15`).
+- Toute modification enregistre la réalisation non publiée (`realisations/actions.ts:79-80`), de même que l'ajout ou le retrait d'une capture (`:164`, `:193`) : il faut republier ensuite.
+- La page publique ne montre que les réalisations publiées, avec accord et un statut (`supabase/migrations/20261106100000_realisation_design_choice.sql:34`).
+
+### Ce qui n'existe pas
+
+- **Aucune machine d'états de facture stockée** : le statut est calculé (voir ci-dessus).
+- **Aucune transition imposée pour une mission** : statut libre (voir ci-dessus).
+- **Aucune transition imposée pour une story** : son statut (« todo », « in_progress », « done » : `lib/domain/user-stories.ts:6`) change librement par le menu de statut (`app/(app)/missions/story-actions.ts:167-176`) ou le formulaire (`:153-163`). Seule protection : le contenu d'un sprint clos est figé (`20261017150000_user_stories_closed_sprint_guard.sql:5-23`).
+- **Aucune réouverture d'un sprint clos** : aucune écriture ne remet un sprint à « planned » ou « active » (voir « Sprint »).
+- Un devis accepté ou refusé ne peut plus changer (`quotes.sql:54-56`).
+
 ## Événements qui déclenchent un traitement
 
 | Événement | Traitement | Synchrone ? |
