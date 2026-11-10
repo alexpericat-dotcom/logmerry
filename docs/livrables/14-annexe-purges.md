@@ -1,10 +1,10 @@
 # Annexe : purges automatiques (proposition, non activée)
 
-> **En deux phrases.** Ce chapitre documente quatre purges automatiques (historique de l'assistant, prospects, messages du formulaire de contact, empreintes anti-abus) **sans les activer** : le SQL n'est ni appliqué ni exécuté, et aucune extension ni migration n'est installée. La mise en service prévue est un **essai à blanc pendant deux semaines**, puis la suppression réelle sur accord d'Alex, après **export des données** (le plan gratuit de Supabase n'a pas de sauvegarde : toute suppression est irréversible).
+> **En deux phrases.** Ce chapitre documente quatre purges automatiques (historique de l'assistant, prospects, messages du formulaire de contact, empreintes anti-abus) **sans les activer** : le SQL n'est ni appliqué ni exécuté, et aucune extension ni migration n'est installée. La mise en service prévue est un **essai à blanc pendant deux semaines**, puis la suppression réelle sur accord du responsable de traitement, après **export des données** (le plan gratuit de Supabase n'a pas de sauvegarde : toute suppression est irréversible).
 
 Rédigé le 9 novembre 2026 d'après la base réelle (lecture seule) et le code. **Limite du SQL : il n'a pas été exécuté, même sur une base de test** ; il sera essayé sur des données de test (droits, sécurité par ligne) avant toute activation.
 
-## Règles retenues (décisions d'Alex, 9 novembre 2026)
+## Règles retenues (décisions du responsable de traitement, 9 novembre 2026)
 
 | Traitement | Règle | Remarque |
 |---|---|---|
@@ -132,7 +132,7 @@ create table public.purge_log (
 );
 alter table public.purge_log enable row level security;   -- aucune politique
 revoke all on public.purge_log from anon, authenticated;
--- Exception à la règle owner_id = auth.uid() : table système sans propriétaire (acceptée par Alex le 9 novembre 2026).
+-- Exception à la règle owner_id = auth.uid() : table système sans propriétaire (acceptée par le responsable de traitement le 9 novembre 2026).
 ```
 
 ## T3 : historique de l'assistant et titres des brouillons
@@ -294,7 +294,7 @@ revoke all on function public.purge_old_messages(boolean), public.purge_stale_pr
 
 ## Planification prévue
 
-Étapes, **dans cet ordre** : (1) export des données ; (2) essai sur des données de test (droits, sécurité par ligne) ; (3) installation de `pg_cron` (schéma et droits : **À confirmer** dans la documentation de Supabase) ; (4) **deux semaines en essai à blanc** : les tâches appellent les fonctions avec `true`, et le journal est relu chaque jour ; (5) passage à `false`, **sur accord d'Alex seulement**.
+Étapes, **dans cet ordre** : (1) export des données ; (2) essai sur des données de test (droits, sécurité par ligne) ; (3) installation de `pg_cron` (schéma et droits : **À confirmer** dans la documentation de Supabase) ; (4) **deux semaines en essai à blanc** : les tâches appellent les fonctions avec `true`, et le journal est relu chaque jour ; (5) passage à `false`, **sur accord du responsable de traitement seulement**.
 
 ```sql
 -- Étape 4 : essai à blanc
@@ -302,7 +302,7 @@ select cron.schedule('purge-old-messages',         '17 3 * * *', 'select public.
 select cron.schedule('purge-stale-prospects',      '27 3 * * *', 'select public.purge_stale_prospects(true)');
 select cron.schedule('purge-old-contact-messages', '37 3 * * *', 'select public.purge_old_contact_messages(true)');
 select cron.schedule('purge-contact-submissions',  '47 3 * * *', 'select public.purge_contact_submissions(true)');
--- Étape 5 (accord d'Alex) : cron.unschedule puis cron.schedule avec (false)
+-- Étape 5 (accord du responsable de traitement) : cron.unschedule puis cron.schedule avec (false)
 
 -- Contrôle quotidien du journal
 select * from public.purge_log where rows_failed > 0 or dry_run order by ran_at desc limit 20;
