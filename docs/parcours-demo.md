@@ -19,7 +19,10 @@ Scénario déroulé le 29 octobre 2026 (story 7.4), sur le compte `demo-a@exampl
 | 11 | Facture | mission, « Nouvelle facture » | 2 400 € HT, échéance dans un mois, devis lié | « Non payée » ; le rappel disparaît du cockpit |
 | 12 | Règlement | Factures, détail, « Ajouter un encaissement » | 2 400 € HT | « Payée », « soldée » |
 | 13 | Prompt | mission, bouton de prompt | « La mission seule » ou le contexte complet ; un objectif | un prompt relisible, sans montant ni donnée financière |
-| 14 | Vitesse, isolation | toutes les pages ; `npm run test:isolation` | | pages courantes sous 3 s ; 129 tests, le compte B ne voit rien |
+| 14 | Portfolio public | Réalisations, « Créer une réalisation » (titre, description, origine, statut affiché, case d'accord), puis « Publier » ; ensuite `/portfolio` sans connexion | une réalisation fictive avec accord coché | la fiche apparaît sur `/portfolio` avec son statut ; une fiche sans accord ne peut pas être publiée (message clair) et n'apparaît pas |
+| 15 | Vitesse, isolation | toutes les pages ; `npm run test:isolation` | | pages courantes sous 3 s ; 129 tests, le compte B ne voit rien |
+
+*L'étape 14 (portfolio) a été ajoutée le 10 novembre 2026 d'après le code et les tests (story 6.2 et 6.3). Elle n'a pas été rejouée : le déroulé du 29 octobre allait jusqu'à l'étape 13, et le rejeu partiel du 9 novembre sur la production n'a pas inclus la création de fiches. À confirmer par un déroulé.*
 
 ## Écarts relevés au déroulé (détail dans `deferred-work.md`)
 
