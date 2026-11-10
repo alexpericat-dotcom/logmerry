@@ -127,6 +127,41 @@ Réalisé sur une version de production locale, compte de démonstration, WCAG 2
 
 Vérification annoncée dans `ui-rules.md` : émulation Pixel 6a (412 × 915) dans Chrome, clair et sombre, puis essai sur un vrai téléphone ; **l'essai sur le vrai téléphone n'est pas documenté** (À confirmer).
 
+## Gabarits et structure des pages
+
+N'est appelé « gabarit » que ce qui structure réellement des pages entières. Relevé fait dans le code de la branche `main` le 10 novembre 2026.
+
+**Ce qui a été lu.** Le dossier `components/` contient 90 fichiers (88 `.tsx` et 2 `.ts`) et un sous-dossier `ui/` de 8 fichiers. **15 fichiers ont été lus** : 3 en entier (`auth-shell.tsx`, `page-banner.tsx`, `portfolio-image.tsx`) et 12 en partie ou par extraits (`app-sidebar.tsx`, `assistant-panel.tsx`, `form-helpers.tsx`, `login-form.tsx`, `mission-form.tsx`, `portfolio-contact-form.tsx`, `portfolio-header-frame.tsx`, `portfolio-sections.tsx`, `portfolio-showcase.tsx`, `realisation-images.tsx`, `search-palette.tsx`, `sprint-form.tsx`). **75 fichiers n'ont pas été lus** ; le sous-dossier `ui/` n'a été que listé (voir la fin de la section). Quatre fichiers hors `components/` ont été lus en entier : `app/layout.tsx`, `app/(app)/layout.tsx`, `app/auth/login/page.tsx` et `app/portfolio/page.tsx`.
+
+### Gabarits de pages
+
+| Rôle | Fichier:ligne | Ce qu'il structure |
+|---|---|---|
+| Toutes les pages | `app/layout.tsx:28-47` | Langue française (`:34`), thème sombre par défaut avec prise en compte du système (`:36-41`), cinq polices chargées (`:19-26`) |
+| Application connectée | `app/(app)/layout.tsx:13-46` | Revérification de la session (`:15-16`), historique de l'assistant chargé (`:21-27`), lien d'évitement « Aller au contenu » (`:32-37`), barre latérale (`:38`), zone `main#main` (`:39`), panneau de l'assistant (`:42`) |
+| Pages d'authentification | `components/auth-shell.tsx:7-23` | Fond dégradé plein écran, logo et nom en haut à gauche, carte centrée ; utilisé par 4 pages : `app/auth/login`, `forgot-password`, `update-password`, `error` |
+| En-tête d'un écran de l'application | `components/page-banner.tsx:13-55` | Bandeau avec titre, action principale, description, filtres et, pour le cockpit, tuiles ; importé par **32 fichiers** sous `app/` |
+| Page publique `/portfolio` | `app/portfolio/page.tsx:39-62` et `components/portfolio-sections.tsx` (`PortfolioHeader:46`, `PortfolioHero:93`, `PortfolioLever:150`, `PortfolioProcess:171`, `PortfolioServices:208`, `PortfolioStack:233`, `PortfolioShowcaseFrame:269`, `PortfolioContact:281`, `PortfolioFooter:298`) | Sections empilées ; lien d'évitement et `main#contenu` dans la page ; en-tête posé sur la photo puis translucide au défilement (`components/portfolio-header-frame.tsx:13`) |
+
+### Panneaux, formulaires et éléments publics (lus)
+
+| Rôle | Fichier:ligne | Ce que le fichier fait |
+|---|---|---|
+| Panneau | `components/assistant-panel.tsx:15-16` | Panneau « Assistant » non modal, placé après `main` : il réduit la largeur de la page sans la recouvrir, plein écran sous 1 024 px |
+| Panneau (navigation) | `components/app-sidebar.tsx:52` | Barre latérale (lue en partie : imports, icônes) |
+| Formulaire (aides communes) | `components/form-helpers.tsx` : `FocusOnMount:11`, `selectClass:34-36`, `ErrorLine:40`, `useFormFields:52`, `focusField:59`, `ErrorSummary:69`, `useMoreFields:105` | Récapitulatif d'erreurs en tête, ligne d'erreur reliée au champ, focus, menus ; 22 fichiers de `components/` importent ce fichier |
+| Formulaire (exemples lus) | `components/mission-form.tsx:34`, `components/sprint-form.tsx:57` | Chacun affiche le récapitulatif d'erreurs en tête (`ErrorSummary`) ; le test de ces deux formulaires est `tests/components/mission-sprint-forms.test.tsx` |
+| Public (carte de réalisation) | `components/portfolio-showcase.tsx:12` (`BrowserFrame`), `:34` (`PortfolioCard`), `:148` (`PortfolioShowcase`) | Cadre de navigateur, carte dépliable, miniatures |
+| Public (image) | `components/portfolio-image.tsx:10-22` | Image de capture avec repli sobre portant le texte alternatif si le fichier ne se charge pas |
+
+### Composants de base
+
+Le sous-dossier `components/ui/` contient 8 fichiers (`badge`, `button`, `card`, `checkbox`, `dropdown-menu`, `input`, `label`, `textarea`). Seuls leurs noms ont été relevés : leur contenu n'a pas été lu. Le chapitre dit plus haut qu'ils sont recolorés par les jetons ; ce point reste celui de `docs/ui-rules.md` et de `lib/theme.test.ts`, non revérifié ici.
+
+### Fichiers de `components/` non lus (75)
+
+assistant-draft-button, assistant-provider, assistant-sources, backlog-order, backlog, calendar-line-row, ceiling-gauge, client-card, client-form, client-status, cockpit-gauges, confirm-delete, confirm-panel, contact-form, contacts-section, dashboard-widgets, data-table, deadline-form, deadline-gantt, deadline-kanban, deadline-row, deadlines-panel, delete-client, delete-mission, delete-note, delete-realisation, dossier-images (.ts), filter-chips, forgot-password-form, index-all-notes, index-status, invoice-form, invoice-payments, invoice-row, invoices-panel, live-preview, logo-mark, logout-button, mission-prompt, mission-status, note-form, note-summary, password-input, payment-form, portfolio-dossier, portfolio-showcase-filter, profile-field, promote-client, publication-control, quotes-section, realisation-form, retry-indexing, rule-actions, rule-form, rule-status, scroll-effects, sense-search, sketch-data (.ts), sketches, sortable-list, sprint-block, sprint-composer, story-form, story-list, story-proposals, story-review, task-proposals, tasks, theme-switcher, today-tasks, tool-icon, typed-text, unset, update-password-form, urgency-badge.
+
 ## Aperçu de l'application réelle
 
 Captures prises le 5 novembre 2026 sur une version de production locale (`next build` puis `next start`), avec des données **fictives** (compte de démonstration) ; elles montrent donc l'état du code du jour, qui n'est pas celui de la production Vercel (voir le chapitre 10).
