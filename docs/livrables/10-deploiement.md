@@ -71,7 +71,7 @@ Deux écarts à connaître :
 
 | Élément | Valeur |
 |---|---|
-| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96, 97, 99 puis 102 par Alex (accords donnés dans la conversation) ; statut **Ready** (capture Vercel pour le n° 97 : construction 33 s) |
+| Dernier déploiement de production | 5 novembre 2026, après la fusion des n° 96, 97, 99 puis 102 par l'auteur (accords donnés dans la conversation) ; statut **Ready** (capture Vercel pour le n° 97 : construction 33 s) |
 | Commit déployé | `59c9d8c`, fusion de la pull request n° 102 (formulaire de contact et « Qui suis-je »), précédée des n° 96 (page publique du portfolio), 97 (statut des réalisations) et 99 (« Choix de conception » et « Validation ») |
 | CI sur ces commits | Succès. La CI de `main` a échoué une première fois sur un test (« double clic sur Ajouter », attente d'une seconde) puis réussi à la relance : test **instable**, noté |
 | Adresse | `https://logmerry.vercel.app` : `/` et `/portfolio/qui-suis-je` renvoient à la connexion, `/auth/login` répond 200, **`/portfolio` répond 200 sans connexion** (vérifié le 5 novembre) |
