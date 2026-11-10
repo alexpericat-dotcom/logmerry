@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-13-2026 12:35
-last_updated: 10-28-2026 21:00
+last_updated: 11-10-2026 15:27
 project: logmerry
 project_key: NOKEY
 tracking_system: file-system
@@ -81,17 +81,17 @@ development_status:
   5-6-écran-à-faire-et-ligne-de-synthèse: done
   epic-5-retrospective: optional
 
-  epic-6: backlog
-  6-1-gérer-mes-réalisations: backlog
-  6-2-publier-avec-l-accord-du-client: backlog
-  6-3-voir-le-portfolio-public: backlog
+  epic-6: in-progress
+  6-1-gérer-mes-réalisations: done
+  6-2-publier-avec-l-accord-du-client: review   # critère 3 non littéral : nom remplacé seulement s'il est vide
+  6-3-voir-le-portfolio-public: review   # contact par formulaire, pas mailto ; lisibilité mobile non testée
   epic-6-retrospective: optional
 
-  epic-7: backlog
-  7-1-données-de-démonstration-fictives: backlog
-  7-2-accessibilité-des-parcours-principaux: backlog
+  epic-7: in-progress
+  7-1-données-de-démonstration-fictives: review   # scripts seed:* ; étiquette « démo » et cockpit du compte B non revérifiés
+  7-2-accessibilité-des-parcours-principaux: review   # un seul parcours au clavier fait ; récapitulatif d'erreurs non prouvé
   7-3-sauvegarde-vérifiée: backlog
-  7-4-parcours-de-démo-complet: backlog
+  7-4-parcours-de-démo-complet: review   # pas d'étape portfolio ; déroulé du 29/10 en développement ; mesure des 3 s non relue
   epic-7-retrospective: optional
 
   epic-8: in-progress
