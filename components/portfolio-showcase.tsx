@@ -2,6 +2,7 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 
 import { LivePreview } from "@/components/live-preview";
 import { PortfolioImage } from "@/components/portfolio-image";
+import { PortfolioImageZoom } from "@/components/portfolio-image-zoom";
 import { Dossier } from "@/components/portfolio-dossier";
 import { canPreviewInFrame, safeHttpsLink, type PublicCard } from "@/lib/domain/portfolio";
 import type { RealisationStatus } from "@/lib/domain/realisations";
@@ -63,7 +64,7 @@ export function PortfolioCard({ card, index, supabaseUrl }: { card: PublicCard; 
               <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {more.map((image) => (
                   <li key={image.id} className="relative aspect-video overflow-hidden rounded-md border bg-muted">
-                    <PortfolioImage src={publicImageUrl(supabaseUrl, image.path)} alt={image.alt} sizes="(min-width: 1024px) 12vw, 30vw" />
+                    <PortfolioImageZoom src={publicImageUrl(supabaseUrl, image.path)} alt={image.alt} />
                   </li>
                 ))}
               </ul>

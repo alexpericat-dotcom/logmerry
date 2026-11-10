@@ -3,7 +3,7 @@ import "../helpers/dom.ts";
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, test } from "node:test";
 
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import {
@@ -71,6 +71,29 @@ describe("réalisations de la page publique", () => {
     const cover = screen.getByAltText("Page d'accueil") as HTMLImageElement;
     assert.equal(cover.src, "https://x.supabase.co/storage/v1/object/public/portfolio/u/r1/1.png");
     assert.ok(screen.getByAltText("Formulaire d'inscription"));
+  });
+
+  test("une miniature s'ouvre en grand dans une boîte de dialogue, avec son texte alternatif ; le bouton Fermer la referme", async () => {
+    // jsdom ne connaît pas `showModal` : on simule l'ouverture et la fermeture natives.
+    const proto = HTMLDialogElement.prototype;
+    proto.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+    proto.close = function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+      this.dispatchEvent(new Event("close"));
+    };
+    render(showcase([item()], [img("1", "Page d'accueil"), img("2", "Formulaire d'inscription")]));
+    const open = screen.getByRole("button", { name: "Agrandir la capture : Formulaire d'inscription" });
+    assert.equal(open.getAttribute("aria-haspopup"), "dialog");
+    assert.equal(screen.getAllByAltText("Formulaire d'inscription").length, 1, "l'image en grand n'est pas chargée avant l'ouverture");
+    await userEvent.click(open);
+    const dialog = document.querySelector("dialog[open]") as HTMLDialogElement;
+    assert.equal(dialog.getAttribute("aria-label"), "Formulaire d'inscription");
+    assert.equal(within(dialog).getAllByAltText("Formulaire d'inscription").length, 1);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Fermer l'aperçu" }));
+    assert.equal(document.querySelector("dialog[open]"), null);
+    await waitFor(() => assert.equal(screen.getAllByAltText("Formulaire d'inscription").length, 1), { timeout: 1000 }); // l'image en grand est déchargée à la fermeture
   });
 
   test("sans capture : un aplat avec le titre, caché des lecteurs d'écran ; aucune balise img sans texte alternatif", () => {

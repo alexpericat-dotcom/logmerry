@@ -7,7 +7,7 @@ import { useState } from "react";
  * Capture du portfolio : si le fichier ne se charge pas (supprimé, hôte en panne), un aplat sobre avec le texte alternatif remplace l'icône d'image cassée.
  * `fill` : le parent fixe la taille (rapport 16/9).
  */
-export function PortfolioImage({ src, alt, sizes, priority = false }: { src: string; alt: string; sizes: string; priority?: boolean }) {
+export function PortfolioImage({ src, alt, sizes, priority = false, contain = false }: { src: string; alt: string; sizes: string; priority?: boolean; contain?: boolean }) {
   const [broken, setBroken] = useState(false);
   if (broken) {
     return (
@@ -18,5 +18,5 @@ export function PortfolioImage({ src, alt, sizes, priority = false }: { src: str
       </div>
     );
   }
-  return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setBroken(true)} className="object-cover object-top" />;
+  return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setBroken(true)} className={contain ? "object-contain" : "object-cover object-top"} />;
 }
