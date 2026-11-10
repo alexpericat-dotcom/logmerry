@@ -93,6 +93,41 @@ Autres fonctions de la base, non appelées par le code de l'application : `rls_a
 
 **Le formulaire de contact** est la seule porte ouverte aux visiteurs sans compte. La fonction valide (nom de 1 à 200 caractères, e-mail d'au plus 254, message de 10 à 4 000), refuse au-delà de 5 messages par heure, 30 par jour au total et 3 par jour pour une même adresse, ignore sans rien écrire un doublon (même adresse et même texte en moins de 24 h) (erreur `54000`, affichée comme « trop de messages »), et écrit une **note en brouillon** chez l'unique destinataire activé (table `contact_form_settings`). Côté application, un champ piège et un délai minimum d'ouverture écartent les robots (même réponse qu'un succès, rien n'est écrit). Le texte reçu est marqué « non vérifié » : c'est une donnée, jamais une consigne.
 
+## Mappings
+
+Relevé fait dans le code et les migrations le 10 novembre 2026, fonction par fonction. Il n'existe **pas de table de mappings générale** ni de webhook : seuls les cas où une saisie devient plusieurs écritures, ou une écriture composée, sont décrits.
+
+### Formulaire de contact vers note
+
+| Étape | Ce que fait le code |
+|---|---|
+| Champs du formulaire | `name`, `email`, `message` ; deux champs de contrôle (`website`, piège ; `openedAt`, délai) ne sont **pas** transmis à la base (`app/portfolio/contact-action.ts:19-20`) |
+| Appel | `rpc("submit_contact_message", { p_name, p_email, p_message })` (`contact-action.ts:26`) ; plafond atteint (code 54000) : message dédié (`:27`) |
+| Fonction en vigueur | `supabase/migrations/20261107110000_contact_form_limits.sql:21-81`. Elle **remplace** la version de `20261107100000_contact_form.sql:17-60` (même insertion de la note, mais plafond de 10 messages par heure, remplacé par le journal d'envois) |
+| Nettoyage | Nom : retours à la ligne et tabulations remplacés par une espace, espaces retirées (`:29`) ; e-mail : espaces retirées, 254 caractères au plus, une arobase (`:30`, `:36`) ; message : espaces retirées, de 10 à 4 000 caractères (`:31`, `:37`) |
+| Écriture 1 : journal d'envois | `contact_submissions(owner_id, email_hash, message_hash)` : `md5(lower(e-mail))` et `md5(message)`, jamais le texte (`:46-47`, `:65`) |
+| Écriture 2 : note | `notes(owner_id, title, body, status, type)` (`:67-78`). `owner_id` : le destinataire désigné dans `contact_form_settings` (`:41`) ; `title` : « Message reçu · » suivi du nom, 200 caractères au plus (`:70`) ; `body` : « Texte reçu d'un visiteur via le formulaire du portfolio, non vérifié. », puis « De : » nom, « E-mail : » adresse, « Reçu le : » date et heure de Paris, puis le message (`:71-75`) ; `status` : « draft » ; `type` : « note » (`:76-77`) |
+| Réponses | `true` : écrit, ou doublon de moins de 24 heures ignoré (`:51-56`) ; `false` : formulaire non activé (`:42-44`) ; erreur 22023 : champ invalide (`:35-39`) |
+
+### Devis accepté vers mission
+
+`accept_quote` (version en vigueur : `supabase/migrations/20261029210000_accept_quote_title.sql:4-33`) : si le devis n'a pas de mission liée (`:20`), la mission créée reprend `client_id` du devis, un titre « {nom du client, 170 caractères au plus} — devis du JJ/MM/AAAA » construit avec la date d'envoi (`:25-27`) et le statut « planned » ; la fiche passe de prospect à client (`:22-24`) ; le devis reçoit `mission_id` et le statut « accepted » (`:29`). Si le devis avait déjà une mission, il la garde et aucune n'est créée.
+
+### Note vers nouvelle fiche prospect
+
+| Étape | Ce que fait le code |
+|---|---|
+| Champs du formulaire de note | `client_id` (la valeur « new » ouvre la création d'une fiche : `lib/domain/note-link.ts:5`), `new_name`, `new_origin` (`app/(app)/notes/actions.ts:60-69`) |
+| Validation | `validateLink` (`lib/domain/note-link.ts:12-21`) passe `new_name` et `new_origin` à `validateClientInput` avec le statut imposé « prospect » (`:15`) ; le nom est nettoyé du caractère nul et des espaces (`lib/domain/clients.ts:32`) |
+| Écriture de la fiche | `clients.insert({ name, status: "prospect", origin })` (`app/(app)/notes/actions.ts:80-84`) |
+| Écriture de la note | L'identifiant de la fiche créée devient `notes.client_id` (`:105`, `:136`). Les deux écritures sont successives : si la note échoue, la fiche reste (commentaire `:79`) |
+
+### Champ de formulaire vers colonne : fiche client et mission
+
+Pour la fiche client, les clés du formulaire portent le nom des colonnes : `ClientInput` (`lib/domain/clients.ts:19`) devient `ClientValues` (`:20`) par `validateClientInput` (`:31-42`), qui nettoie le nom et n'accepte que des statuts et des origines connus, puis `clients.insert(value)` (`app/(app)/clients/actions.ts:57-62`). Pour la mission, de même : `MissionInput` (`lib/domain/missions.ts:18`) devient `MissionValues` (`:19`) par `validateMissionInput` (`:33-47`), avec les dates vides converties en `null` (`:47`), puis `missions.insert(value)` (`app/(app)/missions/actions.ts:74-79`) ; à la modification, `client_id` est retiré (`:87`). `owner_id` n'est jamais envoyé : la base le pose (`:75`).
+
+Ce n'est pas vrai pour tous les formulaires : le devis convertit un montant saisi en euros (`amount_ht`, `tax`) en centimes entiers (`amount_ht_cents`, `tax_cents`), une taxe vide devenant `null` (`lib/domain/quotes.ts:23-31`, `:35`) ; l'encaissement fait de même (`lib/domain/payments.ts:49`). Les autres formulaires n'ont pas été relus pour ce chapitre.
+
 ## Authentification
 
 Voir le détail et le schéma du proxy au chapitre 11. Ce qui compte pour l'intégration :
