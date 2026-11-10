@@ -52,11 +52,11 @@ Mesurée le 4 novembre 2026, de bout en bout pour une question : embedding de la
 | 95e centile | 7 046 ms | 6 100 ms |
 | Appel à Claude seul (moyenne) | 2 866 ms | 3 014 ms |
 
-**Origine de ces chiffres : test local** (script `npm run test:rag` lancé depuis le poste d'Alex, appels réels à Claude et à Mistral, chronomètre du script ; mesures du 4 novembre 2026). Lecture : une réponse arrive en **environ 3,4 secondes**, et dans la pire des vingt questions en **6 à 7 secondes**. L'appel à Claude représente la plus grande part du temps. Une question sur 20 n'appelle pas Claude (aucun extrait au-dessus du seuil) : le message fixe est alors immédiat.
+**Origine de ces chiffres : test local** (script `npm run test:rag` lancé depuis le poste de l'auteur du projet, appels réels à Claude et à Mistral, chronomètre du script ; mesures du 4 novembre 2026). Lecture : une réponse arrive en **environ 3,4 secondes**, et dans la pire des vingt questions en **6 à 7 secondes**. L'appel à Claude représente la plus grande part du temps. Une question sur 20 n'appelle pas Claude (aucun extrait au-dessus du seuil) : le message fixe est alors immédiat.
 
 ### Mesures sur la production (9 novembre 2026)
 
-Relevées sur `logmerry.vercel.app` avec le compte de démonstration, dans un navigateur du poste d'Alex. **Le rejeu a été fait par Claude Code (l'assistant de code), pas par Alex** ; Alex a seulement saisi lui-même l'e-mail et le mot de passe de la connexion (je n'ai lu aucun identifiant). **Une seule exécution par ligne** : ce sont des constats, pas des moyennes. Le temps va du clic jusqu'à l'affichage complet, relevé toutes les 0,5 seconde (**précision d'environ 0,5 s**) ; il comprend le réseau et l'interface.
+Relevées sur `logmerry.vercel.app` avec le compte de démonstration, dans un navigateur piloté par l'assistant de code. **Le rejeu a été fait par Claude Code (l'assistant de code), pas par l'auteur du projet** ; connexion saisie par l'utilisateur, mot de passe jamais lu ni enregistré par l'assistant de code. **Une seule exécution par ligne** : ce sont des constats, pas des moyennes. Le temps va du clic jusqu'à l'affichage complet, relevé toutes les 0,5 seconde (**précision d'environ 0,5 s**) ; il comprend le réseau et l'interface.
 
 | Mesure | Valeur | Origine | Remarque |
 |---|---|---|---|
