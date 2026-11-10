@@ -51,7 +51,7 @@ stateDiagram-v2
   echec --> [*]: suppression
 ```
 
-Un second état existe, **indépendant** : `draft` (brouillon) ou `active`. Un brouillon naît de deux façons : le bouton « Créer une note à documenter plus tard » de l'assistant (titre « À documenter : … », texte vide, jamais citable) ou un message du formulaire de contact public. **Constat** : aucune action de l'application ne fait passer une note de `draft` à `active` (la modification ne change pas ce statut) ; les propositions agiles, qui n'utilisent que des notes `active`, ne verront donc pas un brouillon complété. **À confirmer avec Alex** : comportement voulu ou manque.
+Un second état existe, **indépendant** : `draft` (brouillon) ou `active`. Un brouillon naît de deux façons : le bouton « Créer une note à documenter plus tard » de l'assistant (titre « À documenter : … », texte vide, jamais citable) ou un message du formulaire de contact public. **Constat** : aucune action de l'application ne fait passer une note de `draft` à `active` (la modification ne change pas ce statut) ; les propositions agiles, qui n'utilisent que des notes `active`, ne verront donc pas un brouillon complété. **Décision du 10 novembre 2026** : limite connue, non corrigée avant la soutenance.
 
 ## B. Question à l'assistant
 
@@ -152,6 +152,6 @@ Aucun serveur MCP n'est intégré à LogMerry : pas de fichier `.mcp.json`, pas 
 |---|---|---|
 | Indexation synchrone dans l'enregistrement | Enregistrer une note peut durer jusqu'à 20 s si Mistral est lent | Indexer en arrière-plan (file d'attente), si l'usage le justifie |
 | Pas de nouvelle tentative automatique | Une panne brève se voit tout de suite | Une reprise unique avec attente |
-| Aucun passage de `draft` à `active` | Un brouillon complété n'alimente pas les propositions agiles | À trancher avec Alex |
+| Aucun passage de `draft` à `active` | Un brouillon complété n'alimente pas les propositions agiles | Limite connue (décision du 10 novembre 2026) |
 | Hors corpus avec des extraits retrouvés : réponse prudente et avertissement, pas un refus sec (observé sur la production) | Un fait voisin peut être rappelé ; la réponse reste signalée comme non soutenue par les notes | Refuser plutôt que répondre quand aucune source n'est citée (non fait : périmètre gelé) |
 | Pas de flux de réponse | L'utilisateur attend la réponse complète | Flux (streaming), après le MVP |
