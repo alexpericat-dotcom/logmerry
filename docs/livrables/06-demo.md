@@ -109,3 +109,4 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 | Scénario déroulé le 29 octobre en développement, pas sur la production | Un écart entre les deux reste possible (**À confirmer** par une répétition) |
 | Rejeu partiel sur la production le 9 novembre 2026, **fait par Claude Code** | Les étapes de création (devis, facture, sprint) n'ont pas été rejouées : elles écrivent dans la base |
 | QR scanné par l'auteur du projet le 5 novembre : le téléphone ouvre la page de connexion | Aucune, vérifié |
+| Le portfolio public est alimenté depuis le compte de démonstration (données de test) | Quiconque dispose du mot de passe de démonstration peut modifier ces fiches |
