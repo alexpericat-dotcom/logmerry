@@ -1,38 +1,33 @@
 # Livrables de la soutenance du 16 novembre 2026
 
-Liste donnée par Alex le 4 novembre 2026 ; objectif : **prêts vendredi 6 novembre au matin** (rendez-vous avec son tuteur). Leur origine exacte (école, Workshop 8) n'est pas précisée et ils n'ont pas de lien avec le numéro RNCP : ne rien supposer sur les critères de notation, les confirmer avec le tuteur.
+Liste de livrables donnée par Richard (tuteur) le 30 octobre 2026 (**déclaré par l'auteur ; non vérifié : aucune trace écrite de Richard dans le dépôt**), reprise dans ce dépôt le 4 novembre 2026 ; objectif : **prêts vendredi 6 novembre au matin** (rendez-vous avec le tuteur). Leur lien avec le Workshop 8 et avec les critères de notation n'est pas précisé, et ils n'ont pas de lien avec le numéro RNCP : ne rien supposer sur les critères de notation, les confirmer avec le tuteur.
 
 Règle : rien d'inventé. Ce qui est dans ces documents vient du code, des migrations, des tests et des documents du projet ; ce qui est inconnu est écrit « À confirmer ».
 
 Le PDF d'ensemble se génère avec `npm run livrables` (Chrome sans interface, aucun service externe) : couverture, sommaire avec numéros de page, un chapitre par fichier `NN-*.md`. Résultat : `livrables-soutenance.pdf`.
 
-Légende de la colonne « Reste » : **moi** = je rédige à partir du dépôt ; **toi** = Alex doit fournir ou décider ; **les deux**.
+Statuts, d'après la relecture de tous les chapitres le 10 novembre 2026 (cellules longues tronquées à l'affichage ; diagrammes du chapitre 1 parcourus, non lus ligne à ligne) : **complet** = tout ce que l'intitulé demande est couvert ; **partiel** = une partie de l'intitulé n'est pas couverte (voir la réserve). Les intitulés sont ceux de la liste de Richard, mot pour mot (liste déclarée par l'auteur, non vérifiée par l'assistant).
 
-| N° | Livrable | Ce qui existe déjà (vérifié dans le dépôt) | Fichier prévu | Reste |
+| N° | Intitulé (liste de Richard) | Chapitre | Statut | Réserve |
 |---|---|---|---|---|
-| 1 | Schéma de données (MCD) + dictionnaire + règles d'intégrité | `supabase/migrations/` (une trentaine de fichiers), `lib/supabase/database.types.ts`, modèle dans `ARCHITECTURE-SPINE.md`. Aucun diagramme. | `01-schema-de-donnees.md` (Mermaid ER, dictionnaire, contraintes, RLS) | **fait** (relu dans la base) |
-| 2 | Workflow de saisie des documents et gestion IA / RAG | Code : saisie de note, indexation Mistral, chat, vérification des citations, historique ; `docs/rag-tests.md` | `02-workflows.md` (diagrammes Mermaid : états, événements, règles, exceptions, SLA) | **fait** (MCP : aucun dans l'application, MCP Supabase de développement seulement ; à valider par Alex) |
-| 3 | UX et maquettes | `_bmad-output/planning-artifacts/ux-designs/` (`DESIGN.md`, `EXPERIENCE.md`, `mockups/`, `review-accessibility.md`), `docs/ux-resume.md`, `docs/audit-accessibilite.md`, `docs/ui-rules.md` | `03-ux-design-system.md` (assemblage et critères d'accessibilité) | **fait** ; **toi** : choisir les maquettes (les 5 datent du 12 octobre, avant la refonte) et prendre des captures de l'application réelle |
-| 4 | Spécifications d'intégration : API Supabase et authentification | Migrations, fonctions SQL, Server Actions, Route Handler du chat, `proxy.ts`, `lib/supabase/` | `04-integration-api-auth.md` (contrats, droits, flux d'authentification, aucun webhook) | **fait** (délai des appels à Supabase : À confirmer) |
-| 5 | Exigences de qualité de service (dashboard Supabase) | CI (`.github/workflows/ci.yml`), mesures Lighthouse du portfolio (journal) ; advisors Supabase lisibles par le MCP | `05-qos.md` (budgets, observabilité, modes dégradés) | **fait** (délais Supabase mesurés le 5 nov ; capture du dashboard fournie par Alex) |
-| 6 | Démo de l'application (lien / QR / démo) | `docs/parcours-demo.md`, scripts `scripts/seed-demo*.ts`, `docs/plan-recette.md` | `06-demo.md` (adresse, comptes fictifs, scénario) | **fait** (adresse `logmerry.vercel.app`, QR généré ; **toi** : répéter le scénario sur la production, décider du contenu fusionné ; QR scanné par Alex le 5 nov) |
-| 7 | Rapport d'évaluation (pertinence, hallucinations, latence, coût) | `tests/rag-run.ts`, `tests/rag-cases.json`, 20 questions et tableau des résultats dans `docs/rag-tests.md`. **Latence et coût ne sont pas mesurés aujourd'hui.** | `07-rapport-evaluation.md` (fait) | les deux : mesurer (appels payants à Mistral et Anthropic, environ 1 min 30 par exécution), **toi** : accord pour lancer |
-| 8 | Registre des données et index RAG + gouvernance | Tables `notes`, `note_chunks`, modèle `mistral-embed` (1024 dimensions), `tests/purge.test.ts`, règles du `CLAUDE.md` | `08-registre-rag.md` | **fait** (conditions de conservation chez Anthropic et Mistral : À confirmer) |
-| 9 | Dossier de garde-fous et conformité (modération, données personnelles, journalisation) | Vérification des citations, note piégée du jeu de tests, quotas (`consume_ai_quota`), refus de conseil fiscal ou juridique, seules les notes liées au client envoyées, `ai_calls` (comptage seulement) | `09-garde-fous.md` (les manques sont écrits comme tels) | **fait** ; **toi** : valider, et décider pour les brouillons indexés (voir le chapitre) |
-| 10 | Dossier de déploiement : pipelines dev → prod, compte rendu de mise en production, rollback | `.github/workflows/ci.yml`, `isolation.yml`, `vercel.json` (région `cdg1`), PR et prévisualisations par branche | `10-deploiement.md` | **fait** (production relevée le 5 nov, portfolio public, « Qui suis-je » et formulaire de contact en ligne depuis la fusion des n° 96, 97, 99 et 102 ; retour arrière jamais exercé ; test de nuit : secrets créés le 5 nov, 158 contrôles sur 158 passent) |
-| 11 | Sécurité d'accès : SSO/MFA, matrice des droits, secrets | RLS partout (`rls_audit`), droits d'`anon` figés par un test, aucun `service_role` (test), `.env.local` ignoré. **MFA : non vérifié.** | `11-securite-acces.md` | **fait** (MFA : aucun, vérifié dans le code et la base ; inscription désactivée, déclaré par Alex ; 4 fonctions d'aide ouvertes à `anon` révoquées par migration) |
-| 12 | Continuité : sauvegardes (RPO/RTO), test de restauration, plan de continuité, mode dégradé | Pas de document. Sauvegardes Supabase : **offre et durée de rétention à confirmer** ; modes dégradés dans le code à relever | `12-continuite.md` (rédigé sur l'offre gratuite ; test de restauration à faire) | **toi** : offre Supabase ; moi : le reste |
-| 13 | Exploitation et conformité : tableau de bord, kit support N1/N2 (FAQ, délais), registre RGPD synthétique | Logs Supabase et Vercel ; point ouvert du `CLAUDE.md` sur l'envoi d'extraits à Anthropic et Mistral | `13-exploitation-conformite.md` | **fait** (projet) ; **toi** : registre validé par Alex le 9 nov (bases légales, durées) ; restent les « À confirmer » (chapitre 13, section 5) |
+| 1 | Schéma de données (conceptuel/logique), dictionnaire et règles d'intégrité | `01-schema-de-donnees.md` | **complet** | Relu dans la base le 4 novembre ; dictionnaire limité aux colonnes principales |
+| 2 | Diagrammes de workflows (états, événements, règles, exceptions, SLA) | `02-workflows.md` | **partiel** | États des workflows métier documentés (devis, sprint, mission, facture calculée, réalisation) ; exceptions et SLA hors RAG non documentés |
+| 3 | Guide UX / design system (gabarits, composants, critères d'accessibilité) | `03-ux-design-system.md` | **partiel** | Une ligne sur les composants, aucune section « gabarits » ; maquettes périmées ; parcours clavier non essayé |
+| 4 | Spécifications d'intégration (contrats d'API, webhooks, mappings, authentification) | `04-integration-api-auth.md` | **partiel** | Mappings documentés pour 3 cas ; autres formulaires non relus ; webhooks : aucun |
+| 5 | Exigences QoS (budgets de performance, observabilité, résilience, modes dégradés) | `05-qos.md` | **partiel** | Budgets seulement proposés ; aucune alerte ; aucune mesure en production |
+| 6 | Application / feature IA-driven opérationnelle (lien, QR, démo) | `06-demo.md` | **partiel** | Scénario non rejoué en entier en production |
+| 7 | Rapport d'évaluation (jeu de tests et métriques : pertinence, hallucinations, latence, coût) | `07-rapport-evaluation.md` | **complet** | Coût estimé ; corpus de 11 notes (score optimiste) |
+| 8 | Registre des données et index RAG, politiques de gouvernance | `08-registre-rag.md` | **complet** | Purge non exécutée ; conditions des prestataires d'IA à confirmer |
+| 9 | Dossier de garde-fous et conformité (modération, PII, journalisation) | `09-garde-fous.md` | **partiel** | Ni modération ni détection de données personnelles ; journalisation sans contenu |
+| 10 | Dossier de déploiement et exécution (pipelines dev→prod, compte rendu de mise en production, stratégie de rollback) | `10-deploiement.md` | **complet** | Retour arrière jamais exercé ; affirmation sur les préversions non revérifiée |
+| 11 | Sécurité d'accès opérationnelle : SSO/MFA, matrice IAM (rôles/droits), gestion des secrets | `11-securite-acces.md` | **partiel** | Ni SSO ni MFA (TOTP disponible, non utilisé) ; matrice réduite à trois situations ; pas de rotation des secrets documentée |
+| 12 | Continuité testée : sauvegardes (RPO/RTO), procès-verbal de test de restauration, PRA/PCA synthétique, mode dégradé, haute disponibilité | `12-continuite.md` | **partiel** | Aucune sauvegarde, aucune restauration testée, RTO non mesuré, pas de procès-verbal (plan préparé : `docs/plan-test-restauration.md`) |
+| 13 | Exploitation et conformité actives : tableau de bord (logs, métriques, alertes), kit support N1/N2 (FAQ, SLA), registre RGPD/sécurité synthétique | `13-exploitation-conformite.md` | **partiel** | Aucune alerte d'indisponibilité automatisée ; pas de tableau de bord unique ; aucun SLA engagé |
 
-## Ordre proposé (deux jours)
+## Questions ouvertes
 
-1. D'abord ce qui se déduit du dépôt, sans rien attendre de toi : 1, 4, 8, 9, 11, 2.
-2. Puis ce qui demande un assemblage ou une mesure : 3, 7, 5, 10.
-3. En dernier ce qui dépend de tes réponses : 6, 12, 13.
+Les questions de l'ancienne liste (rédigée avant le 6 novembre) sont réglées, sauf deux ; une troisième s'y ajoute (annotations de Richard). Réglées : offre Supabase (plan Free, déclaré par l'auteur : `13-exploitation-conformite.md:92`), MFA (aucun : `11-securite-acces.md:14`), état de la production Vercel (commit `89bd458` au 9 novembre : `10-deploiement.md:26`), mesures payantes du livrable 7 (exécutées le 4 novembre : `07-rapport-evaluation.md:44`, `docs/rag-tests.md:120-121`). L'ordre de rédaction « en deux jours » est périmé : les 13 chapitres existent.
 
-## Questions à trancher avec Alex
-
-- Format attendu par le tuteur : Markdown suffit, ou Word ou PDF ? Un seul document ou un par livrable ?
-- Ce que désigne « MCP » dans le livrable 2.
-- Offre Supabase, MFA, état de la production Vercel.
-- Accord pour lancer les mesures payantes du livrable 7.
+- **Format de remise.** Un PDF unique produit ; confirmation écrite de Richard non disponible.
+- **Ce que désigne « MCP » dans le livrable 2.** Le chapitre 2 dit qu'aucun MCP n'est intégré à l'application et que le MCP Supabase ne sert qu'au développement (`02-workflows.md:145-147`) ; la validation de cette formulation par l'auteur n'est pas consignée.
+- **Annotations de Richard sur la liste.** Aucune annotation séparée n'a été fournie : les statuts ci-dessus n'en tiennent pas compte.
