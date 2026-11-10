@@ -4,13 +4,13 @@
 
 ## Ce que l'offre gratuite garantit, et ne garantit pas
 
-Faits relevés sur les pages officielles de Supabase le 4 novembre 2026 (pages non datées : à revérifier sur le site avant de les citer).
+Faits relevés sur les pages officielles de Supabase le 4 novembre 2026 (pages non datées : à revérifier sur le site avant de les citer). Relus le 10 novembre 2026 : <https://supabase.com/pricing>, <https://supabase.com/docs/guides/platform/free-project-pausing> et <https://supabase.com/docs/guides/platform/backups>. Cette dernière précise que les sauvegardes de la base **n'incluent pas les fichiers du stockage** (« Database backups do not include objects you store via the Storage API »).
 
 | Sujet | Offre gratuite (celle de LogMerry) | Offre Pro |
 |---|---|---|
 | Sauvegardes automatiques | **Non incluses.** Supabase recommande d'exporter régulièrement les données avec `db dump` et de garder des copies hors du service | Quotidiennes, conservées 7 jours |
 | Restauration à la minute près (PITR) | Non incluse | Module payant |
-| Pause du projet | **Si l'activité sur la base est trop faible pendant 1 semaine** (la définition exacte de l'« activité » n'est pas publiée par Supabase : **À confirmer**) | Jamais |
+| Pause du projet | **Si l'activité sur la base est trop faible pendant 1 semaine** (la page de Supabase parle d'une activité « sufficient » sur la semaine écoulée et dit que « typically a few user requests to the database each day » suffisent ; le seuil exact n'est pas publié ; un projet en pause se restaure jusqu'à 1 an après la pause) | Jamais |
 | Protection contre les mots de passe divulgués | Non incluse | Incluse |
 | Disponibilité contractuelle (SLA) | Non incluse | Non incluse (réservée à l'offre Enterprise) |
 
@@ -23,7 +23,7 @@ RPO : quelle quantité de données peut être perdue. RTO : combien de temps pou
 | Élément | Où il est conservé | RPO | RTO |
 |---|---|---|---|
 | Code de l'application | Dépôt GitHub (une branche par fonctionnalité) | Dernier envoi sur GitHub | À mesurer |
-| Schéma de la base | 55 migrations versionnées dans `supabase/migrations/` | Aucune perte : rejouables depuis le dépôt | À mesurer |
+| Schéma de la base | 56 migrations versionnées dans `supabase/migrations/` | Aucune perte : rejouables depuis le dépôt | À mesurer |
 | Données de la base (notes, clients, factures…) | Supabase seulement | **Âge du dernier export manuel. Aucun export automatique ni planifié n'existe** (aucune tâche de ce type dans `vercel.json` ni dans `.github/workflows/`) | À mesurer |
 | Images du portfolio (Supabase Storage) | Supabase Storage ; sources dans `assets-source/` (non commitées) | Non couvertes par un export de la base | À mesurer |
 | Variables d'environnement et clés | Vercel et `.env.local` (ignoré par Git) | **À confirmer** : copie hors de ces deux endroits, par exemple dans un gestionnaire de mots de passe | À mesurer |
@@ -35,7 +35,7 @@ RPO : quelle quantité de données peut être perdue. RTO : combien de temps pou
 Procédure de reprise, **non testée** à ce jour :
 
 1. Créer un nouveau projet Supabase, région Paris (`eu-west-3`, comme l'actuel).
-2. Appliquer les 55 migrations du dossier `supabase/migrations/` (par l'outil en ligne de commande de Supabase).
+2. Appliquer les 56 migrations du dossier `supabase/migrations/` (par l'outil en ligne de commande de Supabase).
 3. Importer le dernier export des données.
 4. Mettre à jour dans Vercel l'adresse du projet et la clé publique Supabase, ainsi que les clés des services d'IA.
 5. Redéployer l'application.
@@ -71,7 +71,7 @@ L'IA sert à l'assistant, à l'indexation des notes et aux propositions (stories
 
 | Scénario | Effet | Réponse |
 |---|---|---|
-| Le projet Supabase est mis en pause (1 semaine sans activité) | L'application ne répond plus | Réactiver depuis le tableau de bord Supabase (« Resume project ») ; avant la soutenance, vérifier la veille que le projet est actif. **Prévention :** le test d'isolation de nuit (`isolation.yml`, 3 h 17 UTC) crée puis supprime des notes dans la vraie base chaque jour, donc la base reçoit des écritures quotidiennes. Qu'elles suffisent à éviter la pause reste **À confirmer** : aucun ping dédié n'a été ajouté (sources : `supabase.com/kb/faqs/platform/free-project-pausing`, discussion `github.com/orgs/supabase/discussions/51126`) |
+| Le projet Supabase est mis en pause (1 semaine sans activité) | L'application ne répond plus | Réactiver depuis le tableau de bord Supabase (« Resume project ») ; avant la soutenance, vérifier la veille que le projet est actif. **Prévention :** le test d'isolation de nuit (`isolation.yml`, 3 h 17 UTC) crée puis supprime des notes dans la vraie base chaque jour, donc la base reçoit des écritures quotidiennes. D'après la page de Supabase, quelques requêtes utilisateur par jour suffisent en général ; que ces écritures de nuit comptent comme telles reste **À confirmer**, et aucun ping dédié n'a été ajouté (sources : `supabase.com/docs/guides/platform/free-project-pausing`, `supabase.com/kb/faqs/platform/free-project-pausing`, discussion `github.com/orgs/supabase/discussions/51126`) |
 | Suppression ou corruption de données | Perte jusqu'au dernier export | Réimporter l'export ; sans export, la perte est définitive |
 | Panne de Supabase | Application indisponible | Attendre ; aucun engagement de délai sur l'offre gratuite |
 | Mauvais déploiement | Fonctionnalité cassée | Rétablir le déploiement précédent sur Vercel |
