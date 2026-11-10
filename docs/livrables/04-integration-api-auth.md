@@ -138,5 +138,5 @@ Aucune nouvelle tentative automatique n'existe nulle part : c'est un choix de si
 | Limite | Conséquence | Piste |
 |---|---|---|
 | Aucune nouvelle tentative sur les appels sortants | Une panne brève de Claude ou de Mistral se voit tout de suite par l'utilisateur | Une reprise unique avec attente, si l'usage le justifie |
-| Délai des appels à Supabase non mesuré | **À confirmer** | Mesurer lors du chapitre 5 (qualité de service) |
+| Délai d'une Server Action complète vers Supabase non mesuré | **À confirmer** | Un appel simple à l'interface publique de Supabase a été mesuré le 5 novembre 2026 (médianes de 104 ms et 113 ms sur 30 requêtes : `05-qos.md:16-23`) ; le délai d'une Server Action complète n'a pas été mesuré (encadré « À confirmer » du chapitre 5) |
 | Plafond du formulaire de contact calculé sur la table `contact_submissions` (empreintes d'adresses et de messages, supprimées après 30 jours), indépendante des notes | Supprimer une note ne libère pas de place dans le plafond ; un robot qui change d'adresse reste limité à 30 messages par jour | Un captcha, si le volume l'exige |
