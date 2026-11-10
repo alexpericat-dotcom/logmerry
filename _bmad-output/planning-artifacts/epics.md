@@ -630,6 +630,8 @@ En tant que propriétaire, je veux publier une réalisation seulement si le clie
 **Et** avec l'accord coché, elle passe en « publiée » ; le chiffre de résultat n'est publiable qu'avec l'accord.
 **Et** sans accord, le nom du client est remplacé par « Client, secteur X ».
 
+**Écart livré (10 novembre 2026).** Le dernier critère n'est pas livré tel quel : une fiche sans accord n'est jamais publique (contrainte `realisations_publish_needs_consent`, `supabase/migrations/20261030130000_realisations.sql:22` ; vue filtrée par `where r.published and r.client_consent and r.status is not null`, `supabase/migrations/20261106100000_realisation_design_choice.sql:34`). Le nom affiché (`client_label`, même fichier `:19-22`) est celui du client s'il est saisi ; sinon, pour un client réel, « Client, secteur X » ou « Client confidentiel » ; pour un exercice de formation ou un projet personnel, « Secteur : X » ou « Sans client ». Le chiffre de résultat (`:23`) n'apparaît que pour une fiche publiée avec accord (`:34`).
+
 ### Story 6.3 : Voir le portfolio public
 
 En tant que visiteur, je veux ouvrir une page publique sans me connecter, afin de découvrir les réalisations.
@@ -640,6 +642,8 @@ En tant que visiteur, je veux ouvrir une page publique sans me connecter, afin d
 **Et** la page lit uniquement la vue `public_realisations` ; aucune donnée privée n'apparaît.
 **Et** chaque capture publiée a un texte alternatif (obligatoire à la publication) ; le contact se fait par un lien « m'écrire » (`mailto:`).
 **Et** sans réalisation publiée, un message sobre s'affiche ; la page est lisible sur téléphone.
+
+**Écart livré (10 novembre 2026).** (1) Texte alternatif : obligatoire dès l'envoi de la capture, pas seulement à la publication (contrôle avant l'envoi : `components/realisation-images.tsx:41`, `lib/domain/realisation-images.ts:33-36` ; contrainte en base : `supabase/migrations/20261030170000_realisation_images.sql:21`). (2) Contact : un formulaire (nom, e-mail, message) dépose un brouillon dans les notes du propriétaire (`supabase/migrations/20261107100000_contact_form.sql:17` et `:46-55`) ; il n'y a pas de lien `mailto:` sur la page publique (test `lib/portfolio-about.test.ts:36`). Décision du 4 novembre 2026 : `docs/journal.md:792` ; le lien `mailto:` n'ouvrait rien sans logiciel de messagerie : `docs/journal.md:861-867`.
 
 ---
 
