@@ -954,3 +954,10 @@
 
 ## 2026-11-10 — Précision sur la source DGCCRF (ajout : l'entrée du 9 novembre n'est pas réécrite)
 - La fiche DGCCRF « Délais de prescription » (L110-4 : 5 ans), notée le 9 novembre comme « page ouverte et lue », n'a pas pu être rouverte depuis l'assistant le 10 novembre : le serveur répond 403 aux requêtes automatiques (les deux adresses essayées, dont `https://www.economie.gouv.fr/dgccrf/les-fiches-pratiques-et-les-faq/delais-de-prescription`). Son contenu a été vu dans un résultat de recherche. Le chapitre 13 dit donc « adresse relevée dans un résultat de recherche » ; le statut reste « Source officielle secondaire ; texte de l'article non relu sur Légifrance ».
+
+## 2026-11-10 — Livrables de Richard, écarts, plan de restauration, surveillance
+- Livrables : liste des 13 déclarée par l'auteur (donnée par Richard le 30 octobre ; non vérifiée par l'assistant). Chapitres 1 à 13 relus le 10 novembre (cellules longues tronquées à l'affichage ; diagrammes du chapitre 1 parcourus, non lus ligne à ligne). Complets : 1, 7, 8, 10. Partiels : 2, 3, 4, 5, 6, 9, 11, 12, 13. Descentes de statut : 3 (maquettes périmées, parcours clavier non essayé), 4 (mappings non traités), 6 (scénario non rejoué en entier en production). 11, 12, 13 : MFA TOTP disponible mais non utilisé, aucun test de restauration, aucune alerte d'indisponibilité automatisée.
+- epics.md : écarts livrés constatés pour 6.2 et 6.3 (ea98d06). Incohérences corrigées : nombre de migrations (56), chapitre 10 lignes 112-113 et 116.
+- Pages Supabase lues le 10 novembre : MFA TOTP gratuit et activé par défaut ; pause des projets Free après faible activité sur une semaine ; pas de sauvegarde automatique en offre Free.
+- docs/plan-test-restauration.md préparé, non exécuté.
+- Non vérifié : annotations éventuelles de Richard ; contenu des cellules longues au-delà de la troncature ; destinataire de l'e-mail d'avertissement de Supabase ; effet d'un moniteur sur la pause ; affirmation sur les préversions (10-deploiement.md:62,67) : constat du 5 novembre 2026 (journal.md:820), non revérifié à ce jour. Rien n'est poussé.
