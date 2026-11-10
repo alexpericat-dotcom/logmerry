@@ -73,7 +73,7 @@ Le contrat tient en 13 règles (`docs/ui-rules.md`), dont :
 | Signature | Le cobalt (`#1D3BFF` en clair) marque ce qui est actif, jamais un statut ni une série de graphique |
 | Statuts | Succès `#097145`, attention `#954F00`, erreur `#B3261E` (valeurs du thème clair, `DESIGN.md`) |
 | Graphiques | Cinq jetons de série seulement, avec légende ou étiquette directe |
-| Polices | Hanken Grotesk (texte), IBM Plex Mono (chiffres), Pixelify Sans (titres de bandeau, thème clair), Bricolage Grotesque (logotype) |
+| Polices | Cinq polices, chargées dans `app/layout.tsx` : Hanken Grotesk (interface, titres, corps : `:18-19`), IBM Plex Mono (chiffres : `:18`, `:26`), Pixelify Sans (titres et étiquettes seulement, jamais le texte courant : `:22-23`), Bricolage Grotesque 700 (le nom « LogMerry », logotype : `:20-21`), Instrument Serif (titres de la page publique `/portfolio` seulement : `:24-25`) |
 | Composants | shadcn/ui (style new-york, icônes lucide), recolorés par les jetons ; on ne redessine pas sans raison de marque |
 
 > **Mise à jour du 5 novembre 2026.** `docs/ux-resume.md` décrivait encore l'ancienne palette (Chalk, Dawn, Forest, Kyuri) de la session du 11 octobre ; il a été corrigé d'après `DESIGN.md`. En cas de doute, `DESIGN.md` et `ui-rules.md` font foi.
