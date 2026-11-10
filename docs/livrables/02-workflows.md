@@ -195,6 +195,7 @@ stateDiagram-v2
 - **Aucune machine d'états de facture stockée** : le statut est calculé (voir ci-dessus).
 - **Aucune transition imposée pour une mission** : statut libre (voir ci-dessus).
 - **Aucune transition imposée pour une story** : son statut (« todo », « in_progress », « done » : `lib/domain/user-stories.ts:6`) change librement par le menu de statut (`app/(app)/missions/story-actions.ts:167-176`) ou le formulaire (`:153-163`). Seule protection : le contenu d'un sprint clos est figé (`20261017150000_user_stories_closed_sprint_guard.sql:5-23`).
+- **Aucun garde-fou contre la suppression d'un sprint, y compris en cours** : ni côté serveur (`app/(app)/missions/sprint-actions.ts:163-187` ne contrôle aucun statut), ni côté interface (le bouton « Supprimer » est affiché quel que soit le statut : `components/sprint-block.tsx:146-148` ; seule une confirmation « Supprimer ce sprint ? C'est définitif. » est demandée : `:195-208`), ni en base (la politique `sprints_delete` ne contrôle que le propriétaire : `supabase/migrations/20261017120000_sprints.sql:42-43` ; aucun déclencheur de suppression sur `sprints`). Les stories d'un sprint supprimé retournent au backlog (`sprints.sql:45-46`).
 - **Aucune réouverture d'un sprint clos** : aucune écriture ne remet un sprint à « planned » ou « active » (voir « Sprint »).
 - Un devis accepté ou refusé ne peut plus changer (`quotes.sql:54-56`).
 
