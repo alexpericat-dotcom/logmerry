@@ -264,4 +264,4 @@ Les colonnes communes ne sont pas répétées : `id` (identifiant unique génér
 
 ## Évolution du schéma
 
-Le schéma évolue par migrations versionnées, dans le dossier `supabase/migrations/` (55 fichiers, du 13 octobre au 7 novembre 2026). Après chaque migration, les types TypeScript sont régénérés, si bien qu'un schéma qui diverge du code est détecté à la compilation.
+Le schéma évolue par migrations versionnées, dans le dossier `supabase/migrations/` (56 fichiers, du 13 octobre au 7 novembre 2026). Après chaque migration, les types TypeScript sont régénérés, si bien qu'un schéma qui diverge du code est détecté à la compilation.
