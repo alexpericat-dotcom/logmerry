@@ -1,6 +1,6 @@
 # Workflows : saisie des documents et gestion de l'IA (RAG)
 
-> **En deux phrases.** Une note suit un chemin court : elle est **enregistrée d'abord**, puis vectorisée ; l'IA ne peut jamais empêcher l'enregistrement. Une question suit un chemin plus long, où chaque étape peut échouer sans casser le reste (refus propre, pas de réponse fausse). Aucun **MCP** n'est intégré à l'application : le MCP Supabase ne sert qu'au développement.
+> **En deux phrases.** Une note suit un chemin court : elle est **enregistrée d'abord**, puis vectorisée ; l'IA ne peut jamais empêcher l'enregistrement. Une question suit un chemin plus long, où chaque étape peut échouer sans casser le reste (message d'erreur explicite). Aucun **MCP** n'est intégré à l'application : le MCP Supabase ne sert qu'au développement.
 
 Faits relevés dans le code et les tests le 5 novembre 2026. Les délais annoncés sont des **délais d'attente du code** ou des **mesures** ; il n'existe aucun engagement de service (SLA) contractuel.
 
