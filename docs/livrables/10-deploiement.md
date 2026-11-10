@@ -59,12 +59,12 @@ Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, 
 | Adresse publique de production | **`https://logmerry.vercel.app`** (alias Vercel gratuit) ; autres alias : `logmerry-new-team-adce.vercel.app`, `logmerry-git-main-new-team-adce.vercel.app` |
 | Nom de domaine propre | **Aucun relevé** : **À confirmer** |
 | Accès aux préversions et aux adresses de déploiement | **Protégés** par la connexion Vercel (réponse 302 vers l'identification) ; seul l'alias de production est ouvert au public. Un visiteur arrive sur la page de connexion de l'application |
-| Variables d'environnement (noms seulement) | `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY` (production seulement), `AI_CHAT_MODEL`, `NEXT_PUBLIC_SUPABASE_URL` (production et préversion), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (**production seulement**) |
+| Variables d'environnement (noms seulement) | `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY` (production seulement), `AI_CHAT_MODEL`, `NEXT_PUBLIC_SUPABASE_URL` (production et préversion), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (**production seulement**) (constat du 5 novembre 2026, `docs/journal.md:820`, non revérifié à ce jour) |
 | Base de données | **Un seul projet Supabase** (« LogMerry », Paris, `eu-west-3`) : il n'existe **pas de base de recette distincte** |
 
 Deux écarts à connaître :
 
-1. **Les préversions ne sont pas équipées comme la production.** Les clés Anthropic et Mistral et la clé publique Supabase ne sont définies que pour la production : une préversion ne peut pas faire tout ce que fait la production (assistant, connexion) ; l'effet exact n'a pas été essayé (**À confirmer**).
+1. **Les préversions ne sont pas équipées comme la production.** Les clés Anthropic et Mistral et la clé publique Supabase ne sont définies que pour la production : une préversion ne peut pas faire tout ce que fait la production (assistant, connexion) ; l'effet exact n'a pas été essayé (**À confirmer**). Constat du 5 novembre 2026 (`docs/journal.md:820`), **non revérifié à ce jour**. Observé le 10 novembre 2026 (par l'assistant de code, dans le navigateur piloté, après une connexion Vercel saisie par l'utilisateur) : l'aperçu de `feat/portfolio-image-zoom` affichait des réalisations ; l'origine des données et la configuration des variables n'ont pas été relues.
 2. **Il n'y a pas d'environnement de recette.** Les préversions et la production, quand elles parlent à Supabase, parlent au même projet. Le code de développement et les tests visent la même base que la démonstration.
 
 ## Compte rendu de mise en production (état au 5 novembre 2026)
@@ -109,8 +109,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 
 | Limite | Piste |
 |---|---|
-| Fusion possible malgré une CI rouge | Aucun écart base / code restant ; la protection de `main` reste impossible sur l'offre GitHub actuelle |
-| Fusion possible malgré une CI rouge | Discipline ; ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
+| Fusion possible malgré une CI rouge | Protection de `main` impossible sur l'offre GitHub actuelle ; discipline, ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |
-| Écart entre la base et le code publié | Décider du contenu de la mise en production avant le 16 novembre |
+| Écart entre la base et le code publié | Aucun écart de schéma connu (voir « Migrations déjà appliquées ») ; les quatre branches en attente ne contiennent aucune migration (`git diff --name-only` : 0 fichier `supabase/`). Reste à décider du contenu de la mise en production (branches à fusionner) avant le 16 novembre |
