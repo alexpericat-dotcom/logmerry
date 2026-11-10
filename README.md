@@ -84,7 +84,7 @@ Le détail et le plan d'action sont au chapitre 13 du PDF.
 
 | Fichier | Contenu |
 | --- | --- |
-| [`docs/livrables/livrables-soutenance.pdf`](docs/livrables/livrables-soutenance.pdf) | Les 13 livrables et l'annexe des purges, en un seul PDF (sources : [`docs/livrables/`](docs/livrables/)) |
+| [`docs/livrables/livrables-soutenance.pdf`](docs/livrables/livrables-soutenance.pdf) | Les 14 chapitres : 13 livrables et l'annexe des purges, en un seul PDF (sources : [`docs/livrables/`](docs/livrables/)) |
 | [`docs/journal.md`](docs/journal.md) | Journal de vibe coding : prompts, décisions, bugs, corrections |
 | [`docs/brief.md`](docs/brief.md) | Brief produit de départ |
 | [`CLAUDE.md`](CLAUDE.md) | Règles de travail avec l'assistant de code |
