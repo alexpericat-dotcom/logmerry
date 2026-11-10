@@ -20,7 +20,7 @@ Lancer seul une activité de conseil demande de la rigueur : suivre prospects, c
 - Connexion sécurisée, données cloisonnées par compte (sécurité par ligne sur les 22 tables).
 - Cockpit « Aujourd'hui » : tâches du jour avec leur motif, échéances, jauges de plafond (estimations étiquetées).
 - Notes (note, procédure, modèle, FAQ), recherche par mots-clés et par sens, résumé d'une note.
-- Assistant : réponse sourcée à partir de mes notes, refus clair quand rien n'est trouvé, historique conservé.
+- Assistant : réponse sourcée à partir de mes notes ; message fixe si aucun extrait n'est retrouvé, sinon réponse prudente avec le bandeau « Aucune de tes notes ne soutient cette réponse » ; historique conservé.
 - Mini CRM (prospects, clients, contacts), devis, factures et encaissements (suivi interne, pas de facturation légale).
 - Missions en mode agile (backlog, user stories, tâches, sprints) avec propositions de l'IA, éphémères tant que je ne les garde pas.
 - Portfolio public en lecture seule (réalisations publiées avec accord du client) et formulaire de contact.
