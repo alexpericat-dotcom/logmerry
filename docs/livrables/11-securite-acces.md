@@ -92,6 +92,6 @@ La politique de contenu (CSP) est en **mode rapport seulement** : elle ne bloque
 
 | Limite | Conséquence | Pistes |
 |---|---|---|
-| Pas de MFA | Un mot de passe volé suffit pour entrer | Activer le MFA par application d'authentification (disponible dans Supabase Auth ; **À confirmer** sur l'offre gratuite) |
+| Pas de MFA | Un mot de passe volé suffit pour entrer | **Limite assumée.** Le MFA TOTP (application d'authentification) est disponible gratuitement sur Supabase Auth et activé par défaut sur les projets, mais LogMerry ne l'utilise pas (aucun facteur enregistré, voir plus haut). Le MFA par téléphone, le SSO SAML et la protection contre les mots de passe fuités ne sont pas inclus en offre Free. Sources : <https://supabase.com/docs/guides/auth/auth-mfa/totp> et <https://supabase.com/pricing> (consultées le 10 novembre 2026 ; pages non datées) |
 | Mots de passe divulgués non vérifiés | Un mot de passe connu des pirates serait accepté s'il a 12 caractères | Offre Pro, ou politique de mot de passe imposée à la main |
 | CSP non bloquante | Une injection de script ne serait pas stoppée par le navigateur | Passer en mode bloquant avec des jetons (nonces) |
