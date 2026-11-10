@@ -7,7 +7,7 @@
 | Élément | Valeur |
 |---|---|
 | Adresse | `https://logmerry.vercel.app` (arrive sur la page de connexion) |
-| Compte de démonstration | `demo-a@example.com`, compte **fictif**. Le mot de passe n'est écrit nulle part dans ce document : il est dans le gestionnaire de mots de passe d'Alex (ou le fichier local `.env.test.local`, ignoré par Git) |
+| Compte de démonstration | `demo-a@example.com`, compte **fictif**. Le mot de passe n'est écrit nulle part dans ce document : il est dans le gestionnaire de mots de passe de l'auteur du projet (ou le fichier local `.env.test.local`, ignoré par Git) |
 | Inscription | Désactivée : on ne peut pas créer de compte depuis l'adresse publique |
 | Données | Fictives, étiquetées « démo » ; la base ne contient aucune vraie donnée client |
 | Portfolio public | `https://logmerry.vercel.app/portfolio`, **sans connexion** (vérifié le 5 novembre : réponse 200) |
@@ -15,7 +15,7 @@
 
 ![QR code vers https://logmerry.vercel.app](captures/qr-production.png)
 
-*QR généré en local depuis l'adresse ci-dessus (bibliothèque `qrcode`, installée hors du dépôt). **Scanné par Alex avec un téléphone le 5 novembre 2026** : il ouvre la page de connexion.*
+*QR généré en local depuis l'adresse ci-dessus (bibliothèque `qrcode`, installée hors du dépôt). **Scanné par l'auteur du projet avec un téléphone le 5 novembre 2026** : il ouvre la page de connexion.*
 
 ## Ce que la production contient (et ne contient pas)
 
@@ -36,7 +36,7 @@ Production = branche `main` au 5 novembre 2026, commit `59c9d8c` (fusion de la p
 |---|---|---|---|
 | 1 | Le projet Supabase n'est pas en pause (offre gratuite : pause après une semaine sans activité) | Tableau de bord Supabase, ou ouvrir la page de connexion et se connecter | Actif (« ACTIVE_HEALTHY ») |
 | 2 | La production répond | Ouvrir l'adresse ; scanner le QR | Répond (connexion en 200) |
-| 3 | La connexion avec le compte fictif fonctionne | Se connecter | **Essayé le 9 novembre 2026** : connexion saisie par Alex, cockpit affiché |
+| 3 | La connexion avec le compte fictif fonctionne | Se connecter | **Essayé le 9 novembre 2026** : cockpit affiché |
 | 4 | L'assistant répond (clés Anthropic et Mistral valides, crédit disponible) | Poser une question de la note de démonstration | **Essayé le 9 novembre 2026** (voir « Rejeu du 9 novembre 2026 ») : réponse sourcée en 3,5 s |
 | 5 | Pas de restes d'un précédent essai | Supprimer ou renommer les fiches « Parcours démo » (le scénario crée « Atelier Mistral (démo) ») | À vérifier à l'écran |
 | 6 | Le thème (sombre par défaut) et le zoom conviennent à la salle | — | — |
@@ -60,7 +60,7 @@ Reprise du fichier `docs/parcours-demo.md`, déroulé le 29 octobre 2026 sur le 
 | 11 | Facture | Mission, « Nouvelle facture » | 2 400 € HT, échéance dans un mois, devis lié | « Non payée » ; le rappel disparaît |
 | 12 | Règlement | Factures, détail, « Ajouter un encaissement » | 2 400 € HT | « Payée », « soldée » |
 | 13 | Prompt | Mission, bouton de prompt | « La mission seule » ou le contexte complet ; un objectif | Prompt relisible, sans montant ni donnée financière |
-| 14 | Isolation | Test de sécurité | `npm run test:isolation` (sur le poste d'Alex) | Le compte B ne voit rien du compte A |
+| 14 | Isolation | Test de sécurité | `npm run test:isolation` (sur le poste de l'auteur du projet) | Le compte B ne voit rien du compte A |
 
 **Durée** : une vingtaine de minutes, dont environ trois d'attente de l'IA (étapes 4, 7 et 8).
 
@@ -70,7 +70,7 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 
 ## Rejeu du 9 novembre 2026 (production)
 
-**Le rejeu a été fait par Claude Code (l'assistant de code), pas par Alex** ; Alex a seulement saisi lui-même l'e-mail et le mot de passe de la connexion (aucun identifiant n'a été lu ni enregistré par l'assistant). Étapes rejouées en lecture et en questions : cockpit, notes, recherche par mots-clés et par sens, assistant (3 questions), propositions de user stories (non gardées). **Origine des chiffres : mesure sur la production, une seule exécution, précision d'environ 0,5 s** (détail et limites au chapitre 7).
+**Le rejeu a été fait par Claude Code (l'assistant de code), pas par l'auteur du projet** ; connexion saisie par l'utilisateur, mot de passe jamais lu ni enregistré par l'assistant de code. Étapes rejouées en lecture et en questions : cockpit, notes, recherche par mots-clés et par sens, assistant (3 questions), propositions de user stories (non gardées). **Origine des chiffres : mesure sur la production, une seule exécution, précision d'environ 0,5 s** (détail et limites au chapitre 7).
 
 | Étape | Constat | Temps |
 |---|---|---|
@@ -79,9 +79,11 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 | Question sur la TVA | Aucun taux, renvoi vers un expert-comptable | 2,5 s |
 | Propositions de user stories | 7 propositions à relire | **19,6 s** |
 
-**Pendant les 20 secondes de génération des stories** (Alex parle, 3 ou 4 phrases) : « Je viens de donner à l'IA le brief de la mission et la note du rendez-vous ; rien n'est enregistré tant que je ne garde pas une proposition. Claude doit appeler un outil qui impose la forme d'une story, avec ses critères et ses tâches. Chaque proposition est vérifiée : une proposition qui cite une source inconnue ou un chiffre absent des notes est écartée. » **Repli si la génération dépasse 40 secondes** : continuer à parler, puis montrer la capture du plan B (`docs/soutenance/plan-b/12-propositions-user-stories.png`) et passer à l'étape suivante.
+**Pendant les 20 secondes de génération des stories** (l'auteur parle, 3 ou 4 phrases) : « Je viens de donner à l'IA le brief de la mission et la note du rendez-vous ; rien n'est enregistré tant que je ne garde pas une proposition. Claude doit appeler un outil qui impose la forme d'une story, avec ses critères et ses tâches. Chaque proposition est vérifiée : une proposition qui cite une source inconnue ou un chiffre absent des notes est écartée. » **Si le badge « Brouillon » de la note « Procédure : relancer une facture échue (démo) » est visible** (phrase à dire) : « Ce badge « Brouillon » est resté sur une note pourtant complète : l'application ne fait pas passer toute seule une note de brouillon à active. C'est une limite connue, documentée au chapitre 2 : un brouillon complété reste indexé et citable par l'assistant, mais il est exclu des propositions de stories. »
 
-**Nettoyage du compte de démonstration (par Alex, données fictives)** : supprimer la mission « blabla mission » depuis l'application (**à faire, À confirmer**) ; vider l'historique de l'assistant (« Vider la conversation ») **lundi 16 novembre au matin, avant la démonstration** ; le brouillon « Procédure : onboarding d'un nouveau client (démo) » reste « En attente d'indexation » (laissé en place).
+**Repli si la génération dépasse 40 secondes** : continuer à parler, puis montrer la capture du plan B (`docs/soutenance/plan-b/12-propositions-user-stories.png`) et passer à l'étape suivante.
+
+**Nettoyage du compte de démonstration (par l'auteur du projet, données fictives)** : supprimer la mission « blabla mission » depuis l'application (**à faire, À confirmer**) ; vider l'historique de l'assistant (« Vider la conversation ») **lundi 16 novembre au matin, avant la démonstration** ; le brouillon « Procédure : onboarding d'un nouveau client (démo) » reste « En attente d'indexation » (laissé en place).
 
 ## Ce qui peut mal tourner, et la réponse
 
@@ -105,5 +107,5 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 | Limite | Conséquence |
 |---|---|
 | Scénario déroulé le 29 octobre en développement, pas sur la production | Un écart entre les deux reste possible (**À confirmer** par une répétition) |
-| Rejeu partiel sur la production le 9 novembre 2026, **fait par Claude Code** (connexion saisie par Alex) | Les étapes de création (devis, facture, sprint) n'ont pas été rejouées : elles écrivent dans la base |
-| QR scanné par Alex le 5 novembre : le téléphone ouvre la page de connexion | Aucune, vérifié |
+| Rejeu partiel sur la production le 9 novembre 2026, **fait par Claude Code** | Les étapes de création (devis, facture, sprint) n'ont pas été rejouées : elles écrivent dans la base |
+| QR scanné par l'auteur du projet le 5 novembre : le téléphone ouvre la page de connexion | Aucune, vérifié |
