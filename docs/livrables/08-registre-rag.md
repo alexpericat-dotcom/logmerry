@@ -74,7 +74,7 @@ Règles appliquées dans le code :
 | Purge au passage à l'outil pro | Décision du projet : purge complète de la base (embeddings et historique inclus), seul le portfolio est conservé, puis saisie des vraies données. Démo et réel sont isolés par la RLS, sans colonne « fictif ». **Procédure non encore exécutée** |
 | Données de démonstration | Fictives ou anonymisées, étiquetées ; aucune vraie donnée client pendant le Workshop 8 |
 | Journaux | Jamais le contenu d'une question, d'une note ou d'une clé : seulement la nature d'un échec |
-| Durée de conservation de l'historique | **Aucune expiration automatique** ; décision à prendre avant l'usage réel (**À confirmer** avec Alex) |
+| Durée de conservation de l'historique | **Aucune expiration codée** ; durée décidée le 9 novembre 2026 : 12 mois glissants ; purge proposée en annexe (chapitre 14), non activée |
 | Sauvegarde de ces données | Aucune automatique sur l'offre gratuite (chapitre 12) |
 
 ## Limites et suite
