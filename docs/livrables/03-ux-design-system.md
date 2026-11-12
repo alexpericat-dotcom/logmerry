@@ -125,7 +125,7 @@ Réalisé sur une version de production locale, compte de démonstration, WCAG 2
 | Téléphone (sous 768 px) | Barre du haut fixe, barre latérale en tiroir, cibles de 44 px, marges de 16 px, colonne de date masquée dans les tableaux ; consultation et saisie légère (saisie lourde non optimisée au MVP) |
 | Tablette | Barre latérale en icônes ; **le point de rupture n'est pas fixé** (point ouvert de la conception) |
 
-Vérification annoncée dans `ui-rules.md` : émulation Pixel 6a (412 × 915) dans Chrome, clair et sombre, puis essai sur un vrai téléphone ; **l'essai sur le vrai téléphone n'est pas documenté** (À confirmer).
+Vérification annoncée dans `ui-rules.md` : émulation Pixel 6a (412 × 915) dans Chrome, clair et sombre, puis essai sur un vrai téléphone. **Constaté le 5 novembre 2026** (`06-demo.md:18` et `:111`) : l'ouverture de la page de connexion sur téléphone par QR. **Le parcours complet n'a jamais été testé sur un vrai téléphone** (déclaré par l'auteur, 12 novembre 2026 ; limite assumée) ; un essai de la preview sur son Pixel 6a est seulement consigné au journal du 14 octobre 2026 (`docs/journal.md:318` : rendu mobile « pas dingue »), sans détail. Résultats documentés de l'émulation Pixel 6a (story R8, journal du 15 octobre 2026, `docs/journal.md:396-403`) : barre du haut et tiroir avec libellés, cibles de 44 px (sauf le « i » de la recherche, zone tactile élargie, et les liens dans une phrase), aucun débordement horizontal sur Notes, Clients, fiche, formulaires, assistant, palette ⌘K et pages hors connexion (clair et sombre) ; limite notée : le menu « Lié à » affiche un nom de fiche long sur deux lignes dans l'émulation.
 
 ## Gabarits et structure des pages
 
