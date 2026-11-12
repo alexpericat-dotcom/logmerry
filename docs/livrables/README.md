@@ -21,7 +21,7 @@ Statuts, d'après la relecture de tous les chapitres le 10 novembre 2026 (cellul
 | 9 | Dossier de garde-fous et conformité (modération, PII, journalisation) | `09-garde-fous.md` | **partiel** | Ni modération ni détection de données personnelles ; journalisation sans contenu |
 | 10 | Dossier de déploiement et exécution (pipelines dev→prod, compte rendu de mise en production, stratégie de rollback) | `10-deploiement.md` | **complet** | Retour arrière jamais exercé ; affirmation sur les préversions non revérifiée |
 | 11 | Sécurité d'accès opérationnelle : SSO/MFA, matrice IAM (rôles/droits), gestion des secrets | `11-securite-acces.md` | **partiel** | Ni SSO ni MFA (TOTP disponible, non utilisé) ; matrice réduite à trois situations ; pas de rotation des secrets documentée |
-| 12 | Continuité testée : sauvegardes (RPO/RTO), procès-verbal de test de restauration, PRA/PCA synthétique, mode dégradé, haute disponibilité | `12-continuite.md` | **partiel** | Aucune sauvegarde, aucune restauration testée, RTO non mesuré, pas de procès-verbal (plan préparé : `docs/plan-test-restauration.md`) |
+| 12 | Continuité testée : sauvegardes (RPO/RTO), procès-verbal de test de restauration, PRA/PCA synthétique, mode dégradé, haute disponibilité | `12-continuite.md` | **partiel** | Aucune sauvegarde automatique ; restauration testée une fois (12 novembre 2026), procès-verbal rempli (`docs/plan-test-restauration.md`), RTO non mesuré |
 | 13 | Exploitation et conformité actives : tableau de bord (logs, métriques, alertes), kit support N1/N2 (FAQ, SLA), registre RGPD/sécurité synthétique | `13-exploitation-conformite.md` | **partiel** | Aucune alerte d'indisponibilité automatisée ; pas de tableau de bord unique ; aucun SLA engagé |
 
 ## Questions ouvertes
