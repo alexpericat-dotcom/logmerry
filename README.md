@@ -78,6 +78,8 @@ Le détail et le plan d'action sont au chapitre 13 du PDF.
 - **Hébergement gratuit** : plan Hobby de Vercel (usage non commercial, DPA non applicable) et plan Free de Supabase (pas de sauvegarde automatique, pause après une semaine d'inactivité). **Aucune vraie donnée client** tant qu'une décision (plan Pro ou export régulier) n'est pas prise.
 - **RGPD** : registre des traitements validé, avec des points « À confirmer » listés ; purges automatiques **documentées en annexe, non activées**.
 - Pas de double authentification, pas d'alerte ni de surveillance automatique ; parcours clavier complets non essayés de bout en bout.
+- **Un test automatique de l'interface est instable** (« double clic sur Ajouter ») : 2 échecs sur 300 exécutions de la CI examinées (12 novembre 2026), chaque fois vert au même commit ou à la relance ; aucun code corrigé (chapitres 7 et 10 du PDF).
+- **Production** : dernier commit applicatif déployé `7d0558e` (12 novembre 2026, API des déploiements de GitHub) ; les commits suivants ne touchent que la documentation. La branche `feat/portfolio-image-zoom` (agrandissement des miniatures du portfolio) n'est pas fusionnée et n'est pas en production.
 - Outil à utilisateur unique, volontairement (outil personnel autorisé par le brief du challenge).
 
 ## Documentation
