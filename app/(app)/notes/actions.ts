@@ -185,7 +185,7 @@ export type RetryState = { message?: string };
 
 /** Relance l'indexation d'une de mes notes (état « échec »). */
 export async function retryIndexing(id: string): Promise<RetryState> {
-  const result = await withSession(async (supabase): Promise<"indexed" | "failed" | "not-found" | "minute" | "day" | "error"> => {
+  const result = await withSession(async (supabase): Promise<"indexed" | "failed" | "skipped" | "not-found" | "minute" | "day" | "error"> => {
     if (!isUuid(id)) return "not-found";
     const { data, error } = await supabase.from("notes").select("title, body").eq("id", id).maybeSingle();
     if (error) return "failed"; // erreur de lecture : pas une note supprimée
@@ -198,6 +198,7 @@ export async function retryIndexing(id: string): Promise<RetryState> {
   if (result.status === "signed-out") redirect("/auth/login");
   if (result.status === "failed") return { message: "Indexation impossible pour le moment. Réessaie." };
   if (result.value === "not-found") return { message: NOT_FOUND };
+  if (result.value === "skipped") return { message: "Un message du formulaire de contact n'est jamais indexé." };
   if (result.value === "minute" || result.value === "day" || result.value === "error") return { message: quotaMessage(result.value) };
   revalidatePath("/notes");
   revalidatePath("/a-faire");

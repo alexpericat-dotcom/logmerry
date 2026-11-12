@@ -1,4 +1,5 @@
 import { chunkNote } from "./chunking.ts";
+import { isContactMessage } from "./contact-message.ts";
 
 export type ChunkRow = { chunk_index: number; content: string; embedding: number[] };
 
@@ -14,11 +15,13 @@ export type IndexDeps = {
  * Remplace les extraits d'une note puis marque son état. Ne lève jamais : l'enregistrement de la
  * note ne doit pas dépendre de l'IA. Les vecteurs sont calculés avant toute écriture ; en cas d'échec,
  * les anciens extraits sont supprimés (jamais de passage périmé) et l'état passe à « échec ».
+ * Un message du formulaire de contact n'est jamais indexé (« skipped ») : aucun appel au fournisseur, quel que soit le chemin.
  */
 export async function indexNoteWith(
   deps: IndexDeps,
   note: { title: string; body: string },
-): Promise<"indexed" | "failed"> {
+): Promise<"indexed" | "failed" | "skipped"> {
+  if (isContactMessage(note)) return "skipped";
   try {
     const chunks = chunkNote(note.body);
     const vectors = await deps.embed(chunks.map((c) => `${note.title}\n\n${c.content}`));
