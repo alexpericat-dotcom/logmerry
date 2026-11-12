@@ -46,7 +46,7 @@ flowchart LR
 | L'échec de la seconde exécution | La vue publique exposait deux colonnes de plus que celles attendues par le test (`design_choice`, `validation`), ajoutées à la base par la migration de la branche `feat/realisation-design-choice`, appliquée avant d'être fusionnée. Ce n'était pas une fuite (deux champs texte facultatifs) ; corrigé par la fusion de la pull request n° 99 (le test est mis à jour dans la même branche) |
 | Conséquence | Le test de nuit est **entièrement vert** depuis le 5 novembre. Il prouve que la base et le code de `main` sont alignés : tout écart futur (migration appliquée avant sa fusion) le fera échouer, ce qui est son rôle |
 
-Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, du 30 octobre au 5 novembre, sont restés sans réaction (aucune alerte lue ou configurée : **À confirmer**).
+Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, du 30 octobre au 5 novembre, sont restés sans réaction. **Déclaré** (information donnée par le responsable de traitement, non revérifiée) : les e-mails d'échec de GitHub sont bien arrivés mais n'avaient pas été lus. Le 12 novembre 2026 à 22:24, l'auteur déclare avoir créé un filtre Gmail sur les e-mails d'échec de GitHub (expéditeur notifications@github.com, mot « failed ») : suivi (étoile), marqué important, jamais en spam, catégorie Principale (sortis de l'onglet Notifications). Le filtre ne s'applique qu'aux nouveaux e-mails ; il n'est pas testé (aucun échec réel depuis sa création) ; il n'envoie pas de notification sur téléphone. Conclusion : la réception est établie ; la réaction dépend de la lecture des e-mails ; le filtre vise à la faciliter, effet non constaté.
 
 ## Configuration de production
 
@@ -117,7 +117,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 | Migrations dans le pipeline | **Aucune** : appliquées à la main |
 | Environnement de recette ou base de recette | **Aucun** |
 | Protection de la branche `main` | **Impossible** sur l'offre actuelle de GitHub |
-| Alertes de déploiement ou de panne | **Aucune configurée** (GitHub : notifications d'échec **À confirmer** ; Vercel : page Alerts du projet (plan Hobby), **constatée** le 12 novembre 2026 sur capture de l'auteur : elle ne propose que « Upgrade to Pro » ; aucune alerte n'est configurée ; la création d'alertes semble réservée au plan Pro (déduit de cette page, pas de la documentation) ; notifications d'échec de déploiement des réglages du compte Vercel : **À confirmer**, non vérifiées) |
+| Alertes de déploiement ou de panne | **Aucune configurée** (GitHub : **Déclaré** (information donnée par le responsable de traitement, non revérifiée) : les e-mails d'échec de GitHub sont bien arrivés mais n'avaient pas été lus ; filtre Gmail créé le 12 novembre 2026 à 22:24 sur ces e-mails, non testé, sans notification sur téléphone ; la réaction dépend de la lecture des e-mails, effet du filtre non constaté ; Vercel : page Alerts du projet (plan Hobby), **constatée** le 12 novembre 2026 sur capture de l'auteur : elle ne propose que « Upgrade to Pro » ; aucune alerte n'est configurée ; la création d'alertes semble réservée au plan Pro (déduit de cette page, pas de la documentation) ; notifications d'échec de déploiement des réglages du compte Vercel : **À confirmer**, non vérifiées) |
 | Déploiement progressif (« rolling release ») | **Non utilisé** |
 | Test automatique après déploiement (« smoke test ») | **Aucun** |
 
