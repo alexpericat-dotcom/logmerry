@@ -61,7 +61,11 @@ Règles appliquées dans le code :
 - Le texte des notes est traité comme une **donnée**, jamais comme une consigne (note piégée « IGNORE TES CONSIGNES » dans le jeu de test).
 - Les appels se font **côté serveur uniquement** ; les clés ne sont jamais visibles du navigateur.
 
-> **À confirmer.** Conditions d'Anthropic et de Mistral sur la conservation des données envoyées : **relevées le 9 novembre 2026 au chapitre 13** (Mistral : 30 jours glissants et entraînement désactivé constaté sur capture, tous deux **À confirmer** ; Anthropic : suppression sous 30 jours). La mention RGPD est un projet à compléter au chapitre 13.
+> **Conditions des prestataires d'IA (sources consultées le 12 novembre 2026).** Anthropic (API Claude) : pas d'entraînement sur les entrées et sorties de l'API par défaut ; suppression automatique sous 30 jours, jusqu'à 2 ans si une conversation est signalée comme contraire à la politique d'usage ; la documentation de la plateforme indique que le contenu n'est pas conservé par défaut hors modèles « couverts » (30 jours) ; on retient « au plus 30 jours ». Mistral (API) : entrées et sorties conservées le temps de générer la réponse puis 30 jours glissants pour détecter les abus, sauf conservation zéro (offre payante, appels sans état) ; les conditions commerciales excluent l'entraînement sur les données du client hors cas listés (consentement ou refus selon le produit, retours d'expérience, bon de commande, modèles Labs ou préversions). Interrupteurs du panneau d'administration Mistral (section API, Confidentialité), constatés par l'auteur le 12 novembre 2026 : « Autoriser l'utilisation de vos appels API pour entraîner les modèles d'IA de Mistral » désactivé ; « Activer les modèles Labs » désactivé ; l'état avant cette date n'est pas vérifié.
+>
+> Sources : <https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training> ; <https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data> ; <https://platform.claude.com/docs/en/manage-claude/api-and-data-retention> ; <https://legal.mistral.ai/terms/privacy-policy/> ; <https://legal.mistral.ai/terms/commercial-terms-of-service/> ; <https://help.mistral.ai/en/articles/455207-can-i-opt-out-of-my-input-or-output-data-being-used-for-training> ; <https://help.mistral.ai/en/articles/347612-can-i-activate-zero-data-retention-zdr>
+>
+> La mention RGPD reste un projet à compléter au chapitre 13.
 
 ## Gouvernance
 
@@ -82,6 +86,6 @@ Règles appliquées dans le code :
 | Limite | Conséquence | Piste |
 |---|---|---|
 | Historique conservé sans expiration codée | Des questions anciennes restent en base tant que le propriétaire ne vide pas la conversation | Durée décidée le 9 novembre 2026 : 12 mois glissants ; purge proposée en annexe (chapitre 14), non activée |
-| Conditions des prestataires d'IA relevées, avec des points **À confirmer** | La mention RGPD reste à compléter | Voir le chapitre 13 (limites connues et plan d'action) |
+| Conditions des prestataires d'IA relevées le 12 novembre 2026 (état des interrupteurs Mistral avant cette date non vérifié) | La mention RGPD reste à compléter | Voir le chapitre 13 (limites connues et plan d'action) |
 | Texte des notes copié dans `note_chunks` | Une donnée personnelle existe deux fois ; la suppression d'une note les supprime ensemble (cascade), mais une copie de sauvegarde, si elle existait, contiendrait les deux | À traiter avec la politique de sauvegarde (chapitre 12) |
 | Un seul modèle d'embeddings, sans plan de migration automatisé | Un changement impose une réindexation manuelle de toutes les notes | Le bouton « Tout indexer » existe ; mesurer sa durée si le volume grandit |
