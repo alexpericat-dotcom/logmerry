@@ -17,7 +17,7 @@ Statuts, d'après la relecture de tous les chapitres le 10 novembre 2026 (cellul
 | 5 | Exigences QoS (budgets de performance, observabilité, résilience, modes dégradés) | `05-qos.md` | **partiel** | Budgets seulement proposés ; aucune alerte ; aucune mesure en production |
 | 6 | Application / feature IA-driven opérationnelle (lien, QR, démo) | `06-demo.md` | **partiel** | Scénario non rejoué en entier en production |
 | 7 | Rapport d'évaluation (jeu de tests et métriques : pertinence, hallucinations, latence, coût) | `07-rapport-evaluation.md` | **complet** | Coût estimé ; corpus de 11 notes (score optimiste) |
-| 8 | Registre des données et index RAG, politiques de gouvernance | `08-registre-rag.md` | **complet** | Purge non exécutée ; conditions des prestataires d'IA à confirmer |
+| 8 | Registre des données et index RAG, politiques de gouvernance | `08-registre-rag.md` | **complet** | Purge non exécutée ; conditions des prestataires d'IA relevées le 12 novembre 2026 (chapitre 8) ; garanties de transfert partiellement à confirmer (chapitre 13) |
 | 9 | Dossier de garde-fous et conformité (modération, PII, journalisation) | `09-garde-fous.md` | **partiel** | Ni modération ni détection de données personnelles ; journalisation sans contenu |
 | 10 | Dossier de déploiement et exécution (pipelines dev→prod, compte rendu de mise en production, stratégie de rollback) | `10-deploiement.md` | **complet** | Retour arrière jamais exercé ; affirmation sur les préversions non revérifiée |
 | 11 | Sécurité d'accès opérationnelle : SSO/MFA, matrice IAM (rôles/droits), gestion des secrets | `11-securite-acces.md` | **partiel** | Ni SSO ni MFA (TOTP disponible, non utilisé) ; matrice réduite à trois situations ; pas de rotation des secrets documentée |
