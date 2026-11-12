@@ -207,7 +207,7 @@ stateDiagram-v2
 | Clic sur « Réessayer » ou « Tout indexer » | Indexation de la note, ou de 25 notes au plus par clic | Oui |
 | Question posée | Workflow B | Oui, sans flux : la réponse arrive en une fois |
 | « Vider la conversation » | Suppression de tout l'historique du compte | Oui |
-| Message du formulaire de contact | Note en brouillon chez le destinataire (non indexée tant qu'on ne relance pas l'indexation) | Oui |
+| Message du formulaire de contact | Note en brouillon chez le destinataire, **jamais indexée** : ni « Tout indexer » (`lib/domain/index-batch.ts:10`), ni l'enregistrement, ni « Réessayer » (`lib/domain/index-note.ts:24`, état « skipped ») n'envoient le message à Mistral ; repère : le titre « Message reçu · » (`lib/domain/contact-message.ts:8`, `:13`) ; correction déployée le 12 novembre 2026 (n° 103) | Oui |
 
 Il n'existe **aucune tâche planifiée ni file d'attente** dans l'application : tout se passe à la demande. Rappels et résumé hebdomadaire (n8n) sont hors du MVP.
 
