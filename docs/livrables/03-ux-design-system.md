@@ -17,7 +17,7 @@ Sources : `DESIGN.md` (aspect, statut « final », mis à jour le 18 octobre 202
 
 ## Architecture de l'information
 
-Barre latérale fixe à gauche (repliable en icônes), le cockpit en première entrée, assistant en panneau poussé à droite (décision d'Alex, déclarée ; non revérifiée dans cette version).
+Barre latérale fixe à gauche (repliable en icônes), le cockpit en première entrée, assistant en panneau poussé à droite (décision de l'auteur, déclarée ; non revérifiée dans cette version).
 
 | Surface | Rôle |
 |---|---|
@@ -104,7 +104,7 @@ Réalisé sur une version de production locale, compte de démonstration, WCAG 2
 | # | Constat | Suite |
 |---|---|---|
 | 1 | Le focus tombait sur la page à l'ouverture d'un formulaire (le bouton d'ouverture disparaissait) | **Corrigé** |
-| 2 | Titre de page orange sur bleu pâle à 2,73:1 (3:1 exigé) en thème clair | **Corrigé** : couleur passée de `#E4600B` à `#C44A00` (3,77:1 au pire point), option A choisie par Alex |
+| 2 | Titre de page orange sur bleu pâle à 2,73:1 (3:1 exigé) en thème clair | **Corrigé** : couleur passée de `#E4600B` à `#C44A00` (3,77:1 au pire point), option A choisie par l'auteur |
 | 3 | Focus non rendu au bouton d'ouverture après « Annuler » (factures, devis, règles) | **Corrigé** le 30 octobre 2026 |
 | 4 | Liens d'en-tête de colonne plus étroits que 44 px sur téléphone | Dette connue |
 | 5 | Anneau de focus des champs de 1 px, visible mais fin | Dette, à juger à l'usage |
@@ -112,7 +112,7 @@ Réalisé sur une version de production locale, compte de démonstration, WCAG 2
 
 ### Ce que l'audit ne prouve pas
 
-- **Un seul parcours** a été fait au clavier touche par touche (une facture). Les parcours du cockpit et de la saisie après un rendez-vous n'ont pas été parcourus de bout en bout sans souris : **à faire par Alex** (`docs/controles-visuels.md`, section 11).
+- **Un seul parcours** a été fait au clavier touche par touche (une facture). Les parcours du cockpit et de la saisie après un rendez-vous n'ont pas été parcourus de bout en bout sans souris : **à faire par l'auteur** (`docs/controles-visuels.md`, section 11).
 - **Non testés** : lecteur d'écran réel (VoiceOver), glisser-déposer au toucher, panneaux de l'IA, assistant, page de connexion, palette de commandes ⌘K, Lighthouse à 400 px.
 - **L'outil automatique axe-core n'a pas pu être chargé** ; seuls Lighthouse et des scripts maison ont servi. Un audit automatique ne détecte qu'une partie des défauts.
 - Le script de contraste ne voit pas le texte en transparence, les états de survol et désactivé, ni les panneaux fermés.
@@ -191,4 +191,4 @@ Cinq maquettes interactives (HTML) existent dans `_bmad-output/planning-artifact
 | Raccourci ⌘K (recherche et assistant) sur Safari, Chrome et Firefox Mac | À tester |
 | Largeur du passage en mode tablette | À fixer |
 | Écran d'inscription et page « Finances » décrits mais non réalisés | À mettre à jour dans `EXPERIENCE.md` ou à construire |
-| Parcours clavier complets (cockpit, saisie) | À faire par Alex |
+| Parcours clavier complets (cockpit, saisie) | À faire par l'auteur |

@@ -8,14 +8,14 @@
 |---|---|
 | **Mesuré** | Chronométré, avec la date et la méthode |
 | **Réglage** | Valeur écrite dans le code ou la base ; ce n'est pas une mesure |
-| **Objectif proposé** | Seuil que je propose ; à valider par Alex, aucun engagement |
+| **Objectif proposé** | Seuil que je propose ; à valider par l'auteur, aucun engagement |
 | **À confirmer** | Pas de mesure ni de source |
 
 ## Délais mesurés
 
 ### Appels à Supabase (5 novembre 2026)
 
-Méthode : 30 requêtes successives vers l'interface publique du projet (clé publique, aucune donnée privée), depuis le Mac d'Alex en France (aller-retour réseau vers un serveur public voisin : environ 10 ms). Mesure du temps total de chaque requête, du départ à la fin de la réponse.
+Méthode : 30 requêtes successives vers l'interface publique du projet (clé publique, aucune donnée privée), depuis le Mac de l'auteur en France (aller-retour réseau vers un serveur public voisin : environ 10 ms). Mesure du temps total de chaque requête, du départ à la fin de la réponse.
 
 | Appel | Médiane | 95e centile | Maximum | Réponses |
 |---|---|---|---|---|
@@ -93,7 +93,7 @@ Le test d'isolation entre deux comptes a son propre fichier (`isolation.yml`) : 
 | 3 clés étrangères sans index | `message_citations.owner_id`, `realisation_images.owner_id`, `regulatory_rules.previous_version_id` | À ajouter si ces tables grossissent ; sans effet visible avec les volumes de démonstration |
 | 4 index jamais utilisés | `note_chunks_embedding_idx`, `notes_search_idx`, `message_citations_note_idx`, `message_citations_chunk_idx` | **Pas supprimés** : l'index vectoriel et l'index de recherche servent quand le volume monte ; avec quelques notes, la base lit la table entière, ce qui est plus rapide |
 
-### Capture du tableau de bord (fournie par Alex, 5 novembre 2026)
+### Capture du tableau de bord (fournie par l'auteur, 5 novembre 2026)
 
 ![Tableau de bord Supabase du projet LogMerry : état « Healthy », calcul Nano, base à Paris (eu-west-3), CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, aucune sauvegarde, 7 requêtes sur la dernière heure, toutes réussies.](captures/supabase-dashboard.jpg)
 
@@ -106,7 +106,7 @@ Le test d'isolation entre deux comptes a son propre fichier (`isolation.yml`) : 
 | Dernière migration : `revoke_anon_helper_fun…` | Correspond à la migration qui a retiré les droits d'`anon` sur quatre fonctions d'aide |
 | 7 requêtes sur 60 minutes, taux de réussite 100 % | Trafic quasi nul au moment de la capture ; aucun avertissement ni erreur |
 
-Les autres chiffres de ce chapitre viennent de requêtes en lecture seule et de mesures faites depuis le poste d'Alex.
+Les autres chiffres de ce chapitre viennent de requêtes en lecture seule et de mesures faites depuis le poste de l'auteur.
 
 ## Ce qui n'existe pas
 
@@ -128,6 +128,6 @@ Détail au chapitre « Continuité » : en cas de panne de Claude ou de Mistral,
 | Limite | Piste |
 |---|---|
 | Une seule mesure de latence réseau, depuis un seul lieu, hors Vercel | Mesurer une Server Action depuis le navigateur sur la production |
-| Deux exécutions seulement pour la latence de l'assistant | En refaire quelques-unes avant la soutenance (appels payants, avec l'accord d'Alex) |
+| Deux exécutions seulement pour la latence de l'assistant | En refaire quelques-unes avant la soutenance (appels payants, avec l'accord de l'auteur) |
 | Aucune alerte | Une surveillance externe gratuite de l'adresse publique, une fois l'alias de production confirmé |
-| Projet mis en pause après une semaine sans activité (offre gratuite) | Voir le chapitre « Continuité » ; un appel quotidien anti-pause reste une **question ouverte** pour Alex |
+| Projet mis en pause après une semaine sans activité (offre gratuite) | Voir le chapitre « Continuité » ; un appel quotidien anti-pause reste une **question ouverte** pour l'auteur |

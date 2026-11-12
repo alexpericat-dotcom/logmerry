@@ -10,7 +10,7 @@ Faits relevés le 5 novembre 2026 par la ligne de commande de Vercel, l'API de G
 flowchart LR
   A["Branche feat/..<br/>sur mon poste"] -->|"git push"| B["GitHub<br/>CI : tsc, lint, tests, build, audit"]
   A -->|"git push"| C["Vercel<br/>préversion de la branche"]
-  B --> D{"Pull request<br/>fusionnée dans main<br/>par Alex"}
+  B --> D{"Pull request<br/>fusionnée dans main<br/>par l'auteur"}
   C --> D
   D -->|"push sur main"| E["Vercel<br/>déploiement de production<br/>région cdg1"]
   E --> F["logmerry.vercel.app"]
@@ -22,7 +22,7 @@ flowchart LR
 | 1. Développement | Une branche par fonctionnalité, petits commits | Dépôt GitHub `alexpericat-dotcom/logmerry` |
 | 2. Vérification | `ci.yml` à chaque envoi et chaque pull request | Dernière exécution sur `main` (5 novembre, après la fusion du n° 99) : succès en 2 min 40 s |
 | 3. Préversion | Vercel déploie chaque branche à une adresse propre | Alias du type `logmerry-git-<branche>-new-team-adce.vercel.app` |
-| 4. Fusion | Alex fusionne la pull request dans `main` | Aucune règle de protection de branche (voir plus bas) |
+| 4. Fusion | L'auteur fusionne la pull request dans `main` | Aucune règle de protection de branche (voir plus bas) |
 | 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Dernier commit déployé au 12 novembre 2026 : `7d0558e` (API des déploiements de GitHub, statut « success ») ; au 9 novembre : `89bd458` ; au 5 novembre : `59c9d8c` ; statut « Deployment has completed » (Vercel) |
 | 6. Base de données | Les migrations de `supabase/migrations/` sont appliquées **à la main**, après que le SQL m'a été montré | Journal : « appliquée par Alex » ; aucune étape de migration dans la CI |
 
@@ -39,7 +39,7 @@ flowchart LR
 | Constat | Détail |
 |---|---|
 | Avant le 5 novembre | **7 exécutions sur 7 en échec**, du 30 octobre au 5 novembre 2026 : « Secret manquant : SUPABASE_URL », `gh secret list` vide. Le test n'avait **jamais tourné** contre la vraie base ; une régression de la sécurité par ligne n'aurait pas été vue en moins de 24 h |
-| Réparation (Alex, 5 novembre) | Les six secrets (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`) ont été créés dans GitHub ; `gh secret list` les montre tous |
+| Réparation (l'auteur, 5 novembre) | Les six secrets (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `TEST_A_EMAIL`, `TEST_A_PASSWORD`, `TEST_B_EMAIL`, `TEST_B_PASSWORD`) ont été créés dans GitHub ; `gh secret list` les montre tous |
 | Première exécution à la main (5 novembre, `main` avant les fusions) | **151 contrôles sur 152 passent**, dont tous ceux d'isolation entre deux comptes. 1 échec (statut des réalisations) |
 | Seconde exécution (5 novembre, `main` après les n° 96 et 97) | **157 contrôles sur 158 passent** : l'échec du statut a disparu ; un autre apparaît (colonnes de la vue publique) |
 | Troisième exécution (5 novembre, `main` après la n° 99) | **158 contrôles sur 158 passent**, aucun échec. Run GitHub 42094696418 |
@@ -106,7 +106,7 @@ Toutes avec l'accord explicite de l'auteur, une à la fois. Après chacune : CI 
 | **Ce qui ne revient pas** | **La base de données.** Une migration appliquée ne se défait pas avec le déploiement : le schéma n'avance que dans un sens. Un retour arrière du code après une migration qui supprime ou renomme une colonne peut donc casser l'application ancienne |
 | Exercé ? | **Non, jamais.** Je ne l'ai pas lancé : il modifierait la production |
 | Durée attendue | **À confirmer** (non mesurée) |
-| Protection de la branche `main` | **Impossible aujourd'hui** : GitHub répond que cette fonction demande l'offre Pro ou un dépôt public. Rien n'empêche donc une fusion malgré une CI en échec ; seule la discipline d'Alex le fait |
+| Protection de la branche `main` | **Impossible aujourd'hui** : GitHub répond que cette fonction demande l'offre Pro ou un dépôt public. Rien n'empêche donc une fusion malgré une CI en échec ; seule la discipline de l'auteur le fait |
 
 Procédure d'exercice proposée, à faire avec ton accord, hors des heures de démonstration : noter le déploiement actuel, rétablir le précédent, vérifier `/auth/login` et `/api/chat`, puis rétablir le déploiement noté. Durée mesurée à reporter ici.
 

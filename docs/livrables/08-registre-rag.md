@@ -26,7 +26,7 @@ Volumes réels au 5 novembre 2026 (tous comptes confondus, base de démonstratio
 | Découpage | 1 000 caractères au plus, chevauchement de 150, coupe à une fin de phrase quand c'est possible, pas d'extrait minuscule | `lib/domain/chunking.ts` |
 | Texte vectorisé | Le titre de la note puis l'extrait | `lib/domain/index-note.ts` |
 | Filtre de propriété | `owner_id = auth.uid()` **dans la fonction** de recherche, en plus de la RLS | `match_chunks` |
-| Seuil de similarité | 0,76 (décision d'Alex du 13 octobre 2026, réglé sur le jeu de test) | `lib/domain/matching.ts` |
+| Seuil de similarité | 0,76 (décision de l'auteur du 13 octobre 2026, réglé sur le jeu de test) | `lib/domain/matching.ts` |
 | Résultats retenus | 8 extraits au plus (la fonction plafonne à 20) | `lib/domain/matching.ts`, `match_chunks` |
 | Recherche complémentaire | Par mots-clés (5 au plus, plein texte français) pour les questions courtes que le seuil écarterait ; les extraits trouvés ainsi n'ont pas de score | `lib/domain/keywords.ts` |
 
