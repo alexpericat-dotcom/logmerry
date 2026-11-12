@@ -76,7 +76,7 @@ Deux écarts à connaître :
 | CI sur ces commits | Succès. La CI de `main` a échoué une première fois sur un test (« double clic sur Ajouter », attente d'une seconde) puis réussi à la relance : test **instable**, noté |
 | Adresse | `https://logmerry.vercel.app` : `/` et `/portfolio/qui-suis-je` renvoient à la connexion, `/auth/login` répond 200, **`/portfolio` répond 200 sans connexion** (vérifié le 5 novembre) |
 | Historique | Avant le 5 novembre : une vingtaine de déploiements « Ready » du 29 au 30 octobre |
-| **Ce qui n'est pas en production** | Rien de planifié : tout ce qui est fusionné est déployé. La pull request n° 98 (`feat/about-page`) devient redondante, ses commits étant dans la n° 102 |
+| **Ce qui n'est pas en production** | Rien de planifié : tout ce qui est fusionné est déployé. La pull request n° 98 (`feat/about-page`) devient redondante, ses commits étant dans la n° 102 (fermée le 12 novembre 2026) ; état à jour au 12 novembre : voir « Mises en production du 12 novembre 2026 » |
 | Migrations déjà appliquées à la base partagée | Plus d'écart connu : la base et `main` sont alignés (test de nuit : 158 sur 158 après la fusion de la n° 102) |
 
 > **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) a été fusionnée le 9 novembre 2026 avec son accord, et la n° 100 (brouillon) fermée.

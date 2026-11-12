@@ -19,7 +19,7 @@
 
 ## Ce que la production contient (et ne contient pas)
 
-Production = branche `main` au 5 novembre 2026, commit `59c9d8c` (fusion de la pull request n° 102 : formulaire de contact et « Qui suis-je », après les n° 96, 97 et 99). Déploiement terminé dans Vercel (statut de commit GitHub : « Deployment has completed »).
+Dernier commit déployé en production au 12 novembre 2026 : `7d0558e` (fusion de la pull request n° 105, après les n° 103 et 104 ; API des déploiements de GitHub, statut « success »). Au 5 novembre 2026 : `59c9d8c` (fusion de la pull request n° 102 : formulaire de contact et « Qui suis-je », après les n° 96, 97 et 99). La branche `feat/portfolio-image-zoom` n'est pas fusionnée : l'agrandissement des miniatures n'est pas en production. Déploiement terminé dans Vercel (statut de commit GitHub : « Deployment has completed »).
 
 | Visible en démonstration | **Absent de la production** |
 |---|---|
