@@ -12,6 +12,7 @@ Faits relevés dans le code, les migrations et la base réelle le 5 novembre 202
 | Longueur minimale du mot de passe | 12 caractères (`MIN_PASSWORD_LENGTH`) |
 | SSO (connexion par un fournisseur externe) | **Aucun** : aucun appel dans le code |
 | MFA (second facteur) | **Aucun** : rien dans le code, et 0 facteur enregistré dans la base |
+| Double authentification des comptes d'administration | Constat de l'auteur, non vérifié autrement : la double authentification a été activée sur Vercel le 12 novembre 2026 en soirée (heure exacte non relevée). L'état de la double authentification sur GitHub et sur Supabase n'est pas établi |
 | Création de compte | **Aucune page d'inscription** dans l'application. La base compte 5 comptes. L'inscription est **désactivée** dans le tableau de bord de Supabase (réglage déclaré par Alex le 5 novembre 2026 ; non lisible par les outils utilisés ici) |
 | Mot de passe oublié | Lien envoyé par e-mail, retour sur `/auth/confirm` (échange d'un code PKCE contre une session côté serveur), puis page de nouveau mot de passe |
 | Mots de passe déjà divulgués | Protection **désactivée** : elle est réservée à l'offre Pro de Supabase |
