@@ -54,4 +54,4 @@ Le RAG est construit en premier, car c'est la partie la plus risquée et la plus
 - Interface en français, code et commits en anglais, petits commits.
 
 ## Points ouverts
-Statut juridique de l'activité (micro-entreprise BNC déclaré, à confirmer à la source ; pas de date d'immatriculation), règles de prorata, d'ACRE et de bascule de TVA et leurs cas de référence (à écrire par l'auteur avec leurs sources), attentes exactes du tuteur, mention RGPD pour l'envoi des extraits à Anthropic et Mistral, modèle Claude exact.
+Statut juridique de l'activité (statut juridique pas encore choisi (décision de l'auteur du 12 novembre 2026) ; pas de date d'immatriculation), règles de prorata, d'ACRE et de bascule de TVA et leurs cas de référence (à écrire par l'auteur avec leurs sources), attentes exactes du tuteur, mention RGPD pour l'envoi des extraits à Anthropic et Mistral, modèle Claude exact.
