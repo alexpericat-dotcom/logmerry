@@ -96,6 +96,8 @@ Formulation retenue : **restauration testée une fois, données et structure pri
 | Projet source | LogMerry (production), PostgreSQL **17.11** (lu par SQL, lecture seule), région `eu-west-3`, connexion par session pooler, port 5432 |
 | Projet temporaire | « logmerry-restauration-test », région choisie « Europe » (le serveur de connexion affichait `eu-west-3`), session pooler, port 5432 |
 | Réglages du projet temporaire | Data API activée ; « Automatically expose new tables » décoché ; RLS automatique désactivée ; aucun dépôt GitHub lié. Impact de ces réglages sur la restauration : **non vérifié** |
+| Saisie des chaînes de connexion (réalisée, écart avec l'étape 4 du plan) | Les chaînes ont été assemblées en lisant l'adresse (avec le marqueur de mot de passe), puis le mot de passe séparément avec `read -rs`, puis en remplaçant le marqueur par une substitution de variable zsh ; le mot de passe a été effacé de la mémoire du terminal (constat de l'auteur, non vérifié autrement). Le plan prévoyait `read -rs` de la chaîne entière |
+| Requêtes de contrôle lancées en plus des étapes (constat de l'auteur) | (1) comptage des tables du schéma `public` (test : 0 ; production : 24 objets) ; (2) nombre de lignes par table, par une requête sur `information_schema` (c'est l'étape 9 du plan : résultats dans le tableau de comptage ci-dessous) ; (3) comparaison de structure : fonctions, `match_chunks`, politiques, index, déclencheurs, tables avec sécurité par ligne, droits des rôles (résultats dans la ligne « Comparaison de la structure ») |
 | Commandes d'export (sans chaîne de connexion) | Exactement celles des étapes 5, 6a et 6b du plan (confirmé par l'auteur) : lecture de la version (`psql "$PROD_URL" -Atc "select current_setting('server_version'), current_setting('server_version_num')"`), puis `pg_dump "$PROD_URL" --schema=public --schema-only --no-owner --file="$EXPORT_DIR/schema.sql"` et `pg_dump "$PROD_URL" --schema=public --data-only --no-owner --file="$EXPORT_DIR/data.sql"` |
 | Durée de l'export | Non mesurée. Export réalisé vers 20 h 34 |
 | Taille des fichiers d'export | `schema.sql` 120 246 octets ; `data.sql` 129 806 octets (schéma `public` seul, sans propriétaires). Avertissement de `pg_dump` sur `regulatory_rules` (clés étrangères circulaires) |
@@ -113,8 +115,8 @@ Formulation retenue : **restauration testée une fois, données et structure pri
 | Écarts constatés avec ce plan | Voir la liste sous le tableau |
 | Nettoyage : projet temporaire supprimé | ☑ supprimé dans le tableau de bord ; la liste des projets ne montre plus que LogMerry (constaté à 20 h 43) |
 | Nettoyage : dossier d'export supprimé | ☑ par `rm` : **pas un effacement sécurisé** ; fichiers non relus ensuite |
-| Nettoyage : chemin d'export hors du dépôt, vérifié avant l'écriture | ☐ non communiqué |
-| Nettoyage : variables du terminal | ☑ effacées ; historique du terminal : ☐ non communiqué |
+| Nettoyage : chemin d'export hors du dépôt, vérifié avant l'écriture | ☑ la commande `git` du plan a répondu « not a git repository » et le dossier a été créé dans le répertoire personnel de l'auteur (constat de l'auteur) |
+| Nettoyage : variables du terminal | ☑ effacées ; historique du terminal : ☐ non vérifié |
 | Conclusion de l'auteur (sans enjolivement) | Voir ci-dessous |
 
 ### Comptage de lignes par table, production et test (diff vide, d'après l'auteur ; nombres seulement)
