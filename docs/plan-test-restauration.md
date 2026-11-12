@@ -116,7 +116,7 @@ Formulation retenue : **restauration testée une fois, données et structure pri
 | Nettoyage : projet temporaire supprimé | ☑ supprimé dans le tableau de bord ; la liste des projets ne montre plus que LogMerry (constaté à 20 h 43) |
 | Nettoyage : dossier d'export supprimé | ☑ par `rm` : **pas un effacement sécurisé** ; fichiers non relus ensuite |
 | Nettoyage : chemin d'export hors du dépôt, vérifié avant l'écriture | ☑ la commande `git` du plan a répondu « not a git repository » et le dossier a été créé dans le répertoire personnel de l'auteur (constat de l'auteur) |
-| Nettoyage : variables du terminal | ☑ effacées ; historique du terminal : ☐ non vérifié |
+| Nettoyage : variables du terminal | ☑ effacées ; historique du terminal : ☑ avec cette portée seulement (constat de l'auteur, le 12 novembre 2026 vers 21 h) : la commande `fc -l 1 | grep -c "pooler[.]supabase"` a répondu 0, donc aucune occurrence de l'adresse du serveur dans l'historique de la session de terminal. Le mot de passe n'a pas pu être cherché (non vérifiable) ; il a été saisi uniquement avec `read -rs` |
 | Conclusion de l'auteur (sans enjolivement) | Voir ci-dessous |
 
 ### Comptage de lignes par table, production et test (diff vide, d'après l'auteur ; nombres seulement)
