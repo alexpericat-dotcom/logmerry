@@ -10,7 +10,7 @@ Sources : `DESIGN.md` (aspect, statut « final », mis à jour le 18 octobre 202
 |---|---|
 | Un cockpit, pas un tableau de bord chargé | « Aujourd'hui » liste les tâches du jour **avec leur motif** (« facture échue depuis 1 jour ») ; cocher une tâche réordonne la liste |
 | Un assistant toujours à portée | Panneau ouvrable depuis toute page, réponse d'abord en 2 ou 3 puces, sources dessous, « Copier le texte » et « Ouvrir » la note complète |
-| Dire quand on ne sait pas | Message fixe de l'assistant quand aucun extrait n'est retrouvé, sinon réponse prudente avec le bandeau « Aucune de tes notes ne soutient cette réponse », « paramètre manquant » plutôt qu'un chiffre douteux, « À confirmer » pour une donnée inconnue |
+| Dire quand on ne sait pas | Message fixe de l'assistant quand aucun extrait n'est retrouvé, sinon réponse prudente avec le bandeau « Aucune de tes notes ne soutient cette réponse », « paramètre manquant » plutôt qu'un chiffre douteux, « À confirmer » pour une donnée inconnue, sauf le statut juridique et la catégorie d'activité, préremplis par défaut (voir chapitre 13, registre des traitements) |
 | Jamais la couleur seule | Un statut = une icône + un mot + sa couleur |
 | Aucun montant calculé sans étiquette | Tout montant calculé porte « estimation » |
 | Sobre et net | Grille nette, fort contraste, traits marine de 2 px et ombre dure en thème clair |

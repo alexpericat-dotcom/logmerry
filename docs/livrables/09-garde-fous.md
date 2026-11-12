@@ -71,7 +71,7 @@ Les propositions de l'IA sont **éphémères** : rien n'est écrit en base tant 
 ## Garde-fous de l'application hors IA
 
 - **Aucun taux, plafond ou montant fiscal codé en dur** : table de règles versionnées avec source officielle et dates. Une règle absente, « à vérifier » ou périmée **ne produit jamais un chiffre présenté comme fiable** : la jauge affiche « paramètre manquant » avec la raison. Une règle d'essai est étiquetée « DEMO, non officielle ».
-- **Estimations étiquetées** : les provisions et estimations ne sont jamais présentées comme des montants officiels ; une donnée personnelle inconnue reste « À confirmer ».
+- **Estimations étiquetées** : les provisions et estimations ne sont jamais présentées comme des montants officiels ; une donnée personnelle inconnue reste « À confirmer », sauf le statut juridique et la catégorie d'activité, préremplis par défaut (voir chapitre 13, registre des traitements).
 - **Formulaire de contact public** : seule porte ouverte aux visiteurs sans compte ; champ piège et délai minimum de 3 secondes contre les robots (même réponse qu'un succès, rien n'est écrit) ; nom, e-mail et message validés **côté application et côté base** ; plafonds de 5 messages par heure, 30 par jour au total et 3 par jour pour une même adresse, doublons ignorés ; le message arrive en **brouillon**, avec la mention « non vérifié ».
 - **Pages publiques** : un test interdit les termes d'écoblanchiment (« écologique », « durable », « vert », etc.) ; la liste des exceptions est vide et reste à valider par l'auteur.
 - **Portfolio** : seules les réalisations publiées **avec accord du client** sont visibles, par deux vues à liste blanche de colonnes (chapitre 11).
