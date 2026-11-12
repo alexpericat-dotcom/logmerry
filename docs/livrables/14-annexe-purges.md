@@ -67,7 +67,7 @@ end $$;
 create trigger note_chunks_no_contact before insert on public.note_chunks
   for each row execute function public.note_chunks_no_contact();
 
--- La fonction ouverte aux visiteurs (version en base le 9 novembre 2026) : un seul champ ajouté, `source`.
+-- La fonction ouverte aux visiteurs (celle de `supabase/migrations/20261107110000_contact_form_limits.sql:21-81`, mise en forme resserrée ; la base déployée n'a pas été interrogée) : un seul champ ajouté, `source`.
 create or replace function public.submit_contact_message(p_name text, p_email text, p_message text)
 returns boolean language plpgsql security definer set search_path = '' as $$
 declare
