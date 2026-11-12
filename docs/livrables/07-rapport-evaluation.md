@@ -87,7 +87,7 @@ Jetons consommés, lus dans les réponses de Claude et de Mistral :
 - Exécution 2 : 0,058 + 0,035 = **0,093 dollar**.
 - Soit environ **0,0046 dollar par question** (moins d'un demi-centime), et environ 4,6 dollars pour 1 000 questions.
 
-**Mistral** : 1 288 jetons d'embeddings par exécution. Le tarif n'a pas été vérifié ici (**À confirmer** sur la facture Mistral) ; même à un dollar par million de jetons, ce serait 0,0013 dollar : négligeable devant Claude.
+**Mistral** : 1 288 jetons d'embeddings par exécution. Le tarif relevé sur des comparateurs tiers est de 0,10 dollar par million de jetons en entrée (la page officielle de Mistral et la facture n'ont pas été consultées : **À confirmer** sur la facture Mistral) ; 1 288 jetons font environ 0,00013 dollar : négligeable devant Claude.
 
 > Ce sont des **estimations calculées**, pas des montants facturés. Le coût réel est à lire sur les consoles d'Anthropic et de Mistral.
 
