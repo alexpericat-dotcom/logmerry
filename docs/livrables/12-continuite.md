@@ -1,6 +1,6 @@
 # Continuité de service et reprise
 
-> **En deux phrases.** LogMerry tourne sur l'**offre gratuite** de Supabase et sur Vercel, ce qui suffit pour un projet de démonstration mais **ne garantit ni sauvegarde automatique, ni disponibilité contractuelle**. Ce chapitre dit ce qui est garanti, ce qui ne l'est pas, comment tout reconstruire, et ce qui reste à tester : **aucun test de restauration n'a encore été réalisé**.
+> **En deux phrases.** LogMerry tourne sur l'**offre gratuite** de Supabase et sur Vercel, ce qui suffit pour un projet de démonstration mais **ne garantit ni sauvegarde automatique, ni disponibilité contractuelle**. Ce chapitre dit ce qui est garanti, ce qui ne l'est pas, comment tout reconstruire, et ce qui reste à tester : **une restauration a été testée une fois, le 12 novembre 2026 : données et structure principales restaurées, deux écarts connus, corrections non testées** (section « Test de restauration du 12 novembre 2026 »).
 
 ## Ce que l'offre gratuite garantit, et ne garantit pas
 
@@ -28,11 +28,33 @@ RPO : quelle quantité de données peut être perdue. RTO : combien de temps pou
 | Images du portfolio (Supabase Storage) | Supabase Storage ; sources dans `assets-source/` (non commitées) | Non couvertes par un export de la base | À mesurer |
 | Variables d'environnement et clés | Vercel et `.env.local` (ignoré par Git) | **À confirmer** : copie hors de ces deux endroits, par exemple dans un gestionnaire de mots de passe | À mesurer |
 
-> **À confirmer.** Les durées de reprise (RTO) ne sont pas mesurées : elles le seront lors du test de restauration prévu plus bas. Je n'en annonce aucune.
+> **À confirmer.** Les durées de reprise (RTO) ne sont **pas mesurées** : le test de restauration du 12 novembre 2026 n'a pas été chronométré (sa durée totale, de 18 h 20 à 20 h 45 environ, comprend la recherche d'un mot de passe perdu). Je n'en annonce aucune.
+
+## Test de restauration du 12 novembre 2026
+
+**Résultat : restauration testée une fois, données et structure principales restaurées, deux écarts connus, corrections non testées.** Ce n'est pas un « réussi » sans réserve. Faits constatés par l'auteur ; les fichiers d'export ont été supprimés après le test, donc l'assistant n'a pas pu les relire.
+
+| Élément | Constat |
+|---|---|
+| Outils | `pg_dump` et `psql` 18.6 (libpq) ; pas de CLI Supabase ni de Docker |
+| Source et cible | Production PostgreSQL 17.11 (lecture seule) vers un projet temporaire « logmerry-restauration-test » (région « Europe », serveur `eu-west-3`), session pooler, port 5432 ; projet temporaire supprimé ensuite |
+| Export | Schéma `public` seul, sans propriétaires : `schema.sql` 120 246 octets, `data.sql` 129 806 octets ; avertissement de `pg_dump` sur `regulatory_rules` (clés étrangères circulaires) |
+| Restauration | Une passe, sans transaction unique, avec `SET session_replication_role = replica` avant les données : **17 erreurs, toutes dans `schema.sql`, aucune dans `data.sql`** |
+| Données | **Nombre de lignes identique sur les 22 tables** (389 lignes au total) ; seuls des nombres ont été comparés, pas le contenu |
+| Structure | Index 66 / 66, politiques de sécurité par ligne 74 / 74, déclencheurs 22 / 22, tables avec sécurité par ligne active 22 / 22, droits de `service_role` 168 / 168 |
+| **Écart 1** | **Fonction `match_chunks` absente du projet restauré** (fonctions 23 en production, 22 dans le test, confirmé par requête). Cause supposée : un réglage `hnsw.iterative_scan` refusé à la création (**non vérifié**). Sans elle, la recherche de l'assistant ne fonctionnerait pas sur la base restaurée |
+| **Écart 2** | **Droits de `anon` sur `public` : 2 en production, 74 dans le test** ; droits de `authenticated` 153 / 159. Cause supposée : 12 réglages de droits par défaut refusés (« permission denied to change default privileges ») ; le lien avec la case « Automatically expose new tables » décochée **n'est pas établi** |
+| Corrections | Recréer la fonction et réappliquer les retraits de droits : **non testées** |
+| Durée | **Non mesurée** (18 h 20 à 20 h 45 environ, recherche d'un mot de passe perdu comprise) |
+| Non couvert | Comptes `auth.users`, fichiers du stockage (bucket `portfolio`), déclencheurs éventuels sur les tables `auth`, test applicatif et test d'isolation sur la base restaurée |
+
+Les droits de `anon` plus larges dans la base restaurée sont un écart de sécurité à corriger avant de s'appuyer sur cette restauration pour une vraie reprise, sous la seule protection de la sécurité par ligne (active sur les 22 tables).
+
+**Événement lié, 12 novembre 2026 vers 19 h :** le mot de passe de la base de production a été réinitialisé, faute de le retrouver. Aucune chaîne de connexion directe à la base n'existe dans les variables Vercel ni dans les secrets GitHub (noms relevés par l'auteur). Après la réinitialisation, le portfolio public et la connexion au compte de démonstration « semblent fonctionner » (constat de l'auteur, sans test systématique).
 
 ## Reconstruire LogMerry de zéro
 
-Procédure de reprise, **non testée** à ce jour :
+Procédure de reprise, **non testée de bout en bout** : le test du 12 novembre 2026 ne couvre que la restauration du schéma `public` avec ses données (voir plus bas), pas la procédure ci-dessous :
 
 1. Créer un nouveau projet Supabase, région Paris (`eu-west-3`, comme l'actuel).
 2. Appliquer les 56 migrations du dossier `supabase/migrations/` (par l'outil en ligne de commande de Supabase).
@@ -80,7 +102,7 @@ L'IA sert à l'assistant, à l'indexation des notes et aux propositions (stories
 
 ## Ce qui reste à faire
 
-1. **Test de restauration** (le procès-verbal attendu par ce livrable n'existe pas encore) : exporter la base, la rejouer sur un projet Supabase temporaire, mesurer le temps, vérifier par les tests d'isolation, puis supprimer le projet temporaire. Il demande de créer un second projet gratuit : à faire avec l'accord d'Alex.
+1. **Test de restauration : fait une fois le 12 novembre 2026** (procès-verbal dans `docs/plan-test-restauration.md`, section 7). **À refaire ou à compléter :** recréer la fonction `match_chunks` et réappliquer les retraits de droits sur le projet restauré (corrections **non testées**), mesurer les durées, restaurer les comptes et les fichiers du stockage, lancer le test d'isolation et `rls_audit()` sur la base restaurée.
 2. **Mettre en place l'export hebdomadaire** et décider où l'archiver.
 3. **Faire un exercice de retour arrière** sur Vercel.
 4. **Avant la soutenance du 16 novembre** : s'assurer que le projet Supabase est actif.
