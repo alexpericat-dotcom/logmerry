@@ -117,7 +117,7 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 | Migrations dans le pipeline | **Aucune** : appliquées à la main |
 | Environnement de recette ou base de recette | **Aucun** |
 | Protection de la branche `main` | **Impossible** sur l'offre actuelle de GitHub |
-| Alertes de déploiement ou de panne | **Aucune configurée** (**À confirmer** : notifications GitHub et Vercel) |
+| Alertes de déploiement ou de panne | **Aucune configurée** (GitHub : notifications d'échec **À confirmer** ; Vercel : page Alerts du projet (plan Hobby), **constatée** le 12 novembre 2026 sur capture de l'auteur : elle ne propose que « Upgrade to Pro » ; aucune alerte n'est configurée ; la création d'alertes semble réservée au plan Pro (déduit de cette page, pas de la documentation) ; notifications d'échec de déploiement des réglages du compte Vercel : **À confirmer**, non vérifiées) |
 | Déploiement progressif (« rolling release ») | **Non utilisé** |
 | Test automatique après déploiement (« smoke test ») | **Aucun** |
 
