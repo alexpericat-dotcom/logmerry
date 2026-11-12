@@ -986,3 +986,6 @@
 - Non couvert : comptes `auth.users`, stockage, test d'isolation et `rls_audit()` sur la base restaurée, comparaison du contenu.
 - Documents : procès-verbal dans `docs/plan-test-restauration.md` (`dd4e135`), chapitre 12, chapitre 13 (limite 11). Constat de l'auteur, non vérifié autrement : Vercel propose « Enable 2FA ».
 - Non fait : correction des deux écarts, nouveau test, PDF régénéré.
+
+## 2026-11-12 (nuit) — Précision sur le commit dd4e135 (ajout : les entrées passées ne sont pas réécrites)
+- Le commit `dd4e135`, dont le message annonce seulement « procès-verbal du test du 12 novembre 2026 », contient aussi les modifications antérieures du plan de restauration (`docs/plan-test-restauration.md`) : variables renommées (`PROD_URL`, `TEST_URL`), export en deux fichiers (schéma, puis données), tableau des erreurs attendues et vraies erreurs, versions installées de `pg_dump` et `psql`. Constaté après coup ; l'historique n'est pas réécrit.
