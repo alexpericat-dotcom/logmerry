@@ -57,7 +57,7 @@ Les notifications d'échec de GitHub n'ont pas servi : sept échecs d'affilée, 
 | Framework, Node | Next.js, Node 24 |
 | Branche de production | `main` |
 | Adresse publique de production | **`https://logmerry.vercel.app`** (alias Vercel gratuit) ; autres alias : `logmerry-new-team-adce.vercel.app`, `logmerry-git-main-new-team-adce.vercel.app` |
-| Nom de domaine propre | **Aucun relevé** : **À confirmer** |
+| Nom de domaine propre | **Constaté** le 12 novembre 2026 sur la page Overview du projet Vercel (capture de l'auteur, 22:14) : un seul domaine listé, `logmerry.vercel.app` ; la recommandation « Add Custom Domain » n'est pas cochée : aucun domaine propre |
 | Accès aux préversions et aux adresses de déploiement | **Protégés** par la connexion Vercel (réponse 302 vers l'identification) ; seul l'alias de production est ouvert au public. Un visiteur arrive sur la page de connexion de l'application |
 | Variables d'environnement (noms seulement) | `ANTHROPIC_API_KEY`, `MISTRAL_API_KEY` (production seulement), `AI_CHAT_MODEL`, `NEXT_PUBLIC_SUPABASE_URL` (production et préversion), `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (**production seulement**) (constat du 5 novembre 2026, `docs/journal.md:820`, non revérifié à ce jour) |
 | Base de données | **Un seul projet Supabase** (« LogMerry », Paris, `eu-west-3`) : il n'existe **pas de base de recette distincte** |
