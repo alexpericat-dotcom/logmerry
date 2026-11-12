@@ -39,7 +39,7 @@ Si aucun extrait n'atteint le seuil, l'assistant répond par un message fixe, sa
 
 - **Pertinence.** Sur les 6 exécutions, la seule question qui a échoué est la n°14 (« Peut-on arrêter l'abonnement quand on veut ? », alors que la note dit « résiliable » et « préavis »). Elle échoue quand la similarité tombe sous le seuil de 0,76. Mesurée à 0,81 pour une reformulation plus proche (« Puis-je résilier mon accompagnement à tout moment ? »). C'est la limite connue de la recherche par le sens quand le vocabulaire est éloigné.
 - **Hallucinations.** Aucune dans les exécutions enregistrées : les 3 refus attendus, les 3 pièges et la consigne malveillante du corpus sont tous tenus. Dans l'application, deux contrôles automatiques complètent le test : toute réponse contenant un nombre ou une adresse absents des extraits est **rejetée** avant d'être affichée.
-- **Fuites entre comptes : 0** sur toutes les exécutions. Un test séparé (`npm run test:leak`) et un test d'isolation (158 tests) le vérifient à chaque modification.
+- **Fuites entre comptes : 0** sur toutes les exécutions. Un test séparé (`npm run test:leak`) et un test d'isolation (158 tests) le vérifient à chaque modification ; le test d'isolation vise le projet Supabase unique, qui sert aussi à la démonstration ; il n'existe pas de base de recette.
 
 ## Latence
 
