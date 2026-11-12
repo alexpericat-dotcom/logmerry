@@ -170,7 +170,7 @@ Voir le détail et le schéma du proxy au chapitre 11. Ce qui compte pour l'int�
 |---|---|---|---|
 | Claude (`api.anthropic.com/v1/messages`) | 60 s | Erreur sans contenu ni clé dans le journal ; l'utilisateur voit un message fixe | Aucune |
 | Mistral (`api.mistral.ai/v1/embeddings`) | 20 s par lot | Idem ; une note non indexée passe à « échec » et se relance à la main | Aucune |
-| Supabase (Server Actions) | Aucun délai propre posé par l'application sur ses appels Supabase (constat de code ; supabase-js 2.117.3, valeurs par défaut du client) ; durée maximale de la fonction Vercel : défaut de la plateforme, non vérifié | L'action renvoie « Enregistrement impossible. Réessaie. » ; côté navigateur, « Le serveur ne répond pas » | Aucune |
+| Supabase (Server Actions) | Aucun délai propre posé par l'application sur ses appels Supabase (constat de code (lecture du code le 12 novembre 2026, par l'assistant) ; supabase-js 2.117.3, valeurs par défaut du client) ; durée maximale de la fonction Vercel : défaut de la plateforme, non vérifié | L'action renvoie « Enregistrement impossible. Réessaie. » ; côté navigateur, « Le serveur ne répond pas » | Aucune |
 
 Aucune nouvelle tentative automatique n'existe nulle part : c'est un choix de simplicité, et une limite (voir ci-dessous).
 

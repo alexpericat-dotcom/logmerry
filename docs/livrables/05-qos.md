@@ -49,7 +49,7 @@ Mesures du journal, sur un build de production local, Lighthouse mobile :
 | Appel à Claude | Délai de 60 s, aucune nouvelle tentative | `lib/ai/claude-tool.ts` |
 | Appel à Mistral | Délai de 20 s par lot de 16 extraits, aucune nouvelle tentative | `lib/ai/embeddings.ts` |
 | Formulaire de contact | 5 messages par heure, 30 par jour au total et 3 par jour pour une même adresse, délai minimum de 3 s avant l'envoi | `submit_contact_message` |
-| Appels à Supabase depuis l'application | Aucun délai propre posé par l'application sur ses appels Supabase (constat de code ; supabase-js 2.117.3, valeurs par défaut du client) ; durée maximale de la fonction Vercel : défaut de la plateforme, non vérifié | Constat de code : aucun délai ni `abortSignal` sur les appels Supabase (`lib/`, `app/`) |
+| Appels à Supabase depuis l'application | Aucun délai propre posé par l'application sur ses appels Supabase (constat de code (lecture du code le 12 novembre 2026, par l'assistant) ; supabase-js 2.117.3, valeurs par défaut du client) ; durée maximale de la fonction Vercel : défaut de la plateforme, non vérifié | Constat de code (lecture du code le 12 novembre 2026, par l'assistant) : aucun délai ni `abortSignal` sur les appels Supabase (`lib/`, `app/`) |
 
 Conséquence à connaître : l'enregistrement d'une note attend l'indexation. Si Mistral est lent, l'enregistrement peut durer **jusqu'à 20 secondes** avant de passer à l'état « échec » (la note, elle, est conservée).
 
