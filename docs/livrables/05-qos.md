@@ -81,7 +81,7 @@ Le test d'isolation entre deux comptes a son propre fichier (`isolation.yml`) : 
 
 | Source | Ce qu'on y lit | Limite |
 |---|---|---|
-| Tableau de bord Supabase | Journaux de l'API, de la base et de l'authentification ; avis de sécurité et de performance (« advisors ») | Conservation des journaux sur l'offre gratuite : **À confirmer** |
+| Tableau de bord Supabase | Journaux de l'API, de la base et de l'authentification ; avis de sécurité et de performance (« advisors ») | Conservation des journaux : d'après la documentation de Supabase consultée le 12 novembre 2026 : 1 jour sur l'offre gratuite (non relevé dans le tableau de bord du projet) |
 | Vercel | Journaux d'exécution des fonctions, état de chaque déploiement | Idem |
 | Table `ai_calls` | Nombre d'appels à l'assistant par utilisateur (comptage, pas de contenu) | Sert au plafond, pas à la mesure de latence |
 | Journal applicatif | Erreurs des appels sortants, sans contenu ni clé | Aucune agrégation ni alerte |
