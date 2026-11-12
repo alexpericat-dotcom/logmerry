@@ -89,7 +89,7 @@ Si le temps manque : étape 1 (cockpit), puis 3 et 4 (note et question, c'est le
 
 | Incident | Effet | Réponse |
 |---|---|---|
-| Supabase en pause | Connexion impossible | Réactiver le projet depuis le tableau de bord Supabase (**durée : À confirmer**) ; d'où le contrôle de la veille |
+| Supabase en pause | Connexion impossible | Réactiver le projet depuis le tableau de bord Supabase avec « Resume project » ; la page de Supabase consultée le 12 novembre 2026 donne une fenêtre de restauration d'un an et ne donne pas de durée de reprise (**non établie**) ; d'où le contrôle de la veille |
 | Anthropic ou Mistral indisponible | Étapes 4, 7 et 8 sans réponse de l'IA (message fixe) ; le reste fonctionne | Passer à l'étape suivante ; montrer les captures et le chapitre « Rapport d'évaluation » (20 sur 20, 3,4 s) |
 | Plafond d'appels atteint (20 par minute) | Refus avec un message qui demande d'attendre une minute | Attendre une minute |
 | Réseau de la salle | Tout est indisponible | Captures du chapitre « UX et maquettes » (6 images) ; l'application locale (`npm run dev`) en secours, mais elle parle à **la même base** |
