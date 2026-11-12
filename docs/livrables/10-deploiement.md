@@ -79,7 +79,7 @@ Deux écarts à connaître :
 | **Ce qui n'est pas en production** | Rien de planifié : tout ce qui est fusionné est déployé. La pull request n° 98 (`feat/about-page`) devient redondante, ses commits étant dans la n° 102 (fermée le 12 novembre 2026) ; état à jour au 12 novembre : voir « Mises en production du 12 novembre 2026 » |
 | Migrations déjà appliquées à la base partagée | Plus d'écart connu : la base et `main` sont alignés (test de nuit : 158 sur 158 après la fusion de la n° 102) |
 
-> **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) a été fusionnée le 9 novembre 2026 avec son accord, et la n° 100 (brouillon) fermée.
+> **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite de l'auteur ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) a été fusionnée le 9 novembre 2026 avec son accord, et la n° 100 (brouillon) fermée.
 
 ## Mises en production du 12 novembre 2026
 
