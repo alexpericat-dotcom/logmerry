@@ -8,7 +8,7 @@ Faits relevés sur les pages officielles de Supabase le 4 novembre 2026 (pages n
 
 | Sujet | Offre gratuite (celle de LogMerry) | Offre Pro |
 |---|---|---|
-| Sauvegardes automatiques | **Non incluses.** Supabase recommande d'exporter régulièrement les données avec `db dump` et de garder des copies hors du service | Quotidiennes, conservées 7 jours |
+| Sauvegardes automatiques | **Non incluses.** Supabase recommande d'exporter régulièrement les données avec `db dump` et de garder des copies hors du service (l'export du 12 novembre 2026 a été fait avec `pg_dump` et `psql`, Docker n'étant pas installé) | Quotidiennes, conservées 7 jours |
 | Restauration à la minute près (PITR) | Non incluse | Module payant |
 | Pause du projet | **Si l'activité sur la base est trop faible pendant 1 semaine** (la page de Supabase parle d'une activité « sufficient » sur la semaine écoulée et dit que « typically a few user requests to the database each day » suffisent ; le seuil exact n'est pas publié ; un projet en pause se restaure jusqu'à 1 an après la pause) | Jamais |
 | Protection contre les mots de passe divulgués | Non incluse | Incluse |
@@ -67,7 +67,7 @@ Le schéma est donc reconstructible sans perte. Seules les **données** dépende
 
 ## Exporter les données
 
-Supabase recommande, pour l'offre gratuite, l'export par la commande `supabase db dump`, avec une copie conservée hors du service. Je propose : un export après chaque séance de travail importante et au minimum **une fois par semaine**, rangé hors du dépôt (il contient des données). Ce rythme **n'est pas encore en place**.
+Supabase recommande, pour l'offre gratuite, l'export par la commande `supabase db dump`, avec une copie conservée hors du service. L'export du 12 novembre 2026 a été fait avec `pg_dump` et `psql`, parce que Docker n'était pas installé (le CLI lance `pg_dump` dans un conteneur). Je propose : un export après chaque séance de travail importante et au minimum **une fois par semaine**, rangé hors du dépôt (il contient des données). Ce rythme **n'est pas encore en place**.
 
 ## Modes dégradés dans le code
 
