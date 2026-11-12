@@ -70,7 +70,7 @@ export const SERVICES = {
     { title: "Audit et cadrage", text: "Un atelier pour repérer ce qui mérite d'être automatisé, choisir la stack technique adaptée, et transformer votre besoin en parcours clairs et en priorités." },
     { title: "Automatisation", text: "Des enchaînements fiables entre vos outils, pour supprimer les tâches répétitives et les ressaisies." },
     { title: "Application et données sur mesure", text: "Une application web pensée pour votre métier : comptes sécurisés, tableau de bord, base de données, recherche." },
-    { title: "Assistant IA sur vos documents", text: "Un assistant qui répond à partir de vos notes, procédures et livrables, cite ses sources, et dit clairement quand il ne trouve pas." },
+    { title: "Assistant IA sur vos documents", text: "Un assistant qui répond à partir de vos notes, procédures et livrables, cite ses sources, et signale quand vos notes ne soutiennent pas la réponse." },
     { title: "Maintenance et évolution", text: "Suivi, corrections et nouvelles fonctions, pour que l'outil reste le vôtre dans la durée." },
   ],
 };
