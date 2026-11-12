@@ -23,7 +23,7 @@ flowchart LR
 | 2. Vérification | `ci.yml` à chaque envoi et chaque pull request | Dernière exécution sur `main` (5 novembre, après la fusion du n° 99) : succès en 2 min 40 s |
 | 3. Préversion | Vercel déploie chaque branche à une adresse propre | Alias du type `logmerry-git-<branche>-new-team-adce.vercel.app` |
 | 4. Fusion | Alex fusionne la pull request dans `main` | Aucune règle de protection de branche (voir plus bas) |
-| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Dernier commit déployé au 9 novembre 2026 : `89bd458` (API des déploiements de GitHub) ; au 5 novembre : `59c9d8c` ; statut « Deployment has completed » (Vercel) |
+| 5. Production | Vercel déploie `main` tout seul, région `cdg1` | Dernier commit déployé au 12 novembre 2026 : `7d0558e` (API des déploiements de GitHub, statut « success ») ; au 9 novembre : `89bd458` ; au 5 novembre : `59c9d8c` ; statut « Deployment has completed » (Vercel) |
 | 6. Base de données | Les migrations de `supabase/migrations/` sont appliquées **à la main**, après que le SQL m'a été montré | Journal : « appliquée par Alex » ; aucune étape de migration dans la CI |
 
 ## Ce que la CI contrôle
@@ -81,6 +81,22 @@ Deux écarts à connaître :
 
 > **À savoir.** Rien n'est fusionné, ouvert ni poussé sans l'accord explicite d'Alex ; les n° 96, 97, 99 et 102 l'ont été avec cet accord le 5 novembre. La n° 101 (livrables) a été fusionnée le 9 novembre 2026 avec son accord, et la n° 100 (brouillon) fermée.
 
+## Mises en production du 12 novembre 2026
+
+Toutes avec l'accord explicite de l'auteur, une à la fois. Après chacune : CI de `main`, déploiement Vercel de production, comparaison du SHA déployé à celui de `main` (API des déploiements de GitHub), puis `tsc`, `eslint` et `npm test` lancés sur `main` en local (sans fichier d'environnement ni réseau).
+
+| Étape | Commit sur `main` | CI (`check`, `audit`) | Vercel, production | Tests locaux |
+|---|---|---|---|---|
+| Envoi de `main` (44 commits de documentation et d'outillage du PDF ; 0 fichier de `app/`, `lib/`, `components/`, `supabase/`, `public/`, `package.json`, lockfile) | `3a6c503` | succès | succès, SHA déployé = `3a6c503` | 1 177, 0 échec (mesuré avant les fusions) |
+| Pull request n° 103 : les messages du formulaire de contact ne sont jamais indexés, quel que soit le chemin (correctif « T4 » : `be839b8`, `0907aa7`) | `9f3eb14` | succès | succès, SHA déployé = `9f3eb14` | 1 179, 0 échec |
+| Pull request n° 104 : le texte du portfolio dit que l'assistant signale quand les notes ne soutiennent pas la réponse (`b849391`) | `ce283a2` | succès | succès, SHA déployé = `ce283a2` | 1 179, 0 échec |
+| Pull request n° 105 : la mention « Ouvre un site externe » près de « Voir en direct » (`0ba9b5b`) | `7d0558e` | succès | succès, SHA déployé = `7d0558e` | 1 180, 0 échec |
+
+- **Dernier commit applicatif déployé : `7d0558e`** (fusion de la n° 105, dont les commits de code sont `be839b8`, `0907aa7`, `b849391` et `0ba9b5b`). Les commits qui suivent ne touchent que la documentation.
+- **Pas fusionnée** : `feat/portfolio-image-zoom` (agrandissement des miniatures du portfolio, `01f1886`) ; elle n'est donc pas en production. La pull request n° 98 a été fermée le 12 novembre (redondante : son contenu est dans `main` par la n° 102, `59c9d8c`).
+- **Test instable** : sur la pull request n° 105, la CI a échoué une fois sur « double clic sur Ajouter » (exécution 43232018357), puis réussi à la relance sans changement de code ; le même test avait déjà échoué le 3 novembre (exécution 41661178343, commit `9766ea4`, vert dans l'exécution 41661167369 du même commit). 2 échecs sur 300 exécutions de la CI examinées (du 23 octobre au 12 novembre 2026) ; les 15 autres échecs de cette période viennent d'autres tests. Chaque échec est survenu à environ 1 050 ms, l'attente par défaut d'une seconde. Aucun code corrigé.
+
+
 ## Retour arrière
 
 | Question | Réponse |
@@ -112,4 +128,5 @@ Procédure d'exercice proposée, à faire avec ton accord, hors des heures de d�
 | Fusion possible malgré une CI rouge | Protection de `main` impossible sur l'offre GitHub actuelle ; discipline, ou offre GitHub payante, ce que je ne recommande pas pour un projet de démonstration |
 | Préversions sans clés | Ajouter les variables manquantes aux préversions, si on veut les utiliser pour la démonstration |
 | Retour arrière jamais essayé | Exercice décrit ci-dessus |
-| Écart entre la base et le code publié | Aucun écart de schéma connu (voir « Migrations déjà appliquées ») ; les quatre branches en attente ne contiennent aucune migration (`git diff --name-only` : 0 fichier `supabase/`). Reste à décider du contenu de la mise en production (branches à fusionner) avant le 16 novembre |
+| Écart entre la base et le code publié | Aucun écart de schéma connu (voir « Migrations déjà appliquées ») ; les quatre branches qui attendaient le 10 novembre ne contenaient aucune migration (`git diff --name-only` : 0 fichier `supabase/`). Au 12 novembre, trois ont été fusionnées (n° 103, 104 et 105, voir « Mises en production du 12 novembre 2026 ») ; `feat/portfolio-image-zoom` (commit `01f1886`) **n'est pas fusionnée et n'est pas en production** |
+| Test de composants instable | « double clic sur Ajouter » (`tests/components/realisation-images.test.tsx:90`) : 2 échecs sur 300 exécutions de la CI examinées, chaque fois vert au même commit ou à la relance ; aucun code corrigé. À garder en tête : un échec isolé de la CI sur ce test se relance, sans conclure à une régression |

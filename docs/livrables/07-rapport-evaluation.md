@@ -99,6 +99,7 @@ Jetons consommés, lus dans les réponses de Claude et de Mistral :
 - **Jugement automatique grossier** : il ne détecte pas toute invention écrite en toutes lettres, ni un conseil fiscal ou juridique reformulé. En cas de doute, relire les réponses à la main.
 - **Le résultat varie** d'une exécution à l'autre (le modèle de langage n'est pas déterministe) : une exécution à 18 sur 20 a déjà eu lieu avant la consigne sur les refus.
 - **Deux exécutions de latence** seulement : les valeurs sont des ordres de grandeur, pas des garanties.
+- **Un test automatique de l'interface est instable** (« double clic sur Ajouter », `tests/components/realisation-images.test.tsx:90`, attente d'une seconde) : 2 échecs sur 300 exécutions de la CI examinées, exécutions 41661178343 (3 novembre 2026) et 43232018357 (12 novembre 2026), chaque fois vert au même commit ou à la relance. Il ne concerne ni l'assistant ni la mesure de qualité ci-dessus ; aucun code n'a été corrigé. Le nombre de tests de `npm test` (1 180 le 12 novembre 2026, 0 échec) ne dit donc pas que chaque exécution de la CI est verte du premier coup.
 - **Pour la suite** : grossir le corpus avec les données de démonstration et ajouter des questions plus difficiles (vocabulaire éloigné, notes proches les unes des autres).
 
 ## Reproduire la mesure
