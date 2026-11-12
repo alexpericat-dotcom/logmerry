@@ -238,7 +238,7 @@ Les colonnes communes ne sont pas répétées : `id` (identifiant unique génér
 | `payments` | Un encaissement | `invoice_id`, `amount_ht_cents`, `tax_cents`, `received_on` | Mêmes bornes de montant que les factures |
 | `deadlines` | Une échéance administrative | `title`, `due_on`, `category`, `priority`, `recurrence`, `series_id`, `series_day`, `source` | La source est une adresse en `https://` ; jour de série de 1 à 31 |
 | `regulatory_rules` | Une règle réglementaire versionnée | `rule_key`, `activity_category`, `params` (JSON), `effective_from`, `effective_to`, `source`, `verified_on`, `revalidate_after`, `status` | Source obligatoire ; statut : à vérifier, vérifiée, essai ; une version peut pointer vers la précédente |
-| `professional_profile` | Le profil professionnel (une ligne par compte) | Statut juridique, régime fiscal, TVA, ACRE, fréquence URSSAF, etc., chacun avec sa date de confirmation | Une donnée inconnue reste vide : jamais préremplie ; seuils d'alerte validés par une fonction |
+| `professional_profile` | Le profil professionnel (une ligne par compte) | Statut juridique, régime fiscal, TVA, ACRE, fréquence URSSAF, etc., chacun avec sa date de confirmation | Une donnée inconnue reste vide : jamais préremplie, **sauf** le statut juridique et la catégorie d'activité, préremplis par défaut (« Micro-entreprise » et « BNC », « Déclaré ») : voir chapitre 13, registre des traitements ; seuils d'alerte validés par une fonction |
 | `task_checks` | Les contrôles du cockpit déjà faits | `rule_no`, `source_id`, `period_start`, `ceiling_key`, `threshold` | Numéro de règle de 1 à 8 ; seuil : 50, 75, 90 ou 100 |
 
 ### Portfolio public, contact et technique
@@ -258,7 +258,7 @@ Les colonnes communes ne sont pas répétées : `id` (identifiant unique génér
 - **Montants en centimes entiers.** Jamais de nombre décimal pour l'argent.
 - **Textes bornés.** Chaque texte a une longueur minimale et maximale, contrôlée par la base, pas seulement par l'interface.
 - **Valeurs fermées.** Les statuts et les types sont des énumérations : la base refuse toute autre valeur.
-- **Rien d'inventé.** Une donnée personnelle inconnue reste vide (« À confirmer »). Les règles fiscales sont dans une table versionnée, avec source et date de vérification : aucun taux ni plafond n'est écrit dans le code.
+- **Rien d'inventé.** Une donnée personnelle inconnue reste vide (« À confirmer »), **sauf** le statut juridique et la catégorie d'activité, préremplis par défaut (voir chapitre 13, registre des traitements). Les règles fiscales sont dans une table versionnée, avec source et date de vérification : aucun taux ni plafond n'est écrit dans le code.
 - **Le vecteur dépend du modèle.** La dimension des vecteurs est liée au modèle d'embeddings (`mistral-embed`, 1 024 dimensions). Changer de modèle impose de tout réindexer : `embedding_model` garde la trace du modèle utilisé pour chaque extrait.
 - **Le public ne touche aucune table.** Il lit deux vues (`public_realisations`, `public_realisation_images`) qui filtrent « publiée **et** accord du client », et exécute une seule fonction, `submit_contact_message`.
 
