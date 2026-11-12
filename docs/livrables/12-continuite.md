@@ -26,7 +26,7 @@ RPO : quelle quantité de données peut être perdue. RTO : combien de temps pou
 | Schéma de la base | 56 migrations versionnées dans `supabase/migrations/` | Aucune perte : rejouables depuis le dépôt | À mesurer |
 | Données de la base (notes, clients, factures…) | Supabase seulement | **Âge du dernier export manuel. Aucun export automatique ni planifié n'existe** (aucune tâche de ce type dans `vercel.json` ni dans `.github/workflows/`) | À mesurer |
 | Images du portfolio (Supabase Storage) | Supabase Storage ; sources dans `assets-source/` (non commitées) | Non couvertes par un export de la base | À mesurer |
-| Variables d'environnement et clés | Vercel et `.env.local` (ignoré par Git) | **À confirmer** : copie hors de ces deux endroits, par exemple dans un gestionnaire de mots de passe | À mesurer |
+| Variables d'environnement et clés | Vercel et `.env.local` (ignoré par Git) | Aucune copie hors Vercel et `.env.local` (déclaré par l'auteur, 12 novembre 2026). Limite assumée : en cas de perte des deux, les clés sont à régénérer chez chaque fournisseur (déduction). | À mesurer |
 
 > **À confirmer.** Les durées de reprise (RTO) ne sont **pas mesurées** : le test de restauration du 12 novembre 2026 n'a pas été chronométré (sa durée totale, de 18 h 20 à 20 h 45 environ, comprend la recherche d'un mot de passe perdu). Je n'en annonce aucune.
 
