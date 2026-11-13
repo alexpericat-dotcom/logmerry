@@ -95,7 +95,9 @@ Le test d'isolation entre deux comptes a son propre fichier (`isolation.yml`) : 
 
 ### Capture du tableau de bord (fournie par l'auteur, 5 novembre 2026)
 
-![Tableau de bord Supabase du projet LogMerry : état « Healthy », calcul Nano, base à Paris (eu-west-3), CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, aucune sauvegarde, 7 requêtes sur la dernière heure, toutes réussies.](captures/supabase-dashboard.jpg)
+![Tableau de bord Supabase du projet LogMerry : état « Healthy », calcul Nano, base à Paris (eu-west-3), CPU 2 %, disque 14 %, mémoire 57 %, 6 connexions sur 60, aucune sauvegarde, 7 requêtes sur la dernière heure, toutes réussies. Capture partiellement floutée par l'auteur.](captures/supabase-dashboard-floute.jpg)
+
+*Capture partiellement floutée par l'auteur : nom de l'organisation, adresse du projet et photo de profil rendus illisibles (flou appliqué le 13 novembre 2026 sur une copie ; l'original reste dans l'historique Git).*
 
 | Ce que la capture montre | Lecture |
 |---|---|
