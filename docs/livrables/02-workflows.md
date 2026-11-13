@@ -226,6 +226,8 @@ Il n'existe **aucune tâche planifiée ni file d'attente** dans l'application : 
 
 Aucun serveur MCP n'est intégré à LogMerry : pas de fichier `.mcp.json`, pas de dépendance, aucun appel dans le code de l'application. Le **MCP Supabase** est utilisé **uniquement pendant le développement** (migrations, types, lecture de la base, avis de sécurité), en lecture seule hors modification du schéma, avec approbation manuelle des appels. Si un MCP était un jour intégré à l'application, il faudrait décrire ici ses droits et ses flux.
 
+MCP : non utilisé dans l'application (constaté, lecture du dépôt le 13 novembre 2026, par l'assistant).
+
 ## Limites et suite
 
 | Limite | Conséquence | Piste |
